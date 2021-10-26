@@ -67,6 +67,8 @@ pip install igra
 pip install siphon
 pip install fortran-language-server
 
+mamba install -c conda-forge mscorefonts -y
+
 # clean conda installed pkgs
 # conda clean -t
 

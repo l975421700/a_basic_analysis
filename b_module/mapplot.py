@@ -26,11 +26,11 @@ def ticks_labels(
     # Associate with '° W', '°', and '° E'
     xticks_label = [''] * len(xticks_pos)
     for i in np.arange(len(xticks_pos)):
-        if xticks_pos[i] < 0:
+        if (abs(xticks_pos[i]) == 180) | (xticks_pos[i] == 0):
+            xticks_label[i] = str(abs(xticks_pos[i])) + '°'
+        elif xticks_pos[i] < 0:
             xticks_label[i] = str(abs(xticks_pos[i])) + '° W'
-        if xticks_pos[i] == 0:
-            xticks_label[i] = str(xticks_pos[i]) + '°'
-        if xticks_pos[i] > 0:
+        elif xticks_pos[i] > 0:
             xticks_label[i] = str(xticks_pos[i]) + '° E'
     
     # get the y ticks
@@ -155,22 +155,9 @@ from matplotlib.colors import ListedColormap
 from matplotlib.colors import BoundaryNorm
 
 # set of namelist----
-extent1km = [-24.642454, -10.228505, 23.151627, 35.85266]
-extent3d_m = [-17.319347, -16.590143, 32.50762, 33.0472]
-extent3d_g = [-16.004251, -15.163912, 27.55076, 28.373308]
-extent3d_t = [-17.07781, -15.909306, 27.865873, 28.743168]
-extentm = [-17.32, -16.25, 32.35, 33.15]
-extentc = [-18.2, -13.2, 27.5, 29.5]
-extent12km = [-30.504213, -4.761099, 17.60372, 40.405067]
-extent1km_lb = [-23.401758, -11.290954, 24.182158, 34.85296]
 extent_global = [-180, 180, -90, 90]
 extent12km_out = [-35, 0, 10, 45]
 
-ticklabel1km = ticks_labels(-24, -12, 25, 35, 3, 2)
-ticklabelm = ticks_labels(-17.3, -16.3, 32.4, 32.9, 0.2, 0.2)
-ticklabelc = ticks_labels(-18, -14, 27.5, 29.5, 1, 0.5)
-ticklabel12km = ticks_labels(-30, -5, 20, 40, 5, 5)
-ticklabel1km_lb = ticks_labels(-22, -12, 26, 34, 2, 2)
 ticklabel_global = ticks_labels(-180, 180, -90, 90, 60, 30)
 ticklabel12km_out = ticks_labels(-30, 0, 10, 40, 10, 10)
 
@@ -201,48 +188,20 @@ def framework_plot1(
                        'middle_label': False},
     set_figure_margin = True,
     figure_margin=None,
-    plot_vorticity = False,
-    vorticity_elements = {
-        'rvor': None, 'lon': None, 'lat': None, 'vorlevel': None,
-        'ticks': None, 'time_point': None, 'time_location': None,
-        },
     ):
     '''
     ----Input
-    which_area: indicate which area to plot, {"1km", "12km", "madeira", "canary"}
+    which_area: indicate which area to plot, {
+        'global', 'self_defined', '12km_out', }
     
     figsize: figure size
-    
     
     ----output
     
     
     '''
     
-    if which_area == "1km_lb":
-        extent = extent1km_lb
-        ticklabel = ticklabel1km_lb
-        if plot_scalebar:
-            scalebar_elements = {
-                'bars': 2, 'length': 200, 'location': (0.02, 0.015),
-                'barheight': 20, 'linewidth': 0.15, 'col': 'black',
-                'middle_label': False}
-        if (figure_margin is None) & (set_figure_margin):
-            figure_margin = {
-                'left': 0.12, 'right': 0.99, 'bottom': 0.08, 'top': 0.99
-            }
-        if (figsize is None):
-            figsize = np.array([8.8, 8.8]) / 2.54
-    
-    if which_area == "1km":
-        extent = extent1km
-        ticklabel = ticklabel1km
-    
-    if which_area == "12km":
-        extent = extent12km
-        ticklabel = ticklabel12km
-    
-    if which_area == "12km_out":
+    if which_area == '12km_out':
         extent = extent12km_out
         ticklabel = ticklabel12km_out
         plot_scalebar = False
@@ -252,14 +211,6 @@ def framework_plot1(
             figure_margin = {
                 'left': 0.12, 'right': 0.96, 'bottom': 0.05, 'top': 0.995
             }
-    
-    if which_area == "madeira":
-        extent = extentm
-        ticklabel = ticklabelm
-    
-    if which_area == "canary":
-        extent = extentc
-        ticklabel = ticklabelc
     
     if which_area == 'global':
         extent = extent_global
@@ -308,40 +259,6 @@ def framework_plot1(
         gl.xlocator = mticker.FixedLocator(ticklabel[0])
         gl.ylocator = mticker.FixedLocator(ticklabel[2])
     
-    if plot_vorticity:
-        top = cm.get_cmap('Blues_r', int(np.floor(len(
-            vorticity_elements['vorlevel']) / 2)))
-        bottom = cm.get_cmap('Reds', int(np.floor(len(
-            vorticity_elements['vorlevel']) / 2)))
-        newcolors = np.vstack(
-            (top(np.linspace(0, 1, int(np.floor(len(
-                vorticity_elements['vorlevel']) / 2)))),
-             [1, 1, 1, 1],
-             bottom(np.linspace(0, 1, int(np.floor(len(
-                 vorticity_elements['vorlevel']) / 2))))))
-        newcmp = ListedColormap(newcolors, name='RedsBlues_r')
-        
-        plt_rvor = ax.pcolormesh(
-            vorticity_elements['lon'],
-            vorticity_elements['lat'],
-            vorticity_elements['rvor'],
-            cmap=newcmp,
-            norm=BoundaryNorm(
-                vorticity_elements['vorlevel'], ncolors=newcmp.N, clip=False),
-            rasterized=True, transform=transform, zorder=-2,)
-        rvor_time = ax.text(
-            vorticity_elements['time_location'][0],
-            vorticity_elements['time_location'][1],
-            str(vorticity_elements['time_point'])[0:10] + ' ' +
-            str(vorticity_elements['time_point'])[11:13] + ':00 UTC')
-        cbar = fig.colorbar(
-            plt_rvor, ax=ax, orientation="horizontal",  pad=0.1, fraction=0.09,
-            shrink=1, aspect=25, ticks=vorticity_elements['ticks'],
-            extend='both', anchor=(0.5, 1), panchor=(0.5, 0))
-        if xlabel is None:
-            xlabel = "Relative vorticity [$10^{-4}\;s^{-1}$]"
-        cbar.ax.set_xlabel(xlabel)
-    
     if plot_scalebar:
         scale_bar(ax, bars=scalebar_elements['bars'],
                   length=scalebar_elements['length'],
@@ -365,16 +282,11 @@ def framework_plot1(
 
 
 '''
-framework_plot1("1km_lb", output_png = 'figures/00_test/trial.png')
+os.environ['CARTOPY_USER_BACKGROUNDS'] = 'data_source/bg_cartopy'
 
-
-# plot natural earth
 fig, ax = framework_plot1("global")
 ax.background_img(name='natural_earth', resolution='high')
 fig.savefig('figures/00_test/natural_earth.png', dpi=1200)
-
-fig, ax = framework_plot1("madeira", plot_scalebar = False)
-fig.savefig('figures/00_test/trial.png')
 
 '''
 
