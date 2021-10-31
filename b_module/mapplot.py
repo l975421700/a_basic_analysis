@@ -282,6 +282,7 @@ def framework_plot1(
 
 
 '''
+# https://www.naturalearthdata.com/downloads/
 os.environ['CARTOPY_USER_BACKGROUNDS'] = 'data_source/bg_cartopy'
 
 fig, ax = framework_plot1("global")

@@ -69,6 +69,8 @@ pip install fortran-language-server
 
 mamba install -c conda-forge mscorefonts -y
 
+mamba install -c conda-forge rockhound -y
+
 # clean conda installed pkgs
 # conda clean -t
 
