@@ -1,10 +1,10 @@
 
 
 # =============================================================================
-# region
+# region JASMIN
 
-ssh-add -l
-ssh-add .ssh/id_rsa
+# ssh-add -l
+# ssh-add .ssh/id_rsa
 ssh -A qino@login1.jasmin.ac.uk
 ssh qino@sci1.jasmin.ac.uk
 
@@ -13,3 +13,16 @@ ssh qino@sci1.jasmin.ac.uk
 
 # endregion
 # =============================================================================
+
+
+# =============================================================================
+# region
+ssh lander
+ssh -XY xcsc
+
+/projects/ukesm/qgao # project directory
+/home/d05/qgao # home directory
+
+# endregion
+# =============================================================================
+
