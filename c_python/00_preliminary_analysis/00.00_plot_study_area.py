@@ -68,7 +68,7 @@ from a00_basic_analysis.b_module.mapplot import (
 
 
 # =============================================================================
-# region plot global and study area ----
+# region plot global map ----
 
 fig, ax = framework_plot1("global")
 ax.background_img(name='natural_earth', resolution='high')
@@ -81,7 +81,7 @@ fig.savefig('figures/01_study_area/natural_earth.png', dpi=1200)
 
 
 # =============================================================================
-# region plot Antarctica surface height
+# region plot Antarctica surface height in Bedmap2
 
 bedmap_surface = rh.fetch_bedmap2(datasets=['surface'])
 # stats.describe(
@@ -155,11 +155,6 @@ fig.savefig('figures/01_study_area/Surface height in Bedmap2.png')
 
 # https://www.fatiando.org/rockhound/latest/gallery/bedmap2.html#sphx-glr-gallery-bedmap2-py
 
-borders = cfeature.NaturalEarthFeature(
-    'cultural', 'admin_0_boundary_lines_land', '10m',
-    edgecolor='black',
-    facecolor='none', lw=0.25)
-ax.add_feature(borders, zorder=2)
 
 ax.add_feature(cfeature.LAND)
 ax.add_feature(cfeature.OCEAN)
@@ -180,7 +175,7 @@ ax.background_img(name='natural_earth', resolution='high',
 
 
 # =============================================================================
-# region plot Antarctica surface height
+# region plot Antarctica bed height in Bedmap2
 
 bedmap_bed = rh.fetch_bedmap2(datasets=['bed'])
 # stats.describe(
@@ -264,6 +259,7 @@ plt_theta = ax.pcolormesh(
 '''
 # endregion
 # =============================================================================
+
 
 
 

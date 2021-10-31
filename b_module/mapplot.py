@@ -2,8 +2,6 @@
 
 # =============================================================================
 # region Function to generate ticks and labels
-import cartopy.crs as ccrs
-import numpy as np
 
 def ticks_labels(
     xmin, xmax, ymin, ymax, xspacing, yspacing
@@ -17,6 +15,8 @@ def ticks_labels(
     # output ----
     xticks_pos, xticks_label, yticks_pos, yticks_label
     '''
+    
+    import numpy as np
     
     # get the x ticks
     xticks_pos = np.arange(xmin, xmax + xspacing, xspacing)
@@ -52,8 +52,6 @@ def ticks_labels(
 
 '''
 xmin = -180; xmax = 180; ymin = -90; ymax = 90; xspacing = 60; yspacing = 30
-xmin = -24; xmax = -12; ymin = 24; ymax = 33; xspacing = 3; yspacing = 3
-xmin = -17.3; xmax = -16.6; ymin = 32.6; ymax = 33.0; xspacing = 0.1; yspacing = 0.1
 xticks_pos = np.arange(xmin, xmax + xspacing, xspacing)
 ddd = ticks_labels(xmin, xmax, ymin, ymax, xspacing, yspacing)
 '''
@@ -63,24 +61,25 @@ ddd = ticks_labels(xmin, xmax, ymin, ymax, xspacing, yspacing)
 
 # =============================================================================
 # region Function to plot scale bar
-from matplotlib.patches import Rectangle
 
-# plot a scale bar with 4 subdivisions on the left side of the map
-# https://github.com/SciTools/cartopy/issues/490
-def scale_bar(ax, bars = 2, length = None, location = (0.1, 0.05),
-              barheight = 5, linewidth = 3, col = 'black',
-              middle_label=True, fontcolor='black', vline = 1400):
-    """
+def scale_bar(
+    ax, bars = 2, length = None, location = (0.1, 0.05),
+    barheight = 5, linewidth = 3, col = 'black',
+    middle_label=True, fontcolor='black', vline = 1400):
+    '''
     ax: the axes to draw the scalebar on.
-    bars: the number of subdivisions of the bar (black and white chunks)
-    length: the length of the scalebar in km.
+    bars: the number of subdivisions
+    length: in [km].
     location: left side of the scalebar in axis coordinates.
     (ie. 0 is the left side of the plot)
-    barheight: height of bar in [km]
+    barheight: in [km]
     linewidth: the thickness of the scalebar.
-    color: the color of the scale bar
+    col: the color of the scale bar
     middle_label: whether to plot the middle label
-    """
+    '''
+    
+    import cartopy.crs as ccrs
+    from matplotlib.patches import Rectangle
     
     # Get the limits of the axis in lat lon
     llx0, llx1, lly0, lly1 = ax.get_extent(ccrs.PlateCarree())
@@ -134,7 +133,16 @@ def scale_bar(ax, bars = 2, length = None, location = (0.1, 0.05),
             verticalalignment='bottom', color=fontcolor)
 
 '''
+# https://github.com/SciTools/cartopy/issues/490
 # bars = 2; length = 1000; location=(0.1, 0.05); linewidth=3; col='black'
+
+bars=scalebar_elements['bars'],
+length=scalebar_elements['length'],
+location=scalebar_elements['location'],
+barheight=scalebar_elements['barheight'],
+linewidth=scalebar_elements['linewidth'],
+col=scalebar_elements['col'],
+middle_label=scalebar_elements['middle_label']
 '''
 # endregion
 # =============================================================================
@@ -358,5 +366,189 @@ def confidence_ellipse(x, y, ax, n_std=3.0, facecolor='none', **kwargs):
 # =============================================================================
 
 
+# =============================================================================
+# region Function to plot polar scale bar
 
+def polar_scale_bar(
+    ax, bars = None, length = None, location = None,
+    barheight = None, linewidth = None, col = 'black', transform = None,
+    middle_label=None, fontcolor='black', vline = 1400):
+    '''
+    ax: the axes to draw the scalebar on.
+    bars: the number of subdivisions
+    length: in [km].
+    location: left side of the scalebar in axis coordinates.
+    barheight: in [km]
+    linewidth: the thickness of the scalebar.
+    col: the color of the scale bar
+    middle_label: whether to plot the middle label
+    '''
+    
+    import cartopy.crs as ccrs
+    from matplotlib.patches import Rectangle
+    
+    # Get the extent of the plotted area in coordinates in metres
+    x0, x1, y0, y1 = ax.get_extent()
+    
+    # Turn the specified scalebar location into coordinates in metres
+    sbx = x0 + (x1 - x0) * location[0]
+    sby = y0 + (y1 - y0) * location[1]
+    
+    # Plot the scalebar chunks
+    barcol = 'white'
+    
+    for i in range(0, bars):
+        # Generate the x coordinate for the left of ith bar
+        barleft_x = sbx + i * length * 1000 / bars
+        
+        # plot the chunk
+        ax.add_patch(
+            Rectangle((barleft_x, sby),
+                      length * 1000 / bars, barheight * 1000, ec = 'black',
+                      color = barcol, lw = linewidth,
+                      transform=transform, clip_on=False))
+        
+        # alternate the colour
+        if barcol == 'white':
+            barcol = col
+        else:
+            barcol = 'white'
+        # Plot the scalebar label for that chunk
+        if i == 0 or middle_label:
+            ax.text(barleft_x, sby + barheight * 1200,
+                    str(round(i * length / bars)), transform=transform,
+                    horizontalalignment='center', verticalalignment='bottom',
+                    color=fontcolor)
+        
+    # Generate the x coordinate for the last number
+    bar_xt = sbx + length * 1000 * 1.1
+    # Plot the last scalebar label
+    ax.text(bar_xt, sby + barheight * vline, str(round(length)) + ' km',
+            transform=transform, horizontalalignment='center',
+            verticalalignment='bottom', color=fontcolor)
+
+'''
+# https://github.com/SciTools/cartopy/issues/490
+# bars = 2; length = 1000; location=(0.1, 0.05); linewidth=3; col='black'
+
+bars=scalebar_elements['bars'],
+length=scalebar_elements['length'],
+location=scalebar_elements['location'],
+barheight=scalebar_elements['barheight'],
+linewidth=scalebar_elements['linewidth'],
+col=scalebar_elements['col'],
+middle_label=scalebar_elements['middle_label']
+'''
+# endregion
+# =============================================================================
+
+
+# =============================================================================
+# region functions to plot the southern hemisphere
+
+
+def hemisphere_plot(
+    northextent=None, southextent=None, figsize=None, dpi=600,
+    fm_left=0.12, fm_right=0.88, fm_bottom=0.08, fm_top=0.96,
+    add_atlas=True, atlas_color='black', lw=0.25,
+    add_grid=True, grid_color='gray', add_grid_labels = True, output_png=None,
+    plot_scalebar=True, sb_bars=2, sb_length=1000, sb_location=(-0.13, 0),
+    sb_barheight=100, sb_linewidth=0.15, sb_middle_label=False,
+    ):
+    '''
+    ----Input
+    northextent: plot SH, north extent in degree south, e.g. -60, -30, or 0;
+    southextent: plot NH, south extent in degree north, e.g. 60, 30, 0;
+    figsize: figure size, e.g. np.array([8.8, 9.3]) / 2.54;
+    
+    ----output
+    
+    
+    ----function dependence
+    ticks_labels; polar_scale_bar;
+    '''
+    
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import cartopy.crs as ccrs
+    import cartopy.feature as cfeature
+    import matplotlib as mpl
+    import matplotlib.path as mpath
+    mpl.rc('font', family='Times New Roman', size=10)
+    
+    if (figsize is None):
+        figsize = np.array([8.8, 9.3]) / 2.54
+    
+    if not (northextent is None):
+        # northextent = -60
+        projections = ccrs.SouthPolarStereo()
+        ticklabel = ticks_labels(-180, 180, -90, northextent,
+                                 30, int((northextent+90)/3))
+        extent = (-180, 180, -90, northextent)
+    elif not (southextent is None):
+        # southextent = 60
+        projections = ccrs.NorthPolarStereo()
+        ticklabel = ticks_labels(-180, 180, southextent, 90,
+                                 30, int((90-southextent)/3))
+        extent = (-180, 180, southextent, 90)
+    
+    transform = ccrs.PlateCarree()
+    
+    fig, ax = plt.subplots(
+        1, 1, figsize=figsize, subplot_kw={'projection': projections}, dpi=dpi)
+    
+    ax.set_extent(extent, crs=transform)
+    
+    if add_atlas:
+        coastline = cfeature.NaturalEarthFeature(
+            'physical', 'coastline', '10m', edgecolor=atlas_color,
+            facecolor='none', lw=lw)
+        borders = cfeature.NaturalEarthFeature(
+            'cultural', 'admin_0_boundary_lines_land', '10m',
+            edgecolor=atlas_color, facecolor='none', lw=lw)
+        ax.add_feature(coastline, zorder=2)
+        ax.add_feature(borders, zorder=2)
+    
+    if add_grid:
+        gl = ax.gridlines(
+            crs=transform, linewidth=lw/2, zorder=2,
+            draw_labels=add_grid_labels,
+            color=grid_color, alpha=0.5, linestyle='--',
+            xlocs=ticklabel[0], ylocs=ticklabel[2], rotate_labels=False,
+        )
+        gl.ylabel_style = {'size': 0, 'color': 'white'}
+    
+    # set circular axes boundaries
+    theta = np.linspace(0, 2*np.pi, 100)
+    center, radius = [0.5, 0.5], 0.5
+    verts = np.vstack([np.sin(theta), np.cos(theta)]).T
+    circle = mpath.Path(verts * radius + center)
+    ax.set_boundary(circle, transform=ax.transAxes)
+    
+    plt.setp(ax.spines.values(), linewidth=lw*0.8)
+    
+    fig.subplots_adjust(
+        left=fm_left, right=fm_right, bottom=fm_bottom, top=fm_top)
+    
+    if plot_scalebar:
+        polar_scale_bar(
+            ax, bars=sb_bars,
+            length=sb_length,
+            location=sb_location,
+            barheight=sb_barheight,
+            linewidth=sb_linewidth,
+            middle_label=sb_middle_label,
+            transform=projections)
+    
+    if not (output_png is None):
+        fig.savefig(output_png)
+    else:
+        return fig, ax
+
+'''
+hemisphere_plot(northextent=-60, output_png='figures/00_test/trial00',)
+
+'''
+# endregion
+# =============================================================================
 
