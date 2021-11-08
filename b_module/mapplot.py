@@ -151,35 +151,6 @@ middle_label=scalebar_elements['middle_label']
 # =============================================================================
 # region Function to plot advance framework
 
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
-import cartopy.feature as cfeature
-import matplotlib as mpl
-import matplotlib.ticker as mticker
-mpl.rc('font', family='Times New Roman', size=10)
-import cartopy as ctp
-from matplotlib import cm
-from matplotlib.colors import ListedColormap
-from matplotlib.colors import BoundaryNorm
-
-# set of namelist----
-extent_global = [-180, 180, -90, 90]
-extent12km_out = [-35, 0, 10, 45]
-
-ticklabel_global = ticks_labels(-180, 180, -90, 90, 60, 30)
-ticklabel12km_out = ticks_labels(-30, 0, 10, 40, 10, 10)
-
-transform = ctp.crs.PlateCarree()
-coastline = ctp.feature.NaturalEarthFeature(
-    'physical', 'coastline', '10m', edgecolor='black',
-    facecolor='none', lw=0.5)
-borders = ctp.feature.NaturalEarthFeature(
-    'cultural', 'admin_0_boundary_lines_land', '10m', edgecolor='black',
-    facecolor='none', lw=0.5)
-
-'''
-'''
-
 def framework_plot1(
     which_area,
     xlabel = None,
@@ -209,9 +180,19 @@ def framework_plot1(
     
     '''
     
+    import numpy as np
+    import cartopy.feature as cfeature
+    import matplotlib.ticker as mticker
+    import cartopy as ctp
+    import matplotlib.pyplot as plt
+    import matplotlib as mpl
+    mpl.rc('font', family='Times New Roman', size=10)
+    
+    transform = ctp.crs.PlateCarree()
+    
     if which_area == '12km_out':
-        extent = extent12km_out
-        ticklabel = ticklabel12km_out
+        extent = [-35, 0, 10, 45]
+        ticklabel = ticks_labels(-30, 0, 10, 40, 10, 10)
         plot_scalebar = False
         if (figsize is None):
             figsize = np.array([8.8, 8]) / 2.54
@@ -221,8 +202,8 @@ def framework_plot1(
             }
     
     if which_area == 'global':
-        extent = extent_global
-        ticklabel = ticklabel_global
+        extent = [-180, 180, -90, 90]
+        ticklabel = ticks_labels(-180, 180, -90, 90, 60, 30)
         plot_scalebar = False
         lw = 0.1
         if (figure_margin is None) & (set_figure_margin):
@@ -444,7 +425,7 @@ middle_label=scalebar_elements['middle_label']
 
 
 # =============================================================================
-# region functions to plot the southern hemisphere
+# region functions to plot two hemisphere
 
 
 def hemisphere_plot(
@@ -547,6 +528,28 @@ def hemisphere_plot(
 
 '''
 hemisphere_plot(northextent=-60, output_png='figures/00_test/trial00',)
+hemisphere_plot(
+    northextent=-30, sb_length=2000, sb_barheight=200,
+    output_png='figures/00_test/trial01',)
+hemisphere_plot(
+    northextent=0, sb_length=3000, sb_barheight=300,
+    output_png='figures/00_test/trial02',)
+
+hemisphere_plot(southextent=60, output_png='figures/00_test/trial03',)
+hemisphere_plot(
+    southextent=30, sb_length=2000, sb_barheight=200,
+    output_png='figures/00_test/trial04',)
+hemisphere_plot(
+    southextent=0, sb_length=3000, sb_barheight=300,
+    output_png='figures/00_test/trial05',)
+
+
+# northextent=None, southextent=None, figsize=None, dpi=600,
+# fm_left=0.12, fm_right=0.88, fm_bottom=0.08, fm_top=0.96,
+# add_atlas=True, atlas_color='black', lw=0.25,
+# add_grid=True, grid_color='gray', add_grid_labels = True, output_png=None,
+# plot_scalebar=True, sb_bars=2, sb_length=1000, sb_location=(-0.13, 0),
+# sb_barheight=100, sb_linewidth=0.15, sb_middle_label=False,
 
 '''
 # endregion
