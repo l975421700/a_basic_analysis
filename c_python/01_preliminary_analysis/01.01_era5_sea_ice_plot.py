@@ -73,7 +73,7 @@ warnings.filterwarnings('ignore')
 
 
 # =============================================================================
-# region plot NH seasonal sea ice in era5
+# region plot NH seasonal mean sea ice in era5
 
 era5_mon_sl_79_21_sic = xr.open_dataset(
     'bas_palaeoclim_qino/observations/reanalysis/ERA5/mon_sl_79_present/era5_mon_sl_79_21_sic.nc')
@@ -127,7 +127,7 @@ fig.savefig('figures/00_test/trial')
 
 
 # =============================================================================
-# region plot NH monthly sea ice in era5
+# region plot NH monthly mean sea ice in era5
 
 era5_mon_sl_79_21_sic = xr.open_dataset(
     'bas_palaeoclim_qino/observations/reanalysis/ERA5/mon_sl_79_present/era5_mon_sl_79_21_sic.nc')
@@ -179,7 +179,7 @@ fig.savefig('figures/00_test/trial')
 
 
 # =============================================================================
-# region animate NH monthly sea ice in era5
+# region animate NH monthly mean sea ice in era5
 
 era5_mon_sl_79_21_sic = xr.open_dataset(
     'bas_palaeoclim_qino/observations/reanalysis/ERA5/mon_sl_79_present/era5_mon_sl_79_21_sic.nc')
@@ -224,11 +224,11 @@ cbar = fig.colorbar(
     plt_cmp, ax=ax, orientation="horizontal",  pad=0.08, fraction=0.07,
     shrink=1, aspect=25, ticks=pltticks, extend='neither',
     anchor=(0.5, 1), panchor=(0.5, 0))
-cbar.ax.set_xlabel("Sea ice cover [-] in the ERA5 reanalysis (1979-2021)")
+cbar.ax.set_xlabel("Monthly mean sea ice cover [-] in ERA5 (1979-2021)")
 
 ani = animation.ArtistAnimation(fig, ims, interval=500, blit=True)
 ani.save(
-    'figures/02_era5/02_00_era5_sea_ice/02.00.00 monthly sea ice cover in ERA5.mp4',
+    'figures/02_era5/02_00_era5_sea_ice/02.00.00 monthly mean sea ice cover in ERA5_NH.mp4',
     progress_callback=lambda i, n: print(f'Saving frame {i} of {n}'),)
 
 '''
@@ -238,7 +238,7 @@ ani.save(
 
 
 # =============================================================================
-# region plot NH annual sea ice in era5
+# region plot NH annual mean sea ice in era5
 
 era5_mon_sl_79_21_sic = xr.open_dataset(
     'bas_palaeoclim_qino/observations/reanalysis/ERA5/mon_sl_79_present/era5_mon_sl_79_21_sic.nc')
@@ -305,7 +305,7 @@ def season_mean(ds, calendar="standard"):
 
 
 # =============================================================================
-# region animate NH annual sea ice in era5
+# region animate NH annual mean sea ice in era5
 
 era5_mon_sl_79_21_sic = xr.open_dataset(
     'bas_palaeoclim_qino/observations/reanalysis/ERA5/mon_sl_79_present/era5_mon_sl_79_21_sic.nc')
@@ -354,12 +354,12 @@ cbar = fig.colorbar(
     plt_cmp, ax=ax, orientation="horizontal",  pad=0.08, fraction=0.07,
     shrink=1, aspect=25, ticks=pltticks, extend='neither',
     anchor=(0.5, 1), panchor=(0.5, 0))
-cbar.ax.set_xlabel("Annual sea ice cover [-] in the ERA5 reanalysis")
+cbar.ax.set_xlabel("Annual mean sea ice cover [-] in ERA5")
 
 ani = animation.ArtistAnimation(fig, ims, interval=250, blit=True)
 
 ani.save(
-    'figures/02_era5/02_00_era5_sea_ice/02.00.01 Annual sea ice cover in ERA5.mp4',
+    'figures/02_era5/02_00_era5_sea_ice/02.00.01 Annual mean sea ice cover in ERA5_NH.mp4',
     progress_callback=lambda i, n: print(f'Saving frame {i} of {n}'),)
 
 
@@ -371,7 +371,7 @@ ani.save(
 
 
 # =============================================================================
-# region plot SH seasonal sea ice in era5
+# region plot SH seasonal mean sea ice in era5
 
 era5_mon_sl_79_21_sic = xr.open_dataset(
     'bas_palaeoclim_qino/observations/reanalysis/ERA5/mon_sl_79_present/era5_mon_sl_79_21_sic.nc')
@@ -425,7 +425,7 @@ fig.savefig('figures/00_test/trial.png')
 
 
 # =============================================================================
-# region plot SH monthly sea ice in era5
+# region plot SH monthly mean sea ice in era5
 
 era5_mon_sl_79_21_sic = xr.open_dataset(
     'bas_palaeoclim_qino/observations/reanalysis/ERA5/mon_sl_79_present/era5_mon_sl_79_21_sic.nc')
@@ -477,7 +477,7 @@ fig.savefig('figures/00_test/trial.png')
 
 
 # =============================================================================
-# region animate SH monthly sea ice in era5
+# region animate SH monthly mean sea ice in era5
 
 era5_mon_sl_79_21_sic = xr.open_dataset(
     'bas_palaeoclim_qino/observations/reanalysis/ERA5/mon_sl_79_present/era5_mon_sl_79_21_sic.nc')
@@ -536,7 +536,7 @@ ani.save(
 
 
 # =============================================================================
-# region plot SH annual sea ice in era5
+# region plot SH annual mean sea ice in era5
 
 era5_mon_sl_79_21_sic = xr.open_dataset(
     'bas_palaeoclim_qino/observations/reanalysis/ERA5/mon_sl_79_present/era5_mon_sl_79_21_sic.nc')
@@ -603,7 +603,7 @@ def season_mean(ds, calendar="standard"):
 
 
 # =============================================================================
-# region animate SH annual sea ice in era5
+# region animate SH annual mean sea ice in era5
 
 era5_mon_sl_79_21_sic = xr.open_dataset(
     'bas_palaeoclim_qino/observations/reanalysis/ERA5/mon_sl_79_present/era5_mon_sl_79_21_sic.nc')
@@ -665,3 +665,170 @@ ani.save(
 '''
 # endregion
 # =============================================================================
+
+
+# =============================================================================
+# region plot NH monthly sea ice cover in era5
+era5_mon_sl_79_21_sic = xr.open_dataset(
+    'bas_palaeoclim_qino/observations/reanalysis/ERA5/mon_sl_79_present/era5_mon_sl_79_21_sic.nc')
+
+siconc = xr.concat((
+    era5_mon_sl_79_21_sic.siconc[:-2, 0, :, :],
+    era5_mon_sl_79_21_sic.siconc[-2:, 1, :, :]), dim='time')
+
+fig, ax = hemisphere_plot(southextent=45, sb_length=2000, sb_barheight=200,)
+
+pltlevel = np.arange(0, 1.01, 0.01)
+pltticks = np.arange(0, 1.01, 0.2)
+
+plt_cmp = ax.pcolormesh(
+    era5_mon_sl_79_21_sic.longitude.values,
+    era5_mon_sl_79_21_sic.latitude.values[0:241],
+    siconc[0, 0:241, :],
+    norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
+    cmap=cm.get_cmap('Blues', len(pltlevel)), rasterized=True,
+    transform=ccrs.PlateCarree(),)
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, orientation="horizontal",  pad=0.08, fraction=0.07,
+    shrink=1, aspect=25, ticks=pltticks, extend='neither',
+    anchor=(0.5, 1), panchor=(0.5, 0))
+cbar.ax.set_xlabel("Sea ice cover [-] in the ERA5 reanalysis")
+# ax.add_feature(cfeature.LAND, zorder=2)
+fig.savefig('figures/00_test/trial')
+
+# endregion
+# =============================================================================
+
+
+# =============================================================================
+# region animate NH monthly sea ice cover in era5
+
+
+era5_mon_sl_79_21_sic = xr.open_dataset(
+    'bas_palaeoclim_qino/observations/reanalysis/ERA5/mon_sl_79_present/era5_mon_sl_79_21_sic.nc')
+
+siconc = xr.concat((
+    era5_mon_sl_79_21_sic.siconc[:-2, 0, :, :],
+    era5_mon_sl_79_21_sic.siconc[-2:, 1, :, :]), dim='time')
+
+pltlevel = np.arange(0, 1.01, 0.01)
+pltticks = np.arange(0, 1.01, 0.2)
+
+fig, ax = hemisphere_plot(southextent=45, sb_length=2000, sb_barheight=200,)
+ims = []
+
+for i in range(siconc.shape[0]): # range(2):  #
+    # i=0
+    plt_cmp = ax.pcolormesh(
+        era5_mon_sl_79_21_sic.longitude.values,
+        era5_mon_sl_79_21_sic.latitude.values[0:241],
+        siconc[i, 0:241, :],
+        norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
+        cmap=cm.get_cmap('Blues', len(pltlevel)), rasterized=True,
+        transform=ccrs.PlateCarree(),)
+    textinfo = ax.text(
+        -0.1, 1, str(siconc.time[i].values)[:7], backgroundcolor='white',
+        transform=ax.transAxes, fontweight='bold')
+    ims.append([plt_cmp, textinfo])
+    print(str(i) + '/' + str(12))
+
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, orientation="horizontal",  pad=0.08, fraction=0.07,
+    shrink=1, aspect=25, ticks=pltticks, extend='neither',
+    anchor=(0.5, 1), panchor=(0.5, 0))
+cbar.ax.set_xlabel("Sea ice cover [-] in ERA5 (1979-2021)")
+
+ani = animation.ArtistAnimation(fig, ims, interval=500, blit=True)
+ani.save(
+    'figures/02_era5/02_00_era5_sea_ice/02.00.04 monthly sea ice cover in ERA5_NH.mp4',
+    progress_callback=lambda i, n: print(f'Saving frame {i} of {n}'),)
+
+
+'''
+'''
+# endregion
+# =============================================================================
+
+
+# =============================================================================
+# region plot SH monthly sea ice cover in era5
+era5_mon_sl_79_21_sic = xr.open_dataset(
+    'bas_palaeoclim_qino/observations/reanalysis/ERA5/mon_sl_79_present/era5_mon_sl_79_21_sic.nc')
+
+siconc = xr.concat((
+    era5_mon_sl_79_21_sic.siconc[:-2, 0, :, :],
+    era5_mon_sl_79_21_sic.siconc[-2:, 1, :, :]), dim='time')
+
+fig, ax = hemisphere_plot(northextent=-45, sb_length=2000, sb_barheight=200,)
+
+pltlevel = np.arange(0, 1.01, 0.01)
+pltticks = np.arange(0, 1.01, 0.2)
+
+plt_cmp = ax.pcolormesh(
+    era5_mon_sl_79_21_sic.longitude.values,
+    era5_mon_sl_79_21_sic.latitude.values[480:],
+    siconc[0, 480:, :],
+    norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
+    cmap=cm.get_cmap('Blues', len(pltlevel)), rasterized=True,
+    transform=ccrs.PlateCarree(),)
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, orientation="horizontal",  pad=0.08, fraction=0.07,
+    shrink=1, aspect=25, ticks=pltticks, extend='neither',
+    anchor=(0.5, 1), panchor=(0.5, 0))
+cbar.ax.set_xlabel("Sea ice cover [-] in the ERA5 reanalysis")
+# ax.add_feature(cfeature.LAND, zorder=2)
+fig.savefig('figures/00_test/trial')
+
+# endregion
+# =============================================================================
+
+
+# =============================================================================
+# region animate SH monthly sea ice cover in era5
+
+
+era5_mon_sl_79_21_sic = xr.open_dataset(
+    'bas_palaeoclim_qino/observations/reanalysis/ERA5/mon_sl_79_present/era5_mon_sl_79_21_sic.nc')
+
+siconc = xr.concat((
+    era5_mon_sl_79_21_sic.siconc[:-2, 0, :, :],
+    era5_mon_sl_79_21_sic.siconc[-2:, 1, :, :]), dim='time')
+
+pltlevel = np.arange(0, 1.01, 0.01)
+pltticks = np.arange(0, 1.01, 0.2)
+
+fig, ax = hemisphere_plot(northextent=-45, sb_length=2000, sb_barheight=200,)
+ims = []
+
+for i in range(siconc.shape[0]): # range(2):  #
+    # i=0
+    plt_cmp = ax.pcolormesh(
+        era5_mon_sl_79_21_sic.longitude.values,
+        era5_mon_sl_79_21_sic.latitude.values[480:],
+        siconc[i, 480:, :],
+        norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
+        cmap=cm.get_cmap('Blues', len(pltlevel)), rasterized=True,
+        transform=ccrs.PlateCarree(),)
+    textinfo = ax.text(
+        -0.1, 1, str(siconc.time[i].values)[:7], backgroundcolor='white',
+        transform=ax.transAxes, fontweight='bold')
+    ims.append([plt_cmp, textinfo])
+    print(str(i) + '/' + str(12))
+
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, orientation="horizontal",  pad=0.08, fraction=0.07,
+    shrink=1, aspect=25, ticks=pltticks, extend='neither',
+    anchor=(0.5, 1), panchor=(0.5, 0))
+cbar.ax.set_xlabel("Sea ice cover [-] in ERA5 (1979-2021)")
+
+ani = animation.ArtistAnimation(fig, ims, interval=500, blit=True)
+ani.save(
+    'figures/02_era5/02_00_era5_sea_ice/02.00.05 monthly sea ice cover in ERA5_SH.mp4',
+    progress_callback=lambda i, n: print(f'Saving frame {i} of {n}'),)
+
+
+'''
+'''
+# endregion
+# =============================================================================
+

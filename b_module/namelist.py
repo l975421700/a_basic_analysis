@@ -47,6 +47,7 @@ r_v = 461.0  # gas cons tant of vapor [J/kgK]
 p0sl = 100000.0  # pressure at see level
 t0sl = 288.1499938964844   # temperature at see level
 
+zerok = 273.15
 # plot
 # -------------------------------------------------
 
