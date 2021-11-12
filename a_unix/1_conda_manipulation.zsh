@@ -50,7 +50,9 @@ mamba install -c conda-forge pycwt
 mamba install -c conda-forge mscorefonts
 mamba install -c conda-forge line_profiler
 mamba install -c conda-forge xesmf
-
+mamba install -c conda-forge proplot
+mamba install -c conda-forge cmip6_preprocessing
+mamba install -c conda-forge bottleneck
 
 # clean conda installed pkgs
 # conda clean -a

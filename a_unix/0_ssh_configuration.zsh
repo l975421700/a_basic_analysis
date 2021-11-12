@@ -15,6 +15,9 @@ ssh -X qino@mass-cli.jasmin.ac.uk
 # /gws/nopw/j04/bas_palaeoclim
 # ssh-keygen -t rsa -b 2048 -C "qino@bas.ac.uk" -f ~/.ssh/id_rsa
 
+# module load jaspy
+# module load jasmin-sci
+
 # endregion
 # =============================================================================
 

@@ -33,7 +33,7 @@ plt.rcParams.update({"mathtext.fontset": "stix"})
 os.environ['CARTOPY_USER_BACKGROUNDS'] = 'data_source/bg_cartopy'
 from matplotlib.colors import ListedColormap
 # from matplotlib import font_manager as fm
-# fontprop_tnr = fm.FontProperties(fname='data_source/TimesNewRoman.ttf')
+# fontprop_tnr = fm.FontProperties(fname='bas_palaeoclim_qino/others/TimesNewRoman.ttf')
 # mpl.rcParams['font.family'] = fontprop_tnr.get_name()
 # mpl.get_backend()
 # mpl.rcParams['backend'] = 'Qt4Agg'  #
@@ -46,8 +46,6 @@ from dask.diagnostics import ProgressBar
 pbar = ProgressBar()
 pbar.register()
 from geopy import distance
-import rasterio as rio
-import rockhound as rh
 
 # add ellipse
 from scipy import linalg
