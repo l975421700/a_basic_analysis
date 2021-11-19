@@ -5,6 +5,7 @@
 
 # ssh-add -l
 # ssh-add .ssh/id_rsa
+# ssh-copy-id -i .ssh/id_rsa.pub qino@server
 ssh -A qino@login1.jasmin.ac.uk
 ssh qino@sci1.jasmin.ac.uk
 
