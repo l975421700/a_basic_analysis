@@ -53,6 +53,7 @@ mamba install -c conda-forge xesmf
 mamba install -c conda-forge proplot
 mamba install -c conda-forge cmip6_preprocessing
 mamba install -c conda-forge bottleneck
+mamba install -c conda-forge gh
 
 # clean conda installed pkgs
 # conda clean -a
