@@ -272,11 +272,14 @@ def framework_plot1(
 
 '''
 # https://www.naturalearthdata.com/downloads/
-os.environ['CARTOPY_USER_BACKGROUNDS'] = 'data_source/bg_cartopy'
 
 fig, ax = framework_plot1("global")
-ax.background_img(name='natural_earth', resolution='high')
-fig.savefig('figures/00_test/natural_earth.png', dpi=1200)
+fig.savefig('figures/00_test/trial.png', dpi=600)
+
+import os
+os.environ['CARTOPY_USER_BACKGROUNDS'] = 'bas_palaeoclim_qino/others/bg_cartopy'
+# ax.background_img(name='natural_earth', resolution='high')
+# fig.savefig('figures/00_test/natural_earth.png', dpi=1200)
 
 '''
 
@@ -287,9 +290,6 @@ fig.savefig('figures/00_test/natural_earth.png', dpi=1200)
 # =============================================================================
 # region Function to plot confidence ellipse
 # https://matplotlib.org/3.3.2/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py
-import matplotlib.pyplot as plt
-from matplotlib.patches import Ellipse
-import matplotlib.transforms as transforms
 
 def confidence_ellipse(x, y, ax, n_std=3.0, facecolor='none', **kwargs):
     """
@@ -313,6 +313,10 @@ def confidence_ellipse(x, y, ax, n_std=3.0, facecolor='none', **kwargs):
     -------
     matplotlib.patches.Ellipse
     """
+    import numpy as np
+    from matplotlib.patches import Ellipse
+    import matplotlib.transforms as transforms
+    
     if x.size != y.size:
         raise ValueError("x and y must be the same size")
     

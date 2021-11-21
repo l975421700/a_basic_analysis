@@ -10,7 +10,7 @@
 # conda env remove -n deepice
 # conda list
 
-source miniconda3/bin/activate
+source /home/users/qino/miniconda3/bin/activate
 conda activate deepice
 
 conda install -c conda-forge mamba
@@ -54,6 +54,10 @@ mamba install -c conda-forge proplot
 mamba install -c conda-forge cmip6_preprocessing
 mamba install -c conda-forge bottleneck
 mamba install -c conda-forge gh
+# gh auth login
+mamba install -c ncas -c conda-forge cf-python cf-plot udunits2
+mamba install -c conda-forge mpich esmpy
+pip install cf-view
 
 # clean conda installed pkgs
 # conda clean -a
