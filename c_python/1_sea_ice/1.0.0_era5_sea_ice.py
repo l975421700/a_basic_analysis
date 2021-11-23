@@ -832,3 +832,63 @@ ani.save(
 # endregion
 # =============================================================================
 
+
+# =============================================================================
+# region plot SH annual mean sea ice in era5
+
+era5_mon_sl_79_21_sic = xr.open_dataset(
+    'bas_palaeoclim_qino/observations/reanalysis/ERA5/mon_sl_79_present/era5_mon_sl_79_21_sic.nc')
+
+siconc = xr.concat((
+    era5_mon_sl_79_21_sic.siconc[:-2, 0, :, :],
+    era5_mon_sl_79_21_sic.siconc[-2:, 1, :, :]), dim='time')
+
+month_length = era5_mon_sl_79_21_sic.time.dt.days_in_month
+
+weights = (
+    month_length.groupby('time.year') /
+    month_length.groupby('time.year').sum()
+)
+
+np.testing.assert_allclose(weights.groupby(
+    'time.year').sum().values, np.ones(43))
+
+# Calculate the weighted average
+siconc_weighted_ann = (siconc * weights).groupby("time.year").sum(dim="time")
+
+am_siconc_weighted_ann = siconc_weighted_ann[0:-1, :, :].mean(axis=0)
+
+fig, ax = hemisphere_plot(
+    northextent=-45, sb_length=2000, sb_barheight=200,
+    figsize=np.array([8.8, 9.8]) / 2.54, fm_bottom=0.12, fm_top=0.98,)
+
+pltlevel = np.arange(0, 100.01, 0.5)
+pltticks = np.arange(0, 100.01, 20)
+
+plt_cmp = ax.pcolormesh(
+    era5_mon_sl_79_21_sic.longitude,
+    era5_mon_sl_79_21_sic.latitude[480:],
+    am_siconc_weighted_ann[480:, :] * 100,
+    norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
+    cmap=cm.get_cmap('Blues', len(pltlevel)), rasterized=True,
+    transform=ccrs.PlateCarree(),)
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, orientation="horizontal",  pad=0.08, fraction=0.07,
+    shrink=1, aspect=25, ticks=pltticks, extend='neither',
+    anchor=(0.5, 1), panchor=(0.5, 0))
+cbar.ax.set_xlabel(
+    '41 years (1979-2020) annual mean sea ice area fraction [%]\nin the ERA5 reanalysis',)
+# ax.add_feature(cfeature.LAND, zorder=2)
+fig.savefig(
+    'figures/3_sea_ice/3.0_climatology_of_sea_ice/3.0.0.6 annual mean siconc in the ERA5 reanalysis.png')
+
+'''
+'''
+# endregion
+# =============================================================================
+
+
+
+
+
+

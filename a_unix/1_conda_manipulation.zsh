@@ -58,6 +58,7 @@ mamba install -c conda-forge gh
 mamba install -c ncas -c conda-forge cf-python cf-plot udunits2
 mamba install -c conda-forge mpich esmpy
 pip install cf-view
+mamba install -c conda-forge nc-time-axis
 
 # clean conda installed pkgs
 # conda clean -a
