@@ -462,6 +462,18 @@ fig.savefig(
 # region check the annual mean siconc with function esgf_search
 
 
+esgf_siconc_hg3_ll_pi_fl = esgf_search(
+    activity_id='CMIP', table_id='SImon', variable_id='siconc',
+    experiment_id='piControl', institution_id="MOHC",
+    source_id="HadGEM3-GC31-LL", member_id="r1i1p1f1")
+
+esgf_siconc_hg3_ll_pi = xr.open_mfdataset(
+    esgf_siconc_hg3_ll_pi_fl[43:48], combine='by_coords',
+    chunks={'time': 600})
+
+am_esgf_siconc_hg3_ll_pi = esgf_siconc_hg3_ll_pi.siconc.mean(axis=0)
+
+am_esgf_siconc_hg3_ll_pi.load()
 
 
 # endregion
