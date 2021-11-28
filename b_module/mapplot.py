@@ -436,7 +436,8 @@ def hemisphere_plot(
     northextent=None, southextent=None, figsize=None, dpi=600,
     fm_left=0.12, fm_right=0.88, fm_bottom=0.08, fm_top=0.96,
     add_atlas=True, atlas_color='black', lw=0.25,
-    add_grid=True, grid_color='gray', add_grid_labels = True, output_png=None,
+    add_grid=True, grid_color='gray', add_grid_labels = True,
+    output_png=None,
     plot_scalebar=True, sb_bars=2, sb_length=1000, sb_location=(-0.13, 0),
     sb_barheight=100, sb_linewidth=0.15, sb_middle_label=False,
     ):
@@ -559,3 +560,32 @@ hemisphere_plot(
 # endregion
 # =============================================================================
 
+
+# =============================================================================
+# region functions to create a diverging color map
+
+def rb_colormap(pltlevel):
+    '''
+    ----Input
+    pltlevel: levels used for the color bar
+    
+    ----output
+    cmp_cmap: a colormap from blue to white to red, cmp_cmap.reversed()
+    '''
+    import numpy as np
+    from matplotlib import cm
+    from matplotlib.colors import ListedColormap
+    
+    cmp_top = cm.get_cmap('Blues_r', int(np.floor(len(pltlevel) / 2)))
+    cmp_bottom = cm.get_cmap('Reds', int(np.floor(len(pltlevel) / 2)))
+    
+    cmp_colors = np.vstack(
+        (cmp_top(np.linspace(0, 1, int(np.floor(len(pltlevel) / 2)))),
+         [1, 1, 1, 1],
+         cmp_bottom(np.linspace(0, 1, int(np.floor(len(pltlevel) / 2))))))
+    cmp_cmap = ListedColormap(cmp_colors, name='RedsBlues_r')
+    
+    return(cmp_cmap)
+
+# endregion
+# =============================================================================

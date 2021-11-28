@@ -59,18 +59,22 @@ mamba install -c ncas -c conda-forge cf-python cf-plot udunits2
 mamba install -c conda-forge mpich esmpy
 pip install cf-view
 mamba install -c conda-forge nc-time-axis
+mamba install -c conda-forge jupyter_contrib_nbextensions
+mamba install -c conda-forge notebook
+mamba install -c conda-forge rasterio
+mamba install -c conda-forge rockhound
+mamba install -c conda-forge satpy
+mamba install -c conda-forge esmvaltool
+
 
 # clean conda installed pkgs
 # conda clean -a
 
 '''
-# need to change or downgrade other package
-mamba install -c conda-forge satpy
-mamba install -c conda-forge rockhound
-mamba install -c conda-forge rasterio
-mamba install -c conda-forge basemap
+# jupyter contrib nbextension install --user
+# jupyter nbextension enable spellchecker/main
+# jupyter nbextension enable codefolding/main
 
-pip install satpy
 pip install igra
 pip install siphon
 pip install fortran-language-server
@@ -85,11 +89,6 @@ pip install fortran-language-server
 mamba install -c conda-forge opencv
 mamba install -c conda-forge python-geotiepoints
 mamba install -c conda-forge urllib3
-
-mamba install -c conda-forge esmvaltool
-# esmvaltool --help
-# mamba install -c conda-forge esmvaltool-python esmvaltool-ncl
-# mamba install -c conda-forge iris
 
 '''
 # endregion
