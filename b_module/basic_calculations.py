@@ -15,7 +15,7 @@ def mon_sea_ann_average(ds, average):
         month_length.groupby(average).sum()
     )
     
-    ds_weighted = (ds * weights).groupby(average).sum(dim="time")
+    ds_weighted = (ds * weights).groupby(average).sum(dim="time", skipna = True)
     
     # Calculate the weighted average
     return ds_weighted

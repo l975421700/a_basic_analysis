@@ -65,6 +65,8 @@ mamba install -c conda-forge rasterio
 mamba install -c conda-forge rockhound
 mamba install -c conda-forge satpy
 mamba install -c conda-forge esmvaltool
+mamba install -c conda-forge rioxarray
+
 
 
 # clean conda installed pkgs

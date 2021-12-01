@@ -153,7 +153,6 @@ middle_label=scalebar_elements['middle_label']
 
 def framework_plot1(
     which_area,
-    xlabel = None,
     output_png=None,
     dpi=600,
     figsize=None,
@@ -433,6 +432,7 @@ middle_label=scalebar_elements['middle_label']
 
 
 def hemisphere_plot(
+    prescribed_ax=False, ax = None,
     northextent=None, southextent=None, figsize=None, dpi=600,
     fm_left=0.12, fm_right=0.88, fm_bottom=0.08, fm_top=0.96,
     add_atlas=True, atlas_color='black', lw=0.25,
@@ -461,6 +461,8 @@ def hemisphere_plot(
     import matplotlib as mpl
     import matplotlib.path as mpath
     mpl.rc('font', family='Times New Roman', size=10)
+    import warnings
+    warnings.filterwarnings('ignore')
     
     if (figsize is None):
         figsize = np.array([8.8, 9.3]) / 2.54
@@ -480,8 +482,12 @@ def hemisphere_plot(
     
     transform = ccrs.PlateCarree()
     
-    fig, ax = plt.subplots(
-        1, 1, figsize=figsize, subplot_kw={'projection': projections}, dpi=dpi)
+    if (prescribed_ax is False):
+        fig, ax = plt.subplots(
+            1, 1, figsize=figsize, subplot_kw={'projection': projections},
+            dpi=dpi)
+    else:
+        ax = ax
     
     ax.set_extent(extent, crs=transform)
     
@@ -513,8 +519,9 @@ def hemisphere_plot(
     
     plt.setp(ax.spines.values(), linewidth=lw*0.8)
     
-    fig.subplots_adjust(
-        left=fm_left, right=fm_right, bottom=fm_bottom, top=fm_top)
+    if (prescribed_ax is False):
+        fig.subplots_adjust(
+            left=fm_left, right=fm_right, bottom=fm_bottom, top=fm_top)
     
     if plot_scalebar:
         polar_scale_bar(
@@ -528,25 +535,27 @@ def hemisphere_plot(
     
     if not (output_png is None):
         fig.savefig(output_png)
-    else:
+    elif (prescribed_ax is False):
         return fig, ax
+    else:
+        return ax
 
 '''
-hemisphere_plot(northextent=-60, output_png='figures/00_test/trial00',)
+hemisphere_plot(northextent=-60, output_png='figures/0_test/trial.png',)
 hemisphere_plot(
     northextent=-30, sb_length=2000, sb_barheight=200,
-    output_png='figures/00_test/trial01',)
+    output_png='figures/0_test/trial01',)
 hemisphere_plot(
     northextent=0, sb_length=3000, sb_barheight=300,
-    output_png='figures/00_test/trial02',)
+    output_png='figures/0_test/trial02',)
 
-hemisphere_plot(southextent=60, output_png='figures/00_test/trial03',)
+hemisphere_plot(southextent=60, output_png='figures/0_test/trial03',)
 hemisphere_plot(
     southextent=30, sb_length=2000, sb_barheight=200,
-    output_png='figures/00_test/trial04',)
+    output_png='figures/0_test/trial04',)
 hemisphere_plot(
     southextent=0, sb_length=3000, sb_barheight=300,
-    output_png='figures/00_test/trial05',)
+    output_png='figures/0_test/trial05',)
 
 
 # northextent=None, southextent=None, figsize=None, dpi=600,
