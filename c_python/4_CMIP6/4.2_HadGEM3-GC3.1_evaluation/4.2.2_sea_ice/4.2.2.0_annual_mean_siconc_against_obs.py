@@ -13,6 +13,9 @@ import numpy as np
 import xarray as xr
 import dask
 dask.config.set({"array.slicing.split_large_chunks": False})
+from dask.diagnostics import ProgressBar
+pbar = ProgressBar()
+pbar.register()
 from scipy import stats
 import xesmf as xe
 import pandas as pd
@@ -120,6 +123,127 @@ fig.savefig(
 
 # =============================================================================
 # =============================================================================
+# region Don't run Annual mean siconc in AWI-CM-1-1-MR, historical, r1i1p1f1
+
+# Import data
+top_dir = '/badc/cmip6/data/CMIP6/'
+mip = 'CMIP/'
+institute = 'AWI/'
+source = 'AWI-CM-1-1-MR/'
+experiment = 'historical/'
+member = 'r1i1p1f1/'
+table = 'SIday/'
+variable = 'siconc/'
+grid = 'gn/'
+version = 'v20181218/'
+
+siconc_awc_mr_hi_r1_fl = np.array(sorted(glob.glob(
+    top_dir + mip + institute + source + experiment + member +
+    table + variable + grid + version + '*.nc',
+)))
+
+siconc_awc_mr_hi_r1 = xr.open_mfdataset(
+    siconc_awc_mr_hi_r1_fl, data_vars='minimal',
+    coords='minimal', compat='override',
+)
+
+am_siconc_awc_mr_hi_r1_org = siconc_awc_mr_hi_r1.copy()
+am_siconc_awc_mr_hi_r1_org['siconc'] = am_siconc_awc_mr_hi_r1_org[
+    'siconc'][0, :]
+am_siconc_awc_mr_hi_r1_org['siconc'][:] = \
+    siconc_awc_mr_hi_r1.siconc.sel(time=slice(
+        '1979-01-01', '2014-12-31')).mean(axis=0).values
+
+am_siconc_awc_mr_hi_r1_80_org = siconc_awc_mr_hi_r1.copy()
+am_siconc_awc_mr_hi_r1_80_org['siconc'] = am_siconc_awc_mr_hi_r1_80_org[
+    'siconc'][0, :]
+am_siconc_awc_mr_hi_r1_80_org['siconc'][:] = \
+    siconc_awc_mr_hi_r1.siconc.sel(time=slice(
+        '1980-01-01', '2014-12-31')).mean(axis=0).values
+
+
+am_siconc_awc_mr_hi_r1_org.to_netcdf(
+    'bas_palaeoclim_qino/scratch/cmip6/historical/siconc/am_siconc_awc_mr_hi_r1_org.nc')
+am_siconc_awc_mr_hi_r1_80_org.to_netcdf(
+    'bas_palaeoclim_qino/scratch/cmip6/historical/siconc/am_siconc_awc_mr_hi_r1_80_org.nc')
+
+
+'''
+#### cdo commands
+cdo -P 4 -remapcon,global_1 bas_palaeoclim_qino/scratch/cmip6/historical/siconc/am_siconc_awc_mr_hi_r1_org.nc bas_palaeoclim_qino/scratch/cmip6/historical/siconc/am_siconc_awc_mr_hi_r1.nc
+cdo -P 4 -remapcon,global_1 bas_palaeoclim_qino/scratch/cmip6/historical/siconc/am_siconc_awc_mr_hi_r1_80_org.nc bas_palaeoclim_qino/scratch/cmip6/historical/siconc/am_siconc_awc_mr_hi_r1_80.nc
+
+# global_2: lonlat (180x90) grid
+# global_1: lonlat (360x180) grid
+
+
+#### slow
+from cdo import Cdo
+cdo = Cdo()
+cdo.remapcon(
+    'r360x180',
+    input='/badc/cmip6/data/CMIP6/CMIP/AWI/AWI-CM-1-1-MR/historical/r1i1p1f1/SIday/siconc/gn/v20181218/siconc_SIday_AWI-CM-1-1-MR_historical_r1i1p1f1_gn_20110101-20141231.nc',
+    output='bas_palaeoclim_qino/scratch/cmip6/historical/siconc/siconc_SIday_AWI-CM-1-1-MR_historical_r1i1p1f1_gn_20110101-20141231_cdo_regrid.nc')
+
+stats.describe(am_siconc_awc_mr_hi_r1.siconc, axis=None, nan_policy='omit')
+stats.describe(am_siconc_awc_mr_hi_r1_80.siconc, axis=None, nan_policy='omit')
+'''
+# endregion
+# =============================================================================
+
+
+# =============================================================================
+# region Annual mean siconc in AWI-CM-1-1-MR, historical, r1i1p1f1
+
+am_siconc_awc_mr_hi_r1 = xr.open_dataset(
+    'bas_palaeoclim_qino/scratch/cmip6/historical/siconc/am_siconc_awc_mr_hi_r1.nc'
+)
+am_siconc_awc_mr_hi_r1_80 = xr.open_dataset(
+    'bas_palaeoclim_qino/scratch/cmip6/historical/siconc/am_siconc_awc_mr_hi_r1_80.nc'
+)
+
+# endregion
+# =============================================================================
+
+
+# =============================================================================
+# region plot Annual mean siconc in AWI-CM-1-1-MR, historical, r1i1p1f1
+
+
+pltlevel = np.arange(0, 100.01, 0.5)
+pltticks = np.arange(0, 100.01, 20)
+
+fig, ax = hemisphere_plot(
+    northextent=-45, sb_length=2000, sb_barheight=200,
+    figsize=np.array([8.8, 9.8]) / 2.54, fm_top=0.94, )
+
+plt_cmp = ax.pcolormesh(
+    am_siconc_awc_mr_hi_r1.lon,
+    am_siconc_awc_mr_hi_r1.lat,
+    am_siconc_awc_mr_hi_r1.siconc,
+    norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
+    cmap=cm.get_cmap('Blues', len(pltlevel)), rasterized=True,
+    transform=ccrs.PlateCarree(),)
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, orientation="horizontal",  pad=0.08, fraction=0.12,
+    shrink=1, aspect=40, ticks=pltticks, extend='neither',
+    anchor=(0.5, 1), panchor=(0.5, 0))
+cbar.ax.set_xlabel(
+    'Annual mean sea ice area fraction [$\%$]\nAWI-CM-1-1-MR, historical, r1i1p1f1, 1979-2014',
+    linespacing=1.5,)
+
+fig.savefig(
+    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.2_siconc/4.0.2.3_SH annual siconc AWI-CM-1-1-MR, historical, r1i1p1f1 1979_2014.png')
+
+
+'''
+'''
+# endregion
+# =============================================================================
+
+
+# =============================================================================
+# =============================================================================
 # region Annual mean siconc in HadISST
 
 siconc_hadisst = xr.open_dataset(
@@ -176,74 +300,74 @@ fig.savefig(
 # =============================================================================
 # region Don't run Annual mean siconc in NSIDC -- convert tif to nc
 
-siconc_nsidc_fl = np.array(sorted(glob.glob(
-    'bas_palaeoclim_qino/observations/products/NSIDC/Sea_Ice_Index/sh_monthly_geotiff/S_*_concentration_v3.0.tif',
-)))
+# siconc_nsidc_fl = np.array(sorted(glob.glob(
+#     'bas_palaeoclim_qino/observations/products/NSIDC/Sea_Ice_Index/sh_monthly_geotiff/S_*_concentration_v3.0.tif',
+# )))
 
-siconc_nsidc_197811 = xr.open_rasterio(siconc_nsidc_fl[0])
+# siconc_nsidc_197811 = xr.open_rasterio(siconc_nsidc_fl[0])
 
-time = pd.date_range('1978-11', '2021-11', freq = '1M',)
+# time = pd.date_range('1978-11', '2021-11', freq = '1M',)
 
-siconc_nsidc_nc = xr.Dataset(
-    {"siconc": (
-        ("time", "y", "x"), np.zeros(
-            (len(time), len(siconc_nsidc_197811.y),
-             len(siconc_nsidc_197811.x)))),
-     },
-    coords={
-        "time": time,
-        "y": siconc_nsidc_197811.y,
-        "x": siconc_nsidc_197811.x,
-    },
-    attrs=siconc_nsidc_197811.attrs,
-)
+# siconc_nsidc_nc = xr.Dataset(
+#     {"siconc": (
+#         ("time", "y", "x"), np.zeros(
+#             (len(time), len(siconc_nsidc_197811.y),
+#              len(siconc_nsidc_197811.x)))),
+#      },
+#     coords={
+#         "time": time,
+#         "y": siconc_nsidc_197811.y,
+#         "x": siconc_nsidc_197811.x,
+#     },
+#     attrs=siconc_nsidc_197811.attrs,
+# )
 
-for i in range(len(siconc_nsidc_fl)):
-    # i = 30
-    siconc_nsidc_tif = xr.open_rasterio(siconc_nsidc_fl[i])
-    # stats.describe(siconc_nsidc_tif.values, axis =None)
+# for i in range(len(siconc_nsidc_fl)):
+#     # i = 30
+#     siconc_nsidc_tif = xr.open_rasterio(siconc_nsidc_fl[i])
+#     # stats.describe(siconc_nsidc_tif.values, axis =None)
     
-    # clean the data
-    siconc_nsidc_tif_values = siconc_nsidc_tif.values.copy()
-    siconc_nsidc_tif_values[siconc_nsidc_tif_values == 2510] = 0
-    siconc_nsidc_tif_values[siconc_nsidc_tif_values == 2530] = 0
-    siconc_nsidc_tif_values[siconc_nsidc_tif_values == 2540] = 0
-    siconc_nsidc_tif_values[siconc_nsidc_tif_values == 2550] = 0
-    siconc_nsidc_tif_values = siconc_nsidc_tif_values/10
+#     # clean the data
+#     siconc_nsidc_tif_values = siconc_nsidc_tif.values.copy()
+#     siconc_nsidc_tif_values[siconc_nsidc_tif_values == 2510] = 0
+#     siconc_nsidc_tif_values[siconc_nsidc_tif_values == 2530] = 0
+#     siconc_nsidc_tif_values[siconc_nsidc_tif_values == 2540] = 0
+#     siconc_nsidc_tif_values[siconc_nsidc_tif_values == 2550] = 0
+#     siconc_nsidc_tif_values = siconc_nsidc_tif_values/10
     
-    # time: siconc_nsidc_fl[i][83:89]
+#     # time: siconc_nsidc_fl[i][83:89]
     
-    tif_file_date = datetime.strptime(siconc_nsidc_fl[i][83:89], '%Y%m')
+#     tif_file_date = datetime.strptime(siconc_nsidc_fl[i][83:89], '%Y%m')
     
-    siconc_nsidc_nc.siconc[
-        np.where(
-            (pd.DatetimeIndex(siconc_nsidc_nc.time.values).month == tif_file_date.month) &
-            (pd.DatetimeIndex(siconc_nsidc_nc.time.values).year == tif_file_date.year))[0], :, :
-    ] = siconc_nsidc_tif_values
-    # stats.describe(siconc_nsidc_tif_values, axis =None)
-    # stats.describe(siconc_nsidc_nc.siconc[
-    #     np.where(
-    #         (pd.DatetimeIndex(siconc_nsidc_nc.time.values).month == tif_file_date.month) &
-    #         (pd.DatetimeIndex(siconc_nsidc_nc.time.values).year == tif_file_date.year))[0], :, :
-    # ], axis=None)
+#     siconc_nsidc_nc.siconc[
+#         np.where(
+#             (pd.DatetimeIndex(siconc_nsidc_nc.time.values).month == tif_file_date.month) &
+#             (pd.DatetimeIndex(siconc_nsidc_nc.time.values).year == tif_file_date.year))[0], :, :
+#     ] = siconc_nsidc_tif_values
+#     # stats.describe(siconc_nsidc_tif_values, axis =None)
+#     # stats.describe(siconc_nsidc_nc.siconc[
+#     #     np.where(
+#     #         (pd.DatetimeIndex(siconc_nsidc_nc.time.values).month == tif_file_date.month) &
+#     #         (pd.DatetimeIndex(siconc_nsidc_nc.time.values).year == tif_file_date.year))[0], :, :
+#     # ], axis=None)
     
-    print(str(i) + '/' + str(len(siconc_nsidc_fl)))
+#     print(str(i) + '/' + str(len(siconc_nsidc_fl)))
 
-# Set the value of two month with missing values as nan
-siconc_nsidc_nc.siconc[
-    np.where(
-        (pd.DatetimeIndex(siconc_nsidc_nc.time.values).month == 12) &
-        (pd.DatetimeIndex(siconc_nsidc_nc.time.values).year == 1987))[0], :, :
-] = np.nan
-siconc_nsidc_nc.siconc[
-    np.where(
-        (pd.DatetimeIndex(siconc_nsidc_nc.time.values).month == 1) &
-        (pd.DatetimeIndex(siconc_nsidc_nc.time.values).year == 1988))[0], :, :
-] = np.nan
+# # Set the value of two month with missing values as nan
+# siconc_nsidc_nc.siconc[
+#     np.where(
+#         (pd.DatetimeIndex(siconc_nsidc_nc.time.values).month == 12) &
+#         (pd.DatetimeIndex(siconc_nsidc_nc.time.values).year == 1987))[0], :, :
+# ] = np.nan
+# siconc_nsidc_nc.siconc[
+#     np.where(
+#         (pd.DatetimeIndex(siconc_nsidc_nc.time.values).month == 1) &
+#         (pd.DatetimeIndex(siconc_nsidc_nc.time.values).year == 1988))[0], :, :
+# ] = np.nan
 
-siconc_nsidc_nc.to_netcdf(
-    'bas_palaeoclim_qino/observations/products/NSIDC/Sea_Ice_Index/sh_monthly_geotiff/siconc_nsidc_nc_197811_202110.nc'
-)
+# siconc_nsidc_nc.to_netcdf(
+#     'bas_palaeoclim_qino/observations/products/NSIDC/Sea_Ice_Index/sh_monthly_geotiff/siconc_nsidc_nc_197811_202110.nc'
+# )
 
 
 '''
@@ -381,4 +505,9 @@ fig.savefig(
 # =============================================================================
 
 
+# =============================================================================
+# =============================================================================
+# region
 
+# endregion
+# =============================================================================

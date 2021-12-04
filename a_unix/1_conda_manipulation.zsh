@@ -66,13 +66,15 @@ mamba install -c conda-forge rockhound
 mamba install -c conda-forge satpy
 mamba install -c conda-forge esmvaltool
 mamba install -c conda-forge rioxarray
-
-
+mamba install -c conda-forge pyfesom2
 
 # clean conda installed pkgs
 # conda clean -a
 
 '''
+conda install basemap joblib seawater click
+
+
 # jupyter contrib nbextension install --user
 # jupyter nbextension enable spellchecker/main
 # jupyter nbextension enable codefolding/main

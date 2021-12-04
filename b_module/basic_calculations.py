@@ -57,3 +57,30 @@ pre_ann_average1 = mon_sea_ann_average(pre, 'time.year')
 '''
 # endregion
 # =============================================================================
+
+
+# =============================================================================
+# region functions to regrid a dataset to another grid
+
+def regrid(ds_in, ds_out=None, grid_spacing=1, method='bilinear'):
+    '''
+    ds_in: original xarray.DataArray
+    ds_out: xarray.DataArray with target grid, default None
+    grid_spacing: 0.25
+    '''
+    
+    import xesmf as xe
+    
+    ds_in_copy = ds_in.copy()
+    
+    if (ds_out is None):
+        ds_out = xe.util.grid_global(grid_spacing, grid_spacing)
+    
+    regridder = xe.Regridder(ds_in_copy, ds_out, method, periodic=True)
+    return regridder(ds_in_copy)
+
+'''
+'''
+
+# endregion
+# =============================================================================
