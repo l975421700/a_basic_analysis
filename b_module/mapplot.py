@@ -585,13 +585,15 @@ def rb_colormap(pltlevel):
     from matplotlib import cm
     from matplotlib.colors import ListedColormap
     
-    cmp_top = cm.get_cmap('Blues_r', int(np.floor(len(pltlevel) / 2)))
-    cmp_bottom = cm.get_cmap('Reds', int(np.floor(len(pltlevel) / 2)))
+    cmp_top = cm.get_cmap('Blues_r', int(np.floor(len(pltlevel) / 2)) - 1)
+    cmp_bottom = cm.get_cmap('Reds', int(np.floor(len(pltlevel) / 2)) - 1)
     
     cmp_colors = np.vstack(
-        (cmp_top(np.linspace(0, 1, int(np.floor(len(pltlevel) / 2)))),
+        (cmp_top(np.linspace(0, 1, int(np.floor(len(pltlevel) / 2)) - 1)),
          [1, 1, 1, 1],
-         cmp_bottom(np.linspace(0, 1, int(np.floor(len(pltlevel) / 2))))))
+         [1, 1, 1, 1],
+         [1, 1, 1, 1],
+         cmp_bottom(np.linspace(0, 1, int(np.floor(len(pltlevel) / 2)) - 1))))
     cmp_cmap = ListedColormap(cmp_colors, name='RedsBlues_r')
     
     return(cmp_cmap)

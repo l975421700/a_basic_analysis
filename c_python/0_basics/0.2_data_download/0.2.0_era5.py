@@ -180,6 +180,134 @@ c.retrieve(
     'bas_palaeoclim_qino/observations/reanalysis/ERA5/mon_sl_79_present/era5_mon_sl_20_gph.nc')
 
 
+# file: era5_mon_sl_79_21_wind.nc
+# Monthly mean 10m u, 10m v, 10m wind speed from 1979 to 2021
+# retrieval time: 2021-12-04
+c.retrieve(
+    'reanalysis-era5-single-levels-monthly-means',
+    {
+        'format': 'netcdf',
+        'product_type': 'monthly_averaged_reanalysis',
+        'variable': [
+            '10m_u_component_of_wind', '10m_v_component_of_wind', '10m_wind_speed',
+        ],
+        'year': [
+            '1979', '1980', '1981',
+            '1982', '1983', '1984',
+            '1985', '1986', '1987',
+            '1988', '1989', '1990',
+            '1991', '1992', '1993',
+            '1994', '1995', '1996',
+            '1997', '1998', '1999',
+            '2000', '2001', '2002',
+            '2003', '2004', '2005',
+            '2006', '2007', '2008',
+            '2009', '2010', '2011',
+            '2012', '2013', '2014',
+            '2015', '2016', '2017',
+            '2018', '2019', '2020',
+            '2021',
+        ],
+        'month': [
+            '01', '02', '03',
+            '04', '05', '06',
+            '07', '08', '09',
+            '10', '11', '12',
+        ],
+        'time': '00:00',
+    },
+    'bas_palaeoclim_qino/observations/reanalysis/ERA5/mon_sl_79_present/era5_mon_sl_79_21_10mwind.nc')
+
+
+# file: era5_mon_sl_79_21_sst.nc
+# Monthly mean Sea surface temperature from 1979 to 2021
+# retrieval time: 2021-12-04
+c.retrieve(
+    'reanalysis-era5-single-levels-monthly-means',
+    {
+        'format': 'netcdf',
+        'product_type': 'monthly_averaged_reanalysis',
+        'variable': 'sea_surface_temperature',
+        'year': [
+            '1979', '1980', '1981',
+            '1982', '1983', '1984',
+            '1985', '1986', '1987',
+            '1988', '1989', '1990',
+            '1991', '1992', '1993',
+            '1994', '1995', '1996',
+            '1997', '1998', '1999',
+            '2000', '2001', '2002',
+            '2003', '2004', '2005',
+            '2006', '2007', '2008',
+            '2009', '2010', '2011',
+            '2012', '2013', '2014',
+            '2015', '2016', '2017',
+            '2018', '2019', '2020',
+            '2021',
+        ],
+        'month': [
+            '01', '02', '03',
+            '04', '05', '06',
+            '07', '08', '09',
+            '10', '11', '12',
+        ],
+        'time': '00:00',
+    },
+    'bas_palaeoclim_qino/observations/reanalysis/ERA5/mon_sl_79_present/era5_mon_sl_79_21_sst.nc')
+
+
+# file: era5_mon_sl_79_21_evp.nc
+# Monthly mean Evaporation from 1979 to 2021
+# retrieval time: 2021-12-04
+c.retrieve(
+    'reanalysis-era5-single-levels-monthly-means',
+    {
+        'format': 'netcdf',
+        'product_type': 'monthly_averaged_reanalysis',
+        'variable': 'evaporation',
+        'year': [
+            '1979', '1980', '1981',
+            '1982', '1983', '1984',
+            '1985', '1986', '1987',
+            '1988', '1989', '1990',
+            '1991', '1992', '1993',
+            '1994', '1995', '1996',
+            '1997', '1998', '1999',
+            '2000', '2001', '2002',
+            '2003', '2004', '2005',
+            '2006', '2007', '2008',
+            '2009', '2010', '2011',
+            '2012', '2013', '2014',
+            '2015', '2016', '2017',
+            '2018', '2019', '2020',
+            '2021',
+        ],
+        'month': [
+            '01', '02', '03',
+            '04', '05', '06',
+            '07', '08', '09',
+            '10', '11', '12',
+        ],
+        'time': '00:00',
+    },
+    'bas_palaeoclim_qino/observations/reanalysis/ERA5/mon_sl_79_present/era5_mon_sl_79_21_evp.nc')
+
+
+# file: era5_mon_sl_79_21_lsmask.nc
+# Land Sea Mask on 2020-01
+# retrieval time: 2021-12-04
+c.retrieve(
+    'reanalysis-era5-single-levels-monthly-means',
+    {
+        'format': 'netcdf',
+        'product_type': 'monthly_averaged_reanalysis',
+        'variable': 'land_sea_mask',
+        'year': '2020',
+        'month': '01',
+        'time': '00:00',
+    },
+    'bas_palaeoclim_qino/observations/reanalysis/ERA5/mon_sl_79_present/era5_mon_sl_79_21_lsmask.nc')
+
 # endregion
 # =============================================================================
 
