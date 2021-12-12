@@ -439,82 +439,81 @@ stats.describe(dif_am_hg3_ll_hi_r1_hadisst, axis=None, nan_policy='omit')
 # =============================================================================
 # region Don't run Annual mean siconc in NSIDC -- convert tif to nc
 
-# siconc_nsidc_fl = np.array(sorted(glob.glob(
-#     'bas_palaeoclim_qino/observations/products/NSIDC/Sea_Ice_Index/sh_monthly_geotiff/S_*_concentration_v3.0.tif',
-# )))
+siconc_nsidc_fl = np.array(sorted(glob.glob(
+    'bas_palaeoclim_qino/observations/products/NSIDC/Sea_Ice_Index/sh_monthly_geotiff/S_*_concentration_v3.0.tif',
+)))
 
-# siconc_nsidc_197811 = xr.open_rasterio(siconc_nsidc_fl[0])
+siconc_nsidc_197811 = xr.open_rasterio(siconc_nsidc_fl[0])
 
-# time = pd.date_range('1978-11', '2021-11', freq = '1M',)
+time = pd.date_range('1978-11', '2021-11', freq = '1M',)
 
-# siconc_nsidc_nc = xr.Dataset(
-#     {"siconc": (
-#         ("time", "y", "x"), np.zeros(
-#             (len(time), len(siconc_nsidc_197811.y),
-#              len(siconc_nsidc_197811.x)))),
-#      },
-#     coords={
-#         "time": time,
-#         "y": siconc_nsidc_197811.y,
-#         "x": siconc_nsidc_197811.x,
-#     },
-#     attrs=siconc_nsidc_197811.attrs,
-# )
+siconc_nsidc_nc = xr.Dataset(
+    {"siconc": (
+        ("time", "y", "x"), np.zeros(
+            (len(time), len(siconc_nsidc_197811.y),
+             len(siconc_nsidc_197811.x)))),
+     },
+    coords={
+        "time": time,
+        "y": siconc_nsidc_197811.y,
+        "x": siconc_nsidc_197811.x,
+    },
+    attrs=siconc_nsidc_197811.attrs,
+)
 
-# for i in range(len(siconc_nsidc_fl)):
-#     # i = 30
-#     siconc_nsidc_tif = xr.open_rasterio(siconc_nsidc_fl[i])
-#     # stats.describe(siconc_nsidc_tif.values, axis =None)
+for i in range(len(siconc_nsidc_fl)):
+    # i = 30
+    siconc_nsidc_tif = xr.open_rasterio(siconc_nsidc_fl[i])
+    # stats.describe(siconc_nsidc_tif.values, axis =None)
     
-#     # clean the data
-#     siconc_nsidc_tif_values = siconc_nsidc_tif.values.copy()
-#     siconc_nsidc_tif_values[siconc_nsidc_tif_values == 2510] = 0
-#     siconc_nsidc_tif_values[siconc_nsidc_tif_values == 2530] = 0
-#     siconc_nsidc_tif_values[siconc_nsidc_tif_values == 2540] = 0
-#     siconc_nsidc_tif_values[siconc_nsidc_tif_values == 2550] = 0
-#     siconc_nsidc_tif_values = siconc_nsidc_tif_values/10
+    # clean the data
+    siconc_nsidc_tif_values = siconc_nsidc_tif.values.copy()
+    siconc_nsidc_tif_values[siconc_nsidc_tif_values == 2510] = 0
+    siconc_nsidc_tif_values[siconc_nsidc_tif_values == 2530] = 0
+    siconc_nsidc_tif_values[siconc_nsidc_tif_values == 2540] = 0
+    siconc_nsidc_tif_values[siconc_nsidc_tif_values == 2550] = 0
+    siconc_nsidc_tif_values = siconc_nsidc_tif_values/10
     
-#     # time: siconc_nsidc_fl[i][83:89]
+    # time: siconc_nsidc_fl[i][83:89]
     
-#     tif_file_date = datetime.strptime(siconc_nsidc_fl[i][83:89], '%Y%m')
+    tif_file_date = datetime.strptime(siconc_nsidc_fl[i][83:89], '%Y%m')
     
-#     siconc_nsidc_nc.siconc[
-#         np.where(
-#             (pd.DatetimeIndex(siconc_nsidc_nc.time.values).month == tif_file_date.month) &
-#             (pd.DatetimeIndex(siconc_nsidc_nc.time.values).year == tif_file_date.year))[0], :, :
-#     ] = siconc_nsidc_tif_values
-#     # stats.describe(siconc_nsidc_tif_values, axis =None)
-#     # stats.describe(siconc_nsidc_nc.siconc[
-#     #     np.where(
-#     #         (pd.DatetimeIndex(siconc_nsidc_nc.time.values).month == tif_file_date.month) &
-#     #         (pd.DatetimeIndex(siconc_nsidc_nc.time.values).year == tif_file_date.year))[0], :, :
-#     # ], axis=None)
+    siconc_nsidc_nc.siconc[
+        np.where(
+            (pd.DatetimeIndex(siconc_nsidc_nc.time.values).month == tif_file_date.month) &
+            (pd.DatetimeIndex(siconc_nsidc_nc.time.values).year == tif_file_date.year))[0], :, :
+    ] = siconc_nsidc_tif_values
+    # stats.describe(siconc_nsidc_tif_values, axis =None)
+    # stats.describe(siconc_nsidc_nc.siconc[
+    #     np.where(
+    #         (pd.DatetimeIndex(siconc_nsidc_nc.time.values).month == tif_file_date.month) &
+    #         (pd.DatetimeIndex(siconc_nsidc_nc.time.values).year == tif_file_date.year))[0], :, :
+    # ], axis=None)
     
-#     print(str(i) + '/' + str(len(siconc_nsidc_fl)))
+    print(str(i) + '/' + str(len(siconc_nsidc_fl)))
 
-# # Set the value of two month with missing values as nan
-# siconc_nsidc_nc.siconc[
-#     np.where(
-#         (pd.DatetimeIndex(siconc_nsidc_nc.time.values).month == 12) &
-#         (pd.DatetimeIndex(siconc_nsidc_nc.time.values).year == 1987))[0], :, :
-# ] = np.nan
-# siconc_nsidc_nc.siconc[
-#     np.where(
-#         (pd.DatetimeIndex(siconc_nsidc_nc.time.values).month == 1) &
-#         (pd.DatetimeIndex(siconc_nsidc_nc.time.values).year == 1988))[0], :, :
-# ] = np.nan
+# Set the value of two month with missing values as nan
+siconc_nsidc_nc.siconc[
+    np.where(
+        (pd.DatetimeIndex(siconc_nsidc_nc.time.values).month == 12) &
+        (pd.DatetimeIndex(siconc_nsidc_nc.time.values).year == 1987))[0], :, :
+] = np.nan
+siconc_nsidc_nc.siconc[
+    np.where(
+        (pd.DatetimeIndex(siconc_nsidc_nc.time.values).month == 1) &
+        (pd.DatetimeIndex(siconc_nsidc_nc.time.values).year == 1988))[0], :, :
+] = np.nan
 
-# siconc_nsidc_nc.to_netcdf(
-#     'bas_palaeoclim_qino/observations/products/NSIDC/Sea_Ice_Index/sh_monthly_geotiff/siconc_nsidc_nc_197811_202110.nc'
-# )
+siconc_nsidc_nc.to_netcdf(
+    'bas_palaeoclim_qino/observations/products/NSIDC/Sea_Ice_Index/sh_monthly_geotiff/siconc_nsidc_nc_197811_202110.nc'
+)
 
 
 '''
-#### cdo commands
-# cdo -P 4 -remapcon,global_1 bas_palaeoclim_qino/observations/products/NSIDC/Sea_Ice_Index/sh_monthly_geotiff/siconc_nsidc_nc_197811_202110.nc bas_palaeoclim_qino/observations/products/NSIDC/Sea_Ice_Index/sh_monthly_geotiff/siconc_nsidc_nc_197811_202110_cdo_regridded.nc
-
-cdo -f nc remapbil,global_1 bas_palaeoclim_qino/observations/products/NSIDC/Sea_Ice_Index/sh_monthly_geotiff/siconc_nsidc_nc_197811_202110.nc bas_palaeoclim_qino/observations/products/NSIDC/Sea_Ice_Index/sh_monthly_geotiff/siconc_nsidc_nc_197811_202110_cdo_regridded.nc
-
+https://stackoverflow.com/questions/56851980/how-to-project-x-y-coordinates-to-lat-lon-in-netcdf-file
+#### gdalwarp commands does not work
+#  -to SRC_METHOD=NO_GEOTRANSFORM  -r bilinear
+# gdalwarp -overwrite -to SRC_METHOD=NO_GEOTRANSFORM -t_srs EPSG:4326 bas_palaeoclim_qino/observations/products/NSIDC/Sea_Ice_Index/sh_monthly_geotiff/siconc_nsidc_nc_197811_202110.nc bas_palaeoclim_qino/observations/products/NSIDC/Sea_Ice_Index/sh_monthly_geotiff/siconc_nsidc_nc_197811_202110_gdal_reformat.nc
 
 # No data on 1987.12 and 1988.1
 
@@ -556,15 +555,68 @@ np.isnan(siconc_nsidc_nc.siconc[np.where(
 
 
 # =============================================================================
-# =============================================================================
-# region Annual mean siconc in NSIDC
+# region Don't run Annual mean siconc in NSIDC -- transform xy to lonlat
+
+from pyproj import Proj, transform
 
 siconc_nsidc_nc = xr.open_dataset(
     'bas_palaeoclim_qino/observations/products/NSIDC/Sea_Ice_Index/sh_monthly_geotiff/siconc_nsidc_nc_197811_202110.nc'
 )
 
+x2d, y2d = np.meshgrid(siconc_nsidc_nc.x.values, siconc_nsidc_nc.y.values)
+lon, lat = transform(Proj(init='epsg:3976'), Proj(init='epsg:4326'), x2d, y2d)
+
+
+siconc_nsidc = xr.Dataset(
+    {"siconc": (("time", "i", "j"), siconc_nsidc_nc.siconc.values),
+     'lon': (("i", "j"), lon),
+     'lat': (("i", "j"), lat),
+     },
+    coords={
+        "time": siconc_nsidc_nc.time.values,
+        "i": np.arange(0, len(siconc_nsidc_nc.y)),
+        "j": np.arange(0, len(siconc_nsidc_nc.x)),
+    },
+)
+
+siconc_nsidc.to_netcdf(
+    'bas_palaeoclim_qino/observations/products/NSIDC/Sea_Ice_Index/sh_monthly_geotiff/siconc_nsidc_197811_202110.nc'
+)
+
+
+'''
+# check
+siconc_nsidc_nc = xr.open_dataset(
+    'bas_palaeoclim_qino/observations/products/NSIDC/Sea_Ice_Index/sh_monthly_geotiff/siconc_nsidc_nc_197811_202110.nc'
+)
+siconc_nsidc = xr.open_dataset(
+    'bas_palaeoclim_qino/observations/products/NSIDC/Sea_Ice_Index/sh_monthly_geotiff/siconc_nsidc_197811_202110.nc'
+)
+stats.describe(siconc_nsidc.siconc.values, axis =None, nan_policy='omit')
+(siconc_nsidc_nc.siconc.values == siconc_nsidc.siconc.values).sum()
+
+
+# inProj = Proj(init='epsg:3976')
+# outProj = Proj(init='epsg:4326')
+# x1,y1 = -11705274.6374,4826473.6922
+# x2,y2 = transform(inProj,outProj,x1,y1)
+# print (x2,y2)
+
+'''
+# endregion
+# =============================================================================
+
+
+# =============================================================================
+# =============================================================================
+# region Annual mean siconc in NSIDC
+
+siconc_nsidc = xr.open_dataset(
+    'bas_palaeoclim_qino/observations/products/NSIDC/Sea_Ice_Index/sh_monthly_geotiff/siconc_nsidc_197811_202110.nc'
+)
+
 mon_siconc_nsidc = mon_sea_ann_average(
-    siconc_nsidc_nc.siconc.sel(time=slice(
+    siconc_nsidc.siconc.sel(time=slice(
         '1979-01-01', '2015-01-01')), 'time.month'
 )
 
@@ -572,17 +624,27 @@ am_siconc_nsidc = (mon_siconc_nsidc * month_days[:, None, None]
                    ).sum(axis=0)/month_days.sum()
 # stats.describe(am_siconc_nsidc, axis =None)
 
-am_siconc_nsidc_rg_hg3 = regrid(am_siconc_nsidc, am_siconc_hg3_ll_hi_r1)
-am_siconc_nsidc_rg_awc = regrid(am_siconc_nsidc, am_siconc_awc_mr_hi_r1)
+regridder = xe.Regridder(
+    siconc_nsidc, am_siconc_hg3_ll_hi_r1, 'bilinear')
+am_siconc_nsidc_rg_hg3 = regridder(am_siconc_nsidc)
+regridder = xe.Regridder(
+    siconc_nsidc, am_siconc_awc_mr_hi_r1, 'bilinear')
+am_siconc_nsidc_rg_awc = regridder(am_siconc_nsidc)
+
+# am_siconc_nsidc_rg_hg3 = regrid(am_siconc_nsidc, am_siconc_hg3_ll_hi_r1)
+# am_siconc_nsidc_rg_awc = regrid(am_siconc_nsidc, am_siconc_awc_mr_hi_r1)
 
 dif_am_hg3_ll_hi_r1_nsidc = am_siconc_hg3_ll_hi_r1 - am_siconc_nsidc_rg_hg3
 dif_am_awc_mr_hi_r1_nsidc = am_siconc_awc_mr_hi_r1.siconc - am_siconc_nsidc_rg_awc
 
 
 '''
+# check
+(am_siconc_nsidc_rg_hg3.latitude.values == am_siconc_hg3_ll_hi_r1.latitude.values).all()
+(am_siconc_nsidc_rg_awc.lat.values == am_siconc_awc_mr_hi_r1.lat.values).all()
+
 stats.describe(am_siconc_hg3_ll_hi_r1, axis=None, nan_policy='omit')
 
-# check
 pltlevel = np.arange(0, 100.01, 0.5)
 pltticks = np.arange(0, 100.01, 20)
 
@@ -591,9 +653,9 @@ fig, ax = hemisphere_plot(
     figsize=np.array([8.8, 9.8]) / 2.54, fm_top=0.94, )
 
 plt_cmp = ax.pcolormesh(
-    am_siconc_hadisst_rg_hg3.longitude,
-    am_siconc_hadisst_rg_hg3.latitude,
-    am_siconc_hadisst_rg_hg3,
+    am_siconc_nsidc_rg_hg3.longitude,
+    am_siconc_nsidc_rg_hg3.latitude,
+    am_siconc_nsidc_rg_hg3,
     norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
     cmap=cm.get_cmap('Blues', len(pltlevel)), rasterized=True,
     transform=ccrs.PlateCarree(),)
@@ -602,7 +664,7 @@ cbar = fig.colorbar(
     shrink=1, aspect=40, ticks=pltticks, extend='neither',
     anchor=(0.5, 1), panchor=(0.5, 0))
 cbar.ax.set_xlabel(
-    'Annual mean sea ice area fraction [$\%$]\nregridded HadISST1, 1979-2014',
+    'Annual mean sea ice area fraction [$\%$]\nregridded NSIDC, 1979-2014',
     linespacing=1.5,)
 
 fig.savefig('figures/0_test/trial.png')
@@ -615,9 +677,9 @@ fig, ax = hemisphere_plot(
     figsize=np.array([8.8, 9.8]) / 2.54, fm_top=0.94, )
 
 plt_cmp = ax.pcolormesh(
-    am_siconc_hadisst_rg_awc.lon,
-    am_siconc_hadisst_rg_awc.lat,
-    am_siconc_hadisst_rg_awc,
+    am_siconc_nsidc_rg_awc.lon,
+    am_siconc_nsidc_rg_awc.lat,
+    am_siconc_nsidc_rg_awc,
     norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
     cmap=cm.get_cmap('Blues', len(pltlevel)), rasterized=True,
     transform=ccrs.PlateCarree(),)
@@ -626,30 +688,11 @@ cbar = fig.colorbar(
     shrink=1, aspect=40, ticks=pltticks, extend='neither',
     anchor=(0.5, 1), panchor=(0.5, 0))
 cbar.ax.set_xlabel(
-    'Annual mean sea ice area fraction [$\%$]\nregridded HadISST1, 1979-2014',
+    'Annual mean sea ice area fraction [$\%$]\nregridded NSIDC, 1979-2014',
     linespacing=1.5,)
 
 fig.savefig('figures/0_test/trial.png')
 
-
-
-stats.describe(am_siconc_hadisst_rg_hg3, axis =None)
-(am_siconc_hadisst_rg_hg3.longitude.values == am_siconc_hg3_ll_hi_r1.longitude.values).all()
-(am_siconc_hadisst_rg_hg3.latitude.values == am_siconc_hg3_ll_hi_r1.latitude.values).all()
-
-regridder = xe.Regridder(
-    am_siconc_hadisst, am_siconc_hg3_ll_hi_r1, 'bilinear', periodic=True)
-am_siconc_hadisst_rg_hg3_1 = regridder(am_siconc_hadisst)
-
-(am_siconc_hadisst_rg_hg3.values == am_siconc_hadisst_rg_hg3_1.values).all()
-
-stats.describe(am_siconc_hadisst_rg_awc, axis =None)
-(am_siconc_hadisst_rg_awc.lon.values == am_siconc_awc_mr_hi_r1.lon.values).all()
-(am_siconc_hadisst_rg_awc.lat.values == am_siconc_awc_mr_hi_r1.lat.values).all()
-
-# siconc_hadisst1 = xr.open_dataset(
-    #     'bas_palaeoclim_qino/observations/products/HadISST/HadISST_ice.nc'
-    # )
 '''
 # endregion
 # =============================================================================
@@ -668,12 +711,14 @@ fig, ax = hemisphere_plot(
     figsize=np.array([8.8, 9.8]) / 2.54, fm_top=0.94, )
 
 plt_cmp = ax.pcolormesh(
-    am_siconc_nsidc.x,
-    am_siconc_nsidc.y,
+    # am_siconc_nsidc.x, am_siconc_nsidc.y,
+    siconc_nsidc.lon, siconc_nsidc.lat,
     am_siconc_nsidc,
     norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
     cmap=cm.get_cmap('Blues', len(pltlevel)), rasterized=True,
-    transform=nsidc_transform,)
+    # transform=nsidc_transform,
+    transform=ccrs.PlateCarree(),
+    )
 cbar = fig.colorbar(
     plt_cmp, ax=ax, orientation="horizontal",  pad=0.08, fraction=0.12,
     shrink=1, aspect=40, ticks=pltticks, extend='neither',
@@ -684,6 +729,66 @@ cbar.ax.set_xlabel(
 
 fig.savefig(
     'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.2_siconc/4.0.2.2_SH annual siconc NSIDC 1979_2014.png')
+
+
+pltlevel = np.arange(-40, 40.01, 0.1)
+pltticks = np.arange(-40, 40.01, 10)
+cmp_cmap = rb_colormap(pltlevel)
+
+fig, ax = hemisphere_plot(
+    northextent=-45, sb_length=2000, sb_barheight=200,
+    figsize=np.array([8.8, 10.3]) / 2.54, fm_top=0.96, )
+
+plt_cmp = ax.pcolormesh(
+    dif_am_hg3_ll_hi_r1_nsidc.longitude,
+    dif_am_hg3_ll_hi_r1_nsidc.latitude,
+    dif_am_hg3_ll_hi_r1_nsidc,
+    norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
+    cmap=cmp_cmap.reversed(),
+    rasterized=True, transform=ccrs.PlateCarree(),
+)
+
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, orientation="horizontal",  pad=0.08,
+    fraction=0.15, shrink=1, aspect=40, anchor=(0.5, 1), panchor=(0.5, 0),
+    ticks=pltticks, extend='both')
+cbar.ax.set_xlabel(
+    'Annual mean sea ice area fraction difference [$\%$]\n(HadGEM3-GC31-LL, historical, r1i1p1f3) - NSIDC\n1979-2014',
+    linespacing=1.5
+)
+
+fig.savefig(
+    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.2_siconc/4.0.2.9_SH annual siconc HadGEM3-GC31-LL historical r1i1p1f3 - NSIDC 1979_2014.png')
+
+
+pltlevel = np.arange(-40, 40.01, 0.1)
+pltticks = np.arange(-40, 40.01, 10)
+cmp_cmap = rb_colormap(pltlevel)
+
+fig, ax = hemisphere_plot(
+    northextent=-45, sb_length=2000, sb_barheight=200,
+    figsize=np.array([8.8, 10.3]) / 2.54, fm_top=0.96, )
+
+plt_cmp = ax.pcolormesh(
+    dif_am_awc_mr_hi_r1_nsidc.lon,
+    dif_am_awc_mr_hi_r1_nsidc.lat,
+    dif_am_awc_mr_hi_r1_nsidc,
+    norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
+    cmap=cmp_cmap.reversed(),
+    rasterized=True, transform=ccrs.PlateCarree(),
+)
+
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, orientation="horizontal",  pad=0.08,
+    fraction=0.15, shrink=1, aspect=40, anchor=(0.5, 1), panchor=(0.5, 0),
+    ticks=pltticks, extend='both')
+cbar.ax.set_xlabel(
+    'Annual mean sea ice area fraction difference [$\%$]\n(AWI-CM-1-1-MR, historical, r1i1p1f1) - NSIDC\n1979-2014',
+    linespacing=1.5
+)
+
+fig.savefig(
+    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.2_siconc/4.0.2.10_SH annual siconc AWI-CM-1-1-MR, historical, r1i1p1f1 - NSIDC 1979_2014.png')
 
 
 '''
@@ -734,10 +839,76 @@ mon_siconc_era5 = xr.concat((
 
 am_siconc_era5 = mon_sea_ann_average(
     mon_siconc_era5.sel(time=slice(
-        '1979-01-01', '2014-12-30')), 'time.year'
-).mean(axis = 0) * 100
+        '1979-01-01', '2014-12-30')), 'time.year').mean(axis = 0) * 100
 
 
+regridder = xe.Regridder(
+    am_siconc_era5, am_siconc_hg3_ll_hi_r1, 'bilinear')
+am_siconc_era5_rg_hg3 = regridder(am_siconc_era5)
+regridder = xe.Regridder(
+    am_siconc_era5, am_siconc_awc_mr_hi_r1, 'bilinear')
+am_siconc_era5_rg_awc = regridder(am_siconc_era5)
+
+dif_am_hg3_ll_hi_r1_era5 = am_siconc_hg3_ll_hi_r1 - am_siconc_era5_rg_hg3
+dif_am_awc_mr_hi_r1_era5 = am_siconc_awc_mr_hi_r1.siconc - am_siconc_era5_rg_awc
+
+
+'''
+# check
+(am_siconc_era5_rg_hg3.longitude.values == am_siconc_hg3_ll_hi_r1.longitude.values).all()
+(am_siconc_era5_rg_awc.lon.values == am_siconc_awc_mr_hi_r1.lon.values).all()
+
+stats.describe(am_siconc_era5_rg_hg3, axis=None, nan_policy='omit')
+
+pltlevel = np.arange(0, 100.01, 0.5)
+pltticks = np.arange(0, 100.01, 20)
+
+fig, ax = hemisphere_plot(
+    northextent=-45, sb_length=2000, sb_barheight=200,
+    figsize=np.array([8.8, 9.8]) / 2.54, fm_top=0.94, )
+
+plt_cmp = ax.pcolormesh(
+    am_siconc_era5_rg_hg3.longitude,
+    am_siconc_era5_rg_hg3.latitude,
+    am_siconc_era5_rg_hg3,
+    norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
+    cmap=cm.get_cmap('Blues', len(pltlevel)), rasterized=True,
+    transform=ccrs.PlateCarree(),)
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, orientation="horizontal",  pad=0.08, fraction=0.12,
+    shrink=1, aspect=40, ticks=pltticks, extend='neither',
+    anchor=(0.5, 1), panchor=(0.5, 0))
+cbar.ax.set_xlabel(
+    'Annual mean sea ice area fraction [$\%$]\nregridded ERA5, 1979-2014',
+    linespacing=1.5,)
+
+fig.savefig('figures/0_test/trial.png')
+
+pltlevel = np.arange(0, 100.01, 0.5)
+pltticks = np.arange(0, 100.01, 20)
+
+fig, ax = hemisphere_plot(
+    northextent=-45, sb_length=2000, sb_barheight=200,
+    figsize=np.array([8.8, 9.8]) / 2.54, fm_top=0.94, )
+
+plt_cmp = ax.pcolormesh(
+    am_siconc_era5_rg_awc.lon,
+    am_siconc_era5_rg_awc.lat,
+    am_siconc_era5_rg_awc,
+    norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
+    cmap=cm.get_cmap('Blues', len(pltlevel)), rasterized=True,
+    transform=ccrs.PlateCarree(),)
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, orientation="horizontal",  pad=0.08, fraction=0.12,
+    shrink=1, aspect=40, ticks=pltticks, extend='neither',
+    anchor=(0.5, 1), panchor=(0.5, 0))
+cbar.ax.set_xlabel(
+    'Annual mean sea ice area fraction [$\%$]\nregridded ERA5, 1979-2014',
+    linespacing=1.5,)
+
+fig.savefig('figures/0_test/trial.png')
+
+'''
 # endregion
 # =============================================================================
 
@@ -772,6 +943,65 @@ fig.savefig(
     'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.2_siconc/4.0.2.4_SH annual siconc ERA5 1979_2014.png')
 
 
+pltlevel = np.arange(-40, 40.01, 0.1)
+pltticks = np.arange(-40, 40.01, 10)
+cmp_cmap = rb_colormap(pltlevel)
+
+fig, ax = hemisphere_plot(
+    northextent=-45, sb_length=2000, sb_barheight=200,
+    figsize=np.array([8.8, 10.3]) / 2.54, fm_top=0.96, )
+
+plt_cmp = ax.pcolormesh(
+    dif_am_hg3_ll_hi_r1_era5.longitude,
+    dif_am_hg3_ll_hi_r1_era5.latitude,
+    dif_am_hg3_ll_hi_r1_era5,
+    norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
+    cmap=cmp_cmap.reversed(),
+    rasterized=True, transform=ccrs.PlateCarree(),
+)
+
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, orientation="horizontal",  pad=0.08,
+    fraction=0.15, shrink=1, aspect=40, anchor=(0.5, 1), panchor=(0.5, 0),
+    ticks=pltticks, extend='both')
+cbar.ax.set_xlabel(
+    'Annual mean sea ice area fraction difference [$\%$]\n(HadGEM3-GC31-LL, historical, r1i1p1f3) - ERA5\n1979-2014',
+    linespacing=1.5
+)
+
+fig.savefig(
+    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.2_siconc/4.0.2.11_SH annual siconc HadGEM3-GC31-LL historical r1i1p1f3 - ERA5 1979_2014.png')
+
+
+pltlevel = np.arange(-40, 40.01, 0.1)
+pltticks = np.arange(-40, 40.01, 10)
+cmp_cmap = rb_colormap(pltlevel)
+
+fig, ax = hemisphere_plot(
+    northextent=-45, sb_length=2000, sb_barheight=200,
+    figsize=np.array([8.8, 10.3]) / 2.54, fm_top=0.96, )
+
+plt_cmp = ax.pcolormesh(
+    dif_am_awc_mr_hi_r1_era5.lon,
+    dif_am_awc_mr_hi_r1_era5.lat,
+    dif_am_awc_mr_hi_r1_era5,
+    norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
+    cmap=cmp_cmap.reversed(),
+    rasterized=True, transform=ccrs.PlateCarree(),
+)
+
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, orientation="horizontal",  pad=0.08,
+    fraction=0.15, shrink=1, aspect=40, anchor=(0.5, 1), panchor=(0.5, 0),
+    ticks=pltticks, extend='both')
+cbar.ax.set_xlabel(
+    'Annual mean sea ice area fraction difference [$\%$]\n(AWI-CM-1-1-MR, historical, r1i1p1f1) - ERA5\n1979-2014',
+    linespacing=1.5
+)
+
+fig.savefig(
+    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.2_siconc/4.0.2.12_SH annual siconc AWI-CM-1-1-MR, historical, r1i1p1f1 - ERA5 1979_2014.png')
+
 '''
 '''
 # endregion
@@ -796,11 +1026,76 @@ am_siconc_merra2 = mon_sea_ann_average(siconc_merra2.FRSEAICE.sel(
     time=slice('1980-01-01', '2014-12-30')), 'time.year').mean(axis=0) * 100
 
 
+regridder = xe.Regridder(
+    am_siconc_merra2, am_siconc_hg3_ll_hi_r1, 'bilinear', periodic=True)
+am_siconc_merra2_rg_hg3 = regridder(am_siconc_merra2)
+regridder = xe.Regridder(
+    am_siconc_merra2, am_siconc_awc_mr_hi_r1, 'bilinear', periodic=True)
+am_siconc_merra2_rg_awc = regridder(am_siconc_merra2)
+
+dif_am_hg3_ll_hi_r1_merra2 = am_siconc_hg3_ll_hi_r1_80 - am_siconc_merra2_rg_hg3
+dif_am_awc_mr_hi_r1_merra2 = am_siconc_awc_mr_hi_r1_80.siconc - am_siconc_merra2_rg_awc
+
+
+'''
+# check
+(am_siconc_merra2_rg_hg3.latitude.values == am_siconc_hg3_ll_hi_r1.latitude.values).all()
+(am_siconc_merra2_rg_awc.lat.values == am_siconc_awc_mr_hi_r1.lat.values).all()
+
+stats.describe(am_siconc_merra2_rg_hg3, axis=None, nan_policy='omit')
+
+pltlevel = np.arange(0, 100.01, 0.5)
+pltticks = np.arange(0, 100.01, 20)
+
+fig, ax = hemisphere_plot(
+    northextent=-45, sb_length=2000, sb_barheight=200,
+    figsize=np.array([8.8, 9.8]) / 2.54, fm_top=0.94, )
+
+plt_cmp = ax.pcolormesh(
+    am_siconc_merra2_rg_hg3.longitude,
+    am_siconc_merra2_rg_hg3.latitude,
+    am_siconc_merra2_rg_hg3,
+    norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
+    cmap=cm.get_cmap('Blues', len(pltlevel)), rasterized=True,
+    transform=ccrs.PlateCarree(),)
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, orientation="horizontal",  pad=0.08, fraction=0.12,
+    shrink=1, aspect=40, ticks=pltticks, extend='neither',
+    anchor=(0.5, 1), panchor=(0.5, 0))
+cbar.ax.set_xlabel(
+    'Annual mean sea ice area fraction [$\%$]\nregridded MERRA2, 1980-2014',
+    linespacing=1.5,)
+
+fig.savefig('figures/0_test/trial.png')
+
+pltlevel = np.arange(0, 100.01, 0.5)
+pltticks = np.arange(0, 100.01, 20)
+
+fig, ax = hemisphere_plot(
+    northextent=-45, sb_length=2000, sb_barheight=200,
+    figsize=np.array([8.8, 9.8]) / 2.54, fm_top=0.94, )
+
+plt_cmp = ax.pcolormesh(
+    am_siconc_merra2_rg_awc.lon,
+    am_siconc_merra2_rg_awc.lat,
+    am_siconc_merra2_rg_awc,
+    norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
+    cmap=cm.get_cmap('Blues', len(pltlevel)), rasterized=True,
+    transform=ccrs.PlateCarree(),)
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, orientation="horizontal",  pad=0.08, fraction=0.12,
+    shrink=1, aspect=40, ticks=pltticks, extend='neither',
+    anchor=(0.5, 1), panchor=(0.5, 0))
+cbar.ax.set_xlabel(
+    'Annual mean sea ice area fraction [$\%$]\nregridded MERRA2, 1980-2014',
+    linespacing=1.5,)
+
+fig.savefig('figures/0_test/trial.png')
+
+'''
 '''
 (siconc_merra2.FRSEAICE.values == 1000000000000000.0).sum()
 stats.describe(am_siconc_merra2, axis=None)
-
-
 '''
 # endregion
 # =============================================================================
@@ -836,6 +1131,66 @@ fig.savefig(
     'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.2_siconc/4.0.2.5_SH annual siconc MERRA2 1980_2014.png')
 
 
+pltlevel = np.arange(-40, 40.01, 0.1)
+pltticks = np.arange(-40, 40.01, 10)
+cmp_cmap = rb_colormap(pltlevel)
+
+fig, ax = hemisphere_plot(
+    northextent=-45, sb_length=2000, sb_barheight=200,
+    figsize=np.array([8.8, 10.3]) / 2.54, fm_top=0.96, )
+
+plt_cmp = ax.pcolormesh(
+    dif_am_hg3_ll_hi_r1_merra2.longitude,
+    dif_am_hg3_ll_hi_r1_merra2.latitude,
+    dif_am_hg3_ll_hi_r1_merra2,
+    norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
+    cmap=cmp_cmap.reversed(),
+    rasterized=True, transform=ccrs.PlateCarree(),
+)
+
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, orientation="horizontal",  pad=0.08,
+    fraction=0.15, shrink=1, aspect=40, anchor=(0.5, 1), panchor=(0.5, 0),
+    ticks=pltticks, extend='both')
+cbar.ax.set_xlabel(
+    'Annual mean sea ice area fraction difference [$\%$]\n(HadGEM3-GC31-LL, historical, r1i1p1f3) - MERRA2\n1980-2014',
+    linespacing=1.5
+)
+
+fig.savefig(
+    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.2_siconc/4.0.2.13_SH annual siconc HadGEM3-GC31-LL historical r1i1p1f3 - MERRA2 1980_2014.png')
+
+
+pltlevel = np.arange(-40, 40.01, 0.1)
+pltticks = np.arange(-40, 40.01, 10)
+cmp_cmap = rb_colormap(pltlevel)
+
+fig, ax = hemisphere_plot(
+    northextent=-45, sb_length=2000, sb_barheight=200,
+    figsize=np.array([8.8, 10.3]) / 2.54, fm_top=0.96, )
+
+plt_cmp = ax.pcolormesh(
+    dif_am_awc_mr_hi_r1_merra2.lon,
+    dif_am_awc_mr_hi_r1_merra2.lat,
+    dif_am_awc_mr_hi_r1_merra2,
+    norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
+    cmap=cmp_cmap.reversed(),
+    rasterized=True, transform=ccrs.PlateCarree(),
+)
+
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, orientation="horizontal",  pad=0.08,
+    fraction=0.15, shrink=1, aspect=40, anchor=(0.5, 1), panchor=(0.5, 0),
+    ticks=pltticks, extend='both')
+cbar.ax.set_xlabel(
+    'Annual mean sea ice area fraction difference [$\%$]\n(AWI-CM-1-1-MR, historical, r1i1p1f1) - MERRA2\n1980-2014',
+    linespacing=1.5
+)
+
+fig.savefig(
+    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.2_siconc/4.0.2.14_SH annual siconc AWI-CM-1-1-MR, historical, r1i1p1f1 - MERRA2 1980_2014.png')
+
+
 '''
 '''
 # endregion
@@ -857,7 +1212,74 @@ am_siconc_jra55 = (mon_sea_ann_average(siconc_jra55.ci.sel(
 ) * month_days[:, None, None]).sum(axis=0)/month_days.sum() * 100
 
 
+regridder = xe.Regridder(
+    am_siconc_jra55, am_siconc_hg3_ll_hi_r1, 'bilinear', periodic=True)
+am_siconc_jra55_rg_hg3 = regridder(am_siconc_jra55)
+regridder = xe.Regridder(
+    am_siconc_jra55, am_siconc_awc_mr_hi_r1, 'bilinear', periodic=True)
+am_siconc_jra55_rg_awc = regridder(am_siconc_jra55)
 
+dif_am_hg3_ll_hi_r1_jra55 = am_siconc_hg3_ll_hi_r1 - am_siconc_jra55_rg_hg3
+dif_am_awc_mr_hi_r1_jra55 = am_siconc_awc_mr_hi_r1.siconc - am_siconc_jra55_rg_awc
+
+
+'''
+# check
+(am_siconc_jra55_rg_hg3.longitude.values == am_siconc_hg3_ll_hi_r1.longitude.values).all()
+(am_siconc_jra55_rg_awc.lon.values == am_siconc_awc_mr_hi_r1.lon.values).all()
+
+stats.describe(am_siconc_jra55_rg_hg3, axis=None, nan_policy='omit')
+
+pltlevel = np.arange(0, 100.01, 0.5)
+pltticks = np.arange(0, 100.01, 20)
+
+fig, ax = hemisphere_plot(
+    northextent=-45, sb_length=2000, sb_barheight=200,
+    figsize=np.array([8.8, 9.8]) / 2.54, fm_top=0.94, )
+
+plt_cmp = ax.pcolormesh(
+    am_siconc_jra55_rg_hg3.longitude,
+    am_siconc_jra55_rg_hg3.latitude,
+    am_siconc_jra55_rg_hg3,
+    norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
+    cmap=cm.get_cmap('Blues', len(pltlevel)), rasterized=True,
+    transform=ccrs.PlateCarree(),)
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, orientation="horizontal",  pad=0.08, fraction=0.12,
+    shrink=1, aspect=40, ticks=pltticks, extend='neither',
+    anchor=(0.5, 1), panchor=(0.5, 0))
+cbar.ax.set_xlabel(
+    'Annual mean sea ice area fraction [$\%$]\nregridded JRA-55, 1979-2014',
+    linespacing=1.5,)
+
+fig.savefig('figures/0_test/trial.png')
+
+
+pltlevel = np.arange(0, 100.01, 0.5)
+pltticks = np.arange(0, 100.01, 20)
+
+fig, ax = hemisphere_plot(
+    northextent=-45, sb_length=2000, sb_barheight=200,
+    figsize=np.array([8.8, 9.8]) / 2.54, fm_top=0.94, )
+
+plt_cmp = ax.pcolormesh(
+    am_siconc_jra55_rg_awc.lon,
+    am_siconc_jra55_rg_awc.lat,
+    am_siconc_jra55_rg_awc,
+    norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
+    cmap=cm.get_cmap('Blues', len(pltlevel)), rasterized=True,
+    transform=ccrs.PlateCarree(),)
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, orientation="horizontal",  pad=0.08, fraction=0.12,
+    shrink=1, aspect=40, ticks=pltticks, extend='neither',
+    anchor=(0.5, 1), panchor=(0.5, 0))
+cbar.ax.set_xlabel(
+    'Annual mean sea ice area fraction [$\%$]\nregridded JRA-55, 1979-2014',
+    linespacing=1.5,)
+
+fig.savefig('figures/0_test/trial.png')
+
+'''
 '''
 (siconc_jra55.ci.values == 9999).sum()
 stats.describe(am_siconc_jra55, axis=None)
@@ -867,7 +1289,7 @@ stats.describe(am_siconc_jra55, axis=None)
 
 
 # =============================================================================
-# region plot Annual mean siconc in MERRA2
+# region plot Annual mean siconc in JRA-55
 
 
 pltlevel = np.arange(0, 100.01, 0.5)
@@ -895,6 +1317,65 @@ cbar.ax.set_xlabel(
 fig.savefig(
     'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.2_siconc/4.0.2.6_SH annual siconc JRA-55 1979_2014.png')
 
+
+pltlevel = np.arange(-40, 40.01, 0.1)
+pltticks = np.arange(-40, 40.01, 10)
+cmp_cmap = rb_colormap(pltlevel)
+
+fig, ax = hemisphere_plot(
+    northextent=-45, sb_length=2000, sb_barheight=200,
+    figsize=np.array([8.8, 10.3]) / 2.54, fm_top=0.96, )
+
+plt_cmp = ax.pcolormesh(
+    dif_am_hg3_ll_hi_r1_jra55.longitude,
+    dif_am_hg3_ll_hi_r1_jra55.latitude,
+    dif_am_hg3_ll_hi_r1_jra55,
+    norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
+    cmap=cmp_cmap.reversed(),
+    rasterized=True, transform=ccrs.PlateCarree(),
+)
+
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, orientation="horizontal",  pad=0.08,
+    fraction=0.15, shrink=1, aspect=40, anchor=(0.5, 1), panchor=(0.5, 0),
+    ticks=pltticks, extend='both')
+cbar.ax.set_xlabel(
+    'Annual mean sea ice area fraction difference [$\%$]\n(HadGEM3-GC31-LL, historical, r1i1p1f3) - JRA-55\n1979-2014',
+    linespacing=1.5
+)
+
+fig.savefig(
+    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.2_siconc/4.0.2.15_SH annual siconc HadGEM3-GC31-LL historical r1i1p1f3 - JRA-55 1979_2014.png')
+
+
+pltlevel = np.arange(-40, 40.01, 0.1)
+pltticks = np.arange(-40, 40.01, 10)
+cmp_cmap = rb_colormap(pltlevel)
+
+fig, ax = hemisphere_plot(
+    northextent=-45, sb_length=2000, sb_barheight=200,
+    figsize=np.array([8.8, 10.3]) / 2.54, fm_top=0.96, )
+
+plt_cmp = ax.pcolormesh(
+    dif_am_awc_mr_hi_r1_jra55.lon,
+    dif_am_awc_mr_hi_r1_jra55.lat,
+    dif_am_awc_mr_hi_r1_jra55,
+    norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
+    cmap=cmp_cmap.reversed(),
+    rasterized=True, transform=ccrs.PlateCarree(),
+)
+
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, orientation="horizontal",  pad=0.08,
+    fraction=0.15, shrink=1, aspect=40, anchor=(0.5, 1), panchor=(0.5, 0),
+    ticks=pltticks, extend='both')
+cbar.ax.set_xlabel(
+    'Annual mean sea ice area fraction difference [$\%$]\n(AWI-CM-1-1-MR, historical, r1i1p1f1) - JRA-55\n1979-2014',
+    linespacing=1.5
+)
+
+fig.savefig(
+    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.2_siconc/4.0.2.16_SH annual siconc AWI-CM-1-1-MR, historical, r1i1p1f1 - JRA-55 1979_2014.png')
 
 '''
 '''

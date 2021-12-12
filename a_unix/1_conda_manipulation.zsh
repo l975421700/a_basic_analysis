@@ -68,6 +68,7 @@ mamba install -c conda-forge esmvaltool
 mamba install -c conda-forge rioxarray
 mamba install -c conda-forge pyfesom2
 
+
 # clean conda installed pkgs
 # conda clean -a
 

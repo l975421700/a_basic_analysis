@@ -3,7 +3,7 @@
 # =============================================================================
 # region functions to calculate monthly/seasonal/annual weighted average
 
-def mon_sea_ann_average(ds, average):
+def mon_sea_ann_average(ds, average, skipna = True):
     '''
     ds: xarray.DataArray, monthly mean values
     average: 'time.month', 'time.season', 'time.year'
@@ -15,7 +15,8 @@ def mon_sea_ann_average(ds, average):
         month_length.groupby(average).sum()
     )
     
-    ds_weighted = (ds * weights).groupby(average).sum(dim="time", skipna = True)
+    ds_weighted = (
+        ds * weights).groupby(average).sum(dim="time", skipna=skipna)
     
     # Calculate the weighted average
     return ds_weighted
@@ -62,7 +63,8 @@ pre_ann_average1 = mon_sea_ann_average(pre, 'time.year')
 # =============================================================================
 # region functions to regrid a dataset to another grid
 
-def regrid(ds_in, ds_out=None, grid_spacing=1, method='bilinear'):
+def regrid(ds_in, ds_out=None, grid_spacing=1, method='bilinear',
+           periodic=True, ignore_degenerate=False):
     '''
     ds_in: original xarray.DataArray
     ds_out: xarray.DataArray with target grid, default None
@@ -76,7 +78,9 @@ def regrid(ds_in, ds_out=None, grid_spacing=1, method='bilinear'):
     if (ds_out is None):
         ds_out = xe.util.grid_global(grid_spacing, grid_spacing)
     
-    regridder = xe.Regridder(ds_in_copy, ds_out, method, periodic=True)
+    regridder = xe.Regridder(
+        ds_in_copy, ds_out, method, periodic=periodic,
+        ignore_degenerate=ignore_degenerate,)
     return regridder(ds_in_copy)
 
 '''

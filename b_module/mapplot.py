@@ -508,7 +508,7 @@ def hemisphere_plot(
             color=grid_color, alpha=0.5, linestyle='--',
             xlocs=ticklabel[0], ylocs=ticklabel[2], rotate_labels=False,
         )
-        gl.ylabel_style = {'size': 0, 'color': 'white'}
+        gl.ylabel_style = {'size': 0, 'color': None, 'alpha': 0}
     
     # set circular axes boundaries
     theta = np.linspace(0, 2*np.pi, 100)
@@ -600,3 +600,62 @@ def rb_colormap(pltlevel):
 
 # endregion
 # =============================================================================
+
+
+# =============================================================================
+# region functions to plot high and low pressure systems
+
+
+def plot_maxmin_points(lon, lat, data, ax, extrema, nsize, symbol, color='k',
+                       plotValue=False, transform=None):
+    '''
+    lon: 1D longitude
+    lat: 1D latitude
+    data: variables field
+    extrema: 'min' or 'max'
+    nsize: Size of the grid box to filter
+    symbol: String 'H' or 'L'
+    color: colors for 'H' or 'L' and values
+    plot_value: Boolean, whether to plot the numeric value of max/min point
+    '''
+    from scipy.ndimage.filters import gaussian_filter, maximum_filter, minimum_filter
+    import numpy as np
+    
+    data = gaussian_filter(data, sigma=3.0)
+    # add dummy variables
+    dummy = np.random.normal(0, 0.01, data.shape)
+    data = data + dummy
+    
+    if (extrema == 'max'):
+        data_ext = maximum_filter(data, nsize, mode='nearest')
+    elif (extrema == 'min'):
+        data_ext = minimum_filter(data, nsize, mode='nearest')
+    else:
+        raise ValueError('Value for hilo must be either max or min')
+    
+    mxy, mxx = np.where(data_ext == data)
+    ny, nx = data.shape
+    
+    for i in range(len(mxy)):
+        # 1st criterion
+        criteria1 = ((mxx[i] > 0.05 * nx) & (mxx[i] < 0.95 * nx) &
+                     (mxy[i] > 0.05 * ny) & (mxy[i] < 0.95 * ny))
+        if criteria1:
+            ax.text(
+                lon[mxx[i]], lat[mxy[i]], symbol,
+                color=color, clip_on=True, clip_box=ax.bbox, fontweight='bold',
+                horizontalalignment='center', verticalalignment='center',
+                transform=transform)
+        if (criteria1 & plotValue):
+            ax.text(
+                lon[mxx[i]], lat[mxy[i]],
+                '\n' + str(np.int(data[mxy[i], mxx[i]])),
+                color=color, clip_on=True, clip_box=ax.bbox,
+                fontweight='bold', horizontalalignment='center',
+                verticalalignment='top',
+                transform=transform)
+
+
+# endregion
+# =============================================================================
+

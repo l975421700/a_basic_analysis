@@ -104,8 +104,7 @@ cbar.ax.set_xlabel(
 )
 fig.subplots_adjust(left=0.06, right=0.97, bottom=0.08, top=0.995)
 fig.savefig(
-    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.0_precipitation/4.0.0.0_global annual pre HadGEM3-GC31-LL historical r1i1p1f3 1979_2014.png',
-    dpi=1200)
+    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.0_precipitation/4.0.0.0_global annual pre HadGEM3-GC31-LL historical r1i1p1f3 1979_2014.png',)
 
 
 # SH map
@@ -132,8 +131,7 @@ cbar.ax.set_xlabel(
     (source[:-1], experiment[:-1], member[:-1]), linespacing=1.5
 )
 fig.savefig(
-    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.0_precipitation/4.0.0.1_SH annual pre HadGEM3-GC31-LL historical r1i1p1f3 1979_2014.png',
-    dpi=1200)
+    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.0_precipitation/4.0.0.1_SH annual pre HadGEM3-GC31-LL historical r1i1p1f3 1979_2014.png',)
 
 
 # diverging colormap
@@ -511,8 +509,7 @@ cbar.ax.set_xlabel(
 )
 fig.subplots_adjust(left=0.06, right=0.97, bottom=0.08, top=0.995)
 fig.savefig(
-    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.0_precipitation/4.0.0.2_global annual pre era5 1979_2014.png',
-    dpi=1200)
+    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.0_precipitation/4.0.0.2_global annual pre era5 1979_2014.png',)
 
 
 # SH map
@@ -539,8 +536,7 @@ cbar.ax.set_xlabel(
     linespacing=1.5
 )
 fig.savefig(
-    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.0_precipitation/4.0.0.3_SH annual pre era5 1979_2014.png',
-    dpi=1200)
+    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.0_precipitation/4.0.0.3_SH annual pre era5 1979_2014.png',)
 
 
 # diverging colormap
@@ -571,8 +567,7 @@ cbar.ax.set_xlabel(
     linespacing=1.5
 )
 fig.savefig(
-    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.0_precipitation/4.0.0.15_SH annual pre era5 1979_2014 diverging colormap.png',
-    dpi=1200)
+    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.0_precipitation/4.0.0.15_SH annual pre era5 1979_2014 diverging colormap.png',)
 
 
 ################ compare with HadGEM3-GC31-LL, historical, r1i1p1f3
@@ -600,8 +595,7 @@ cbar.ax.set_xlabel(
 )
 fig.subplots_adjust(left=0.06, right=0.97, bottom=0.08, top=0.995)
 fig.savefig(
-    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.0_precipitation/4.0.0.4_global regridded annual pre era5 1979_2014.png',
-    dpi=1200)
+    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.0_precipitation/4.0.0.4_global regridded annual pre era5 1979_2014.png',)
 
 
 # SH regridded map
@@ -628,8 +622,7 @@ cbar.ax.set_xlabel(
     linespacing=1.5
 )
 fig.savefig(
-    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.0_precipitation/4.0.0.5_SH regridded annual pre era5 1979_2014.png',
-    dpi=1200)
+    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.0_precipitation/4.0.0.5_SH regridded annual pre era5 1979_2014.png',)
 
 
 # absolute difference
@@ -656,8 +649,7 @@ cbar.ax.set_xlabel(
 )
 fig.subplots_adjust(left=0.06, right=0.97, bottom=0.08, top=0.995)
 fig.savefig(
-    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.0_precipitation/4.0.0.6_global annual pre HadGEM3-GC31-LL historical r1i1p1f3 - era5 1979_2014.png',
-    dpi=1200)
+    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.0_precipitation/4.0.0.6_global annual pre HadGEM3-GC31-LL historical r1i1p1f3 - era5 1979_2014.png',)
 
 
 pltlevel_sh = np.arange(-400, 400.01, 0.2)
@@ -684,8 +676,7 @@ cbar.ax.set_xlabel(
     linespacing=1.5
 )
 fig.savefig(
-    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.0_precipitation/4.0.0.7_SH annual pre HadGEM3-GC31-LL historical r1i1p1f3 - era5 1979_2014.png',
-    dpi=1200)
+    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.0_precipitation/4.0.0.7_SH annual pre HadGEM3-GC31-LL historical r1i1p1f3 - era5 1979_2014.png',)
 
 
 # relative difference
