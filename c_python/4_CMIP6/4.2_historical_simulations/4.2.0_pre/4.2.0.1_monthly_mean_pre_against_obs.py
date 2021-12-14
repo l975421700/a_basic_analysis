@@ -161,7 +161,7 @@ ax.grid(True, linewidth=0.25, color='gray', alpha=0.5, linestyle='--')
 fig.subplots_adjust(left=0.16, right=0.96, bottom=0.2, top=0.96)
 
 fig.savefig(
-    'figures/0_test/trial.png',)
+    'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.0_precipitation/4.0.0.1_monthly_pre/4.0.0.1.0_monthly precipitation.png',)
 
 '''
 (mon_pr_hg3_ll_hi_r1 * areacella_hg3_ll.areacella)[10, 20, 30].values

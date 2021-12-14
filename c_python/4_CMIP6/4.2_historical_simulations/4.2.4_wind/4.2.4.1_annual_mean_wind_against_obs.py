@@ -147,7 +147,7 @@ plt_cmp = ax.pcolormesh(
     am_si10_hg3_ll_hi_r1.lat,
     am_si10_hg3_ll_hi_r1,
     norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
-    cmap=cm.get_cmap('Blues', len(pltlevel)), rasterized=True,
+    cmap=cm.get_cmap('viridis', len(pltlevel)), rasterized=True,
     transform=ccrs.PlateCarree(),
 )
 cbar = fig.colorbar(
@@ -174,7 +174,7 @@ plt_cmp = ax.pcolormesh(
     am_si10_hg3_ll_hi_r1.lat,
     am_si10_hg3_ll_hi_r1,
     norm=BoundaryNorm(pltlevel_sh, ncolors=len(pltlevel_sh), clip=False),
-    cmap=cm.get_cmap('Blues', len(pltlevel_sh)), rasterized=True,
+    cmap=cm.get_cmap('viridis', len(pltlevel_sh)), rasterized=True,
     transform=ccrs.PlateCarree(),
 )
 cbar = fig.colorbar(
@@ -285,7 +285,7 @@ plt_cmp = ax.pcolormesh(
     am_si10_awc_mr_hi_r1.lat,
     am_si10_awc_mr_hi_r1,
     norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
-    cmap=cm.get_cmap('Blues', len(pltlevel)), rasterized=True,
+    cmap=cm.get_cmap('viridis', len(pltlevel)), rasterized=True,
     transform=ccrs.PlateCarree(),
 )
 cbar = fig.colorbar(
@@ -312,7 +312,7 @@ plt_cmp = ax.pcolormesh(
     am_si10_awc_mr_hi_r1.lat,
     am_si10_awc_mr_hi_r1,
     norm=BoundaryNorm(pltlevel_sh, ncolors=len(pltlevel_sh), clip=False),
-    cmap=cm.get_cmap('Blues', len(pltlevel_sh)), rasterized=True,
+    cmap=cm.get_cmap('viridis', len(pltlevel_sh)), rasterized=True,
     transform=ccrs.PlateCarree(),
 )
 cbar = fig.colorbar(
@@ -430,7 +430,7 @@ plt_cmp = ax.pcolormesh(
     am_si10_era5.latitude,
     am_si10_era5,
     norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
-    cmap=cm.get_cmap('Blues', len(pltlevel)), rasterized=True,
+    cmap=cm.get_cmap('viridis', len(pltlevel)), rasterized=True,
     transform=ccrs.PlateCarree(),
 )
 cbar = fig.colorbar(
@@ -457,7 +457,7 @@ plt_cmp = ax.pcolormesh(
     am_si10_era5.latitude,
     am_si10_era5,
     norm=BoundaryNorm(pltlevel_sh, ncolors=len(pltlevel_sh), clip=False),
-    cmap=cm.get_cmap('Blues', len(pltlevel_sh)), rasterized=True,
+    cmap=cm.get_cmap('viridis', len(pltlevel_sh)), rasterized=True,
     transform=ccrs.PlateCarree(),
 )
 cbar = fig.colorbar(
@@ -582,6 +582,22 @@ cbar.ax.set_xlabel(
 )
 fig.savefig(
     'figures/4_cmip6/4.0_HadGEM3-GC3.1/4.0.4_winds/4.0.4.10_SH annual mean wind speed AWI-CM-1-1-MR, historical, r1i1p1f1 - ERA5 1979_2014.png',)
+
+# endregion
+# =============================================================================
+
+
+# =============================================================================
+# =============================================================================
+# region Annual mean wind in MERRA2
+
+speed_merra2_fl = np.array(sorted(glob.glob(
+    'bas_palaeoclim_qino/observations/reanalysis/MERRA2/QLML_SPEED_TLML_TSH_ULML_VLML/MERRA2_*.tavgM_2d_flx_Nx.*.SUB.nc',
+)))
+
+speed_merra2 = xr.open_mfdataset(
+    speed_merra2_fl, data_vars='minimal', coords='minimal', compat='override',
+)
 
 # endregion
 # =============================================================================

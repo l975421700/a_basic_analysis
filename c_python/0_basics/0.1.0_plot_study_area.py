@@ -158,13 +158,55 @@ fig.savefig('figures/01_study_area/Surface height in Bedmap2.png')
 
 ax.add_feature(cfeature.LAND)
 ax.add_feature(cfeature.OCEAN)
-
 ax.background_img(name='natural_earth', resolution='high',
                   extent=[-180, 180, -90, -60])
 
 # https://stackoverflow.com/questions/45302485/matplotlib-focus-on-specific-lon-lat-using-spstere-projection
 # http://neichin.github.io/personalweb/writing/Cartopy-shapefile/
 # https://www.fatiando.org/rockhound/latest/gallery/bedmap2.html
+
+
+projections = ccrs.SouthPolarStereo()
+transform = ccrs.PlateCarree()
+
+ticklabel = ticks_labels(-180, 179, -90, -65, 30, 10)
+labelsize = 10
+
+fig, ax = plt.subplots(
+    1, 1, figsize=np.array([8.8, 9.3]) / 2.54,
+    subplot_kw={'projection': projections}, dpi=600)
+
+ax.set_extent((-180, 180, -90, -60), crs = transform)
+
+figure_margin = {
+    'left': 0.12, 'right': 0.88, 'bottom': 0.08, 'top': 0.96}
+
+coastline = cfeature.NaturalEarthFeature(
+    'physical', 'coastline', '10m', edgecolor='black',
+    facecolor='none', lw=0.25)
+ax.add_feature(coastline, zorder=2)
+gl = ax.gridlines(
+    crs=transform, linewidth=0.15, zorder=2, draw_labels=True,
+    color='gray', alpha=0.5, linestyle='--',
+    xlocs=ticklabel[0], ylocs=ticklabel[2], rotate_labels = False,
+    )
+gl.ylabel_style = {'size': 0, 'color': 'white'}
+
+fig.subplots_adjust(
+    left=figure_margin['left'], right=figure_margin['right'],
+    bottom=figure_margin['bottom'], top=figure_margin['top'])
+
+# set circular axes boundaries
+theta = np.linspace(0, 2*np.pi, 100)
+center, radius = [0.5, 0.5], 0.5
+verts = np.vstack([np.sin(theta), np.cos(theta)]).T
+circle = mpath.Path(verts * radius + center)
+ax.set_boundary(circle, transform=ax.transAxes)
+
+plt.setp(ax.spines.values(), linewidth=0.2)
+
+fig.savefig('figures/0_test/trial.png')
+
 
 '''
 

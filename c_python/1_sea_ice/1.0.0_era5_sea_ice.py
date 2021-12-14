@@ -329,10 +329,12 @@ np.testing.assert_allclose(weights.groupby(
 # Calculate the weighted average
 siconc_weighted_ann = (siconc * weights).groupby("time.year").sum(dim="time")
 
-pltlevel = np.arange(0, 1.01, 0.01)
-pltticks = np.arange(0, 1.01, 0.2)
+pltlevel = np.arange(0, 100.01, 0.5)
+pltticks = np.arange(0, 100.01, 20)
 
-fig, ax = hemisphere_plot(southextent=45, sb_length=2000, sb_barheight=200,)
+fig, ax = hemisphere_plot(
+    southextent=45, sb_length=2000, sb_barheight=200,
+    figsize=np.array([8.8, 9.8]) / 2.54, fm_top=0.94, )
 ims = []
 
 for i in range(len(siconc_weighted_ann.year) - 1):  # range(2): #
@@ -340,7 +342,7 @@ for i in range(len(siconc_weighted_ann.year) - 1):  # range(2): #
     plt_cmp = ax.pcolormesh(
         era5_mon_sl_79_21_sic.longitude.values,
         era5_mon_sl_79_21_sic.latitude.values[0:241],
-        siconc_weighted_ann.sel(year=(i+1979))[0:241, :],
+        siconc_weighted_ann.sel(year=(i+1979))[0:241, :] * 100,
         norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
         cmap=cm.get_cmap('Blues', len(pltlevel)), rasterized=True,
         transform=ccrs.PlateCarree(),)
@@ -351,18 +353,18 @@ for i in range(len(siconc_weighted_ann.year) - 1):  # range(2): #
     print(str(i) + '/' + str(len(siconc_weighted_ann.year)))
 
 cbar = fig.colorbar(
-    plt_cmp, ax=ax, orientation="horizontal",  pad=0.08, fraction=0.07,
-    shrink=1, aspect=25, ticks=pltticks, extend='neither',
+    plt_cmp, ax=ax, orientation="horizontal",  pad=0.08, fraction=0.12,
+    shrink=1, aspect=40, ticks=pltticks, extend='neither',
     anchor=(0.5, 1), panchor=(0.5, 0))
-cbar.ax.set_xlabel("Annual mean sea ice cover [-] in ERA5")
+cbar.ax.set_xlabel(
+    "Annual mean sea ice area fraction [$\%$]\nThe ERA5 reanalysis, 1979-2020",
+    linespacing=1.5,)
 
 ani = animation.ArtistAnimation(fig, ims, interval=250, blit=True)
 
 ani.save(
     'figures/02_era5/02_00_era5_sea_ice/02.00.01 Annual mean sea ice cover in ERA5_NH.mp4',
     progress_callback=lambda i, n: print(f'Saving frame {i} of {n}'),)
-
-
 
 '''
 '''
