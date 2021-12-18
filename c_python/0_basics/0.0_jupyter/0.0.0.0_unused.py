@@ -202,3 +202,69 @@ stats.describe(am_siconc_awc_mr_hi_r1_80.siconc, axis=None, nan_policy='omit')
 # =============================================================================
 
 
+# =============================================================================
+# region Handling CloudSat raw data
+
+# Using deepice_pynio environment
+# conda activate deepice_pynio
+# python -c "from IPython import start_ipython; start_ipython()" --no-autoindent
+
+# management
+from pyhdf.SD import SD, SDC
+import warnings
+warnings.filterwarnings('ignore')
+
+# data analysis
+import numpy as np
+import xarray as xr
+import dask
+dask.config.set({"array.slicing.split_large_chunks": False})
+
+# import Nio
+# Nio.option_defaults['TimePeriodSuffix'] = True
+# cloudsat2007001 = xr.open_dataset(
+#     'bas_palaeoclim_qino/observations/products/CloudSat/2C-SNOW-PROFILE.P1_R05/2007001005141_03607_CS_2C-SNOW-PROFILE_GRANULE_P1_R05_E02_F00.hdf',
+#     engine='pynio',
+# )
+
+'''
+
+import Nio
+Nio.option_defaults
+opt = Nio.option_defaults
+opt['CompressionLevel'] = -2
+
+# file = Nio.open_file(
+#     'bas_palaeoclim_qino/observations/products/CloudSat/2C-SNOW-PROFILE.P1_R05/2007001005141_03607_CS_2C-SNOW-PROFILE_GRANULE_P1_R05_E02_F00.hdf', 'r')
+# file.dataset()
+
+# from pyhdf.SD import SD, SDC
+# hdf = SD(
+#     'bas_palaeoclim_qino/observations/products/CloudSat/2C-SNOW-PROFILE.P1_R05/2007001005141_03607_CS_2C-SNOW-PROFILE_GRANULE_P1_R05_E02_F00.hdf',
+#     SDC.READ)
+# hdf.datasets()
+
+# import xarray as xr
+# cloudsat2007001_nc = xr.open_dataset(
+#     'bas_palaeoclim_qino/observations/products/CloudSat/2C-SNOW-PROFILE.P1_R05/2007001005141_03607_CS_2C-SNOW-PROFILE_GRANULE_P1_R05_E02_F00.nc',
+# )
+
+# import pandas
+# pandas.read_hdf(
+#     'bas_palaeoclim_qino/observations/products/CloudSat/2C-SNOW-PROFILE.P1_R05/2007001005141_03607_CS_2C-SNOW-PROFILE_GRANULE_P1_R05_E02_F00.hdf'
+# )
+
+import rioxarray as rxr
+cloudsat2007001 = rxr.open_rasterio(
+    'bas_palaeoclim_qino/observations/products/CloudSat/2C-SNOW-PROFILE.P1_R05/2007001005141_03607_CS_2C-SNOW-PROFILE_GRANULE_P1_R05_E02_F00.hdf',
+    masked=True,
+)
+
+import rasterio
+cloudsat2007001 = rasterio.open(
+    'bas_palaeoclim_qino/observations/products/CloudSat/2C-SNOW-PROFILE.P1_R05/2007001005141_03607_CS_2C-SNOW-PROFILE_GRANULE_P1_R05_E02_F00.hdf',
+)
+'''
+# endregion
+# =============================================================================
+

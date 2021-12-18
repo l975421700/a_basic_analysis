@@ -207,7 +207,7 @@ def framework_plot1(
         lw = 0.1
         if (figure_margin is None) & (set_figure_margin):
             figure_margin = {
-                'left': 0.06, 'right': 0.97, 'bottom': 0.05, 'top': 0.995
+                'left': 0.07, 'right': 0.97, 'bottom': 0.05, 'top': 0.995
             }
         if (figsize is None):
             figsize = np.array([8.8*2, 8.8]) / 2.54
@@ -273,7 +273,7 @@ def framework_plot1(
 # https://www.naturalearthdata.com/downloads/
 
 fig, ax = framework_plot1("global")
-fig.savefig('figures/00_test/trial.png', dpi=600)
+fig.savefig('figures/0_test/trial.png')
 
 import os
 os.environ['CARTOPY_USER_BACKGROUNDS'] = 'bas_palaeoclim_qino/others/bg_cartopy'
@@ -434,7 +434,7 @@ middle_label=scalebar_elements['middle_label']
 def hemisphere_plot(
     prescribed_ax=False, ax = None,
     northextent=None, southextent=None, figsize=None, dpi=600,
-    fm_left=0.12, fm_right=0.88, fm_bottom=0.08, fm_top=0.96,
+    fm_left=0.13, fm_right=0.88, fm_bottom=0.08, fm_top=0.96,
     add_atlas=True, atlas_color='black', lw=0.25,
     add_grid=True, grid_color='gray', add_grid_labels = True,
     output_png=None,
@@ -463,6 +463,7 @@ def hemisphere_plot(
     mpl.rc('font', family='Times New Roman', size=10)
     import warnings
     warnings.filterwarnings('ignore')
+    from cartopy.mpl.ticker import LongitudeFormatter
     
     if (figsize is None):
         figsize = np.array([8.8, 9.3]) / 2.54
@@ -507,6 +508,7 @@ def hemisphere_plot(
             draw_labels=add_grid_labels,
             color=grid_color, alpha=0.5, linestyle='--',
             xlocs=ticklabel[0], ylocs=ticklabel[2], rotate_labels=False,
+            xformatter=LongitudeFormatter(degree_symbol='° '),
         )
         gl.ylabel_style = {'size': 0, 'color': None, 'alpha': 0}
     
@@ -541,10 +543,14 @@ def hemisphere_plot(
         return ax
 
 '''
-hemisphere_plot(northextent=-60, output_png='figures/0_test/trial.png',)
+hemisphere_plot(
+    northextent=-60, output_png='figures/0_test/trial.png',
+    add_grid_labels=False, plot_scalebar=False, grid_color='black',
+    fm_left=0.06, fm_right=0.94, fm_bottom=0.04, fm_top=0.98,
+    )
 hemisphere_plot(
     northextent=-30, sb_length=2000, sb_barheight=200,
-    output_png='figures/0_test/trial01',)
+    output_png='figures/0_test/trial',)
 hemisphere_plot(
     northextent=0, sb_length=3000, sb_barheight=300,
     output_png='figures/0_test/trial02',)
@@ -659,3 +665,89 @@ def plot_maxmin_points(lon, lat, data, ax, extrema, nsize, symbol, color='k',
 # endregion
 # =============================================================================
 
+
+# =============================================================================
+# region quickly plot variables
+
+def quick_var_plot(
+    var=None, varname=None, xlabel=' \n ', whicharea='global',
+    lon=None, lat=None, pltlevel=None, pltticks=None, northextent=-60,
+    figsize=None, cmap=None, colors='Blues', extend='max',
+    outputfile='figures/0_test/trial.png',
+    fm_left=0.06, fm_right=0.94, fm_bottom=0.06, fm_top=0.99,
+    ):
+    '''
+    ----Input
+    var: variable values.
+    varname: variables to plot. e.g. 'pre'
+    whicharea: 'global', 'SH'
+    '''
+    import numpy as np
+    from matplotlib import cm
+    import cartopy.crs as ccrs
+    from matplotlib.colors import BoundaryNorm
+    
+    if(lon is None):
+        lon = var.lon
+    if(lat is None):
+        lat = var.lat
+    
+    if(whicharea == 'global'):
+        if(figsize is None):
+            figsize=np.array([8.8*2, 11]) / 2.54
+        if(varname == 'pre'):
+            if(pltlevel is None):
+                pltlevel = np.arange(0, 4000.01, 2)
+            if(pltticks is None):
+                pltticks = np.arange(0, 4000.01, 500)
+        if(cmap is None):
+            cmap = cm.get_cmap(colors, len(pltlevel))
+        
+        fig, ax = framework_plot1(whicharea, figsize=figsize)
+    elif(whicharea == 'SH'):
+        if(figsize is None):
+            figsize = np.array([8.8, 9.8]) / 2.54
+        if(varname == 'pre'):
+            if(pltlevel is None):
+                pltlevel = np.concatenate(
+                    (np.arange(0, 100, 1), np.arange(100, 1600.01, 15)))
+            if(pltticks is None):
+                pltticks = np.concatenate(
+                    (np.arange(0, 100, 20), np.arange(100, 1600.01, 300)))
+        if(cmap is None):
+            cmap = rb_colormap(pltlevel).reversed()
+        
+        fig, ax = hemisphere_plot(
+            northextent=northextent, figsize=figsize,
+            add_grid_labels=False, plot_scalebar=False, grid_color='black',
+            fm_left=fm_left, fm_right=fm_right, fm_bottom=fm_bottom,
+            fm_top=fm_top,
+            )
+    
+    plt_cmp = ax.pcolormesh(
+        lon, lat, var,
+        norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
+        cmap=cmap, rasterized=True,
+        transform=ccrs.PlateCarree(),
+    )
+    
+    if(whicharea == 'global'):
+        cbar = fig.colorbar(
+            plt_cmp, ax=ax, orientation="horizontal",  pad=0.06,
+            fraction=0.09, shrink=0.6, aspect=40, anchor=(0.5, -0.6),
+            ticks=pltticks, extend=extend)
+        fig.subplots_adjust(left=0.06, right=0.97, bottom=0.08, top=0.995)
+    elif(whicharea == 'SH'):
+        cbar = fig.colorbar(
+            plt_cmp, ax=ax, orientation="horizontal",  pad=0.02,
+            fraction=0.13, shrink=1, aspect=40, anchor=(0.5, 1),
+            panchor=(0.5, 0), ticks=pltticks, extend=extend)
+    
+    cbar.ax.set_xlabel(xlabel, linespacing=1.5)
+    fig.savefig(outputfile,)
+
+
+'''
+'''
+# endregion
+# =============================================================================

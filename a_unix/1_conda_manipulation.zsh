@@ -71,7 +71,6 @@ mamba install -c conda-forge pyfesom2
 
 # clean conda installed pkgs
 # conda clean -a
-
 '''
 conda install basemap joblib seawater click
 
@@ -100,7 +99,17 @@ mamba install -c conda-forge urllib3
 # =============================================================================
 
 # =============================================================================
-# region
+# region miniconda management on jasmin 2021-12-16 (Using pynio)
+
+# conda create --name deepice_pynio --channel conda-forge/label/cf201901 pynio pyngl
+
+conda activate deepice_pynio
+
+conda install -c conda-forge mamba
+mamba install -c conda-forge xarray
+mamba install -c conda-forge dask
+mamba install -c conda-forge ipykernel
+
 # endregion
 # =============================================================================
 

@@ -9,7 +9,7 @@
 ssh -A qino@login1.jasmin.ac.uk
 ssh qino@sci1.jasmin.ac.uk
 
-# /home/users/qino/miniconda3/envs/deepice211017/bin/python -c "from IPython import start_ipython; start_ipython()" --no-autoindent
+# python -c "from IPython import start_ipython; start_ipython()" --no-autoindent
 
 ssh -X qino@mass-cli.jasmin.ac.uk
 

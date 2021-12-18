@@ -166,6 +166,7 @@ ax.background_img(name='natural_earth', resolution='high',
 # https://www.fatiando.org/rockhound/latest/gallery/bedmap2.html
 
 
+from cartopy.mpl.ticker import LongitudeFormatter
 projections = ccrs.SouthPolarStereo()
 transform = ccrs.PlateCarree()
 
@@ -189,6 +190,7 @@ gl = ax.gridlines(
     crs=transform, linewidth=0.15, zorder=2, draw_labels=True,
     color='gray', alpha=0.5, linestyle='--',
     xlocs=ticklabel[0], ylocs=ticklabel[2], rotate_labels = False,
+    xformatter=LongitudeFormatter(degree_symbol='° '),
     )
 gl.ylabel_style = {'size': 0, 'color': 'white'}
 

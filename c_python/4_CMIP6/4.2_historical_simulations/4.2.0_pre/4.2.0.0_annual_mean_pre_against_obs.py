@@ -59,7 +59,7 @@ version = 'v20190624/'
 
 # pr, Precipitation, [kg m-2 s-1] / [mm/s]
 pr_hg3_ll_hi_r1_fl = np.array(sorted(glob.glob(
-    top_dir + mip + institute + source + experiment + member +
+    top_dir + mip + institute + source + experiment + member + \
     table + variable + grid + version + '*.nc',
 )))
 
