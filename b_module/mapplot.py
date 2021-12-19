@@ -672,16 +672,17 @@ def plot_maxmin_points(lon, lat, data, ax, extrema, nsize, symbol, color='k',
 def quick_var_plot(
     var=None, varname=None, xlabel=' \n ', whicharea='global',
     lon=None, lat=None, pltlevel=None, pltticks=None, northextent=-60,
-    figsize=None, cmap=None, colors='Blues', extend='max',
+    figsize=None, cmap=None, colors=None, extend=None,
     outputfile='figures/0_test/trial.png',
     fm_left=0.06, fm_right=0.94, fm_bottom=0.06, fm_top=0.99,
     ):
     '''
     ----Input
     var: variable values.
-    varname: variables to plot. e.g. 'pre'
+    varname: variables to plot. e.g. 'pre', 'e'
     whicharea: 'global', 'SH'
     '''
+    
     import numpy as np
     from matplotlib import cm
     import cartopy.crs as ccrs
@@ -700,6 +701,19 @@ def quick_var_plot(
                 pltlevel = np.arange(0, 4000.01, 2)
             if(pltticks is None):
                 pltticks = np.arange(0, 4000.01, 500)
+            if(extend is None):
+                extend = 'max'
+            if(colors is None):
+                colors = 'Blues'
+        if(varname == 'evp'):
+            if(pltlevel is None):
+                pltlevel = np.arange(0, 3500.01, 2)
+            if(pltticks is None):
+                pltticks = np.arange(0, 3500.01, 500)
+            if(extend is None):
+                extend = 'both'
+            if(colors is None):
+                colors = 'Blues'
         if(cmap is None):
             cmap = cm.get_cmap(colors, len(pltlevel))
         
@@ -714,6 +728,15 @@ def quick_var_plot(
             if(pltticks is None):
                 pltticks = np.concatenate(
                     (np.arange(0, 100, 20), np.arange(100, 1600.01, 300)))
+        if(varname == 'evp'):
+            if(pltlevel is None):
+                pltlevel = np.concatenate(
+                    (np.arange(-30, 0, 0.3), np.arange(0, 800.01, 8)))
+            if(pltticks is None):
+                pltticks = np.concatenate(
+                    (np.arange(-30, 0, 5), np.arange(0, 800.01, 200)))
+            if(extend is None):
+                extend = 'both'
         if(cmap is None):
             cmap = rb_colormap(pltlevel).reversed()
         
@@ -721,22 +744,20 @@ def quick_var_plot(
             northextent=northextent, figsize=figsize,
             add_grid_labels=False, plot_scalebar=False, grid_color='black',
             fm_left=fm_left, fm_right=fm_right, fm_bottom=fm_bottom,
-            fm_top=fm_top,
-            )
+            fm_top=fm_top,)
     
     plt_cmp = ax.pcolormesh(
         lon, lat, var,
         norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
-        cmap=cmap, rasterized=True,
-        transform=ccrs.PlateCarree(),
-    )
+        cmap=cmap, rasterized=True, transform=ccrs.PlateCarree(),)
     
     if(whicharea == 'global'):
         cbar = fig.colorbar(
             plt_cmp, ax=ax, orientation="horizontal",  pad=0.06,
             fraction=0.09, shrink=0.6, aspect=40, anchor=(0.5, -0.6),
             ticks=pltticks, extend=extend)
-        fig.subplots_adjust(left=0.06, right=0.97, bottom=0.08, top=0.995)
+        fig.subplots_adjust(
+            left=0.07, right=0.97, bottom=0.09, top=0.995)
     elif(whicharea == 'SH'):
         cbar = fig.colorbar(
             plt_cmp, ax=ax, orientation="horizontal",  pad=0.02,
