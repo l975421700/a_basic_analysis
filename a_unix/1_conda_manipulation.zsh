@@ -67,7 +67,7 @@ mamba install -c conda-forge satpy
 mamba install -c conda-forge esmvaltool
 mamba install -c conda-forge rioxarray
 mamba install -c conda-forge pyfesom2
-
+mamba install -c conda-forge geopandas
 
 # clean conda installed pkgs
 # conda clean -a

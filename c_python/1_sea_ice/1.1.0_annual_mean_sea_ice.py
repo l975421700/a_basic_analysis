@@ -479,5 +479,11 @@ am_esgf_siconc_hg3_ll_pi.load()
 # endregion
 # =============================================================================
 
+# ds = xr.open_dataset(
+#     '/badc/cmip6/data/CMIP6/PMIP/NERC/HadGEM3-GC31-LL/midHolocene/r1i1p1f1/Amon/pr/gn/v20210111/pr_Amon_HadGEM3-GC31-LL_midHolocene_r1i1p1f1_gn_225001-234912.nc')
+
+# ds1 = xr.open_dataset(
+#     '/badc/cmip6/data/CMIP6/PMIP/NERC/HadGEM3-GC31-LL/lig127k/r1i1p1f1/Amon/pr/gn/v20210114/pr_Amon_HadGEM3-GC31-LL_lig127k_r1i1p1f1_gn_185001-204912.nc')
+
 
 
