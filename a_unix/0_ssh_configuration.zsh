@@ -18,6 +18,7 @@ ssh -X qino@mass-cli.jasmin.ac.uk
 
 # module load jaspy
 # module load jasmin-sci
+# which xconv
 
 # endregion
 # =============================================================================
