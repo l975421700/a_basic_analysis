@@ -23,6 +23,7 @@ from matplotlib import patches
 import matplotlib.ticker as mticker
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.colors import BoundaryNorm
+import matplotlib.colors as mcolors
 from matplotlib import cm
 import cartopy as ctp
 import cartopy.crs as ccrs
@@ -320,18 +321,7 @@ plt_theta = ax.pcolormesh(
 # =============================================================================
 # region plot Antarctic boundaries
 
-# (lon, lat, eais_mask, eais_mask01, \
-#     wais_mask, wais_mask01, ap_mask, ap_mask01) = create_ais_mask()
-
-# ais_masks = {'lon': lon, 'lat': lat, 'eais_mask': eais_mask,
-#              'eais_mask01': eais_mask01, 'wais_mask': wais_mask,
-#              'wais_mask01': wais_mask01, 'ap_mask': ap_mask,
-#              'ap_mask01': ap_mask01,}
-
-# with open('bas_palaeoclim_qino/others/ais_masks.pickle', 'wb') as handle:
-#     pickle.dump(ais_masks, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-# Load data (deserialize)
+# Load data
 with open('bas_palaeoclim_qino/others/ais_masks.pickle', 'rb') as handle:
     ais_masks = pickle.load(handle)
 
@@ -340,42 +330,46 @@ one_degree_grids_cdo_area = xr.open_dataset(
 ais_imbie2 = gpd.read_file(
     'bas_palaeoclim_qino/observations/products/IMBIE_2016_drainage_basins/Rignot_Basins/ANT_IceSheets_IMBIE2/ANT_IceSheets_IMBIE2_v1.6.shp')
 
-one_degree_grids_cdo_area.cell_area.values[ais_masks['eais_mask']].sum() / 10**6
-ais_imbie2.geometry[2].area / 10**6
-one_degree_grids_cdo_area.cell_area.values[ais_masks['wais_mask']].sum() / 10**6
-ais_imbie2.geometry[1].area / 10**6
-one_degree_grids_cdo_area.cell_area.values[ais_masks['ap_mask']].sum() / 10**6
-ais_imbie2.geometry[3].area / 10**6
-# 9761642.045593847, 9620521.647740476, 2110804.571811703, 2038875.6430063567, 232127.50065176177, 232678.32105463636
-
 fig, ax = hemisphere_plot(
     northextent=-60,
     add_grid_labels=False, plot_scalebar=False, grid_color='black',
     fm_left=0.06, fm_right=0.94, fm_bottom=0.04, fm_top=0.98, add_atlas=False,)
 
-plt_polygon = ais_imbie2.plot(
-    ax=ax, transform=ccrs.epsg(3031), cmap="viridis")
+# plt_polygon = ais_imbie2.plot(
+#     ax=ax, transform=ccrs.epsg(3031), cmap="viridis")
 
-# ax.pcolormesh(
-#     lon, lat, one_degree_grids_cdo_area.cell_area,
-#     cmap='viridis', rasterized=True, transform=ccrs.PlateCarree(),
-# )
+plt_wais = ais_imbie2.loc[ais_imbie2.Regions == 'West'].plot(
+    ax=ax, transform=ccrs.epsg(3031),
+    edgecolor='red', facecolor='none', linewidths=0.5, zorder=2)
+plt_eais = ais_imbie2.loc[ais_imbie2.Regions == 'East'].plot(
+    ax=ax, transform=ccrs.epsg(3031),
+    edgecolor='blue', facecolor='none', linewidths=0.5, zorder=2)
+plt_ap = ais_imbie2.loc[ais_imbie2.Regions == 'Peninsula'].plot(
+    ax=ax, transform=ccrs.epsg(3031),
+    edgecolor='m', facecolor='none', linewidths=0.5, zorder=2)
 
-ax.contour(
+ax.pcolormesh(
     one_degree_grids_cdo_area.lon,
     one_degree_grids_cdo_area.lat,
-    ais_masks['eais_mask01'], colors='blue', levels=np.array([0.5]),
-    transform=ccrs.PlateCarree(), linewidths=1, linestyles='solid')
-ax.contour(
+    ais_masks['eais_mask01'],
+    cmap=ListedColormap(
+        np.vstack(([0, 0, 0, 0], mcolors.to_rgba_array('lightblue')))),
+    transform=ccrs.PlateCarree())
+ax.pcolormesh(
     one_degree_grids_cdo_area.lon,
     one_degree_grids_cdo_area.lat,
-    ais_masks['wais_mask01'], colors='red', levels=np.array([0.5]),
-    transform=ccrs.PlateCarree(), linewidths=1, linestyles='solid')
-ax.contour(
+    ais_masks['wais_mask01'],
+    cmap=ListedColormap(
+        np.vstack(([0, 0, 0, 0], mcolors.to_rgba_array('lightpink')))),
+    transform=ccrs.PlateCarree())
+ax.pcolormesh(
     one_degree_grids_cdo_area.lon,
     one_degree_grids_cdo_area.lat,
-    ais_masks['ap_mask01'], colors='gray', levels=np.array([0.5]),
-    transform=ccrs.PlateCarree(), linewidths=1, linestyles='solid')
+    ais_masks['ap_mask01'],
+    cmap=ListedColormap(
+        np.vstack(([0, 0, 0, 0], mcolors.to_rgba_array('lightgray')))),
+    transform=ccrs.PlateCarree())
+
 
 coastline = cfeature.NaturalEarthFeature(
     'physical', 'coastline', '10m', edgecolor='black',
@@ -404,6 +398,38 @@ east_ctr.collections[0].get_paths()
 
 
 '''
+ax.pcolormesh(
+    lon, lat, one_degree_grids_cdo_area.cell_area,
+    cmap='viridis', rasterized=True, transform=ccrs.PlateCarree(),
+)
+
+ax.contour(
+    one_degree_grids_cdo_area.lon,
+    one_degree_grids_cdo_area.lat,
+    ais_masks['eais_mask01'], colors='blue', levels=np.array([0.5]),
+    transform=ccrs.PlateCarree(), linewidths=1, linestyles='solid',
+    interpolation='none')
+ax.contour(
+    one_degree_grids_cdo_area.lon,
+    one_degree_grids_cdo_area.lat,
+    ais_masks['wais_mask01'], colors='red', levels=np.array([0.5]),
+    transform=ccrs.PlateCarree(), linewidths=1, linestyles='solid')
+ax.contour(
+    one_degree_grids_cdo_area.lon,
+    one_degree_grids_cdo_area.lat,
+    ais_masks['ap_mask01'], colors='m', levels=np.array([0.5]),
+    transform=ccrs.PlateCarree(), linewidths=1, linestyles='solid')
+
+
+# one_degree_grids_cdo_area.cell_area.values[ais_masks['eais_mask']].sum() / 10**6
+# ais_imbie2.geometry[2].area / 10**6
+# one_degree_grids_cdo_area.cell_area.values[ais_masks['wais_mask']].sum() / 10**6
+# ais_imbie2.geometry[1].area / 10**6
+# one_degree_grids_cdo_area.cell_area.values[ais_masks['ap_mask']].sum() / 10**6
+# ais_imbie2.geometry[3].area / 10**6
+# 9761642.045593847, 9620521.647740476, 2110804.571811703, 2038875.6430063567, 232127.50065176177, 232678.32105463636
+
+
 # plot ANT_Rignot_Basins_IMBIE2
 ant_basins_imbie2 = gpd.read_file(
     'bas_palaeoclim_qino/observations/products/IMBIE_2016_drainage_basins/Rignot_Basins/ANT_Basins_IMBIE2_v1.6/ANT_Basins_IMBIE2_v1.6.shp'

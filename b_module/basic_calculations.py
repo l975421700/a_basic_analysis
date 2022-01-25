@@ -143,6 +143,7 @@ transform=ccrs.PlateCarree(), linewidths=1, linestyles='solid')
 # =============================================================================
 # region function to generate mask for three AIS
 
+
 def create_ais_mask(lon_lat_file = None, ais_file = None):
     '''
     ---- Input
@@ -189,20 +190,56 @@ def create_ais_mask(lon_lat_file = None, ais_file = None):
     ap_mask01 = np.zeros(ap_mask.shape)
     ap_mask01[ap_mask] = 1
     
-    return (lon, lat, eais_mask, eais_mask01, \
-        wais_mask, wais_mask01, ap_mask, ap_mask01)
+    ais_mask = (eais_mask | wais_mask | ap_mask)
+    ais_mask01 = np.zeros(ais_mask.shape)
+    ais_mask01[ais_mask] = 1
+    
+    eais_area = ncfile.cell_area.values[eais_mask].sum()
+    wais_area = ncfile.cell_area.values[wais_mask].sum()
+    ap_area = ncfile.cell_area.values[ap_mask].sum()
+    
+    return (lon, lat, eais_mask, eais_mask01, wais_mask, wais_mask01, ap_mask,
+            ap_mask01, ais_mask, ais_mask01, eais_area, wais_area, ap_area)
 
+
+'''
+# Production run to create area and masks files
+import pickle
+(lon, lat, eais_mask, eais_mask01, wais_mask, wais_mask01, ap_mask,
+ ap_mask01, ais_mask, ais_mask01, eais_area, wais_area, ap_area
+ ) = create_ais_mask()
+
+ais_masks = {'lon': lon, 'lat': lat, 'eais_mask': eais_mask,
+             'eais_mask01': eais_mask01, 'wais_mask': wais_mask,
+             'wais_mask01': wais_mask01, 'ap_mask': ap_mask,
+             'ap_mask01': ap_mask01, 'ais_mask': ais_mask,
+             'ais_mask01': ais_mask01,}
+ais_area = {'eais': eais_area, 'wais': wais_area, 'ap': ap_area,
+            'ais': eais_area + wais_area + ap_area,}
+
+with open('bas_palaeoclim_qino/others/ais_masks.pickle', 'wb') as handle:
+    pickle.dump(ais_masks, handle, protocol=pickle.HIGHEST_PROTOCOL)
+with open('bas_palaeoclim_qino/others/ais_area.pickle', 'wb') as handle:
+    pickle.dump(ais_area, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+'''
 
 
 '''
 # check
-(lon, lat, eais_mask, eais_mask01, wais_mask, wais_mask01, ap_mask, ap_mask01) = create_ais_mask()
-
 from a00_basic_analysis.b_module.mapplot import (
     framework_plot1,hemisphere_plot,)
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import numpy as np
+import pickle
+
+with open('bas_palaeoclim_qino/others/ais_masks.pickle', 'rb') as handle:
+    ais_masks = pickle.load(handle)
+with open('bas_palaeoclim_qino/others/ais_area.pickle', 'rb') as handle:
+    ais_area = pickle.load(handle)
+ais_area
+# 9761642.045593847, 9620521.647740476, 2110804.571811703, 2038875.6430063567, 232127.50065176177, 232678.32105463636
 
 fig, ax = hemisphere_plot(
     northextent=-60,
@@ -211,13 +248,16 @@ fig, ax = hemisphere_plot(
 
 # fig, ax = framework_plot1("global")
 ax.contour(
-    lon, lat, eais_mask01, colors='blue', levels=np.array([0.5]),
+    ais_masks['lon'], ais_masks['lat'], ais_masks['eais_mask01'],
+    colors='blue', levels=np.array([0.5]),
     transform=ccrs.PlateCarree(), linewidths=0.5, linestyles='solid')
 ax.contour(
-    lon, lat, wais_mask01, colors='red', levels=np.array([0.5]),
+    ais_masks['lon'], ais_masks['lat'], ais_masks['wais_mask01'],
+    colors='red', levels=np.array([0.5]),
     transform=ccrs.PlateCarree(), linewidths=0.5, linestyles='solid')
 ax.contour(
-    lon, lat, ap_mask01, colors='yellow', levels=np.array([0.5]),
+    ais_masks['lon'], ais_masks['lat'], ais_masks['ap_mask01'],
+    colors='yellow', levels=np.array([0.5]),
     transform=ccrs.PlateCarree(), linewidths=0.5, linestyles='solid')
 coastline = cfeature.NaturalEarthFeature(
     'physical', 'coastline', '10m', edgecolor='black',
@@ -225,8 +265,10 @@ coastline = cfeature.NaturalEarthFeature(
 ax.add_feature(coastline, zorder=2)
 
 fig.savefig('figures/0_test/trial.png')
+'''
 
 
+'''
 # derivation
 one_degree_grids_cdo_area = xr.open_dataset(
     'bas_palaeoclim_qino/others/one_degree_grids_cdo_area.nc')
