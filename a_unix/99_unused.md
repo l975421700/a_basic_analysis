@@ -1,7 +1,8 @@
 
 
+./app/nemo_cice/rose-app.conf:12:NEMO_START=/work/n02/n02/vittoria/lig127k_startfiles/au022o_22000101_restart.nc
 
-
+./app/nemo_cice/rose-app.conf:8:NEMO_ICEBERGS_START=/work/n02/n02/vittoria/lig127k_startfiles/au022o_icebergs_22000101_restart.nc
 
 
 # =============================================================================
