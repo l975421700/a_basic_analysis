@@ -64,14 +64,14 @@ from matplotlib.patches import Ellipse
 import matplotlib.transforms as transforms
 
 # self defined
-from a00_basic_analysis.b_module.mapplot import (
+from a_basic_analysis.b_module.mapplot import (
     ticks_labels,
     scale_bar,
     framework_plot1,
     hemisphere_plot,
 )
 
-from a00_basic_analysis.b_module.basic_calculations import (
+from a_basic_analysis.b_module.basic_calculations import (
     create_ais_mask,
 )
 # endregion
