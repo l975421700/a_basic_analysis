@@ -1,0 +1,23 @@
+general:
+        setup_name: echam
+        compute_time: "00:15:00"
+        initial_date: "2000-01-01"
+        final_date: "2000-01-31"
+        model_dir: "/work/ollie/qigao001/model_codes/echam-6.3.05p2-wiso/"
+        base_dir: "/work/ollie/qigao001/output/test/"
+        nyear: 0
+        nmonth: 1
+        use_venv: False
+
+echam:
+        version: "6.3.05p2-wiso"
+        scenario: "PI-CTRL"
+        res: T63
+        post_processing: False
+        lresume: False
+
+        file_movements:
+                forcing:
+                        all_directions: "link"
+
+# failed
