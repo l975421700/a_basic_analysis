@@ -55,7 +55,7 @@ fesom:
     ini_parent_date: "2133-12-31"
     restart_rate: 1
     restart_unit: "y"
-    restart_first: 1
+    # restart_first: 1
     version: "2.1-wiso"
     use_icebergs: False
     # ALE_scheme: 'zstar'

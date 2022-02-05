@@ -1,7 +1,7 @@
 general:
     setup_name: "awiesm"
     version: "2.1-wiso"
-    compute_time: "02:50:00"
+    compute_time: "03:00:00"
     initial_date: "2000-01-01"
     final_date: "2000-12-31"
     base_dir: "/work/ollie/qigao001/output/"
@@ -12,15 +12,16 @@ general:
 echam:
     lresume: 1
     ini_parent_exp_id: "pi_final"
-    fake_initial_date: "3100-01-01"
-    ini_parent_date:  "$(( ${fake_initial_date} - ${echam.time_step}seconds ))"
+    # fake_initial_date: "3101-01-01"
+    # ini_parent_date:  "$(( ${fake_initial_date} - ${echam.time_step}seconds ))"
+    ini_parent_date: "3100-12-31"
     ini_parent_dir: "/work/ollie/qigao001/startdump/restart_pi_final/echam/"
     restart_rate: 1
     restart_unit: "years"
     nproca: 24
     nprocb:  24
-    nprocar: 0
-    nprocbr: 0
+    nprocar: 24
+    nprocbr: 24
     file_movements:
         forcing:
             all_directions: "link"
@@ -31,8 +32,8 @@ echam:
                 parctl:
                     nproca: 24
                     nprocb: 24
-                    nprocar: 0
-                    nprocbr: 0
+                    nprocar: 24
+                    nprocbr: 24
                 runctl:
                     default_output: True
                 radctl:
@@ -59,7 +60,7 @@ fesom:
     lresume: 1
     ini_parent_exp_id: pi_final
     ini_parent_dir: "/work/ollie/qigao001/startdump/restart_pi_final/fesom/"
-    ini_parent_date: "3100-01-01"
+    ini_parent_date: "3100-12-31"
     file_movements:
         forcing:
             all_directions: "link"
@@ -89,13 +90,15 @@ jsbach:
         jsbach_1850: "/work/ollie/dsidoren/input/fesom2.0/meshes/mesh_CORE2_finaltopo_mean/tarfilesT63/input/jsbach/jsbach_T63CORE2_11tiles_5layers_1850.nc"
     lresume: 1
     ini_parent_exp_id: "pi_final"
-    ini_parent_date: "3100-01-01"
+    fake_initial_date: "3101-01-01"
+    ini_parent_date:  "$(( ${fake_initial_date} - ${echam.time_step}seconds ))"
+    # ini_parent_date: "31001231235230"
     ini_parent_dir: "/work/ollie/qigao001/startdump/restart_pi_final/jsbach/"
 
 oasis3mct:
     lresume: 1
     ini_parent_exp_id: "pi_final"
-    ini_parent_date: "3100-01-01"
+    ini_parent_date: "3100-12-31"
     ini_parent_dir: "/work/ollie/qigao001/startdump/restart_pi_final/oasis3mct/"
 
 hdmodel:
@@ -106,6 +109,8 @@ hdmodel:
             all_directions: "link"
     lresume: 1
     ini_parent_exp_id: "pi_final"
-    ini_parent_date: "3100-01-01"
+    fake_initial_date: "3101-01-01"
+    ini_parent_date:  "$(( ${fake_initial_date} - ${echam.time_step}seconds ))"
+    # ini_parent_date: "31001231235230"
     ini_parent_dir: "/work/ollie/qigao001/startdump/restart_pi_final/hdmodel/"
 
