@@ -83,6 +83,8 @@ When you issue each of the folloing command, you will be informed which packages
     $ mamba install -c pyviz geoviews
     $ mamba install -c conda-forge cmocean
     $ mamba install -c pyviz hvplot
+    $ mamba install -c conda-forge numpy=1.21
+    $ mamba install -c conda-forge pynio
 
 
 
@@ -121,3 +123,5 @@ Remove unused packages and caches.
     $ conda install -c conda-forge matplotlib
     $ conda install -c conda-forge pandas
     $ conda install -c conda-forge cartopy
+    $ conda install -c conda-forge numpy=1.21
+    $ conda install -c conda-forge mamba

@@ -673,14 +673,15 @@ def quick_var_plot(
     var=None, varname=None, xlabel=' \n ', whicharea='global',
     lon=None, lat=None, pltlevel=None, pltticks=None, northextent=-60,
     figsize=None, cmap=None, colors=None, extend=None,
-    outputfile='figures/0_test/trial.png',
-    fm_left=0.06, fm_right=0.94, fm_bottom=0.06, fm_top=0.99,
+    outputfile='figures/0_test/trial.png',#
+    fm_left=None, fm_right=None, fm_bottom=None, fm_top=None,
     ):
     '''
     ----Input
     var: variable values.
     varname: variables to plot. e.g. 'pre', 'e'
     whicharea: 'global', 'SH'
+    
     '''
     
     import numpy as np
@@ -717,7 +718,19 @@ def quick_var_plot(
         if(cmap is None):
             cmap = cm.get_cmap(colors, len(pltlevel))
         
-        fig, ax = framework_plot1(whicharea, figsize=figsize)
+        if(fm_left is None):
+            fm_left = 0.06
+        if(fm_right is None):
+            fm_right = 0.97
+        if(fm_bottom is None):
+            fm_bottom = 0.08
+        if(fm_top is None):
+            fm_top = 0.995
+        
+        fig, ax = framework_plot1(
+            whicharea, figsize=figsize,)
+    
+    
     elif(whicharea == 'SH'):
         if(figsize is None):
             figsize = np.array([8.8, 9.8]) / 2.54
@@ -740,6 +753,16 @@ def quick_var_plot(
         if(cmap is None):
             cmap = rb_colormap(pltlevel).reversed()
         
+        # fm_left=0.06, fm_right=0.94, fm_bottom=0.06, fm_top=0.99,
+        if(fm_left is None):
+            fm_left = 0.06
+        if(fm_right is None):
+            fm_right = 0.94
+        if(fm_bottom is None):
+            fm_bottom = 0.06
+        if(fm_top is None):
+            fm_top = 0.99
+        
         fig, ax = hemisphere_plot(
             northextent=northextent, figsize=figsize,
             add_grid_labels=False, plot_scalebar=False, grid_color='black',
@@ -753,11 +776,11 @@ def quick_var_plot(
     
     if(whicharea == 'global'):
         cbar = fig.colorbar(
-            plt_cmp, ax=ax, orientation="horizontal",  pad=0.06,
-            fraction=0.09, shrink=0.6, aspect=40, anchor=(0.5, -0.6),
+            plt_cmp, ax=ax, orientation="horizontal",  pad=0.02,
+            fraction=0.14, shrink=0.6, aspect=40, anchor=(0.5, 0.7),
             ticks=pltticks, extend=extend)
         fig.subplots_adjust(
-            left=0.07, right=0.97, bottom=0.09, top=0.995)
+            left=fm_left, right=fm_right, bottom=fm_bottom, top=fm_top)
     elif(whicharea == 'SH'):
         cbar = fig.colorbar(
             plt_cmp, ax=ax, orientation="horizontal",  pad=0.02,
