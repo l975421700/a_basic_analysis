@@ -33,7 +33,7 @@ quantiles = np.array(
 
 # folder
 # -------------------------------------------------
-
+awi_esm_odir = '/work/ollie/qigao001/output/awiesm-2.1-wiso/'
 
 # Physical constants
 # -------------------------------------------------
@@ -48,6 +48,7 @@ p0sl = 100000.0  # pressure at see level
 t0sl = 288.1499938964844   # temperature at see level
 
 zerok = 273.15
+
 # plot
 # -------------------------------------------------
 

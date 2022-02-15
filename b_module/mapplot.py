@@ -795,3 +795,41 @@ def quick_var_plot(
 '''
 # endregion
 # =============================================================================
+
+
+# =============================================================================
+# region generate mesh components for FESOM2 grid plot
+
+def mesh2plot(
+    meshdir='/work/ollie/qigao001/startdump/fesom2/mesh/core2/',
+    box=[-180, 180, -90, 90],
+    ):
+    '''
+    # input ----
+    
+    # output ----
+    '''
+    
+    import pyfesom2 as pf
+    import numpy as np
+    
+    mesh = pf.load_mesh(meshdir)
+    
+    box_mesh = [box[0] - 1, box[1] + 1, box[2] - 1, box[3] + 1]
+    left, right, down, up = box_mesh
+    
+    selection = ((mesh.x2 >= left) & (mesh.x2 <= right) & (mesh.y2 >= down)
+                 & (mesh.y2 <= up))
+    elem_selection = selection[mesh.elem]
+    no_nan_triangles = np.all(elem_selection, axis=1)
+    elem_no_nan = mesh.elem[no_nan_triangles]
+    d = mesh.x2[elem_no_nan].max(axis=1) - mesh.x2[elem_no_nan].min(axis=1)
+    no_cyclic_elem2 = np.argwhere(d < 100).ravel()
+    elem2plot = elem_no_nan[no_cyclic_elem2]
+    
+    tri2plot = {'x2': mesh.x2, 'y2': mesh.y2, 'elem2plot': elem2plot}
+    
+    return(tri2plot)
+
+# endregion
+# =============================================================================

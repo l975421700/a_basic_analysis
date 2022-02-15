@@ -85,6 +85,7 @@ When you issue each of the folloing command, you will be informed which packages
     $ mamba install -c pyviz hvplot
     $ mamba install -c conda-forge numpy=1.21
     $ mamba install -c conda-forge pynio
+    $ pip install fortran-language-server
 
 
 
