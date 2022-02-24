@@ -1,10 +1,56 @@
 
+
 # ERA5 data retrieval
 # Source: https://cds.climate.copernicus.eu/cdsapp#!/search?type=dataset
 
 
+import cdsapi
+c = cdsapi.Client()
+
+
 # =============================================================================
-# region ERA5 monthly averaged data on single levels from 1979 to present
+# region 1979-2014 ERA5 monthly averaged data on single levels from 1979 to present
+
+# retrieval time: 2022-02-24
+c.retrieve(
+    'reanalysis-era5-single-levels-monthly-means',
+    {
+        'format': 'netcdf',
+        'product_type': 'monthly_averaged_reanalysis',
+        'variable': 'total_precipitation',
+        'year': [
+            '1979', '1980', '1981',
+            '1982', '1983', '1984',
+            '1985', '1986', '1987',
+            '1988', '1989', '1990',
+            '1991', '1992', '1993',
+            '1994', '1995', '1996',
+            '1997', '1998', '1999',
+            '2000', '2001', '2002',
+            '2003', '2004', '2005',
+            '2006', '2007', '2008',
+            '2009', '2010', '2011',
+            '2012', '2013', '2014',
+        ],
+        'month': [
+            '01', '02', '03',
+            '04', '05', '06',
+            '07', '08', '09',
+            '10', '11', '12',
+        ],
+        'time': '00:00',
+    },
+    '/home/users/qino/bas_palaeoclim_qino/scratch/cmip6/hist/pre/ERA5_mon_sl_197901_201412_pre.nc')
+
+
+
+# endregion
+# =============================================================================
+
+
+# =============================================================================
+# =============================================================================
+# region deprecated 1979-2021 ERA5 monthly averaged data on single levels from 1979 to present
 # folder: mon_sl_79_present
 # https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels-monthly-means?tab=overview
 
@@ -312,7 +358,8 @@ c.retrieve(
 # =============================================================================
 
 # =============================================================================
-# region ERA5 hourly data on single levels from 1979 to present
+# =============================================================================
+# region deprecated 1979-2021 ERA5 hourly data on single levels from 1979 to present
 # folder: hr_sl_79_present
 # https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-single-levels-monthly-means?tab=overview
 
