@@ -1,0 +1,99 @@
+general:
+    setup_name: "awiesm"
+    version: "2.1-wiso"
+    compute_time: "02:00:00"
+    initial_date: "2000-01-01"
+    final_date: "2003-12-31"
+    base_dir: "/work/ollie/qigao001/output/"
+    nmonth: 0
+    nyear: 1
+    use_venv: False
+    # clean_old_rundirs_except: 2
+    # clean_old_rundirs_keep_every: 25
+
+awiesm:
+    postprocessing: True  # false
+    scenario: "PALEO"
+    model_dir: "/work/ollie/qigao001/model_codes/awiesm-2.1-wiso/"
+
+echam:
+    lresume: 1
+    ini_parent_exp_id: "pi_v5wmy"
+    fake_initial_date: "2134-01-01"
+    ini_parent_date:  "$(( ${fake_initial_date} - ${echam.time_step}seconds ))"
+    ini_parent_dir: "/home/ollie/lniu/workollie/AWIESM/pool/restart_pi_v5wmy/echam/"
+    restart_rate: 1
+    restart_unit: "years"
+    namelist_dir: "/work/ollie/qigao001/startdump/namelist/work_RC12_nowiso/"
+    nproca: 24
+    nprocb: 24
+    nprocar: 0
+    nprocbr: 0
+    add_namelist_changes:
+        namelist.echam:
+            parctl:
+                nproca: 24
+                nprocb: 24
+                nprocar: 0
+                nprocbr: 0
+            runctl:
+                default_output: True
+            radctl:
+                lrad_async: False
+            wisoctl:
+                lwiso_rerun: False
+                lwiso: False
+                nwiso: 0
+    # add_config_sources:
+    #    "namelist.echam": /pf/a/a270075/workPalmod/awiesm/hosing/experiments-gamma/namelists/namelist.echam  # turn on output jsbach
+    # disturbance: 1.0001
+
+fesom:
+    lresume: 1
+    ini_parent_exp_id: pi_v5wmy
+    ini_parent_dir: "/home/ollie/lniu/workollie/AWIESM/pool/restart_pi_v5wmy/fesom/"
+    ini_parent_date: "2133-12-31"
+    restart_rate: 1
+    restart_unit: "y"
+    # restart_first: 1
+    version: "2.1-wiso"
+    use_icebergs: False
+    # ALE_scheme: 'zstar'
+    res: "CORE2"
+    mesh_dir: "/home/ollie/lniu/workollie/AWIESM/pool/mesh_core2/"
+    namelist_dir: "/work/ollie/qigao001/startdump/namelist/work_RC12_nowiso/"
+    add_namelist_changes:
+        namelist.config:
+            paths:
+                ClimateDataPath: "/home/ollie/lniu/workollie/AWIESM/pool/hydrography/"
+                ForcingDataPath: remove_from_namelist
+                OpbndPath: remove_from_namelist
+                TideForcingPath: remove_from_namelist
+            icebergs:
+                use_icebergs: False
+            run_config:
+                lwiso: False
+            geometry:
+                force_rotation: True
+        namelist.forcing:
+            land_ice:
+                use_landice_water: False
+                landice_start_mon: 1
+                landice_end_mon: 12
+                fwf_path: "/home/ollie/xshi/work/AWIESM_2_1_LR_concurrent_rad/pi_fwf1_path/"
+
+jsbach:
+    input_sources:
+        jsbach_1850: "/home/ollie/lniu/workollie/AWIESM/pool/mesh_core2/tarfilesT63/input/jsbach/jsbach_T63CORE2_11tiles_5layers_1850.nc"
+
+oasis3mct:
+    lresume: 1
+    ini_parent_exp_id: "pi_v5wmy"
+    ini_parent_date: "21331231"
+    ini_restart_dir: "/home/ollie/lniu/workollie/AWIESM/pool/restart_pi_v5wmy/oasis3mct/"
+
+
+# copied from /home/ollie/xshi/work/AWIESM_2_1_LR_concurrent_rad/pi_fix.yaml
+# diff /work/ollie/qigao001/a_basic_analysis/d_model_simulation_records/1_AWI_ESM/1.0_runscripts/1.0.1_PI/pi_fix.yaml /home/ollie/xshi/work/AWIESM_2_1_LR_concurrent_rad/pi_fix.yaml
+
+

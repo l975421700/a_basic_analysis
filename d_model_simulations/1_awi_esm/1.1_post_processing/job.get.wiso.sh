@@ -1,25 +1,28 @@
+echo $'\n################ Get wiso files'
 
-expid=$1
-yrstart=$2
-yrend=$3
-# {}
-# Set file path
-cdo="/global/AWIsoft/cdo/1.9.2/bin/cdo"
-output_dir='/work/ollie/qigao001/output/awiesm-2.1-wiso'
+output_dir=$1
+expid=$2
+yrstart=$3
+yrend=$4
 
-echo '################ Get wiso file'
+echo '#### activate conda env training'
+source /home/ollie/qigao001/miniconda3/bin/activate training
+which cdo
 
 echo '#### combine grib files'
-${cdo} -mergetime ${output_dir}/${expid}/outdata/echam/${expid}_*.01_wiso ${output_dir}/${expid}/analysis/echam/${expid}_${yrstart}_${yrend}.01_wiso
+cdo -mergetime ${output_dir}/${expid}/outdata/echam/${expid}_*.01_wiso ${output_dir}/${expid}/analysis/echam/${expid}_${yrstart}_${yrend}.01_wiso
 
 echo '#### grib2nc'
-${cdo} -f nc -t ${output_dir}/${expid}/outdata/echam/${expid}_${yrstart}01.01_wiso.codes copy ${output_dir}/${expid}/analysis/echam/${expid}_${yrstart}_${yrend}.01_wiso ${output_dir}/${expid}/analysis/echam/${expid}_${yrstart}_${yrend}.01_wiso.nc
+cdo -f nc -t ${output_dir}/${expid}/outdata/echam/${expid}_${yrstart}01.01_wiso.codes copy ${output_dir}/${expid}/analysis/echam/${expid}_${yrstart}_${yrend}.01_wiso ${output_dir}/${expid}/analysis/echam/${expid}_${yrstart}_${yrend}.01_wiso.nc
 
 echo '#### mon2am'
-${cdo} -timmean ${output_dir}/${expid}/analysis/echam/${expid}_${yrstart}_${yrend}.01_wiso.nc ${output_dir}/${expid}/analysis/echam/${expid}_${yrstart}_${yrend}.01_wiso.am.nc
+cdo -timmean ${output_dir}/${expid}/analysis/echam/${expid}_${yrstart}_${yrend}.01_wiso.nc ${output_dir}/${expid}/analysis/echam/${expid}_${yrstart}_${yrend}.01_wiso.am.nc
 
 echo '#### mon2ann'
-${cdo} -yearmean ${output_dir}/${expid}/analysis/echam/${expid}_${yrstart}_${yrend}.01_wiso.nc ${output_dir}/${expid}/analysis/echam/${expid}_${yrstart}_${yrend}.01_wiso.ann.nc
+cdo -yearmean ${output_dir}/${expid}/analysis/echam/${expid}_${yrstart}_${yrend}.01_wiso.nc ${output_dir}/${expid}/analysis/echam/${expid}_${yrstart}_${yrend}.01_wiso.ann.nc
+
+echo '#### mon2mm'
+cdo -ymonmean ${output_dir}/${expid}/analysis/echam/${expid}_${yrstart}_${yrend}.01_wiso.nc ${output_dir}/${expid}/analysis/echam/${expid}_${yrstart}_${yrend}.01_wiso.mm.nc
 
 rm ${output_dir}/${expid}/analysis/echam/${expid}_${yrstart}_${yrend}.01_wiso
 

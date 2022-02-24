@@ -1,0 +1,60 @@
+general:
+    setup_name: "echam"
+    version: "6.3.05p2-wiso"
+    compute_time: "00:29:00"
+    initial_date: "2000-01-01"
+    final_date: "2000-01-31"
+    model_dir: "/home/ollie/mwerner/codes/echam-6.3.05p2-wiso/"
+    base_dir: "/work/ollie/mwerner/echam6-wiso-test/"
+    nmonth: 0
+    nyear: 1
+    use_venv: False
+    # clean_old_rundirs_except: 3
+
+echam:
+    scenario: "PI-CTRL"
+    res: T63
+    lresume: False
+    restart_rate: 1
+    restart_unit: "years"
+    nproca: 24
+    nprocb:  24
+    # nprocar: 6
+    # nprocbr: 6
+    nprocar: 0
+    nprocbr: 0
+    file_movements:
+        forcing:
+            all_directions: "link"
+        input:
+            all_directions: "link"
+    forcing_sources:
+        wiso_sw_observed: "/home/ollie/mwerner/model_input/ECHAM6-wiso/PI_ctrl/T63/T63_wisosw_d.nc"
+    add_forcing_files:
+        wiso_sw: wiso_sw_observed
+    forcing_in_work:
+        wiso_sw: "unit.25"
+    add_namelist_changes:
+            namelist.echam:
+                parctl:
+                    nproca: 24
+                    nprocb: 24
+                    # nprocar: 6
+                    # nprocbr: 6
+                    nprocar: 0
+                    nprocbr: 0
+                runctl:
+                    default_output: True
+                radctl:
+                    # lrad_async: True
+                    lrad_async: False
+                wisoctl:
+                    lwiso: True
+                    lwiso_rerun: ${lresume}
+                    nwiso: 3
+                    
+jsbach:
+    add_namelist_changes:
+        namelist.jsbach:
+            jsbach_ctl:
+                with_hd: False

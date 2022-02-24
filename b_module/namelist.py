@@ -33,7 +33,7 @@ quantiles = np.array(
 
 # folder
 # -------------------------------------------------
-awi_esm_odir = '/work/ollie/qigao001/output/awiesm-2.1-wiso/'
+
 
 # Physical constants
 # -------------------------------------------------
