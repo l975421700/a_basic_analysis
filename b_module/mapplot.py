@@ -432,13 +432,13 @@ middle_label=scalebar_elements['middle_label']
 
 
 def hemisphere_plot(
-    prescribed_ax=False, ax = None,
+    ax_org = None,
     northextent=None, southextent=None, figsize=None, dpi=600,
     fm_left=0.13, fm_right=0.88, fm_bottom=0.08, fm_top=0.96,
     add_atlas=True, atlas_color='black', lw=0.25,
-    add_grid=True, grid_color='gray', add_grid_labels = True,
+    add_grid=True, grid_color='gray', add_grid_labels = False,
     output_png=None,
-    plot_scalebar=True, sb_bars=2, sb_length=1000, sb_location=(-0.13, 0),
+    plot_scalebar=False, sb_bars=2, sb_length=1000, sb_location=(-0.13, 0),
     sb_barheight=100, sb_linewidth=0.15, sb_middle_label=False,
     ):
     '''
@@ -461,6 +461,7 @@ def hemisphere_plot(
     import matplotlib as mpl
     import matplotlib.path as mpath
     mpl.rc('font', family='Times New Roman', size=10)
+    mpl.rcParams['figure.dpi'] = 600
     import warnings
     warnings.filterwarnings('ignore')
     from cartopy.mpl.ticker import LongitudeFormatter
@@ -483,12 +484,12 @@ def hemisphere_plot(
     
     transform = ccrs.PlateCarree()
     
-    if (prescribed_ax is False):
+    if (ax_org is None):
         fig, ax = plt.subplots(
             1, 1, figsize=figsize, subplot_kw={'projection': projections},
             dpi=dpi)
     else:
-        ax = ax
+        ax = ax_org
     
     ax.set_extent(extent, crs=transform)
     
@@ -521,7 +522,7 @@ def hemisphere_plot(
     
     plt.setp(ax.spines.values(), linewidth=lw*0.8)
     
-    if (prescribed_ax is False):
+    if (ax_org is None):
         fig.subplots_adjust(
             left=fm_left, right=fm_right, bottom=fm_bottom, top=fm_top)
     
@@ -537,7 +538,7 @@ def hemisphere_plot(
     
     if not (output_png is None):
         fig.savefig(output_png)
-    elif (prescribed_ax is False):
+    elif (ax_org is None):
         return fig, ax
     else:
         return ax
