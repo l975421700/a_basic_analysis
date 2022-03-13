@@ -1,12 +1,12 @@
 general:
     setup_name: "awiesm"
     version: "2.1-wiso"
-    compute_time: "02:00:00"
+    compute_time: "01:00:00"
     initial_date: "2000-01-01"
-    final_date: "2000-01-31"
+    final_date: "2000-12-31"
     base_dir: "/work/ollie/qigao001/output/awiesm-2.1-wiso/pi_final/"
-    nmonth: 1
-    nyear: 0
+    nmonth: 0
+    nyear: 1
     use_venv: False
 
 echam:
@@ -16,7 +16,7 @@ echam:
     ini_parent_date:  "$(( ${fake_initial_date} - ${echam.time_step}seconds ))"
     ini_parent_dir: "/work/ollie/qigao001/startdump/restart_pi_final/echam/"
     restart_rate: 1
-    restart_unit: "months"
+    restart_unit: "years"
     nproca: 24
     nprocb:  24
     nprocar: 0
@@ -55,7 +55,7 @@ fesom:
     mesh_dir: "/work/ollie/dsidoren/input/fesom2.0/meshes/mesh_CORE2_finaltopo_mean/"
     namelist_dir: "/work/ollie/qigao001/startdump/namelist/work_RC12_wiso/"
     restart_rate: 1
-    restart_unit: "months"
+    restart_unit: "y"
     restart_first: 1
     lresume: 1
     ini_parent_exp_id: pi_final
