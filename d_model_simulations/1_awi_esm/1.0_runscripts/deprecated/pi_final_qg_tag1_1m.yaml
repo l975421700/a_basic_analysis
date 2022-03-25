@@ -1,7 +1,7 @@
 general:
     setup_name: "awiesm"
     version: "2.1-wiso"
-    compute_time: "02:00:00"
+    compute_time: "00:20:00"
     initial_date: "2000-01-01"
     final_date: "2000-01-31"
     base_dir: "/work/ollie/qigao001/output/awiesm-2.1-wiso/pi_final/"
@@ -40,8 +40,8 @@ echam:
                 wisoctl:
                     lwiso: True
                     lwiso_rerun: False
-                    nwiso: 7
-                    ntag: 4
+                    nwiso: 4
+                    ntag: 1
 
 awiesm:
     postprocessing: True

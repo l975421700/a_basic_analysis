@@ -153,6 +153,7 @@ middle_label=scalebar_elements['middle_label']
 
 def framework_plot1(
     which_area,
+    ax_org=None,
     output_png=None,
     dpi=600,
     figsize=None,
@@ -219,8 +220,11 @@ def framework_plot1(
         if (figsize is None):
             figsize = np.array([8.8, 8.8]) / 2.54
     
-    fig, ax = plt.subplots(
-        1, 1, figsize=figsize, subplot_kw={'projection': transform}, dpi=dpi)
+    if (ax_org is None):
+        fig, ax = plt.subplots(
+            1, 1, figsize=figsize, subplot_kw={'projection': transform}, dpi=dpi)
+    else:
+        ax = ax_org
     
     ax.set_extent(extent, crs = transform)
     if ticks_and_labels:
@@ -256,7 +260,7 @@ def framework_plot1(
                   col=scalebar_elements['col'],
                   middle_label=scalebar_elements['middle_label'])
     
-    if set_figure_margin & (not(figure_margin is None)):
+    if set_figure_margin & (not(figure_margin is None)) & (ax_org is None):
         fig.subplots_adjust(
             left=figure_margin['left'], right=figure_margin['right'],
             bottom=figure_margin['bottom'], top=figure_margin['top'])
@@ -265,8 +269,10 @@ def framework_plot1(
     
     if (not(output_png is None)):
         fig.savefig(output_png, dpi=dpi)
-    else:
+    elif (ax_org is None):
         return fig, ax
+    else:
+        return ax
 
 
 '''

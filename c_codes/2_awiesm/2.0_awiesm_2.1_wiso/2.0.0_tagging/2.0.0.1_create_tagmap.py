@@ -53,7 +53,7 @@ from a_basic_analysis.b_module.namelist import (
 
 
 # =============================================================================
-# region get basic information
+# region create tagmap_nhsh_sl
 
 pi_final_qg_tag4_1y_echam_am = xr.open_dataset(
     '/work/ollie/qigao001/output/awiesm-2.1-wiso/pi_final/pi_final_qg_tag4_1y/analysis/echam/pi_final_qg_tag4_1y_2000_2003.01_echam.am.nc')
@@ -67,7 +67,7 @@ ntag = 4
 tagmap_nhsh_sl = xr.Dataset(
     {"tagmap": (
         ("level", "lat", "lon"),
-        np.zeros((ntag+3, len(lat), len(lon)), dtype=np.int8)),
+        np.zeros((ntag+3, len(lat), len(lon)), dtype=np.double)),
      },
     coords={
         "level": np.arange(1, ntag+3+1, 1, dtype='int32'),
@@ -103,7 +103,7 @@ tagmap = xr.open_dataset('/home/ollie/qigao001/startdump/tagging/tagmap3/tagmap.
 tagmap_nhsh_sl = xr.open_dataset(
     '/home/ollie/qigao001/startdump/tagging/tagmap3/tagmap_nhsh_sl.nc',)
 np.max(tagmap_nhsh_sl.tagmap[3, :, :] + tagmap_nhsh_sl.tagmap[4, :, :] + tagmap_nhsh_sl.tagmap[5, :, :] + tagmap_nhsh_sl.tagmap[6, :, :])
-
+np.min(tagmap_nhsh_sl.tagmap[3, :, :] + tagmap_nhsh_sl.tagmap[4, :, :] + tagmap_nhsh_sl.tagmap[5, :, :] + tagmap_nhsh_sl.tagmap[6, :, :])
 
 
 '''
@@ -113,5 +113,80 @@ np.max(tagmap_nhsh_sl.tagmap[3, :, :] + tagmap_nhsh_sl.tagmap[4, :, :] + tagmap_
 # endregion
 # =============================================================================
 
+
+# =============================================================================
+# region create tagmap_nh_s
+
+pi_final_qg_tag4_1y_echam_am = xr.open_dataset(
+    '/work/ollie/qigao001/output/awiesm-2.1-wiso/pi_final/pi_final_qg_tag4_1m_0/analysis/echam/pi_final_qg_tag4_1m_0.01_echam.nc')
+lon = pi_final_qg_tag4_1y_echam_am.lon.values
+lat = pi_final_qg_tag4_1y_echam_am.lat.values
+slm = pi_final_qg_tag4_1y_echam_am.slm.squeeze()
+
+
+ntag = 1
+
+tagmap_nh_s = xr.Dataset(
+    {"tagmap": (
+        ("level", "lat", "lon"),
+        np.zeros((ntag+3, len(lat), len(lon)), dtype=np.double)),
+     },
+    coords={
+        "level": np.arange(1, ntag+3+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
+    }
+)
+
+# nh sea
+tagmap_nh_s.tagmap.sel(level=4, lat=slice(90, 0))[:, :] = \
+    1 - slm.sel(lat=slice(90, 0)).values
+
+tagmap_nh_s.to_netcdf(
+    '/home/ollie/qigao001/startdump/tagging/tagmap3/tagmap_nh_s.nc', mode='w')
+
+
+'''
+'''
+# endregion
+# =============================================================================
+
+
+# =============================================================================
+# region create tagmap_nh_l
+
+pi_final_qg_tag4_1y_echam_am = xr.open_dataset(
+    '/work/ollie/qigao001/output/awiesm-2.1-wiso/pi_final/pi_final_qg_tag4_1m_0/analysis/echam/pi_final_qg_tag4_1m_0.01_echam.nc')
+lon = pi_final_qg_tag4_1y_echam_am.lon.values
+lat = pi_final_qg_tag4_1y_echam_am.lat.values
+slm = pi_final_qg_tag4_1y_echam_am.slm.squeeze()
+
+
+ntag = 1
+
+tagmap_nh_l = xr.Dataset(
+    {"tagmap": (
+        ("level", "lat", "lon"),
+        np.zeros((ntag+3, len(lat), len(lon)), dtype=np.double)),
+     },
+    coords={
+        "level": np.arange(1, ntag+3+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
+    }
+)
+
+# nh land
+tagmap_nh_l.tagmap.sel(level=4, lat=slice(90, 0))[:, :] = \
+    slm.sel(lat=slice(90, 0)).values
+
+tagmap_nh_l.to_netcdf(
+    '/home/ollie/qigao001/startdump/tagging/tagmap3/tagmap_nh_l.nc', mode='w')
+
+
+'''
+'''
+# endregion
+# =============================================================================
 
 
