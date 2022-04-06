@@ -772,8 +772,9 @@ for i in range(len(expid)):
         tag_evp_frac[expid[i]]['region_' + str(j+1)] = \
             (awi_esm_o[expid[i]]['wiso']['wiso_ann'].wisoevap[3, j+3, :, :].values) / (awi_esm_o[expid[i]]['echam']['echam_ann'].evap[3, :, :].values) * 100
         
+        # set maximum effective evaporation to be 1.93e-8 mm/s or 0.05 mm/mon
         tag_evp_frac[expid[i]]['region_' + str(j+1)][
-            awi_esm_o[expid[i]]['echam']['echam_ann'].evap[3, :, :] >= -1e-8
+            awi_esm_o[expid[i]]['echam']['echam_ann'].evap[3, :, :] >= -1.93e-8
         ] = np.nan
 
 
@@ -886,8 +887,9 @@ for i in range(len(expid)):
             (awi_esm_o[expid[i]]['wiso']['wiso_ann'].wisoaprl[3, j+3, :, :] + awi_esm_o[expid[i]]['wiso']['wiso_ann'].wisoaprc[3, j+3, :, :]
              ).values / (awi_esm_o[expid[i]]['echam']['echam_ann'].aprl[3, :, :] + awi_esm_o[expid[i]]['echam']['echam_ann'].aprc[3, :, :]).values * 100
         
+        # set the value of fraction to be missing values when precipitation is less than 0.5 mm/mon
         tag_pre_frac[expid[i]]['region_' + str(j+1)][
-            (awi_esm_o[expid[i]]['echam']['echam_ann'].aprl[3, :, :] + awi_esm_o[expid[i]]['echam']['echam_ann'].aprc[3, :, :]).values < 1e-8
+            (awi_esm_o[expid[i]]['echam']['echam_ann'].aprl[3, :, :] + awi_esm_o[expid[i]]['echam']['echam_ann'].aprc[3, :, :]).values < 1.93e-8
         ] = np.nan
 
 j=0
@@ -970,5 +972,24 @@ fig.savefig('figures/6_awi/6.0_awi-esm-2.1-wiso/6.0.0_pi_final/6.0.0.6_tagging_e
 # endregion
 # =============================================================================
 
+
+# =============================================================================
+# region check conservation of evaporation to precipitation
+
+echam6_t63_slm_area = xr.open_dataset('/work/ollie/qigao001/output/scratch/others/land_sea_masks/ECHAM6_T63_slm_area.nc')
+
+np.sum(echam6_t63_slm_area.cell_area.values * awi_esm_o[expid[i]]['echam']['echam_ann'].evap[0, :, :].values) / np.sum(echam6_t63_slm_area.cell_area.values)
+
+np.sum(echam6_t63_slm_area.cell_area.values * (awi_esm_o[expid[i]]['echam']['echam_ann'].aprl[0, :, :] + awi_esm_o[expid[i]]['echam']['echam_ann'].aprc[0, :, :]).values) / np.sum(echam6_t63_slm_area.cell_area.values)
+
+
+# 1.2 per mil deficit in the second year
+# 2.4 per mil deficit in the second year
+# 1.0 per mil deficit in the third year
+# 1.9 per mil deficit in the fourth year
+
+
+# endregion
+# =============================================================================
 
 

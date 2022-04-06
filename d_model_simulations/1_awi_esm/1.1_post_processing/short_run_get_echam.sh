@@ -1,7 +1,7 @@
 
 
 output_dir='/work/ollie/qigao001/output/awiesm-2.1-wiso/pi_final'
-expid='pi_final_qg_tag4_1m_0'
+expid='pi_final_qg_tag5_1y_7_qgtest5'
 yrstart=2000
 
 
