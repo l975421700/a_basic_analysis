@@ -10,6 +10,11 @@ general:
     use_venv: False
 
 echam:
+    executable: echam6_org_20220330
+    bin_sources:
+            echam_bin: "${bin_dir}/${executable}"
+    bin_in_work:
+            echam_bin: "${executable}"
     lresume: 1
     ini_parent_exp_id: "pi_final"
     fake_initial_date: "3101-01-01"
@@ -40,8 +45,8 @@ echam:
                 wisoctl:
                     lwiso: True
                     lwiso_rerun: False
-                    nwiso: 7
-                    ntag: 4
+                    nwiso: 3
+                    # ntag: 5
 
 awiesm:
     postprocessing: True
@@ -101,4 +106,9 @@ hdmodel:
             all_directions: "link"
         input:
             all_directions: "link"
+
+# computer:
+#     partitions:
+#         compute:
+#             name:  "mpp_new"
 
