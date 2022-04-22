@@ -186,17 +186,25 @@ fig.savefig('figures/3_tagging/3.0_tagmap_creation/3.0.1_division_of_continents.
 # =============================================================================
 # region create tagmap_echam6_t63_0
 
+# inputfile = 'bas_palaeoclim_qino/scratch/cmip6/hist/sst/sst_mon_ESACCI-2.1_198201_201612_am_rg_echam6_t63_slm_trim.nc'
+inputfile = '/work/ollie/qigao001/startdump/tagging/tagmap/auxiliaries/sst_mon_ESACCI-2.1_198201_201612_am_rg_echam6_t63_slm_trim.nc'
+
+# outputfile = 'bas_palaeoclim_qino/startdump/tagmap/tagmap_echam6_t63_0.nc'
+outputfile = '/work/ollie/qigao001/startdump/tagging/tagmap/tagmap_echam6_t63_0.nc'
+
 # import data
-esacci_echam6_t63_trim = xr.open_dataset('bas_palaeoclim_qino/scratch/cmip6/hist/sst/sst_mon_ESACCI-2.1_198201_201612_am_rg_echam6_t63_slm_trim.nc')
+esacci_echam6_t63_trim = xr.open_dataset(inputfile)
+lon = esacci_echam6_t63_trim.lon.values
+lat = esacci_echam6_t63_trim.lat.values
 analysed_sst = esacci_echam6_t63_trim.analysed_sst
 
-echam6_t63_slm = xr.open_dataset('/home/users/qino/bas_palaeoclim_qino/others/land_sea_masks/ECHAM6_T63_slm.nc')
-lon = echam6_t63_slm.lon
-lat = echam6_t63_slm.lat
-slm = echam6_t63_slm.slm
+# echam6_t63_slm = xr.open_dataset('/home/users/qino/bas_palaeoclim_qino/others/land_sea_masks/ECHAM6_T63_slm.nc')
+# lon = echam6_t63_slm.lon
+# lat = echam6_t63_slm.lat
+# slm = echam6_t63_slm.slm
 
 # get latlon info
-lon2, lat2 = np.meshgrid(lon.values, lat.values)
+lon2, lat2 = np.meshgrid(lon, lat)
 coors = np.hstack((lon2.reshape(-1, 1), lat2.reshape(-1, 1)))
 
 # define paths and masks
@@ -360,13 +368,12 @@ tagmap_echam6_t63_0.tagmap.sel(level=(
 tagmap_echam6_t63_0.tagmap.sel(level=(
     9+len(atlantic_lat_ubs)+len(pacific_lat_ubs)+len(indiano_lat_ubs) + 8)).values[austria_lmask & (np.isnan(analysed_sst))] = 1
 
-tagmap_echam6_t63_0.to_netcdf(
-    'bas_palaeoclim_qino/startdump/tagmap/tagmap_echam6_t63_0.nc')
+tagmap_echam6_t63_0.to_netcdf(outputfile)
 
 
 '''
 # check
-tagmap_echam6_t63_0 = xr.open_dataset('bas_palaeoclim_qino/startdump/tagmap/tagmap_echam6_t63_0.nc')
+tagmap_echam6_t63_0 = xr.open_dataset('/work/ollie/qigao001/startdump/tagging/tagmap/tagmap_echam6_t63_0.nc')
 stats.describe(tagmap_echam6_t63_0.tagmap[3, :, :], axis=None)
 stats.describe(tagmap_echam6_t63_0.tagmap[4:8, :, :].sum(axis=0), axis=None)
 stats.describe(tagmap_echam6_t63_0.tagmap[8:55, :, :].sum(axis=0), axis=None)

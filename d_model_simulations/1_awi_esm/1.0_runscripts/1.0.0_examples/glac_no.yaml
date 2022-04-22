@@ -1,0 +1,120 @@
+general:
+    setup_name: "awiesm"
+    compute_time: "01:30:00"
+    initial_date: "2002-01-01"
+    final_date: "2301-12-31"
+    base_dir: "/work/ollie/xshi/AWIESM_2_1_LR_concurrent_rad/"
+    nmonth: 0
+    nyear: 1
+    use_venv: False
+    clean_old_rundirs_except: 2
+    clean_old_rundirs_keep_every: 25
+
+computer:
+    additional_flags: "--qos=express"
+
+awiesm:
+    version: "2.1-wiso"
+    postprocessing: false  # true
+    scenario: "PALEO"
+    model_dir: "/home/ollie/xshi/esm_tools/awiesm-2.1-wiso/"
+
+echam:
+    lresume: 1
+    ini_parent_exp_id: "glac1d_noib"
+    fake_initial_date: "2002-01-01"
+    ini_parent_date:  "$(( ${fake_initial_date} - ${echam.time_step}seconds ))"
+    ini_parent_dir: "/home/ollie/xshi/work/AWIESM_2_1_LR_concurrent_rad/glac1d_noib/restart/echam/"
+    restart_rate: 1
+    restart_unit: "years"
+    nproca: 24
+    nprocb: 24
+    nprocar: 0
+    nprocbr: 0
+    executable: echam6_ndd12
+    bin_sources:
+            echam_bin: "${bin_dir}/${executable}"
+    bin_in_work:
+            echam_bin: "${executable}"
+    lrad_async: False
+    #add_config_sources:
+    #    "namelist.echam": /pf/a/a270075/workPalmod/awiesm/hosing/experiments-gamma/namelists/namelist.echam  # turn on output jsbach
+    # disturbance: 1.0001
+    namelist_changes:
+        namelist.echam:
+            parctl:
+                nproca: 24
+                nprocb: 24
+                nprocar: 0
+                nprocbr: 0
+            radctl:
+                CO2VMR: 190.0e-6
+                CH4VMR: 0.375e-6
+                N2OVMR: 0.200e-6
+                cecc: 0.018994
+                cobld: 22.949
+                clonp: 294.42
+                yr_perp: -99999
+                lrad_async: False
+            wisoctl:
+                lwiso_rerun: True 
+                lwiso: True 
+                nwiso: 3
+
+
+hdmodel:
+    add_input_sources:
+            hdpara: "/home/ollie/xshi/mesh_glac1d_m1/tarfilesT63/input/echam6/hdpara.nc"
+
+fesom:
+    lresume: 1 
+    ini_parent_exp_id: "glac1d_final"
+    ini_parent_dir: "/home/ollie/xshi/work/AWIESM_2_1_LR_concurrent_rad/glac1d_noib/restart/fesom/"
+    ini_parent_date: "2001-12-31"
+    restart_rate: 1
+    restart_unit: "y"
+    restart_first: 1
+    version: "2.0"
+    use_icebergs: false 
+    use_icesheet_coupling: false 
+    iceberg_dir: "/home/ollie/xshi/mesh_glac1d_m1/ib_1824/"
+    ALE_scheme: 'zstar'
+    res: "CORE2"
+    mesh_dir: "/home/ollie/xshi/mesh_glac1d_m1/"
+    nx: 95239
+    namelist_dir: "/home/ollie/xshi/work/AWIESM_2_1_LR_concurrent_rad/work_RC12_wiso/"
+    namelist_changes:
+        namelist.config:
+            paths:
+                ClimateDataPath: "/home/ollie/xshi/work/AWIESM_2_1_LR_concurrent_rad/hydrography/lgm/"
+                ForcingDataPath: remove_from_namelist
+                OpbndPath: remove_from_namelist
+                TideForcingPath: remove_from_namelist
+            icebergs:
+                use_icebergs: false
+                use_icesheet_coupling: false 
+#                ib_num: 1824
+                steps_per_ib_step: 16
+        namelist.forcing:
+            land_ice:
+                use_landice_water: False 
+                landice_start_mon: 1  
+                landice_end_mon: 12  
+                fwf_path: "/home/ollie/xshi/work/AWIESM_2_1_LR_concurrent_rad/pi_fwf1_path/"
+                use_iceberg_water: False 
+                iceberg_start_mon: 1  
+                iceberg_end_mon: 12  
+                iceberg_path: "/home/ollie/xshi/work/AWIESM_2_1_LR_concurrent_rad/iceberg_path_na/"
+                iceberg_freshwater_flux: False 
+                iceberg_heat_flux: False 
+                iceberg_isotope_flux: False
+
+jsbach:
+    input_sources:
+        jsbach_1850: "/home/ollie/xshi/mesh_glac1d_m1/tarfilesT63/input/jsbach/jsbach_T63CORE2_11tiles_5layers_natural-veg.GLAC1D_21k.nc"
+
+oasis3mct:
+    lresume:  1
+    ini_parent_exp_id: "lgm_m1"
+    ini_parent_date: "20011231"
+    ini_restart_dir: "/home/ollie/xshi/work/AWIESM_2_1_LR_concurrent_rad/glac1d_noib/restart/oasis3mct/"
