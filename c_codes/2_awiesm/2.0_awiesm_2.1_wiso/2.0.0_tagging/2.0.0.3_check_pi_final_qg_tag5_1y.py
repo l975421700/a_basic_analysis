@@ -54,17 +54,14 @@ from a_basic_analysis.b_module.namelist import (
 
 # =============================================================================
 # =============================================================================
-# region import monthly output pi_final_qg_tag5_1y_*
+# region import monthly output pi_final_qg*
 
-awi_esm_odir = '/home/ollie/qigao001/output/awiesm-2.1-wiso/pi_final/'
+awi_esm_odir = '/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/'
 
 expid = [
-    # 'pi_final_qg_1y_12_qgtest2.3.6',
-    # 'pi_final_qg_1m_20_qgtest2.3.6',
-    # 'pi_final_qg_1m_21_qgtest2.3.7',
-    
-    'pi_final_qg_1m_25_qgtest2.4.2',
-    'pi_final_qg_1m_23_qgtest2.4.0',
+    # 'pi_echam6_1m_24_2.5.15',
+    # 'pi_echam6_1m_25_2.5.0',
+    'pi_echam6_1m_28_2.5.18',
     ]
 
 awi_esm_org_o = {}
@@ -82,11 +79,6 @@ for i in range(len(expid)):
     awi_esm_org_o[expid[i]]['wiso'] = xr.open_dataset(
         awi_esm_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_wiso.nc')
 
-
-'''
-i = 0
-expid[i]
-'''
 # endregion
 # =============================================================================
 
@@ -97,15 +89,72 @@ expid[i]
 i = 0
 expid[i]
 imonth = 0
+iglobal = -1
+
+np.nanmax(abs(awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, -2, :, :]))
+test = awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, -2, :, :]
+test.to_netcdf('/work/ollie/qigao001/output/0_backup/test1.nc')
+
+
+# Absolute maximum difference between normal and tagged evp from whole globe: 0
+np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, iglobal, :, :]))
+
+# Absolute maximum difference between normal and tagged evp from nh/sh: 6.213667802512646e-09
+np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 4:6, :, :].sum(axis=0)))
+test = awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 4:6, :, :].sum(axis=0)
+test.to_netcdf('/work/ollie/qigao001/output/0_backup/test1.nc')
+
+# Absolute maximum difference between normal and tagged evp from nh/sh: 6.213667802512646e-09
+np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 6:8, :, :].sum(axis=0)))
+test = awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 6:8, :, :].sum(axis=0)
+test.to_netcdf('/work/ollie/qigao001/output/0_backup/test.nc')
+
+# Absolute maximum difference between normal and tagged evp from nh/sh + 1: 1.734327815938741e-05
+np.nanmax(abs(3 * awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 6:8, :, :].sum(axis=0)))
+
+np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] +
+              awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 4, :, :] -
+              awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 6, :, :]))
+
+np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 10, :, :]))
+
+np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - 2 * awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 9, :, :]))
+np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - 0.5 * awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 8, :, :]))
+
+
+i = 12
+expid[i]
+imonth = 0
 iglobal = 3
+
+# Absolute maximum difference between normal and tagged evp from whole globe: 0
+np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, iglobal, :, :]))
+
+# Absolute maximum difference between normal and tagged evp from nh/sh: 6.213667802512646e-09
+np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 4:6, :, :].sum(axis=0)))
+test = awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 4:6, :, :].sum(axis=0)
+test.to_netcdf('/work/ollie/qigao001/output/0_backup/test1.nc')
+
+# Absolute maximum difference between normal and tagged evp from w/e: 1.0289659257978201e-07
+np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 6:8, :, :].sum(axis=0)))
+test = awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 6:8, :, :].sum(axis=0)
+test.to_netcdf('/work/ollie/qigao001/output/0_backup/test2.nc')
+
+
+i = 10
+expid[i]
+imonth = 0
+iglobal = 3
+
+# np.nanmax(abs(awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, iglobal, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 4, :, :]))
 
 # Absolute maximum difference between tagged evp from whole and half globe: 3.3527612686157227e-08
 np.nanmax(abs(awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, iglobal, :, :] - 2 * awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 4, :, :]))
 test = awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, iglobal, :, :] - 2 * awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 4, :, :]
-test.to_netcdf('/work/ollie/qigao001/output/backup/test1.nc')
+test.to_netcdf('/work/ollie/qigao001/output/0_backup/test1.nc')
 
 
-i = 1
+i = 5
 expid[i]
 imonth = 0
 iglobal = 3
@@ -113,14 +162,12 @@ iglobal = 3
 # Absolute maximum difference between normal and tagged evp from 4 regions: 2.6025372790172696e-07
 np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 4:8, :, :].sum(axis=0)))
 test = awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 4:8, :, :].sum(axis=0)
-test.to_netcdf('/work/ollie/qigao001/output/backup/test.nc')
+test.to_netcdf('/work/ollie/qigao001/output/0_backup/test3.nc')
 
 
-
-i = 0
+i = 9
 expid[i]
 imonth = 0
-
 iglobal = 3
 
 # Absolute maximum difference between normal and tagged evp from whole globe: 0
@@ -132,7 +179,7 @@ np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_
 np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 3:7, :, :].sum(axis=0)))
 
 test = awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 3:7, :, :].sum(axis=0)
-test.to_netcdf('/work/ollie/qigao001/output/backup/test.nc')
+test.to_netcdf('/work/ollie/qigao001/output/0_backup/test.nc')
 
 
 # Absolute maximum difference between normal and tagged pre from whole globe: 0
@@ -142,9 +189,7 @@ np.nanmax(abs((awi_esm_org_o[expid[i]]['echam'].aprl[imonth, :, :] + awi_esm_org
 np.nanmax(abs((awi_esm_org_o[expid[i]]['echam'].aprl[imonth, :, :] + awi_esm_org_o[expid[i]]['echam'].aprc[imonth, :, :]) - (awi_esm_org_o[expid[i]]['wiso'].wisoaprl[imonth, 3:7, :, :].sum(axis=0) + awi_esm_org_o[expid[i]]['wiso'].wisoaprc[imonth, 3:7, :, :].sum(axis=0))))
 
 test1 = (awi_esm_org_o[expid[i]]['echam'].aprl[imonth, :, :] + awi_esm_org_o[expid[i]]['echam'].aprc[imonth, :, :]) - (awi_esm_org_o[expid[i]]['wiso'].wisoaprl[imonth, 3:7, :, :].sum(axis=0) + awi_esm_org_o[expid[i]]['wiso'].wisoaprc[imonth, 3:7, :, :].sum(axis=0))
-test1.to_netcdf('/work/ollie/qigao001/output/backup/test1.nc')
-
-
+test1.to_netcdf('/work/ollie/qigao001/output/0_backup/test1.nc')
 
 
 # Absolute difference between tagged evp from whole globe and from 47 regions
@@ -152,11 +197,11 @@ test1.to_netcdf('/work/ollie/qigao001/output/backup/test1.nc')
 np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 8:55, :, :].sum(axis=0)))
 
 test = awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 8:55, :, :].sum(axis=0)
-test.to_netcdf('/work/ollie/qigao001/output/backup/test.nc')
+test.to_netcdf('/work/ollie/qigao001/output/0_backup/test.nc')
 
 test = awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 7, :, :] - (awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 3, :, :] + awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 4, :, :] + awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 5, :, :] + awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 6, :, :])
 # test.values[tagmap.tagmap[3, :, :] == 0] = np.nan
-test.to_netcdf('/work/ollie/qigao001/output/backup/test.nc')
+test.to_netcdf('/work/ollie/qigao001/output/0_backup/test.nc')
 
 
 # endregion
@@ -939,11 +984,26 @@ awi_esm_o[expid[i]]['wiso']['wiso_ann']
 # =============================================================================
 # region import monthly output pi_final_qg_tag5_1m_*
 
-awi_esm_odir = '/home/ollie/qigao001/output/awiesm-2.1-wiso/pi_final/'
+# awi_esm_odir = '/home/ollie/qigao001/output/awiesm-2.1-wiso/pi_final/'
+awi_esm_odir = '/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/'
 
 expid = [
-    'pi_final_qg_1m_22_qgtest2.4',
-    'pi_final_qg_1m_23_qgtest2.4.0',
+    'pi_echam6_1m_10_2.5.1',
+    'pi_echam6_1m_23_2.5.15',
+    # 'pi_final_qg_1m_23_qgtest2.4.0',
+    # 'pi_final_qg_1m_29_qgtest2.4.3',
+    # 'pi_echam6_1m_0_2.5.0',
+    # 'pi_echam6_1m_1_2.5.1',
+    # 'pi_echam6_1m_2_2.5.2',
+    # 'pi_echam6_1m_3_2.5.0',
+    # 'pi_echam6_1m_4_2.5.0',
+    # 'pi_echam6_1m_5_2.5.1',
+    # 'pi_echam6_1m_6_2.5.1',
+    # 'pi_echam6_1m_7_2.5.1',
+    # 'pi_echam6_1m_8_2.5.2',
+    # 'pi_echam6_1m_9_2.5.2',
+    # 'pi_echam6_1m_10_2.5.1',
+    # 'pi_echam6_1m_11_2.5.3',
     ]
 
 awi_esm_org_o = {}
@@ -1081,8 +1141,9 @@ no improvement from echam6_qgtest2_20220401 to echam6_qgtest5_20220405
 
 # =============================================================================
 # region check data format
-outputdata = xr.open_dataset('/work/ollie/qigao001/output/awiesm-2.1-wiso/pi_final/pi_final_qg_1y_1_qgtest2.1/outdata/echam/pi_final_qg_1y_1_qgtest2.1_200001.01_echam', engine='cfgrib')
-outputdata.q[0, 0, 0].values
+outputdata = xr.open_dataset('/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/pi_echam6_1m_28_2.5.18/outdata/echam/pi_echam6_1m_28_2.5.18_200001.01_wiso', engine='cfgrib')
+outputdata.data_vars
+outputdata.wisoevap[0, 0, 0].values
 
 outputdata1 = xr.open_dataset('/work/ollie/cdanek/out/awicm-CMIP6/hu_svn471_ollie/fesom.2000.oce.mean.nc')
 # outputdata1.tos[0, 0].values

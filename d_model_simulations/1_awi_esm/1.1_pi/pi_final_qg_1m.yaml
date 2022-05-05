@@ -10,7 +10,7 @@ general:
     use_venv: False
 
 echam:
-    executable: echam6_220421_qgtest2.4.0
+    executable: echam6_0422_wiso_2.5.1
     bin_sources:
             echam_bin: "${bin_dir}/${executable}"
     bin_in_work:
@@ -45,8 +45,8 @@ echam:
                 wisoctl:
                     lwiso: True
                     lwiso_rerun: False
-                    nwiso: 5
-                    ntag: 2
+                    nwiso: 8
+                    ntag: 5
 
 awiesm:
     postprocessing: False

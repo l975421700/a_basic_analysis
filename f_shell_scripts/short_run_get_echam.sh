@@ -1,7 +1,7 @@
 
 
-output_dir='/work/ollie/qigao001/output/awiesm-2.1-wiso/pi_final'
-expid='pi_final_qg_1m_27_qgtest2.4.0'
+output_dir='/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi'
+expid='pi_echam6_1m_28_2.5.18'
 yrstart=2000
 
 

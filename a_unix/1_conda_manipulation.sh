@@ -9,6 +9,7 @@
 # conda env list
 # conda env remove -n deepice
 # conda list
+# conda update -n base -c defaults conda
 
 source /home/users/qino/miniconda3/bin/activate
 conda activate deepice
