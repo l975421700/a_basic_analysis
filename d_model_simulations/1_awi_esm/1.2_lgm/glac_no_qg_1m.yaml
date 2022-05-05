@@ -1,0 +1,120 @@
+general:
+    setup_name: "awiesm"
+    version: "2.1-wiso"
+    compute_time: "00:30:00"
+    initial_date: "2000-01-01"
+    final_date: "2000-01-31"
+    base_dir: "/work/ollie/qigao001/output/awiesm-2.1-wiso/lgm/"
+    nmonth: 1
+    nyear: 0
+    use_venv: False
+
+echam:
+    executable: echam6_220411_qgtest2.1.2ndd12
+    bin_sources:
+            echam_bin: "${bin_dir}/${executable}"
+    bin_in_work:
+            echam_bin: "${executable}"
+    lresume: 1
+    ini_parent_exp_id: "glac1d_noib"
+    fake_initial_date: "2002-01-01"
+    ini_parent_date:  "$(( ${fake_initial_date} - ${echam.time_step}seconds ))"
+    ini_parent_dir: "/home/ollie/xshi/work/AWIESM_2_1_LR_concurrent_rad/glac1d_noib/restart/echam/"
+    restart_rate: 1
+    restart_unit: "months"
+    nproca: 24
+    nprocb:  24
+    nprocar: 0
+    nprocbr: 0
+    lrad_async: False
+    file_movements:
+        forcing:
+            all_directions: "link"
+        input:
+            all_directions: "link"
+    add_namelist_changes:
+            namelist.echam:
+                parctl:
+                    nproca: 24
+                    nprocb: 24
+                    nprocar: 0
+                    nprocbr: 0
+                runctl:
+                    default_output: True
+                    l_orbvsop87: False
+                radctl:
+                    CO2VMR: 190.0e-6
+                    CH4VMR: 0.375e-6
+                    N2OVMR: 0.200e-6
+                    cecc: 0.018994
+                    cobld: 22.949
+                    clonp: 294.42
+                    yr_perp: -99999
+                    lrad_async: False
+                wisoctl:
+                    lwiso_rerun: False
+                    lwiso: True
+                    nwiso: 8
+                    ntag: 5
+
+awiesm:
+    postprocessing: False
+    scenario: "PALEO"
+    model_dir: "/work/ollie/qigao001/model_codes/awiesm-2.1-wiso/"
+
+fesom:
+    version: "2.1-wiso"
+    res: "CORE2"
+    mesh_dir: "/home/ollie/xshi/mesh_glac1d_m1/"
+    nx: 95239
+    namelist_dir: "/work/ollie/qigao001/startdump/namelist/work_RC12_wiso/"
+    restart_rate: 1
+    restart_unit: "months"
+    restart_first: 1
+    lresume: 1
+    ini_parent_exp_id: "glac1d_final"
+    ini_parent_dir: "/home/ollie/xshi/work/AWIESM_2_1_LR_concurrent_rad/glac1d_noib/restart/fesom/"
+    ini_parent_date: "2001-12-31"
+    ALE_scheme: 'zstar' # right?
+    file_movements:
+        forcing:
+            all_directions: "link"
+        input:
+            all_directions: "link"
+    add_namelist_changes:
+        namelist.config:
+            paths:
+                ClimateDataPath: "/home/ollie/xshi/work/AWIESM_2_1_LR_concurrent_rad/hydrography/lgm/"
+                ForcingDataPath: remove_from_namelist
+                OpbndPath: remove_from_namelist
+                TideForcingPath: remove_from_namelist
+            run_config:
+                lwiso: True
+            geometry:
+                force_rotation: True
+
+jsbach:
+    file_movements:
+        forcing:
+            all_directions: "link"
+        input:
+            all_directions: "link"
+    input_sources:
+        jsbach_1850: "/home/ollie/xshi/mesh_glac1d_m1/tarfilesT63/input/jsbach/jsbach_T63CORE2_11tiles_5layers_natural-veg.GLAC1D_21k.nc"
+
+oasis3mct:
+    lresume: 1
+    ini_parent_exp_id: "lgm_m1"
+    ini_parent_date: "20011231"
+    ini_restart_dir: "/home/ollie/xshi/work/AWIESM_2_1_LR_concurrent_rad/restart/lgm_m1/oasis3mct/"
+
+hdmodel:
+    add_input_sources:
+        hdpara: "/home/ollie/xshi/mesh_glac1d_m1/tarfilesT63/input/echam6/hdpara.nc"
+    file_movements:
+        forcing:
+            all_directions: "link"
+        input:
+            all_directions: "link"
+
+

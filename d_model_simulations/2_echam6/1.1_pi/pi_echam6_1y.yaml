@@ -1,0 +1,69 @@
+general:
+    setup_name: "echam"
+    compute_time: "01:00:00"
+    initial_date: "2000-01-01"
+    final_date: "2000-12-31"
+    model_dir: "/work/ollie/qigao001/model_codes/echam-6.3.05p2-wiso/"
+    base_dir: "/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/"
+    nmonth: 0
+    nyear: 1
+    use_venv: False
+
+echam:
+    version: "6.3.05p2-wiso"
+    executable: echam6_0422_2.5.1
+    bin_sources:
+            echam_bin: "${bin_dir}/${executable}"
+    bin_in_work:
+            echam_bin: "${executable}"
+    scenario: "PI-CTRL"
+    res: T63
+    lresume: False
+    restart_rate: 1
+    restart_unit: "years"
+    nproca: 24
+    nprocb:  24
+    nprocar: 0
+    nprocbr: 0
+    add_namelist_changes:
+            namelist.echam:
+                parctl:
+                    nproca: 24
+                    nprocb: 24
+                    nprocar: 0
+                    nprocbr: 0
+                runctl:
+                    default_output: True
+                radctl:
+                    lrad_async: False
+                wisoctl:
+                    lwiso: True
+                    lwiso_rerun: False
+                    nwiso: 9
+                    ntag: 6
+    file_movements:
+        forcing:
+            all_directions: "link"
+        input:
+            all_directions: "link"
+    forcing_sources:
+        wiso_sw_observed: "/home/ollie/mwerner/model_input/ECHAM6-wiso/PI_ctrl/T63/T63_wisosw_d.nc"
+    add_forcing_files:
+        wiso_sw: wiso_sw_observed
+    forcing_in_work:
+        wiso_sw: "unit.25"
+
+jsbach:
+    file_movements:
+        forcing:
+            all_directions: "link"
+        input:
+            all_directions: "link"
+    add_namelist_changes:
+        namelist.jsbach:
+            jsbach_ctl:
+                with_hd: False
+
+
+
+
