@@ -188,15 +188,16 @@ fig.savefig('figures/3_tagging/3.0_tagmap_creation/3.0.1_division_of_continents.
 
 # import data
 esacci_echam6_t63_trim = xr.open_dataset('bas_palaeoclim_qino/scratch/cmip6/hist/sst/sst_mon_ESACCI-2.1_198201_201612_am_rg_echam6_t63_slm_trim.nc')
+lon = esacci_echam6_t63_trim.lon.values
+lat = esacci_echam6_t63_trim.lat.values
 analysed_sst = esacci_echam6_t63_trim.analysed_sst
 
-echam6_t63_slm = xr.open_dataset('/home/users/qino/bas_palaeoclim_qino/others/land_sea_masks/ECHAM6_T63_slm.nc')
-lon = echam6_t63_slm.lon
-lat = echam6_t63_slm.lat
-slm = echam6_t63_slm.slm
+# echam6_t63_slm = xr.open_dataset('/home/users/qino/bas_palaeoclim_qino/others/land_sea_masks/ECHAM6_T63_slm.nc')
+# slm = echam6_t63_slm.slm
+# (lat == echam6_t63_slm.lat.values).all()
 
 # get latlon info
-lon2, lat2 = np.meshgrid(lon.values, lat.values)
+lon2, lat2 = np.meshgrid(lon, lat)
 coors = np.hstack((lon2.reshape(-1, 1), lat2.reshape(-1, 1)))
 
 # define paths and masks

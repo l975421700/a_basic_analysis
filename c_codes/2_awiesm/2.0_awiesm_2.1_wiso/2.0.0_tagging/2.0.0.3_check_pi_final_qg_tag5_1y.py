@@ -955,3 +955,20 @@ test.to_netcdf('/work/ollie/qigao001/output/backup/test.nc')
 # =============================================================================
 
 
+# =============================================================================
+# =============================================================================
+# region check areas used for ECHAM6 T63
+
+ECHAM6_T63_slm_area = xr.open_dataset('/home/users/qino/bas_palaeoclim_qino/others/land_sea_masks/ECHAM6_T63_slm_area.nc')
+
+AWI_ESM_T63_areacella = xr.open_dataset('/badc/cmip6/data/CMIP6/CMIP/AWI/AWI-ESM-1-1-LR/historical/r1i1p1f1/fx/areacella/gn/v20200212/areacella_fx_AWI-ESM-1-1-LR_historical_r1i1p1f1_gn.nc')
+
+(ECHAM6_T63_slm_area.cell_area.values == AWI_ESM_T63_areacella.areacella.values).all()
+
+ECHAM6_T63_slm_area.cell_area.values.sum()
+AWI_ESM_T63_areacella.areacella.values.sum()
+
+# endregion
+# =============================================================================
+
+
