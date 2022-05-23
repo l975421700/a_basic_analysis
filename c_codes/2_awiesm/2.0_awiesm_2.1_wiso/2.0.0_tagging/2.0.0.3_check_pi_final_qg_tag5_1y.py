@@ -1257,6 +1257,19 @@ no improvement from echam6_qgtest2_20220401 to echam6_qgtest5_20220405
 
 
 # =============================================================================
+<<<<<<< HEAD
+# =============================================================================
+# region check areas used for ECHAM6 T63
+
+ECHAM6_T63_slm_area = xr.open_dataset('/home/users/qino/bas_palaeoclim_qino/others/land_sea_masks/ECHAM6_T63_slm_area.nc')
+
+AWI_ESM_T63_areacella = xr.open_dataset('/badc/cmip6/data/CMIP6/CMIP/AWI/AWI-ESM-1-1-LR/historical/r1i1p1f1/fx/areacella/gn/v20200212/areacella_fx_AWI-ESM-1-1-LR_historical_r1i1p1f1_gn.nc')
+
+(ECHAM6_T63_slm_area.cell_area.values == AWI_ESM_T63_areacella.areacella.values).all()
+
+ECHAM6_T63_slm_area.cell_area.values.sum()
+AWI_ESM_T63_areacella.areacella.values.sum()
+=======
 # region check data format
 outputdata = xr.open_dataset('/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/pi_echam6_1m_28_2.5.18/outdata/echam/pi_echam6_1m_28_2.5.18_200001.01_wiso', engine='cfgrib')
 outputdata.data_vars
@@ -1264,6 +1277,7 @@ outputdata.wisoevap[0, 0, 0].values
 
 outputdata1 = xr.open_dataset('/work/ollie/cdanek/out/awicm-CMIP6/hu_svn471_ollie/fesom.2000.oce.mean.nc')
 # outputdata1.tos[0, 0].values
+>>>>>>> 25bdc9e97dae13963c77770f6b276f7eb1a023d1
 
 # endregion
 # =============================================================================
