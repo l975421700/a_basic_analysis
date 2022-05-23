@@ -10,7 +10,7 @@ general:
     use_venv: False
 
 echam:
-    executable: echam6_220420_qgtest2.3.6
+    executable: echam6_0516_3.0
     bin_sources:
             echam_bin: "${bin_dir}/${executable}"
     bin_in_work:

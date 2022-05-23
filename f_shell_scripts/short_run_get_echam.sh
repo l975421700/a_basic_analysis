@@ -1,9 +1,10 @@
 
 
 output_dir='/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi'
-expid='pi_echam6_1m_28_2.5.18'
+expid='pi_echam6_1d_3.6_6'
 yrstart=2000
 
+echo '################ Processing output of ' ${expid}
 
 echo '#### activate conda env training'
 source /home/ollie/qigao001/miniconda3/bin/activate training

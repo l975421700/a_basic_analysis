@@ -11,7 +11,7 @@ general:
 
 echam:
     version: "6.3.05p2-wiso"
-    executable: echam6_0503_2.5.19
+    executable: echam6_0518_3.4
     bin_sources:
             echam_bin: "${bin_dir}/${executable}"
     bin_in_work:
@@ -34,13 +34,17 @@ echam:
                     nprocbr: 0
                 runctl:
                     default_output: True
+                    # putdata: [ 450, 'seconds', 'first', 0 ]
+                    # putdata: [ 6, 'hours', 'last', 0 ]
+                    # putdata: [ 1, 'days', 'last', 0 ]
+                    # dt_stop: [ 2000, 1, 2 ]
                 radctl:
                     lrad_async: False
                 wisoctl:
                     lwiso: True
                     lwiso_rerun: False
-                    nwiso: 10
-                    ntag: 7
+                    nwiso: 50
+                    ntag: 47
     file_movements:
         forcing:
             all_directions: "link"
@@ -48,10 +52,13 @@ echam:
             all_directions: "link"
     forcing_sources:
         wiso_sw_observed: "/home/ollie/mwerner/model_input/ECHAM6-wiso/PI_ctrl/T63/T63_wisosw_d.nc"
+        wiso_tagmap_1: "/work/ollie/qigao001/startdump/tagging/tagmap/tagmap_echam6_t63_1_47.nc"
     add_forcing_files:
         wiso_sw: wiso_sw_observed
+        wiso_tagmap: wiso_tagmap_1
     forcing_in_work:
         wiso_sw: "unit.25"
+        wiso_tagmap: "unit.26"
 
 jsbach:
     file_movements:
