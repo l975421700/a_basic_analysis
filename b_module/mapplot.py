@@ -439,7 +439,7 @@ middle_label=scalebar_elements['middle_label']
 
 def hemisphere_plot(
     ax_org = None,
-    northextent=None, southextent=None, figsize=None, dpi=600,
+    northextent=None, southextent=None, figsize=None,
     fm_left=0.13, fm_right=0.88, fm_bottom=0.08, fm_top=0.96,
     add_atlas=True, atlas_color='black', lw=0.25,
     add_grid=True, grid_color='gray', add_grid_labels = False,
@@ -467,7 +467,6 @@ def hemisphere_plot(
     import matplotlib as mpl
     import matplotlib.path as mpath
     mpl.rc('font', family='Times New Roman', size=10)
-    mpl.rcParams['figure.dpi'] = 600
     import warnings
     warnings.filterwarnings('ignore')
     from cartopy.mpl.ticker import LongitudeFormatter
@@ -492,8 +491,7 @@ def hemisphere_plot(
     
     if (ax_org is None):
         fig, ax = plt.subplots(
-            1, 1, figsize=figsize, subplot_kw={'projection': projections},
-            dpi=dpi)
+            1, 1, figsize=figsize, subplot_kw={'projection': projections},)
     else:
         ax = ax_org
     
