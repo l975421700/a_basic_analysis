@@ -54,14 +54,12 @@ from a_basic_analysis.b_module.namelist import (
 
 # =============================================================================
 # =============================================================================
-# region import monthly output pi_final_qg*
+# region import output pi_echam6_*
 
 awi_esm_odir = '/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/'
 
 expid = [
-    # 'pi_echam6_1m_24_2.5.15',
-    # 'pi_echam6_1m_25_2.5.0',
-    'pi_echam6_1m_28_2.5.18',
+    'pi_echam6_1m_3.4_15',
     ]
 
 awi_esm_org_o = {}
@@ -88,120 +86,288 @@ for i in range(len(expid)):
 
 i = 0
 expid[i]
-imonth = 0
-iglobal = -1
+i_ts=-1
+np.max(awi_esm_org_o[expid[i]]['wiso'].tagmap[:, 3:, :, :].sum(axis=1))
+np.min(awi_esm_org_o[expid[i]]['wiso'].tagmap[:, 3:, :, :].sum(axis=1))
 
-np.nanmax(abs(awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, -2, :, :]))
-test = awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, -2, :, :]
-test.to_netcdf('/work/ollie/qigao001/output/0_backup/test1.nc')
-
-
-# Absolute maximum difference between normal and tagged evp from whole globe: 0
-np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, iglobal, :, :]))
-
-# Absolute maximum difference between normal and tagged evp from nh/sh: 6.213667802512646e-09
-np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 4:6, :, :].sum(axis=0)))
-test = awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 4:6, :, :].sum(axis=0)
-test.to_netcdf('/work/ollie/qigao001/output/0_backup/test1.nc')
-
-# Absolute maximum difference between normal and tagged evp from nh/sh: 6.213667802512646e-09
-np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 6:8, :, :].sum(axis=0)))
-test = awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 6:8, :, :].sum(axis=0)
-test.to_netcdf('/work/ollie/qigao001/output/0_backup/test.nc')
-
-# Absolute maximum difference between normal and tagged evp from nh/sh + 1: 1.734327815938741e-05
-np.nanmax(abs(3 * awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 6:8, :, :].sum(axis=0)))
-
-np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] +
-              awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 4, :, :] -
-              awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 6, :, :]))
-
-np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 10, :, :]))
-
-np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - 2 * awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 9, :, :]))
-np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - 0.5 * awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 8, :, :]))
+np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[i_ts, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[i_ts, 3:, :, :].sum(axis=0)))
+np.nanmean(abs(awi_esm_org_o[expid[i]]['echam'].evap[i_ts, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[i_ts, 3:, :, :].sum(axis=0)))
 
 
-i = 12
-expid[i]
+
+'''
+    'TAG01',
+    'TAG02',
+    'pi_echam6_1m_3.0_8',
+    'pi_echam6_1m_3.0_9',
+    'pi_echam6_1m_3.0_10',
+    'pi_echam6_1m_3.0_11',
+    # 'pi_echam6_1m_3.0_12',
+    'pi_echam6_1m_3.3_13',
+    'pi_echam6_1y_3.3_2',
+    
+    'pi_echam6_1m_3.4_14',
+    'pi_echam6_1m_3.4_15',
+    'pi_echam6_1y_3.3_3',
+
+i = 0
+j = 1
+expid[i] + ' : ' + expid[j]
+iday = -1
+
+# normal and tagged evp from nh/sh
+# 'TAG01': 1.4551915228366852e-11 (1.2979247306551163e-12)
+np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[iday, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[iday, 3:5, :, :].sum(axis=0)))
+np.nanmean(abs(awi_esm_org_o[expid[i]]['echam'].evap[iday, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[iday, 3:5, :, :].sum(axis=0)))
+test = awi_esm_org_o[expid[i]]['echam'].evap[iday, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[iday, 3:5, :, :].sum(axis=0)
+test.to_netcdf('/work/ollie/qigao001/0_backup/test7.nc')
+
+# # 'TAG02': 2.1827872842550278e-11 (2.65585084788553e-12)
+np.nanmax(abs(awi_esm_org_o[expid[j]]['echam'].evap[iday, :, :] - awi_esm_org_o[expid[j]]['wiso'].wisoevap[iday, 3:7, :, :].sum(axis=0)))
+np.nanmean(abs(awi_esm_org_o[expid[j]]['echam'].evap[iday, :, :] - awi_esm_org_o[expid[j]]['wiso'].wisoevap[iday, 3:7, :, :].sum(axis=0)))
+test = awi_esm_org_o[expid[j]]['echam'].evap[iday, :, :] - awi_esm_org_o[expid[j]]['wiso'].wisoevap[iday, 3:7, :, :].sum(axis=0)
+test.to_netcdf('/work/ollie/qigao001/0_backup/test8.nc')
+
+k = 2
+expid[k]
+iday=-1
+# 'pi_echam6_1m_3.0_8': 1.4551915228366852e-11 (1.429769882735046e-12)
+np.nanmax(abs(awi_esm_org_o[expid[k]]['echam'].evap[iday, :, :] - awi_esm_org_o[expid[k]]['wiso'].wisoevap[iday, 3:5, :, :].sum(axis=0)))
+np.nanmean(abs(awi_esm_org_o[expid[k]]['echam'].evap[iday, :, :] - awi_esm_org_o[expid[k]]['wiso'].wisoevap[iday, 3:5, :, :].sum(axis=0)))
+
+
+m = 3
+expid[m]
+imonth=-1
+# 'pi_echam6_1m_3.0_9': 1.4551915228366852e-11 (3.516791796048185e-12)
+np.nanmax(abs(awi_esm_org_o[expid[m]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[m]]['wiso'].wisoevap[imonth, 3:5, :, :].sum(axis=0)))
+np.nanmean(abs(awi_esm_org_o[expid[m]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[m]]['wiso'].wisoevap[imonth, 3:5, :, :].sum(axis=0)))
+
+n = 4
+expid[n]
+imonth=-1
+# 'pi_echam6_1m_3.0_10': 1.4379636370520643e-11 (2.960530794522301e-12)
+np.nanmax(abs(awi_esm_org_o[expid[n]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[n]]['wiso'].wisoevap[imonth, 3:5, :, :].sum(axis=0)))
+np.nanmean(abs(awi_esm_org_o[expid[n]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[n]]['wiso'].wisoevap[imonth, 3:5, :, :].sum(axis=0)))
+
+o = 5
+expid[o]
+imonth=-1
+# 'pi_echam6_1m_3.0_11': 2.1827872842550278e-11 (4.0741730976555524e-12)
+np.nanmax(abs(awi_esm_org_o[expid[o]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[o]]['wiso'].wisoevap[imonth, 3:, :, :].sum(axis=0)))
+np.nanmean(abs(awi_esm_org_o[expid[o]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[o]]['wiso'].wisoevap[imonth, 3:, :, :].sum(axis=0)))
+
+p = 6
+expid[p]
+imonth=-1
+# 'pi_echam6_1m_3.3_13': 1.0186340659856796e-10 (1.1922709733072325e-11)
+np.nanmax(abs(awi_esm_org_o[expid[p]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[p]]['wiso'].wisoevap[imonth, 3:, :, :].sum(axis=0)))
+np.nanmean(abs(awi_esm_org_o[expid[p]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[p]]['wiso'].wisoevap[imonth, 3:, :, :].sum(axis=0)))
+
+np.nanmax(abs(awi_esm_org_o[expid[p]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[p]]['wiso'].wisoevap[imonth, 3:, :, :].sum(axis=0)) / awi_esm_org_o[expid[p]]['echam'].evap[imonth, :, :])
+np.nanmean(abs(awi_esm_org_o[expid[p]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[p]]['wiso'].wisoevap[imonth, 3:, :, :].sum(axis=0)) / awi_esm_org_o[expid[p]]['echam'].evap[imonth, :, :])
+test = abs(awi_esm_org_o[expid[p]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[p]]['wiso'].wisoevap[imonth, 3:, :, :].sum(axis=0)) / awi_esm_org_o[expid[p]]['echam'].evap[imonth, :, :]
+test.to_netcdf('/work/ollie/qigao001/0_backup/test.nc')
+
+
+q = 7
+expid[q]
+imonth=-1
+# 'pi_echam6_1y_3.3_2': 1.4551915228366852e-11 (3.5440292675856552e-12)
+np.nanmax(abs(awi_esm_org_o[expid[q]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[q]]['wiso'].wisoevap[imonth, 3:, :, :].sum(axis=0)))
+np.nanmean(abs(awi_esm_org_o[expid[q]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[q]]['wiso'].wisoevap[imonth, 3:, :, :].sum(axis=0)))
+
+r = 8
+expid[r]
+imonth=-1
+# 'pi_echam6_1m_3.4_14': 1.4551915228366852e-11 (3.4453427765078637e-12)
+np.nanmax(abs(awi_esm_org_o[expid[r]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[r]]['wiso'].wisoevap[imonth, 3:, :, :].sum(axis=0)))
+np.nanmean(abs(awi_esm_org_o[expid[r]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[r]]['wiso'].wisoevap[imonth, 3:, :, :].sum(axis=0)))
+
+imonth=-1
+# 'pi_echam6_1m_3.4_15': 4.547473508864641e-11 (7.537378129048497e-12)
+np.nanmax(abs(awi_esm_org_o[expid[9]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[9]]['wiso'].wisoevap[imonth, 3:, :, :].sum(axis=0)))
+np.nanmean(abs(awi_esm_org_o[expid[9]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[9]]['wiso'].wisoevap[imonth, 3:, :, :].sum(axis=0)))
+
+imonth=-1
+# 'pi_echam6_1y_3.3_3': 5.4569682106375694e-11 (8.06949568893995e-12)
+np.nanmax(abs(awi_esm_org_o[expid[10]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[10]]['wiso'].wisoevap[imonth, 3:, :, :].sum(axis=0)))
+np.nanmean(abs(awi_esm_org_o[expid[10]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[10]]['wiso'].wisoevap[imonth, 3:, :, :].sum(axis=0)))
+
+'''
+
+
+'''
+
+i = 0
+j = 1
+expid[i] + ' ' + expid[j]
 imonth = 0
 iglobal = 3
 
-# Absolute maximum difference between normal and tagged evp from whole globe: 0
-np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, iglobal, :, :]))
-
-# Absolute maximum difference between normal and tagged evp from nh/sh: 6.213667802512646e-09
-np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 4:6, :, :].sum(axis=0)))
-test = awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 4:6, :, :].sum(axis=0)
+#### global 0 tagmap
+# qg: 5.624760213152058e-09 (1.4678977193675738e-11)
+# mw: 5.350868081954729e-10 (2.43729498569945e-12)
+np.nanmax(abs(awi_esm_org_o[expid[j]]['wiso'].wisoevap[imonth, -2, :, :]))
+np.nanmean(abs(awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, -2, :, :]))
+test = awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, -2, :, :]
 test.to_netcdf('/work/ollie/qigao001/output/0_backup/test1.nc')
-
-# Absolute maximum difference between normal and tagged evp from w/e: 1.0289659257978201e-07
-np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 6:8, :, :].sum(axis=0)))
-test = awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 6:8, :, :].sum(axis=0)
+test = awi_esm_org_o[expid[j]]['wiso'].wisoevap[imonth, -2, :, :]
 test.to_netcdf('/work/ollie/qigao001/output/0_backup/test2.nc')
 
 
-i = 10
-expid[i]
-imonth = 0
-iglobal = 3
-
-# np.nanmax(abs(awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, iglobal, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 4, :, :]))
-
-# Absolute maximum difference between tagged evp from whole and half globe: 3.3527612686157227e-08
-np.nanmax(abs(awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, iglobal, :, :] - 2 * awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 4, :, :]))
-test = awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, iglobal, :, :] - 2 * awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 4, :, :]
-test.to_netcdf('/work/ollie/qigao001/output/0_backup/test1.nc')
-
-
-i = 5
-expid[i]
-imonth = 0
-iglobal = 3
-
-# Absolute maximum difference between normal and tagged evp from 4 regions: 2.6025372790172696e-07
-np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 4:8, :, :].sum(axis=0)))
-test = awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 4:8, :, :].sum(axis=0)
+#### normal and tagged evp from whole globe
+# qg: 0 (0)
+# mw: 9.285620762966573e-06 (2.08923571184035e-07)
+# np.nanmax(abs(awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 3, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, -1, :, :]))
+np.nanmax(abs(awi_esm_org_o[expid[j]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[j]]['wiso'].wisoevap[imonth, iglobal, :, :]))
+np.nanmean(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, iglobal, :, :]))
+test = awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, iglobal, :, :]
 test.to_netcdf('/work/ollie/qigao001/output/0_backup/test3.nc')
+test = awi_esm_org_o[expid[j]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[j]]['wiso'].wisoevap[imonth, iglobal, :, :]
+test.to_netcdf('/work/ollie/qigao001/output/0_backup/test4.nc')
 
 
-i = 9
+# normal and tagged evp from nh/sh
+# qg: 7.414200808852911e-09 (5.3256362283112445e-11)
+# mw: 9.285584383178502e-06 (2.0891927161099173e-07)
+np.nanmax(abs(awi_esm_org_o[expid[j]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[j]]['wiso'].wisoevap[imonth, 4:6, :, :].sum(axis=0)))
+np.nanmean(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 4:6, :, :].sum(axis=0)))
+test = awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 4:6, :, :].sum(axis=0)
+test.to_netcdf('/work/ollie/qigao001/output/0_backup/test5.nc')
+test = awi_esm_org_o[expid[j]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[j]]['wiso'].wisoevap[imonth, 4:6, :, :].sum(axis=0)
+test.to_netcdf('/work/ollie/qigao001/output/0_backup/test6.nc')
+
+# normal and tagged evp from wh/eh
+# qg: 5.624315235763788e-09 (1.4609350766174128e-11)
+# mw: 9.285595297114924e-06 (2.08921370080538e-07)
+np.nanmax(abs(awi_esm_org_o[expid[j]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[j]]['wiso'].wisoevap[imonth, 6:8, :, :].sum(axis=0)))
+np.nanmean(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 6:8, :, :].sum(axis=0)))
+
+
+test = awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 6:8, :, :].sum(axis=0)
+test.to_netcdf('/work/ollie/qigao001/output/0_backup/test.nc')
+'''
+# endregion
+# =============================================================================
+
+
+# =============================================================================
+# region check tagmap and SST bins
+
+i = 0
 expid[i]
-imonth = 0
-iglobal = 3
+i_ts=-1
+i_level = 17
 
-# Absolute maximum difference between normal and tagged evp from whole globe: 0
-np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, iglobal, :, :]))
+# tagmap, 14th layer, 191st timestep
+awi_esm_org_o[expid[i]]['wiso'].tagmap[i_ts, i_level-1, :, :]
 
+# tsw, 191st timestep, tagmap == 1
+np.max(awi_esm_org_o[expid[i]]['echam'].tsw[i_ts, :, :].values[awi_esm_org_o[expid[i]]['wiso'].tagmap[i_ts, i_level-1, :, :] == 1])
+np.min(awi_esm_org_o[expid[i]]['echam'].tsw[i_ts, :, :].values[awi_esm_org_o[expid[i]]['wiso'].tagmap[i_ts, i_level-1, :, :] == 1])
+# [295.15137, 297.14844]
+# [295.15, 297.15]
 
-
-# Absolute maximum difference between normal and tagged evp from 4 regions: 4.9651135e-08 (1st month: 9.0443064e-07)
-np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 3:7, :, :].sum(axis=0)))
-
-test = awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 3:7, :, :].sum(axis=0)
-test.to_netcdf('/work/ollie/qigao001/output/0_backup/test.nc')
-
-
-# Absolute maximum difference between normal and tagged pre from whole globe: 0
-np.nanmax(abs((awi_esm_org_o[expid[i]]['echam'].aprl[imonth, :, :] + awi_esm_org_o[expid[i]]['echam'].aprc[imonth, :, :]) - (awi_esm_org_o[expid[i]]['wiso'].wisoaprl[imonth, iglobal, :, :] + awi_esm_org_o[expid[i]]['wiso'].wisoaprc[imonth, iglobal, :, :])))
-
-# Absolute maximum difference between normal and tagged pre from 4 regions: 8.57054e-06 (1st month: 2.3614368e-05)
-np.nanmax(abs((awi_esm_org_o[expid[i]]['echam'].aprl[imonth, :, :] + awi_esm_org_o[expid[i]]['echam'].aprc[imonth, :, :]) - (awi_esm_org_o[expid[i]]['wiso'].wisoaprl[imonth, 3:7, :, :].sum(axis=0) + awi_esm_org_o[expid[i]]['wiso'].wisoaprc[imonth, 3:7, :, :].sum(axis=0))))
-
-test1 = (awi_esm_org_o[expid[i]]['echam'].aprl[imonth, :, :] + awi_esm_org_o[expid[i]]['echam'].aprc[imonth, :, :]) - (awi_esm_org_o[expid[i]]['wiso'].wisoaprl[imonth, 3:7, :, :].sum(axis=0) + awi_esm_org_o[expid[i]]['wiso'].wisoaprc[imonth, 3:7, :, :].sum(axis=0))
-test1.to_netcdf('/work/ollie/qigao001/output/0_backup/test1.nc')
+# tagmap, 14th layer, 191st timestep, tsw [295.15, 297.15]
+np.mean(awi_esm_org_o[expid[i]]['wiso'].tagmap[i_ts, i_level-1, :, :].values[np.where((awi_esm_org_o[expid[i]]['echam'].tsw[i_ts-1, :, :] > 295.15) & (awi_esm_org_o[expid[i]]['echam'].tsw[i_ts-1, :, :] <= 297.15))])
 
 
-# Absolute difference between tagged evp from whole globe and from 47 regions
-# less than 1.213748e-07
-np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 8:55, :, :].sum(axis=0)))
+################ plot tagmap, 14th layer, 191st timestep
 
-test = awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 8:55, :, :].sum(axis=0)
-test.to_netcdf('/work/ollie/qigao001/output/0_backup/test.nc')
 
-test = awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 7, :, :] - (awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 3, :, :] + awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 4, :, :] + awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 5, :, :] + awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, 6, :, :])
-# test.values[tagmap.tagmap[3, :, :] == 0] = np.nan
-test.to_netcdf('/work/ollie/qigao001/output/0_backup/test.nc')
+pltlevel = np.arange(0, 1.001, 0.001)
+pltticks = np.arange(0, 1.001, 0.2)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False)
+pltcmp = cm.get_cmap('Blues', len(pltlevel))
+
+
+fig, ax = framework_plot1("global", figsize=np.array([8.8*2, 11]) / 2.54)
+
+plt_cmp = ax.pcolormesh(
+    awi_esm_org_o[expid[i]]["wiso"].lon,
+    awi_esm_org_o[expid[i]]["wiso"].lat,
+    awi_esm_org_o[expid[i]]['wiso'].tagmap[i_ts, i_level-1, :, :],
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=ax,
+    orientation="horizontal", pad=0.02, fraction=0.14, shrink=0.6,
+    aspect=40, anchor=(0.5, 0.7), ticks=pltticks, extend="neither",)
+
+cbar.ax.set_xlabel(
+    u'Values of tagmap [$-$] at the 14th layer and the 191st timestep\necham-6.3.05p2-wiso: ' + expid[i],
+    linespacing=1.5)
+
+fig.subplots_adjust(left=0.06, right=0.97, bottom=0.08, top=0.995)
+fig.savefig('figures/6_awi/6.0_tagging_development/6.0.0_SST/6.0.0.0.0_Values of tagmap at 14th layer and 191st timestep.png')
+
+
+
+################ plot tsw, 191st timestep
+
+pltlevel = np.arange(-2, 30.01, 2)
+pltticks = np.arange(-2, 30.01, 2)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False)
+pltcmp = cm.get_cmap('tab20c', len(pltlevel)).reversed()
+
+
+fig, ax = framework_plot1("global", figsize=np.array([8.8*2, 11]) / 2.54)
+
+plt_cmp = ax.pcolormesh(
+    awi_esm_org_o[expid[i]]['echam'].lon,
+    awi_esm_org_o[expid[i]]['echam'].lat,
+    awi_esm_org_o[expid[i]]['echam'].tsw[i_ts, :, :].values - 273.15,
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=ax,
+    orientation="horizontal", pad=0.02, fraction=0.14, shrink=0.6,
+    aspect=40, anchor=(0.5, 0.7), ticks=pltticks, extend="both",)
+
+cbar.ax.set_xlabel(
+    'tsw: surface temperature of water [$°C$] at the 191st timestep\necham-6.3.05p2-wiso: ' + expid[i],
+    linespacing=1.5)
+
+fig.subplots_adjust(left=0.06, right=0.97, bottom=0.08, top=0.995)
+fig.savefig('figures/6_awi/6.0_tagging_development/6.0.0_SST/6.0.0.0.1_tsw at the 191st timestep.png')
+
+
+################ plot tsw, 191st timestep, tagmap == 1
+
+tsw_tagmap1 = awi_esm_org_o[expid[i]]['echam'].tsw[i_ts, :, :].values - 273.15
+tsw_tagmap1[awi_esm_org_o[expid[i]]['wiso'].tagmap[i_ts, i_level-1, :, :] != 1] = np.nan
+
+pltlevel = np.arange(-2, 30.01, 2)
+pltticks = np.arange(-2, 30.01, 2)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False)
+pltcmp = cm.get_cmap('tab20c', len(pltlevel)).reversed()
+
+fig, ax = framework_plot1("global", figsize=np.array([8.8*2, 11]) / 2.54)
+
+plt_cmp = ax.pcolormesh(
+    awi_esm_org_o[expid[i]]['echam'].lon,
+    awi_esm_org_o[expid[i]]['echam'].lat,
+    tsw_tagmap1,
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=ax,
+    orientation="horizontal", pad=0.02, fraction=0.14, shrink=0.6,
+    aspect=40, anchor=(0.5, 0.7), ticks=pltticks, extend="both",)
+
+cbar.ax.set_xlabel(
+    'tsw: surface temperature of water [$°C$] at the 191st timestep where tagmap==1\necham-6.3.05p2-wiso: ' + expid[i],
+    linespacing=1.5)
+
+fig.subplots_adjust(left=0.06, right=0.97, bottom=0.08, top=0.995)
+fig.savefig('figures/6_awi/6.0_tagging_development/6.0.0_SST/6.0.0.0.2_tsw at the 191st timestep with tagmap_1.png')
+
+
+################ evaporation
+
+
+
 
 
 # endregion
@@ -212,39 +378,71 @@ test.to_netcdf('/work/ollie/qigao001/output/0_backup/test.nc')
 # region check tagging evaporation fraction
 
 # calculate the water tracer fraction
+i = 0
+expid[i]
+i_ts=-1
+i_level = 17
+
 tag_evp_frac = {}
-imonth = 11
 
 for i in range(len(expid)):
     # i=0
-    tag_evp_frac[expid[i]] = {}
+    tag_evp_frac[expid[i]] = np.zeros((
+        awi_esm_org_o[expid[i]]["wiso"].wisoevap.shape[1]-3,
+        awi_esm_org_o[expid[i]]["wiso"].wisoevap.shape[2],
+        awi_esm_org_o[expid[i]]["wiso"].wisoevap.shape[3],
+    ))
 
-    for j in range(awi_esm_org_o[expid[i]]["wiso"].wisoevap.shape[1]-3):
+    for j in range(tag_evp_frac[expid[i]].shape[0]):
         # j=0
-        tag_evp_frac[expid[i]]['region_' + str(j+1)] = (awi_esm_org_o[expid[i]]['wiso'].wisoevap[imonth, j+3, :, :].values) / (awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :].values) * 100
+        tag_evp_frac[expid[i]][j, :, :] = (awi_esm_org_o[expid[i]]['wiso'].wisoevap[i_ts, j+3, :, :].values) / (awi_esm_org_o[expid[i]]['echam'].evap[i_ts, :, :].values) * 100
         
         # 1.93e-8 mm/s -> 0.05 mm/mon
-        tag_evp_frac[expid[i]]['region_' + str(j+1)][
-            abs(awi_esm_org_o[expid[i]]['echam'].evap[imonth, :, :]) <= 1.93e-8
+        tag_evp_frac[expid[i]][j, :, :][
+            abs(awi_esm_org_o[expid[i]]['echam'].evap[i_ts, :, :]) <= 1.93e-8
         ] = np.nan
 
-
 '''
 i = 0
-j = 4
-stats.describe(tag_evp_frac[expid[i]]['region_' + str(j+1)], axis=None, nan_policy='omit')
-
-i = 0
-
-stats.describe(tag_evp_frac[expid[i]]['region_1'], axis=None, nan_policy = 'omit')
-stats.describe(tag_evp_frac[expid[i]]['region_2'], axis=None, nan_policy = 'omit')
-stats.describe(tag_evp_frac[expid[i]]['region_3'], axis=None, nan_policy = 'omit')
-stats.describe(tag_evp_frac[expid[i]]['region_4'], axis=None, nan_policy = 'omit')
-stats.describe(tag_evp_frac[expid[i]]['region_5'], axis=None, nan_policy = 'omit')
-
-stats.describe((tag_evp_frac[expid[i]]['region_1'] + tag_evp_frac[expid[i]]['region_2'] + tag_evp_frac[expid[i]]['region_3'] + tag_evp_frac[expid[i]]['region_4']), axis=None, nan_policy = 'omit')
-
+expid[i]
+stats.describe(tag_evp_frac[expid[i]].sum(axis=0), axis=None, nan_policy='omit')
+99.57203865, 100.421875
 '''
+
+################ Tagged evaporation from all regions over normal evaporation
+
+pltlevel = np.arange(99.5, 100.501, 0.001)
+pltticks = np.arange(99.5, 100.501, 0.1)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False)
+pltcmp = cm.get_cmap('PuOr', len(pltlevel))
+
+
+fig, ax = framework_plot1("global", figsize=np.array([8.8*2, 11]) / 2.54)
+
+plt_cmp = ax.pcolormesh(
+    awi_esm_org_o[expid[i]]["wiso"].lon,
+    awi_esm_org_o[expid[i]]["wiso"].lat,
+    tag_evp_frac[expid[i]].sum(axis=0),
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, orientation="horizontal",  pad=0.02,
+    fraction=0.14, shrink=0.6, aspect=40, anchor=(0.5, 0.7),
+    ticks=pltticks, extend="both",)
+
+cbar.ax.set_xlabel(
+    u'Tagged evaporation from all regions over normal evaporation [$\%$]\necham-6.3.05p2-wiso: ' + expid[i],
+    linespacing=1.5)
+
+fig.subplots_adjust(left=0.06, right=0.97, bottom=0.08, top=0.995)
+fig.savefig('figures/6_awi/6.0_tagging_development/6.0.0_SST/6.0.0.1.0_fraction of evaporation from all tag regions.png')
+
+# 'pi_echam6_1d_3.6_4': 1.0186341e-10, 1.7560668e-11
+np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].evap[i_ts, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[i_ts, 3:, :, :].sum(axis=0)))
+np.nanmean(abs(awi_esm_org_o[expid[i]]['echam'].evap[i_ts, :, :] - awi_esm_org_o[expid[i]]['wiso'].wisoevap[i_ts, 3:, :, :].sum(axis=0)))
+
+
+################ Tagged evaporation from 14th regions over normal evaporation
 
 pltlevel = np.arange(0, 100.001, 0.5)
 pltticks = np.arange(0, 100.001, 20)
@@ -252,21 +450,23 @@ pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False)
 pltcmp = cm.get_cmap('Greens', len(pltlevel))
 
 
-i = 5
 
 
-for j in range(awi_esm_org_o[expid[i]]["wiso"].wisoevap.shape[1]-3):
-    # j=4
+for j in range(tag_evp_frac[expid[i]].shape[0]):
+    # j=i_level - 4
     fig, ax = framework_plot1("global", figsize=np.array([8.8*2, 11]) / 2.54)
     
     plt_cmp = ax.pcolormesh(
         awi_esm_org_o[expid[i]]["wiso"].lon,
         awi_esm_org_o[expid[i]]["wiso"].lat,
-        tag_evp_frac[expid[i]]['region_' + str(j+1)],
-        norm=pltnorm, cmap=pltcmp, rasterized=True, transform=ccrs.PlateCarree(),)
+        tag_evp_frac[expid[i]][j, :, :],
+        norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
     
     ax.contour(
-        tagmap.lon, tagmap.lat, tagmap.tagmap[j+3, :, :], colors='black',
+        awi_esm_org_o[expid[i]]["wiso"].lon,
+        awi_esm_org_o[expid[i]]["wiso"].lat,
+        awi_esm_org_o[expid[i]]['wiso'].tagmap[i_ts, i_level-1, :, :],
+        colors='black',
         levels=np.array([0.5]), linewidths=0.5, linestyles='solid',)
     
     cbar = fig.colorbar(
@@ -275,78 +475,16 @@ for j in range(awi_esm_org_o[expid[i]]["wiso"].wisoevap.shape[1]-3):
         ticks=pltticks, extend="neither",)
     
     cbar.ax.set_xlabel(
-        u'Fraction of evaporation from the tag region [$\%$]\nAWI-ESM-2-1-wiso: ' + expid[i],
+        u'Fraction of evaporation from the ' + str(i_level-3) + 'th tag region [$\%$]\necham-6.3.05p2-wiso: ' + expid[i],
         linespacing=1.5)
     
     fig.subplots_adjust(left=0.06, right=0.97, bottom=0.08, top=0.995)
-    fig.savefig('figures/6_awi/6.0_awi-esm-2.1-wiso/6.0.0_pi_final/6.0.0.6_tagging_exp/6.0.0.6.2_pi_final_qg_tag5_1y/6.0.0.6.2.' + str(i) + '.' +
-                str(j) + '_' + expid[i] + '_tag_evp_frac_region_' + str(j+1) + '.png')
+    fig.savefig('figures/6_awi/6.0_tagging_development/6.0.0_SST/6.0.0.1.1_fraction of evaporation from the ' + str(i_level-3) + 'th tag regions.png')
     print(str(j))
 
 
-i = 5
-
-pltlevel = np.arange(80, 120.001, 0.01)
-pltticks = np.arange(80, 120.001, 5)
-pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False)
-pltcmp = cm.get_cmap('PuOr', len(pltlevel))
 
 
-fig, ax = framework_plot1("global", figsize=np.array([8.8*2, 11]) / 2.54)
-
-plt_cmp = ax.pcolormesh(
-    awi_esm_org_o[expid[i]]["wiso"].lon,
-    awi_esm_org_o[expid[i]]["wiso"].lat,
-    (tag_evp_frac[expid[i]]['region_1'] + tag_evp_frac[expid[i]]['region_2'] + tag_evp_frac[expid[i]]['region_3'] + tag_evp_frac[expid[i]]['region_4']),
-    norm=pltnorm, cmap=pltcmp, rasterized=True, transform=ccrs.PlateCarree(),)
-
-cbar = fig.colorbar(
-    plt_cmp, ax=ax, orientation="horizontal",  pad=0.02,
-    fraction=0.14, shrink=0.6, aspect=40, anchor=(0.5, 0.7),
-    ticks=pltticks, extend="both",)
-
-cbar.ax.set_xlabel(
-    u'Fraction of evaporation from all tag regions [$\%$]\nAWI-ESM-2-1-wiso: ' + expid[i],
-    linespacing=1.5)
-
-fig.subplots_adjust(left=0.06, right=0.97, bottom=0.08, top=0.995)
-fig.savefig('figures/6_awi/6.0_awi-esm-2.1-wiso/6.0.0_pi_final/6.0.0.6_tagging_exp/6.0.0.6.2_pi_final_qg_tag5_1y/6.0.0.6.2.' +
-            str(i) + '.5_' + expid[i] + '_tag_evp_frac_all_regions.png')
-
-
-i = 5
-j=4
-
-pltlevel = np.arange(80, 120.001, 0.01)
-pltticks = np.arange(80, 120.001, 5)
-pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False)
-pltcmp = cm.get_cmap('PuOr', len(pltlevel))
-
-
-fig, ax = framework_plot1("global", figsize=np.array([8.8*2, 11]) / 2.54)
-
-plt_cmp = ax.pcolormesh(
-    awi_esm_org_o[expid[i]]["wiso"].lon,
-    awi_esm_org_o[expid[i]]["wiso"].lat,
-    tag_evp_frac[expid[i]]['region_' + str(j+1)],
-    norm=pltnorm, cmap=pltcmp, rasterized=True, transform=ccrs.PlateCarree(),)
-
-ax.contour(
-        tagmap.lon, tagmap.lat, tagmap.tagmap[j+3, :, :], colors='black',
-        levels=np.array([0.5]), linewidths=0.5, linestyles='solid',)
-
-cbar = fig.colorbar(
-    plt_cmp, ax=ax, orientation="horizontal",  pad=0.02,
-    fraction=0.14, shrink=0.6, aspect=40, anchor=(0.5, 0.7),
-    ticks=pltticks, extend="both",)
-
-cbar.ax.set_xlabel(
-    u'Fraction of evaporation from the tag region [$\%$]\nAWI-ESM-2-1-wiso: ' + expid[i],
-    linespacing=1.5)
-
-fig.subplots_adjust(left=0.06, right=0.97, bottom=0.08, top=0.995)
-fig.savefig('figures/6_awi/6.0_awi-esm-2.1-wiso/6.0.0_pi_final/6.0.0.6_tagging_exp/6.0.0.6.2_pi_final_qg_tag5_1y/6.0.0.6.2.' +
-            str(i) + '.6_' + expid[i] + '_tag_evp_frac_region_' + str(j+1) + '.png')
 
 
 
@@ -361,7 +499,7 @@ fig.savefig('figures/6_awi/6.0_awi-esm-2.1-wiso/6.0.0_pi_final/6.0.0.6_tagging_e
 
 # calculate the water tracer fraction
 tag_pre_frac = {}
-imonth = 11
+imonth = 119
 
 for i in range(len(expid)):
     # i=3
@@ -403,7 +541,7 @@ pltticks = np.arange(0, 100.001, 20)
 pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False)
 pltcmp = cm.get_cmap('Purples', len(pltlevel))
 
-i = 5
+i = 0
 
 for j in range(awi_esm_org_o[expid[i]]['wiso'].wisoaprl.shape[1]-3):
     # j=4
@@ -415,9 +553,6 @@ for j in range(awi_esm_org_o[expid[i]]['wiso'].wisoaprl.shape[1]-3):
         tag_pre_frac[expid[i]]['region_' + str(j+1)],
         norm=pltnorm, cmap=pltcmp, rasterized=True, transform=ccrs.PlateCarree(),)
     
-    ax.contour(
-        tagmap.lon, tagmap.lat, tagmap.tagmap[j+3, :, :], colors='red',
-        levels=np.array([0.5]), linewidths=0.5, linestyles='solid',)
     
     cbar = fig.colorbar(
         plt_cmp, ax=ax, orientation="horizontal",  pad=0.02,
@@ -988,28 +1123,24 @@ awi_esm_o[expid[i]]['wiso']['wiso_ann']
 awi_esm_odir = '/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/'
 
 expid = [
-    'pi_echam6_1m_10_2.5.1',
-    'pi_echam6_1m_23_2.5.15',
-    # 'pi_final_qg_1m_23_qgtest2.4.0',
-    # 'pi_final_qg_1m_29_qgtest2.4.3',
-    # 'pi_echam6_1m_0_2.5.0',
-    # 'pi_echam6_1m_1_2.5.1',
-    # 'pi_echam6_1m_2_2.5.2',
-    # 'pi_echam6_1m_3_2.5.0',
-    # 'pi_echam6_1m_4_2.5.0',
-    # 'pi_echam6_1m_5_2.5.1',
-    # 'pi_echam6_1m_6_2.5.1',
-    # 'pi_echam6_1m_7_2.5.1',
-    # 'pi_echam6_1m_8_2.5.2',
-    # 'pi_echam6_1m_9_2.5.2',
-    # 'pi_echam6_1m_10_2.5.1',
-    # 'pi_echam6_1m_11_2.5.3',
+    # 'TAG01',
+    # 'TAG02',
+    # 'pi_echam6_1m_3.0_2',
+    # 'pi_echam6_1m_3.0_8',
+    # 'pi_echam6_1m_3.0_9',
+    # 'pi_echam6_1m_3.0_10',
+    # 'pi_echam6_1m_3.0_11',
+    # 'pi_echam6_1m_3.0_12',
+    
+    'pi_echam6_1d_3.4_1',
+    # 'pi_echam6_1d_3.5_2',
+    'pi_echam6_1d_3.5_3',
     ]
 
 awi_esm_org_o = {}
 
 for i in range(len(expid)):
-    # i=7
+    # i=1
     
     awi_esm_org_o[expid[i]] = {}
     
@@ -1045,51 +1176,37 @@ i = 0
 j = 1
 expid[i] + '   ' + expid[j]
 # normal climate variables
-(awi_esm_org_o[expid[i]]['echam'].evap.values == awi_esm_org_o[expid[j]]['echam'].evap.values).all()
-(awi_esm_org_o[expid[i]]['echam'].aprl.values == awi_esm_org_o[expid[j]]['echam'].aprl.values).all()
-(awi_esm_org_o[expid[i]]['echam'].temp2.values == awi_esm_org_o[expid[j]]['echam'].temp2.values).all()
-(awi_esm_org_o[expid[i]]['echam'].u10.values == awi_esm_org_o[expid[j]]['echam'].u10.values).all()
-(awi_esm_org_o[expid[i]]['echam'].q2m.values == awi_esm_org_o[expid[j]]['echam'].q2m.values).all()
+(awi_esm_org_o[expid[i]]['echam'].evap == awi_esm_org_o[expid[j]]['echam'].evap).all()
+(awi_esm_org_o[expid[i]]['echam'].aprl == awi_esm_org_o[expid[j]]['echam'].aprl).all()
+# np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].aprl - awi_esm_org_o[expid[j]]['echam'].aprl))
+(awi_esm_org_o[expid[i]]['echam'].temp2 == awi_esm_org_o[expid[j]]['echam'].temp2).all()
+# np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].temp2 - awi_esm_org_o[expid[j]]['echam'].temp2))
+(awi_esm_org_o[expid[i]]['echam'].u10 == awi_esm_org_o[expid[j]]['echam'].u10).all()
+(awi_esm_org_o[expid[i]]['echam'].q2m == awi_esm_org_o[expid[j]]['echam'].q2m).all()
+# np.nanmax(abs(awi_esm_org_o[expid[i]]['echam'].q2m - awi_esm_org_o[expid[j]]['echam'].q2m))
+
 
 # wiso variables
-
-(awi_esm_org_o[expid[i]]['wiso'].wisoevap[:, 0:3, :, :].values == awi_esm_org_o[expid[j]]['wiso'].wisoevap[:, 0:3, :, :].values).all()
-(awi_esm_org_o[expid[i]]['wiso'].wisoaprl[:, 0:3, :, :].values == awi_esm_org_o[expid[j]]['wiso'].wisoaprl[:, 0:3, :, :].values).all()
-(awi_esm_org_o[expid[i]]['wiso'].wisows[:, 0:3, :, :].values == awi_esm_org_o[expid[j]]['wiso'].wisows[:, 0:3, :, :].values).all()
-
-test = awi_esm_org_o[expid[i]]['wiso'].wisoevap[:, 2, :, :] - awi_esm_org_o[expid[j]]['wiso'].wisoevap[:, 2, :, :]
-test.to_netcdf('/work/ollie/qigao001/output/backup/test.nc')
-
 
 (awi_esm_org_o[expid[i]]['wiso'].wisoevap.values == awi_esm_org_o[expid[j]]['wiso'].wisoevap.values).all()
 (awi_esm_org_o[expid[i]]['wiso'].wisoaprl.values == awi_esm_org_o[expid[j]]['wiso'].wisoaprl.values).all()
 (awi_esm_org_o[expid[i]]['wiso'].wisows.values == awi_esm_org_o[expid[j]]['wiso'].wisows.values).all()
 
+np.nanmax(abs(awi_esm_org_o[expid[i]]['wiso'].wisoevap[:, 3:6, :, :] - awi_esm_org_o[expid[j]]['wiso'].wisoevap[:, 3:6, :, :]))
+test = awi_esm_org_o[expid[i]]['wiso'].wisoevap[:, 3:6, :, :] - awi_esm_org_o[expid[j]]['wiso'].wisoevap[:, 3:6, :, :]
+test.to_netcdf('/work/ollie/qigao001/0_backup/test00.nc')
+
+
+np.nanmax(abs(awi_esm_org_o[expid[i]]['wiso'].wisoevap[:, 3:6, :, :].values - awi_esm_org_o[expid[j]]['wiso'].wisoevap[:, 3:6, :, :].values))
+'''
+(awi_esm_org_o[expid[i]]['wiso'].wisoevap[:, 0:3, :, :].values == awi_esm_org_o[expid[j]]['wiso'].wisoevap[:, 0:3, :, :].values).all()
+(awi_esm_org_o[expid[i]]['wiso'].wisoaprl[:, 0:3, :, :].values == awi_esm_org_o[expid[j]]['wiso'].wisoaprl[:, 0:3, :, :].values).all()
+(awi_esm_org_o[expid[i]]['wiso'].wisows[:, 0:3, :, :].values == awi_esm_org_o[expid[j]]['wiso'].wisows[:, 0:3, :, :].values).all()
+
+(awi_esm_org_o[expid[j]]['wiso'].wisoevap[:, 15:18, :, :].values == awi_esm_org_o[expid[j]]['wiso'].wisoevap[:, 12:15, :, :].values).all()
+
 
 '''
-'pi_final_qg_1y_0_qgtest2.1' != 'pi_final_qg_1y_1_qgtest2.1'
-# different value of ntag impact the wiso simulation differently
-
-
-pi_final_qg_1m_0_no_tagging_ntag0 = pi_final_qg_1m_1_xiaoxu_tagging_ntag0 = pi_final_qg_1m_2_qgtest2.0_ntag0 = pi_final_qg_1m_3_qgtest2.1_ntag0
-# always bit reproducible when ntag=0
-
-pi_final_qg_1m_0_no_tagging_ntag0 != pi_final_qg_1m_4_xiaoxu_tagging_ntag5
-# tagging code changed wiso simulation from the beginning
-'''
-
-'''
-# for yearly output
-(awi_esm_org_o[expid[i]]['echam'].evap[0:12, :, :].values == awi_esm_org_o[expid[j]]['echam'].evap.values).all()
-(awi_esm_org_o[expid[i]]['echam'].aprl[0:12, :, :].values == awi_esm_org_o[expid[j]]['echam'].aprl.values).all()
-(awi_esm_org_o[expid[i]]['echam'].temp2[0:12, :, :].values == awi_esm_org_o[expid[j]]['echam'].temp2.values).all()
-(awi_esm_org_o[expid[i]]['echam'].u10[0:12, :, :].values == awi_esm_org_o[expid[j]]['echam'].u10.values).all()
-(awi_esm_org_o[expid[i]]['echam'].q2m[0:12, :, :].values == awi_esm_org_o[expid[j]]['echam'].q2m.values).all()
-(awi_esm_org_o[expid[i]]['wiso'].wisoevap[0:12, :, :, :].values == awi_esm_org_o[expid[j]]['wiso'].wisoevap[:, :, :, :].values).all()
-(awi_esm_org_o[expid[i]]['wiso'].wisoaprl[0:12, :, :, :].values == awi_esm_org_o[expid[j]]['wiso'].wisoaprl[:, :, :, :].values).all()
-(awi_esm_org_o[expid[i]]['wiso'].wisows[0:12, :, :, :].values == awi_esm_org_o[expid[j]]['wiso'].wisows[:, :, :, :].values).all()
-'''
-
 
 '''
 (awi_esm_org_o[expid[i]]['wiso'].wisoevap[:, 0:3, :, :].values == awi_esm_org_o[expid[j]]['wiso'].wisoevap[:, 0:3, :, :].values).all()

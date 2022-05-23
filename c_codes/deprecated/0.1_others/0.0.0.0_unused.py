@@ -1,6 +1,544 @@
 
 
 # =============================================================================
+# region create tagmap_nhsh_qg1
+
+echam_t63_slm = xr.open_dataset(
+    '/work/ollie/qigao001/scratch/others/land_sea_masks/ECHAM6_T63_slm.nc')
+lon = echam_t63_slm.lon.values
+lat = echam_t63_slm.lat.values
+slm = echam_t63_slm.slm.squeeze()
+
+
+ntag = 2
+
+tagmap_nhsh_qg1 = xr.Dataset(
+    {"tagmap": (
+        ("level", "lat", "lon"),
+        np.zeros((ntag+3, len(lat), len(lon)), dtype=np.double)),
+     },
+    coords={
+        "level": np.arange(1, ntag+3+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
+    }
+)
+
+tagmap_nhsh_qg1.tagmap.sel(level=slice(1, 3))[:, :] = 1
+
+# sh
+tagmap_nhsh_qg1.tagmap.sel(level=4, lat=slice(0, -90))[:, :] = 1
+
+# nh
+tagmap_nhsh_qg1.tagmap.sel(level=5, lat=slice(90, 0))[:, :] = 1
+
+tagmap_nhsh_qg1.to_netcdf(
+    '/home/ollie/qigao001/startdump/tagging/tagmap3/tagmap_nhsh_qg1.nc', mode='w')
+
+
+'''
+tagmap_nhsh_qg1 = xr.open_dataset('/home/ollie/qigao001/startdump/tagging/tagmap3/tagmap_nhsh_qg1.nc')
+
+# check
+np.max(tagmap_nhsh_qg1.tagmap[3:5, :, :].sum(axis=0))
+np.min(tagmap_nhsh_qg1.tagmap[3:5, :, :].sum(axis=0))
+'''
+# endregion
+# =============================================================================
+
+
+# =============================================================================
+# region create tagmap_nhsh_qg2
+
+echam_t63_slm = xr.open_dataset(
+    '/work/ollie/qigao001/scratch/others/land_sea_masks/ECHAM6_T63_slm.nc')
+lon = echam_t63_slm.lon.values
+lat = echam_t63_slm.lat.values
+slm = echam_t63_slm.slm.squeeze()
+
+
+ntag = 4
+
+tagmap_nhsh_qg2 = xr.Dataset(
+    {"tagmap": (
+        ("level", "lat", "lon"),
+        np.zeros((ntag+3, len(lat), len(lon)), dtype=np.double)),
+     },
+    coords={
+        "level": np.arange(1, ntag+3+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
+    }
+)
+
+# sh
+tagmap_nhsh_qg2.tagmap.sel(level=5, lat=slice(0, -90))[:, :] = 1
+
+# nh
+tagmap_nhsh_qg2.tagmap.sel(level=6, lat=slice(90, 0))[:, :] = 1
+
+tagmap_nhsh_qg2.to_netcdf(
+    '/home/ollie/qigao001/startdump/tagging/tagmap3/tagmap_nhsh_qg2.nc', mode='w')
+
+
+'''
+tagmap_nhsh_qg0 = xr.open_dataset('/home/ollie/qigao001/startdump/tagging/tagmap3/tagmap_nhsh_qg0.nc')
+
+# check
+np.max(tagmap_nhsh_qg0.tagmap[3:5, :, :].sum(axis=0))
+np.min(tagmap_nhsh_qg0.tagmap[3:5, :, :].sum(axis=0))
+'''
+# endregion
+# =============================================================================
+
+
+# =============================================================================
+# region create tagmap_nhsh_qg3
+
+echam_t63_slm = xr.open_dataset(
+    '/work/ollie/qigao001/scratch/others/land_sea_masks/ECHAM6_T63_slm.nc')
+lon = echam_t63_slm.lon.values
+lat = echam_t63_slm.lat.values
+slm = echam_t63_slm.slm.squeeze()
+
+
+ntag = 3
+
+tagmap_nhsh_qg3 = xr.Dataset(
+    {"tagmap": (
+        ("level", "lat", "lon"),
+        np.zeros((ntag+3, len(lat), len(lon)), dtype=np.double)),
+     },
+    coords={
+        "level": np.arange(1, ntag+3+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
+    }
+)
+
+tagmap_nhsh_qg3.tagmap.sel(level=slice(1, 3))[:, :] = 1
+
+# sh
+tagmap_nhsh_qg3.tagmap.sel(level=4, lat=slice(0, -90))[:, :] = 1
+
+# nh
+tagmap_nhsh_qg3.tagmap.sel(level=5, lat=slice(90, 0))[:, :] = 1
+
+tagmap_nhsh_qg3.tagmap.sel(level=6)[:, :] = 1
+
+tagmap_nhsh_qg3.to_netcdf(
+    '/home/ollie/qigao001/startdump/tagging/tagmap3/tagmap_nhsh_qg3.nc', mode='w')
+
+'''
+'''
+# endregion
+# =============================================================================
+
+
+# =============================================================================
+# region create tagmap_nhsh_qg4
+
+echam_t63_slm = xr.open_dataset(
+    '/work/ollie/qigao001/scratch/others/land_sea_masks/ECHAM6_T63_slm.nc')
+lon = echam_t63_slm.lon.values
+lat = echam_t63_slm.lat.values
+slm = echam_t63_slm.slm.squeeze()
+
+
+ntag = 3
+
+tagmap_nhsh_qg4 = xr.Dataset(
+    {"tagmap": (
+        ("level", "lat", "lon"),
+        np.zeros((ntag+3, len(lat), len(lon)), dtype=np.double)),
+     },
+    coords={
+        "level": np.arange(1, ntag+3+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
+    }
+)
+
+tagmap_nhsh_qg4.tagmap.sel(level=slice(1, 3))[:, :] = 1
+
+tagmap_nhsh_qg4.tagmap.sel(level=4)[:, :] = 1
+
+# sh
+tagmap_nhsh_qg4.tagmap.sel(level=5, lat=slice(0, -90))[:, :] = 1
+
+# nh
+tagmap_nhsh_qg4.tagmap.sel(level=6, lat=slice(90, 0))[:, :] = 1
+
+tagmap_nhsh_qg4.to_netcdf(
+    '/home/ollie/qigao001/startdump/tagging/tagmap3/tagmap_nhsh_qg4.nc', mode='w')
+
+'''
+'''
+# endregion
+# =============================================================================
+
+
+# =============================================================================
+# region create tagmap_g_nhsh_p1
+
+echam_t63_slm = xr.open_dataset(
+    '/work/ollie/qigao001/scratch/others/land_sea_masks/ECHAM6_T63_slm.nc')
+lon = echam_t63_slm.lon.values
+lat = echam_t63_slm.lat.values
+slm = echam_t63_slm.slm.squeeze()
+
+
+ntag = 8
+
+tagmap_g_nhsh_p1 = xr.Dataset(
+    {"tagmap": (
+        ("level", "lat", "lon"),
+        np.zeros((ntag+3, len(lat), len(lon)), dtype=np.double)),
+     },
+    coords={
+        "level": np.arange(1, ntag+3+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
+    }
+)
+
+# globe
+tagmap_g_nhsh_p1.tagmap.sel(level=4)[:, :] = 1
+
+# sh
+tagmap_g_nhsh_p1.tagmap.sel(level=5, lat=slice(0, -90))[:, :] = 1
+
+# nh
+tagmap_g_nhsh_p1.tagmap.sel(level=6, lat=slice(90, 0))[:, :] = 1
+
+# sh + 1
+tagmap_g_nhsh_p1.tagmap.sel(level=7)[:, :] = tagmap_g_nhsh_p1.tagmap.sel(level=5) + 1
+
+# nh + 1
+tagmap_g_nhsh_p1.tagmap.sel(level=8)[:, :] = tagmap_g_nhsh_p1.tagmap.sel(level=6) + 1
+
+# globe + 1
+tagmap_g_nhsh_p1.tagmap.sel(level=9)[:, :] = tagmap_g_nhsh_p1.tagmap.sel(level=4) + 1
+
+# globe -0.5
+tagmap_g_nhsh_p1.tagmap.sel(level=10)[:, :] = tagmap_g_nhsh_p1.tagmap.sel(level=4) -0.5
+
+# globe
+tagmap_g_nhsh_p1.tagmap.sel(level=11)[:, :] = tagmap_g_nhsh_p1.tagmap.sel(level=4)
+
+
+
+tagmap_g_nhsh_p1.to_netcdf(
+    '/home/ollie/qigao001/startdump/tagging/tagmap3/tagmap_g_nhsh_p1.nc')
+
+
+
+
+'''
+# check
+stats.describe(tagmap_g_nhsh_ew.tagmap.sel(level=4), axis=None)
+stats.describe(tagmap_g_nhsh_ew.tagmap.sel(level=5) + tagmap_g_nhsh_ew.tagmap.sel(level=6), axis=None)
+stats.describe(tagmap_g_nhsh_ew.tagmap.sel(level=7) + tagmap_g_nhsh_ew.tagmap.sel(level=8), axis=None)
+'''
+# endregion
+# =============================================================================
+
+
+# =============================================================================
+# region create tagmap_g_nhsh_1p
+
+echam_t63_slm = xr.open_dataset(
+    '/work/ollie/qigao001/scratch/others/land_sea_masks/ECHAM6_T63_slm.nc')
+lon = echam_t63_slm.lon.values
+lat = echam_t63_slm.lat.values
+slm = echam_t63_slm.slm.squeeze()
+
+
+ntag = 7
+
+tagmap_g_nhsh_1p = xr.Dataset(
+    {"tagmap": (
+        ("level", "lat", "lon"),
+        np.zeros((ntag+3, len(lat), len(lon)), dtype=np.double)),
+     },
+    coords={
+        "level": np.arange(1, ntag+3+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
+    }
+)
+
+# globe
+tagmap_g_nhsh_1p.tagmap.sel(level=4)[:, :] = 1
+
+# sh
+tagmap_g_nhsh_1p.tagmap.sel(level=5, lat=slice(0, -90))[:, :] = 1
+
+# nh
+tagmap_g_nhsh_1p.tagmap.sel(level=6, lat=slice(90, 0))[:, :] = 1
+
+# globe but 1 point
+tagmap_g_nhsh_1p.tagmap.sel(level=7)[:, :] = 1
+tagmap_g_nhsh_1p.tagmap.sel(level=7)[48, 92] = 0
+
+# 1 point
+tagmap_g_nhsh_1p.tagmap.sel(level=8)[48, 92] = 1
+
+# zero fields
+tagmap_g_nhsh_1p.tagmap.sel(level=9)[:, :] = 0
+
+# globe
+tagmap_g_nhsh_1p.tagmap.sel(level=10)[:, :] = 1
+
+tagmap_g_nhsh_1p.to_netcdf(
+    '/home/ollie/qigao001/startdump/tagging/tagmap3/tagmap_g_nhsh_1p.nc')
+
+'''
+# check
+stats.describe(tagmap_g_nhsh_1p.tagmap.sel(level=4), axis=None)
+stats.describe(tagmap_g_nhsh_1p.tagmap.sel(level=5) + tagmap_g_nhsh_1p.tagmap.sel(level=6), axis=None)
+stats.describe(tagmap_g_nhsh_1p.tagmap.sel(level=7) + tagmap_g_nhsh_1p.tagmap.sel(level=8), axis=None)
+'''
+# endregion
+# =============================================================================
+
+
+# =============================================================================
+# region create tagmap_nh_s
+
+echam_t63_slm = xr.open_dataset(
+    '/work/ollie/qigao001/scratch/others/land_sea_masks/ECHAM6_T63_slm.nc')
+lon = echam_t63_slm.lon.values
+lat = echam_t63_slm.lat.values
+slm = echam_t63_slm.slm.squeeze()
+
+
+ntag = 1
+
+tagmap_nh_s = xr.Dataset(
+    {"tagmap": (
+        ("level", "lat", "lon"),
+        np.zeros((ntag+3, len(lat), len(lon)), dtype=np.double)),
+     },
+    coords={
+        "level": np.arange(1, ntag+3+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
+    }
+)
+
+# nh sea
+tagmap_nh_s.tagmap.sel(level=4, lat=slice(90, 0))[:, :] = \
+    1 - slm.sel(lat=slice(90, 0)).values
+
+tagmap_nh_s.to_netcdf(
+    '/home/ollie/qigao001/startdump/tagging/tagmap3/tagmap_nh_s.nc', mode='w')
+
+
+'''
+cdo --reduce_dim -selvar,slm /work/ollie/qigao001/output/awiesm-2.1-wiso/pi_final/pi_final_qg_tag4_1y_0/analysis/echam/pi_final_qg_tag4_1y_0_2000_2003.01_echam.am.nc /work/ollie/qigao001/output/scratch/others/land_sea_masks/ECHAM6_T63_slm.nc
+
+'''
+# endregion
+# =============================================================================
+
+
+# =============================================================================
+# region create tagmap_nh_l
+
+echam_t63_slm = xr.open_dataset(
+    '/work/ollie/qigao001/scratch/others/land_sea_masks/ECHAM6_T63_slm.nc')
+lon = echam_t63_slm.lon.values
+lat = echam_t63_slm.lat.values
+slm = echam_t63_slm.slm.squeeze()
+
+
+ntag = 1
+
+tagmap_nh_l = xr.Dataset(
+    {"tagmap": (
+        ("level", "lat", "lon"),
+        np.zeros((ntag+3, len(lat), len(lon)), dtype=np.double)),
+     },
+    coords={
+        "level": np.arange(1, ntag+3+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
+    }
+)
+
+# nh land
+tagmap_nh_l.tagmap.sel(level=4, lat=slice(90, 0))[:, :] = \
+    slm.sel(lat=slice(90, 0)).values
+
+tagmap_nh_l.to_netcdf(
+    '/home/ollie/qigao001/startdump/tagging/tagmap3/tagmap_nh_l.nc', mode='w')
+
+
+'''
+'''
+# endregion
+# =============================================================================
+
+
+# =============================================================================
+# region create tagmap_g_nhsh_sl
+
+echam_t63_slm = xr.open_dataset(
+    '/work/ollie/qigao001/scratch/others/land_sea_masks/ECHAM6_T63_slm.nc')
+lon = echam_t63_slm.lon.values
+lat = echam_t63_slm.lat.values
+slm = echam_t63_slm.slm.squeeze()
+
+
+ntag = 5
+
+tagmap_g_nhsh_sl = xr.Dataset(
+    {"tagmap": (
+        ("level", "lat", "lon"),
+        np.zeros((ntag+3, len(lat), len(lon)), dtype=np.double)),
+     },
+    coords={
+        "level": np.arange(1, ntag+3+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
+    }
+)
+
+# globe
+tagmap_g_nhsh_sl.tagmap.sel(level=4)[:, :] = 1
+
+# sh land
+tagmap_g_nhsh_sl.tagmap.sel(level=5, lat=slice(0, -90))[:, :] = \
+    slm.sel(lat=slice(0, -90)).values
+
+# sh sea
+tagmap_g_nhsh_sl.tagmap.sel(level=6, lat=slice(0, -90))[:, :] = \
+    1 - slm.sel(lat=slice(0, -90)).values
+
+# nh land
+tagmap_g_nhsh_sl.tagmap.sel(level=7, lat=slice(90, 0))[:, :] = \
+    slm.sel(lat=slice(90, 0)).values
+
+# nh sea
+tagmap_g_nhsh_sl.tagmap.sel(level=8, lat=slice(90, 0))[:, :] = \
+    1 - slm.sel(lat=slice(90, 0)).values
+
+
+
+tagmap_g_nhsh_sl.to_netcdf(
+    '/home/ollie/qigao001/startdump/tagging/tagmap3/tagmap_g_nhsh_sl.nc')
+
+
+# endregion
+# =============================================================================
+
+
+# =============================================================================
+# region create tagmap_g
+
+echam_t63_slm = xr.open_dataset(
+    '/work/ollie/qigao001/scratch/others/land_sea_masks/ECHAM6_T63_slm.nc')
+lon = echam_t63_slm.lon.values
+lat = echam_t63_slm.lat.values
+slm = echam_t63_slm.slm.squeeze()
+
+
+ntag = 1
+
+tagmap_g = xr.Dataset(
+    {"tagmap": (
+        ("level", "lat", "lon"),
+        np.zeros((ntag+3, len(lat), len(lon)), dtype=np.double)),
+     },
+    coords={
+        "level": np.arange(1, ntag+3+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
+    }
+)
+
+tagmap_g.tagmap.sel(level=4)[:, :] = 1
+
+tagmap_g.to_netcdf(
+    '/home/ollie/qigao001/startdump/tagging/tagmap3/tagmap_g.nc')
+
+
+# endregion
+# =============================================================================
+
+
+# =============================================================================
+# region create tagmap_g2
+
+echam_t63_slm = xr.open_dataset(
+    '/work/ollie/qigao001/scratch/others/land_sea_masks/ECHAM6_T63_slm.nc')
+lon = echam_t63_slm.lon.values
+lat = echam_t63_slm.lat.values
+slm = echam_t63_slm.slm.squeeze()
+
+
+ntag = 2
+
+tagmap_g2 = xr.Dataset(
+    {"tagmap": (
+        ("level", "lat", "lon"),
+        np.zeros((ntag+3, len(lat), len(lon)), dtype=np.double)),
+     },
+    coords={
+        "level": np.arange(1, ntag+3+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
+    }
+)
+
+tagmap_g2.tagmap.sel(level=4)[:, :] = 1
+tagmap_g2.tagmap.sel(level=5)[:, :] = 0.5
+
+tagmap_g2.to_netcdf(
+    '/home/ollie/qigao001/startdump/tagging/tagmap3/tagmap_g2.nc')
+
+
+# endregion
+# =============================================================================
+
+
+# =============================================================================
+# region create tagmap_g2i
+
+echam_t63_slm = xr.open_dataset(
+    '/work/ollie/qigao001/scratch/others/land_sea_masks/ECHAM6_T63_slm.nc')
+lon = echam_t63_slm.lon.values
+lat = echam_t63_slm.lat.values
+slm = echam_t63_slm.slm.squeeze()
+
+
+ntag = 2
+
+tagmap_g2i = xr.Dataset(
+    {"tagmap": (
+        ("level", "lat", "lon"),
+        np.zeros((ntag+3, len(lat), len(lon)), dtype=np.double)),
+     },
+    coords={
+        "level": np.arange(1, ntag+3+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
+    }
+)
+
+tagmap_g2i.tagmap.sel(level=4)[:, :] = 1
+tagmap_g2i.tagmap.sel(level=5)[:, :] = 1
+
+tagmap_g2i.to_netcdf(
+    '/home/ollie/qigao001/startdump/tagging/tagmap3/tagmap_g2i.nc')
+
+
+# endregion
+# =============================================================================
+
+
+# =============================================================================
 # region attempt to plot Fesom2 original mesh
 
 import pyfesom2 as pf

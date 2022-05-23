@@ -1,18 +1,17 @@
 general:
     setup_name: "echam"
-    compute_time: "00:10:00"
+    compute_time: "00:30:00"
     initial_date: "2000-01-01"
-    final_date: "2000-01-03"
+    final_date: "2000-01-05"
     model_dir: "/work/ollie/qigao001/model_codes/echam-6.3.05p2-wiso/"
     base_dir: "/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/"
-    nday: 1
-    nmonth: 0
+    nmonth: 1
     nyear: 0
     use_venv: False
 
 echam:
     version: "6.3.05p2-wiso"
-    executable: echam6_0422_2.5.1
+    executable: echam6_0522_3.6
     bin_sources:
             echam_bin: "${bin_dir}/${executable}"
     bin_in_work:
@@ -21,7 +20,7 @@ echam:
     res: T63
     lresume: False
     restart_rate: 1
-    restart_unit: "d"
+    restart_unit: "months"
     nproca: 24
     nprocb:  24
     nprocar: 0
@@ -35,13 +34,22 @@ echam:
                     nprocbr: 0
                 runctl:
                     default_output: True
+                    out_filetype: 1
+                    putdata: [ 450, 'seconds', 'first', 0 ]
+                    # putdata: [ 6, 'hours', 'last', 0 ]
+                    dt_stop: [ 2000, 1, 2 ]
                 radctl:
                     lrad_async: False
                 wisoctl:
                     lwiso: True
                     lwiso_rerun: False
-                    nwiso: 8
-                    ntag: 5
+                    nwiso: 7
+                    ntag: 4
+                    ntag1: 0
+                    ntag2: 0
+                    ntag3: 0
+                    ntag4: 0
+                    ntag_sum: 4
     file_movements:
         forcing:
             all_directions: "link"
@@ -49,10 +57,13 @@ echam:
             all_directions: "link"
     forcing_sources:
         wiso_sw_observed: "/home/ollie/mwerner/model_input/ECHAM6-wiso/PI_ctrl/T63/T63_wisosw_d.nc"
+        wiso_tagmap_1: "/work/ollie/qigao001/startdump/tagging/tagmap/tagmap_nhsh_sl.nc"
     add_forcing_files:
         wiso_sw: wiso_sw_observed
+        wiso_tagmap: wiso_tagmap_1
     forcing_in_work:
         wiso_sw: "unit.25"
+        wiso_tagmap: "unit.26"
 
 jsbach:
     file_movements:
