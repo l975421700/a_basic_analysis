@@ -319,7 +319,7 @@ plt_theta = ax.pcolormesh(
 
 
 # =============================================================================
-# region plot Antarctic boundaries
+# region plot AIS boundaries, ice core sites
 
 # Load data
 with open('bas_palaeoclim_qino/others/ais_masks.pickle', 'rb') as handle:
@@ -632,4 +632,65 @@ polygon_eais.plot(ax=ax, color='grey', zorder=3, transform=ccrs.PlateCarree())
 # =============================================================================
 
 
+# =============================================================================
+# region plot AIS boundaries, ice core sites, surface height
+
+ais_imbie2 = gpd.read_file(
+    'data_sources/products/IMBIE_2016_drainage_basins/Rignot_Basins/ANT_IceSheets_IMBIE2/ANT_IceSheets_IMBIE2_v1.6.shp')
+major_ice_core_site = pd.read_csv('data_sources/major_ice_core_site.csv')
+major_ice_core_site = major_ice_core_site.loc[major_ice_core_site['age (kyr)'] > 120, ]
+
+fig, ax = hemisphere_plot(
+    northextent=-60, figsize=np.array([5.8, 5.8]) / 2.54,
+    fm_bottom=0.01, lw=0.1)
+
+plt_wais = ais_imbie2.loc[ais_imbie2.Regions == 'West'].plot(
+    ax=ax, transform=ccrs.epsg(3031),
+    edgecolor='red', facecolor='none', linewidths=0.15, zorder=2)
+plt_eais = ais_imbie2.loc[ais_imbie2.Regions == 'East'].plot(
+    ax=ax, transform=ccrs.epsg(3031),
+    edgecolor='blue', facecolor='none', linewidths=0.15, zorder=2)
+plt_ap = ais_imbie2.loc[ais_imbie2.Regions == 'Peninsula'].plot(
+    ax=ax, transform=ccrs.epsg(3031),
+    edgecolor='m', facecolor='none', linewidths=0.15, zorder=2)
+
+ax.scatter(
+    x = major_ice_core_site.lon, y = major_ice_core_site.lat,
+    s=3, c='none', linewidths=0.5, marker='o',
+    transform=ctp.crs.PlateCarree(), edgecolors = 'black',
+    )
+
+for irow in range(major_ice_core_site.shape[0]):
+    # irow = 0
+    ax.text(major_ice_core_site.lon[irow], major_ice_core_site.lat[irow]+1,
+            major_ice_core_site.Site[irow], transform=ccrs.PlateCarree(),
+            fontsize = 6, color='black')
+
+fig.savefig('figures/1_study_area/trial1.png')
+
+
+
+
+
+'''
+# pltlevel = np.arange(0, 32.01, 0.1)
+# pltticks = np.arange(0, 32.01, 4)
+# pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False)
+# pltcmp = cm.get_cmap('RdBu', len(pltlevel)).reversed()
+
+# plt_cmp = ax.pcolormesh(
+#     x,
+#     y,
+#     z,
+#     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+# cbar = fig.colorbar(
+#     cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=ax, aspect=30,
+#     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
+#     pad=0.02, fraction=0.2,
+#     )
+# cbar.ax.set_xlabel('1st line\n2nd line', linespacing=2)
+'''
+# endregion
+# =============================================================================
 

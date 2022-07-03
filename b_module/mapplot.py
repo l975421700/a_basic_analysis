@@ -124,7 +124,7 @@ def scale_bar(
                     str(round(i * length / bars)), transform=tmc,
                     horizontalalignment='center', verticalalignment='bottom',
                     color=fontcolor)
-        
+    
     # Generate the x coordinate for the last number
     bar_xt = sbx + length * 1000 * 1.1
     # Plot the last scalebar label
@@ -149,22 +149,211 @@ middle_label=scalebar_elements['middle_label']
 
 
 # =============================================================================
+# region Function to plot globe
+
+
+import numpy as np
+import cartopy as ctp
+
+def globe_plot(
+    ax_org=None,
+    figsize=np.array([8.8, 6.4]) / 2.54,
+    extent=[-180, 180, -90, 90],
+    projections = ctp.crs.PlateCarree(), # (Robinson, PlateCarree)
+    add_atlas=True, atlas_color='black', lw=0.1,
+    add_grid=True, grid_color='gray',
+    add_grid_labels=True, ticklabel = None, labelsize=6,
+    fm_left=0.07, fm_right=0.98, fm_bottom=0.1, fm_top=0.97,
+    plot_scalebar=False, sb_bars=2, sb_length=200, sb_location=(0.02, 0.015),
+    sb_barheight=20, sb_linewidth=0.15, sb_col='black', sb_middle_label=False,
+    ):
+    '''
+    ----Input
+    
+    ----output
+    
+    '''
+    
+    import cartopy.feature as cfeature
+    import matplotlib.ticker as mticker
+    import matplotlib.pyplot as plt
+    
+    if (ticklabel is None):
+        ticklabel = ticks_labels(-180, 180, -90, 90, 60, 30)
+    
+    if (ax_org is None):
+        fig, ax = plt.subplots(
+            1, 1, figsize=figsize, subplot_kw={'projection': projections},)
+    else:
+        ax = ax_org
+    
+    ax.set_extent(extent, crs = ctp.crs.PlateCarree())
+    
+    if add_grid_labels:
+        ax.set_xticks(ticklabel[0],)
+        ax.set_xticklabels(ticklabel[1], fontsize=labelsize)
+        ax.set_yticks(ticklabel[2],)
+        ax.set_yticklabels(ticklabel[3], fontsize=labelsize)
+        ax.tick_params(length=1, width=lw * 2)
+    
+    if add_atlas:
+        coastline = cfeature.NaturalEarthFeature(
+            'physical', 'coastline', '10m', edgecolor=atlas_color,
+            facecolor='none', lw=lw)
+        ax.add_feature(coastline, zorder=2)
+        borders = cfeature.NaturalEarthFeature(
+            'cultural', 'admin_0_boundary_lines_land', '10m',
+            edgecolor=atlas_color, facecolor='none', lw=lw)
+        ax.add_feature(borders, zorder=2)
+    
+    if add_grid:
+        gl = ax.gridlines(
+            crs=ctp.crs.PlateCarree(), linewidth=lw * 0.75, zorder=2,
+            color=grid_color, linestyle='--')
+        gl.xlocator = mticker.FixedLocator(ticklabel[0])
+        gl.ylocator = mticker.FixedLocator(ticklabel[2])
+    
+    if plot_scalebar:
+        scale_bar(ax, bars=sb_bars,
+                  length=sb_length,
+                  location=sb_location,
+                  barheight=sb_barheight,
+                  linewidth=sb_linewidth,
+                  col=sb_col,
+                  middle_label=sb_middle_label,)
+    
+    if (ax_org is None):
+        fig.subplots_adjust(
+            left=fm_left, right=fm_right, bottom=fm_bottom, top=fm_top)
+    
+    if (ax_org is None):
+        return fig, ax
+    else:
+        return ax
+
+
+'''
+#-------------------------------- Test one plot
+import numpy as np
+from matplotlib.colors import BoundaryNorm
+from matplotlib import cm
+import matplotlib as mpl
+mpl.rcParams['figure.dpi'] = 600
+mpl.rc('font', family='Times New Roman', size=9)
+mpl.rcParams['axes.linewidth'] = 0.2
+import cartopy.crs as ccrs
+
+pltlevel = np.arange(0, 32.01, 0.1)
+pltticks = np.arange(0, 32.01, 4)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False)
+pltcmp = cm.get_cmap('RdBu', len(pltlevel)).reversed()
+
+fig, ax = globe_plot()
+
+# plt_cmp = ax.pcolormesh(
+#     x,
+#     y,
+#     z,
+#     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.7, ticks=pltticks, extend='max',
+    pad=0.1, fraction=0.2,
+    )
+cbar.ax.tick_params(length=2, width=0.4)
+cbar.ax.set_xlabel('1st line\n2nd line', linespacing=2)
+fig.savefig('0_backup/trial1.png')
+
+
+#-------------------------------- Test n*m plot
+import numpy as np
+from matplotlib.colors import BoundaryNorm
+from matplotlib import cm
+import matplotlib as mpl
+mpl.rcParams['figure.dpi'] = 600
+mpl.rc('font', family='Times New Roman', size=9)
+import cartopy.crs as ccrs
+import matplotlib.pyplot as plt
+mpl.rcParams['axes.linewidth'] = 0.2
+
+pltlevel = np.arange(0, 32.01, 0.1)
+pltticks = np.arange(0, 32.01, 4)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False)
+pltcmp = cm.get_cmap('RdBu', len(pltlevel)).reversed()
+
+output_png = '0_backup/trial2.png'
+cbar_label = 'TEXT\nTEXT'
+
+nrow = 2
+ncol = 3
+fm_bottom = 2.5 / (4.6*nrow + 2.5)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([8.8*ncol, 4.6*nrow + 2.5]) / 2.54,
+    subplot_kw={'projection': ccrs.PlateCarree()},
+    gridspec_kw={'hspace': 0.15, 'wspace': 0.02},)
+
+for irow in range(nrow):
+    for jcol in range(ncol):
+        if((irow!=0) | (jcol !=0)):
+            axs[irow, jcol] = globe_plot(ax_org = axs[irow, jcol], add_grid_labels=False)
+        else:
+            axs[irow, jcol].axis('off')
+
+# axs[0, 1].pcolormesh(
+#     x,
+#     y,
+#     z,
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt.text(
+    0.5, 1.05, 'TEXT', transform=axs[0, 1].transAxes,
+    ha='center', va='center', rotation='horizontal')
+plt.text(
+    -0.05, 0.5, 'TEXT', transform=axs[1, 0].transAxes,
+    ha='center', va='center', rotation='vertical')
+
+cbar = fig.colorbar(
+    cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=axs, aspect=40,
+    orientation="horizontal", shrink=0.5, ticks=pltticks, extend='max',
+    anchor=(0.5, 0.4),
+    )
+cbar.ax.set_xlabel(cbar_label, linespacing=2)
+
+fig.subplots_adjust(left=0.04, right = 0.99, bottom = fm_bottom, top = 0.96)
+fig.savefig(output_png)
+
+# cbar1 = fig.colorbar(
+#     cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=axs,
+#     orientation="horizontal",shrink=0.5,aspect=40,extend='max',
+#     anchor=(-0.2, -0.3), ticks=pltticks)
+# cbar1.ax.set_xlabel('TEXT\nTEXT', linespacing=2)
+
+# cbar2 = fig.colorbar(
+#     cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=axs,
+#     orientation="horizontal",shrink=0.5,aspect=40,extend='max',
+#     anchor=(1.1,-3.8),ticks=pltticks)
+# cbar2.ax.set_xlabel('TEXT\nTEXT', linespacing=2)
+
+
+'''
+# endregion
+# =============================================================================
+
+
+# =============================================================================
 # region Function to plot advance framework
 
 def framework_plot1(
     which_area,
     ax_org=None,
-    output_png=None,
-    dpi=600,
     figsize=None,
     country_boundaries=True, border_color = 'black',
     gridlines=True, grid_color = 'gray',
-    ticks_and_labels = True,
-    lw=0.25, labelsize=10, extent=None, ticklabel = None,
-    plot_scalebar = True,
-    scalebar_elements={'bars': 2, 'length': 200, 'location': (0.02, 0.015),
-                       'barheight': 20, 'linewidth': 0.15, 'col': 'black',
-                       'middle_label': False},
+    ticks_and_labels = True, ticklabel = None,
+    lw=0.25, extent=None,
+    plot_scalebar=False, sb_bars=2, sb_length=200, sb_location=(0.02, 0.015),
+    sb_barheight=20, sb_linewidth=0.15, sb_col='black', sb_middle_label=False,
     set_figure_margin = True,
     figure_margin=None,
     ):
@@ -222,7 +411,7 @@ def framework_plot1(
     
     if (ax_org is None):
         fig, ax = plt.subplots(
-            1, 1, figsize=figsize, subplot_kw={'projection': transform}, dpi=dpi)
+            1, 1, figsize=figsize, subplot_kw={'projection': transform},)
     else:
         ax = ax_org
     
@@ -232,7 +421,7 @@ def framework_plot1(
         ax.set_xticklabels(ticklabel[1])
         ax.set_yticks(ticklabel[2])
         ax.set_yticklabels(ticklabel[3])
-        ax.tick_params(length=2, labelsize=labelsize)
+        ax.tick_params(length=2)
     
     if country_boundaries:
         coastline = cfeature.NaturalEarthFeature(
@@ -252,13 +441,13 @@ def framework_plot1(
         gl.ylocator = mticker.FixedLocator(ticklabel[2])
     
     if plot_scalebar:
-        scale_bar(ax, bars=scalebar_elements['bars'],
-                  length=scalebar_elements['length'],
-                  location=scalebar_elements['location'],
-                  barheight=scalebar_elements['barheight'],
-                  linewidth=scalebar_elements['linewidth'],
-                  col=scalebar_elements['col'],
-                  middle_label=scalebar_elements['middle_label'])
+        scale_bar(ax, bars=sb_bars,
+                  length=sb_length,
+                  location=sb_location,
+                  barheight=sb_barheight,
+                  linewidth=sb_linewidth,
+                  col=sb_col,
+                  middle_label=sb_middle_label,)
     
     if set_figure_margin & (not(figure_margin is None)) & (ax_org is None):
         fig.subplots_adjust(
@@ -267,9 +456,7 @@ def framework_plot1(
     else:
         fig.tight_layout()
     
-    if (not(output_png is None)):
-        fig.savefig(output_png, dpi=dpi)
-    elif (ax_org is None):
+    if (ax_org is None):
         return fig, ax
     else:
         return ax
@@ -278,13 +465,13 @@ def framework_plot1(
 '''
 # https://www.naturalearthdata.com/downloads/
 
-fig, ax = framework_plot1("global")
-fig.savefig('figures/0_test/trial.png')
+fig, ax = framework_plot1('global')
+fig.savefig('0_backup/trial.png')
 
 import os
 os.environ['CARTOPY_USER_BACKGROUNDS'] = 'bas_palaeoclim_qino/others/bg_cartopy'
 # ax.background_img(name='natural_earth', resolution='high')
-# fig.savefig('figures/00_test/natural_earth.png', dpi=1200)
+# fig.savefig('figures/00_test/natural_earth.png')
 
 '''
 
@@ -437,13 +624,15 @@ middle_label=scalebar_elements['middle_label']
 # region functions to plot two hemisphere
 
 
+import numpy as np
+
 def hemisphere_plot(
     ax_org = None,
-    northextent=None, southextent=None, figsize=None,
-    fm_left=0.13, fm_right=0.88, fm_bottom=0.08, fm_top=0.96,
+    northextent=None, southextent=None,
+    figsize=np.array([5.8, 7.8]) / 2.54,
+    fm_left=0.01, fm_right=0.99, fm_bottom=0.04, fm_top=0.99,
     add_atlas=True, atlas_color='black', lw=0.25,
     add_grid=True, grid_color='gray', add_grid_labels = False,
-    output_png=None,
     plot_scalebar=False, sb_bars=2, sb_length=1000, sb_location=(-0.13, 0),
     sb_barheight=100, sb_linewidth=0.15, sb_middle_label=False,
     ):
@@ -451,37 +640,27 @@ def hemisphere_plot(
     ----Input
     northextent: plot SH, north extent in degree south, e.g. -60, -30, or 0;
     southextent: plot NH, south extent in degree north, e.g. 60, 30, 0;
-    figsize: figure size, e.g. np.array([8.8, 9.3]) / 2.54;
     
     ----output
-    
     
     ----function dependence
     ticks_labels; polar_scale_bar;
     '''
     
-    import numpy as np
     import matplotlib.pyplot as plt
     import cartopy.crs as ccrs
     import cartopy.feature as cfeature
-    import matplotlib as mpl
     import matplotlib.path as mpath
-    mpl.rc('font', family='Times New Roman', size=10)
     import warnings
     warnings.filterwarnings('ignore')
     from cartopy.mpl.ticker import LongitudeFormatter
     
-    if (figsize is None):
-        figsize = np.array([8.8, 9.3]) / 2.54
-    
     if not (northextent is None):
-        # northextent = -60
         projections = ccrs.SouthPolarStereo()
         ticklabel = ticks_labels(-180, 180, -90, northextent,
                                  30, int((northextent+90)/3))
         extent = (-180, 180, -90, northextent)
     elif not (southextent is None):
-        # southextent = 60
         projections = ccrs.NorthPolarStereo()
         ticklabel = ticks_labels(-180, 180, southextent, 90,
                                  30, int((90-southextent)/3))
@@ -540,42 +719,114 @@ def hemisphere_plot(
             middle_label=sb_middle_label,
             transform=projections)
     
-    if not (output_png is None):
-        fig.savefig(output_png)
-    elif (ax_org is None):
+    if (ax_org is None):
         return fig, ax
     else:
         return ax
 
+
 '''
-hemisphere_plot(
-    northextent=-60, output_png='figures/0_test/trial.png',
-    add_grid_labels=False, plot_scalebar=False, grid_color='black',
-    fm_left=0.06, fm_right=0.94, fm_bottom=0.04, fm_top=0.98,
+#-------------------------------- Test one plot
+import numpy as np
+from matplotlib.colors import BoundaryNorm
+from matplotlib import cm
+import matplotlib as mpl
+mpl.rcParams['figure.dpi'] = 600
+mpl.rc('font', family='Times New Roman', size=9)
+import cartopy.crs as ccrs
+
+pltlevel = np.arange(0, 32.01, 0.1)
+pltticks = np.arange(0, 32.01, 4)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False)
+pltcmp = cm.get_cmap('RdBu', len(pltlevel)).reversed()
+
+fig, ax = hemisphere_plot(northextent=-45)
+
+# plt_cmp = ax.pcolormesh(
+#     x,
+#     y,
+#     z,
+#     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
+    pad=0.02, fraction=0.2,
     )
-hemisphere_plot(
-    northextent=-30, sb_length=2000, sb_barheight=200,
-    output_png='figures/0_test/trial',)
-hemisphere_plot(
-    northextent=0, sb_length=3000, sb_barheight=300,
-    output_png='figures/0_test/trial02',)
+cbar.ax.set_xlabel('1st line\n2nd line', linespacing=2)
+fig.savefig('0_backup/trial1.png')
 
-hemisphere_plot(southextent=60, output_png='figures/0_test/trial03',)
-hemisphere_plot(
-    southextent=30, sb_length=2000, sb_barheight=200,
-    output_png='figures/0_test/trial04',)
-hemisphere_plot(
-    southextent=0, sb_length=3000, sb_barheight=300,
-    output_png='figures/0_test/trial05',)
+# fig, ax = hemisphere_plot(northextent=-60)
+# fig, ax = hemisphere_plot(northextent=-30)
+# fig, ax = hemisphere_plot(southextent=60)
+# fig, ax = hemisphere_plot(southextent=45)
+# fig, ax = hemisphere_plot(southextent=30)
+
+#-------------------------------- Test n*m plot
+import numpy as np
+from matplotlib.colors import BoundaryNorm
+from matplotlib import cm
+import matplotlib as mpl
+mpl.rcParams['figure.dpi'] = 600
+mpl.rc('font', family='Times New Roman', size=9)
+import cartopy.crs as ccrs
+import matplotlib.pyplot as plt
+
+pltlevel = np.arange(0, 32.01, 0.1)
+pltticks = np.arange(0, 32.01, 4)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False)
+pltcmp = cm.get_cmap('RdBu', len(pltlevel)).reversed()
+
+nrow = 3
+ncol = 4
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.1, 'wspace': 0.1},)
+
+for irow in range(nrow):
+    for jcol in range(ncol):
+        if((irow!=0) | (jcol !=0)):
+            axs[irow, jcol] = hemisphere_plot(northextent=-60, ax_org = axs[irow, jcol])
+        else:
+            axs[irow, jcol].axis('off')
+
+# axs[0, 1].pcolormesh(
+#     x,
+#     y,
+#     z,
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt.text(
+    0.5, 1.05, 'TEXT', transform=axs[0, 1].transAxes,
+    ha='center', va='center', rotation='horizontal')
+plt.text(
+    -0.05, 0.5, 'TEXT', transform=axs[1, 0].transAxes,
+    ha='center', va='center', rotation='vertical')
+
+cbar = fig.colorbar(
+    cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=axs, aspect=40,
+    orientation="horizontal", shrink=0.5, ticks=pltticks, extend='max',
+    anchor=(0.5, -0.3),
+    )
+cbar.ax.set_xlabel('TEXT\nTEXT', linespacing=2)
 
 
-# northextent=None, southextent=None, figsize=None, dpi=600,
-# fm_left=0.12, fm_right=0.88, fm_bottom=0.08, fm_top=0.96,
-# add_atlas=True, atlas_color='black', lw=0.25,
-# add_grid=True, grid_color='gray', add_grid_labels = True, output_png=None,
-# plot_scalebar=True, sb_bars=2, sb_length=1000, sb_location=(-0.13, 0),
-# sb_barheight=100, sb_linewidth=0.15, sb_middle_label=False,
+fig.subplots_adjust(left=0.04, right = 0.99, bottom = 0.12, top = 0.96)
+fig.savefig('0_backup/trial2.png')
 
+
+# cbar1 = fig.colorbar(
+#     cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=axs,
+#     orientation="horizontal",shrink=0.5,aspect=40,extend='max',
+#     anchor=(-0.2, -0.3), ticks=pltticks)
+# cbar1.ax.set_xlabel('TEXT\nTEXT', linespacing=2)
+
+# cbar2 = fig.colorbar(
+#     cm.ScalarMappable(norm=pltnorm2, cmap=pltcmp2), ax=axs,
+#     orientation="horizontal",shrink=0.5,aspect=40,extend='max',
+#     anchor=(1.1,-3.8),ticks=pltticks2)
+# cbar2.ax.set_xlabel('TEXT\nTEXT', linespacing=2)
 '''
 # endregion
 # =============================================================================
@@ -587,24 +838,24 @@ hemisphere_plot(
 def rb_colormap(pltlevel, right_c = 'Blues_r', left_c = 'Reds'):
     '''
     ----Input
-    pltlevel: levels used for the color bar
+    pltlevel: levels used for the color bar, must be even;
     
     ----output
-    cmp_cmap: a colormap from blue to white to red, cmp_cmap.reversed()
+    cmp_cmap:
     '''
     import numpy as np
     from matplotlib import cm
     from matplotlib.colors import ListedColormap
     
-    cmp_top = cm.get_cmap(right_c, int(np.floor(len(pltlevel) / 2)) - 1)
-    cmp_bottom = cm.get_cmap(left_c, int(np.floor(len(pltlevel) / 2)) - 1)
+    cmp_top = cm.get_cmap(right_c, int(np.floor(len(pltlevel) / 2)))
+    cmp_bottom = cm.get_cmap(left_c, int(np.floor(len(pltlevel) / 2)))
     
     cmp_colors = np.vstack(
-        (cmp_top(np.linspace(0, 1, int(np.floor(len(pltlevel) / 2)) - 1)),
-         [1, 1, 1, 1],
-         [1, 1, 1, 1],
-         [1, 1, 1, 1],
-         cmp_bottom(np.linspace(0, 1, int(np.floor(len(pltlevel) / 2)) - 1))))
+        (cmp_top(np.linspace(0, 1, int(np.floor(len(pltlevel) / 2)))),
+        #  [1, 1, 1, 1],
+        #  [1, 1, 1, 1],
+        #  [1, 1, 1, 1],
+         cmp_bottom(np.linspace(0, 1, int(np.floor(len(pltlevel) / 2))))))
     cmp_cmap = ListedColormap(cmp_colors)
     
     return(cmp_cmap)
@@ -777,7 +1028,7 @@ def quick_var_plot(
     plt_cmp = ax.pcolormesh(
         lon, lat, var,
         norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
-        cmap=cmap, rasterized=True, transform=ccrs.PlateCarree(),)
+        cmap=cmap, transform=ccrs.PlateCarree(),)
     
     if(whicharea == 'global'):
         cbar = fig.colorbar(

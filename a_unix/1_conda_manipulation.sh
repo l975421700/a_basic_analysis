@@ -11,6 +11,7 @@
 # conda list
 # conda update -n base -c defaults conda
 
+# source /home/ollie/qigao001/miniconda3/bin/activate training
 source /home/users/qino/miniconda3/bin/activate
 conda activate deepice
 
@@ -70,6 +71,7 @@ mamba install -c conda-forge rioxarray
 mamba install -c conda-forge pyfesom2
 mamba install -c conda-forge geopandas
 mamba install -c conda-forge pymannkendall
+mamba install -c conda-forge fortls
 
 # clean conda installed pkgs
 # conda clean -a
@@ -83,7 +85,6 @@ conda install basemap joblib seawater click
 
 pip install igra
 pip install siphon
-pip install fortran-language-server
 
 # regridding
 # https://github.com/JiaweiZhuang/xESMF/issues/47

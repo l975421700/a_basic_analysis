@@ -1,8 +1,8 @@
 general:
     setup_name: "echam"
-    compute_time: "00:30:00"
+    compute_time: "02:00:00"
     initial_date: "2000-01-01"
-    final_date: "2000-01-31"
+    final_date: "2000-12-31"
     model_dir: "/work/ollie/qigao001/model_codes/echam-6.3.05p2-wiso/"
     base_dir: "/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/"
     nmonth: 1
@@ -11,7 +11,7 @@ general:
 
 echam:
     version: "6.3.05p2-wiso"
-    executable: echam6_0518_3.4
+    executable: echam6_0629_3.64
     bin_sources:
             echam_bin: "${bin_dir}/${executable}"
     bin_in_work:
@@ -19,6 +19,8 @@ echam:
     scenario: "PI-CTRL"
     res: T63
     lresume: False
+    with_wiso: True
+    wiso_code: True
     restart_rate: 1
     restart_unit: "months"
     nproca: 24
@@ -34,17 +36,36 @@ echam:
                     nprocbr: 0
                 runctl:
                     default_output: True
+                    out_filetype: 2
                     # putdata: [ 450, 'seconds', 'first', 0 ]
                     # putdata: [ 6, 'hours', 'last', 0 ]
                     # putdata: [ 1, 'days', 'last', 0 ]
-                    # dt_stop: [ 2000, 1, 2 ]
+                    # dt_stop: [ 2000, 1, 31 ]
                 radctl:
                     lrad_async: False
                 wisoctl:
                     lwiso: True
-                    lwiso_rerun: False
-                    nwiso: 50
-                    ntag: 47
+                    lwiso_rerun: ${lresume}
+                    nwiso: 99
+                    ntag: 96
+                    ntag1: 0
+                    ntag2: 0
+                    ntag3: 0
+                    ntag4: 0
+                    ntags1_lat: 0
+                    ntags2_lon: 0
+                    ntags3_sst: 0
+                    ntags4_rh2m: 0
+                    ntags5_wind10: 0
+                    ntag_sum: 96
+                    lupdate_tagmap: True
+                    tag_minsst: 260
+                    tag_maxsst: 310
+                    lcorrfac: False
+                    ltag_corr1: False
+                    ltag_corr2: False
+                    ltag_corr3: True
+                    latm_water: False
     file_movements:
         forcing:
             all_directions: "link"
@@ -52,7 +73,7 @@ echam:
             all_directions: "link"
     forcing_sources:
         wiso_sw_observed: "/home/ollie/mwerner/model_input/ECHAM6-wiso/PI_ctrl/T63/T63_wisosw_d.nc"
-        wiso_tagmap_1: "/work/ollie/qigao001/startdump/tagging/tagmap/tagmap_echam6_t63_1_47.nc"
+        wiso_tagmap_1: "/work/ollie/qigao001/startdump/tagging/tagmap/tagmap_l_95latbin.nc"
     add_forcing_files:
         wiso_sw: wiso_sw_observed
         wiso_tagmap: wiso_tagmap_1
@@ -70,6 +91,13 @@ jsbach:
         namelist.jsbach:
             jsbach_ctl:
                 with_hd: False
+    add_streams:
+        - jsbach
+        - js_wiso
+        - land
+        - la_wiso
+        - surf
+        - sf_wiso
 
 
 

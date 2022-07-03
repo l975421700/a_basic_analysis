@@ -1,7 +1,7 @@
 
 
 output_dir='/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi'
-expid='pi_echam6_1d_3.6_6'
+expid='pi_echam6_1d_174_3.60'
 yrstart=2000
 
 echo '################ Processing output of ' ${expid}

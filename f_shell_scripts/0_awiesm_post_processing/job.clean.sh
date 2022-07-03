@@ -1,7 +1,7 @@
 echo $'\n################ clean extra model output files'
 
-output_dir='/work/ollie/qigao001/output/backup'
-expid='pi_final_qg_tag5_1m_4_wisocode_tag'
+output_dir='/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi'
+expid='pi_echam6_1d_002_3.29'
 yrstart=2000
 yrend=2000
 
