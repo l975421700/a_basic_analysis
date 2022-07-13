@@ -11,14 +11,17 @@ general:
 
 echam:
     version: "6.3.05p2-wiso"
-    executable: echam6
+    executable: echam6_0711_4.3
     bin_sources:
             echam_bin: "${bin_dir}/${executable}"
     bin_in_work:
             echam_bin: "${executable}"
     scenario: "PI-CTRL"
     res: T63
-    lresume: False
+    lresume: True
+    ini_parent_exp_id: "pi_echam6_1y_309_4.3"
+    ini_parent_date:  "2000-12-31"
+    ini_parent_dir: "/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/${ini_parent_exp_id}/restart/echam/"
     with_wiso: True
     wiso_code: True
     restart_rate: 1
@@ -37,9 +40,9 @@ echam:
                 runctl:
                     default_output: True
                     out_filetype: 2
-                    putdata: [ 450, 'seconds', 'first', 0 ]
+                    # putdata: [ 450, 'seconds', 'first', 0 ]
                     # putdata: [ 6, 'hours', 'last', 0 ]
-                    dt_stop: [ 2000, 1, 2, 0, 00, 00 ]
+                    # dt_stop: [ 2000, 1, 1, 2, 00, 00 ]
                 radctl:
                     lrad_async: False
                 wisoctl:
@@ -60,14 +63,10 @@ echam:
                     lupdate_tagmap: True
                     tag_minsst: 268.15
                     tag_maxsst: 318.15
-                    tag_minrh2m: 0
-                    tag_maxrh2m: 1.6
-                    tag_minwind10: -14
-                    tag_maxwind10: 28
-                    lcorrfac: True
-                    ltag_corr1: True
+                    lcorrfac: False
+                    ltag_corr1: False
                     ltag_corr2: False
-                    ltag_corr3: True
+                    ltag_corr3: False
                     ltag_corr3_m: False
                     latm_water: True
     file_movements:

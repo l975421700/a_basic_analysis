@@ -15,11 +15,11 @@
 # ${pp_dir}/job.get.wiso_d.sh ${output_dir} ${expid} ${yrstart} ${yrend}
 
 
-# /work/ollie/qigao001/a_basic_analysis/f_shell_scripts/short_run_get_echam_nc.sh
+/work/ollie/qigao001/a_basic_analysis/f_shell_scripts/short_run_get_echam_nc.sh
 
-source /home/ollie/qigao001/miniconda3/bin/activate training
-which python
+# source /home/ollie/qigao001/miniconda3/bin/activate training
+# which python
 
-python /work/ollie/qigao001/a_basic_analysis/c_codes/2_awiesm/2.0._tagging/2.0.1.0_check_tagging_results/2.0.1.0.0_collect_correction_factors.py
+# python /work/ollie/qigao001/a_basic_analysis/c_codes/2_awiesm/2.0._tagging/2.0.1.0_check_tagging_results/2.0.1.0.0_collect_correction_factors.py
 
 #Xsrun  I know what I am doing

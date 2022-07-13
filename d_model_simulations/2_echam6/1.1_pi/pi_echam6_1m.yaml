@@ -1,8 +1,8 @@
 general:
     setup_name: "echam"
-    compute_time: "02:00:00"
+    compute_time: "00:30:00"
     initial_date: "2000-01-01"
-    final_date: "2000-12-31"
+    final_date: "2000-02-01"
     model_dir: "/work/ollie/qigao001/model_codes/echam-6.3.05p2-wiso/"
     base_dir: "/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/"
     nmonth: 1
@@ -11,7 +11,7 @@ general:
 
 echam:
     version: "6.3.05p2-wiso"
-    executable: echam6_0629_3.64
+    executable: echam6_0711_4.3
     bin_sources:
             echam_bin: "${bin_dir}/${executable}"
     bin_in_work:
@@ -46,8 +46,8 @@ echam:
                 wisoctl:
                     lwiso: True
                     lwiso_rerun: ${lresume}
-                    nwiso: 99
-                    ntag: 96
+                    nwiso: 22
+                    ntag: 19
                     ntag1: 0
                     ntag2: 0
                     ntag3: 0
@@ -57,15 +57,16 @@ echam:
                     ntags3_sst: 0
                     ntags4_rh2m: 0
                     ntags5_wind10: 0
-                    ntag_sum: 96
+                    ntag_sum: 19
                     lupdate_tagmap: True
-                    tag_minsst: 260
-                    tag_maxsst: 310
-                    lcorrfac: False
-                    ltag_corr1: False
+                    tag_minsst: 268.15
+                    tag_maxsst: 318.15
+                    lcorrfac: True
+                    ltag_corr1: True
                     ltag_corr2: False
                     ltag_corr3: True
-                    latm_water: False
+                    ltag_corr3_m: False
+                    latm_water: True
     file_movements:
         forcing:
             all_directions: "link"
@@ -73,7 +74,7 @@ echam:
             all_directions: "link"
     forcing_sources:
         wiso_sw_observed: "/home/ollie/mwerner/model_input/ECHAM6-wiso/PI_ctrl/T63/T63_wisosw_d.nc"
-        wiso_tagmap_1: "/work/ollie/qigao001/startdump/tagging/tagmap/tagmap_l_95latbin.nc"
+        wiso_tagmap_1: "/work/ollie/qigao001/startdump/tagging/tagmap/tagmap_l_18latbin.nc"
     add_forcing_files:
         wiso_sw: wiso_sw_observed
         wiso_tagmap: wiso_tagmap_1

@@ -61,40 +61,7 @@ from a_basic_analysis.b_module.namelist import (
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 
 expid = [
-    # 'pi_echam6_1d_200_3.60',
-    # 'pi_echam6_1d_206_3.64',
-    # 'pi_echam6_1d_207_3.65',
-    # 'pi_echam6_1d_208_3.66',
-    # 'pi_echam6_1d_209_3.67',
-    # 'pi_echam6_1d_210_3.68',
-    # 'pi_echam6_1d_211_3.69',
-    # 'pi_echam6_1d_212_3.69',
-    'pi_echam6_1d_213_3.69',
-    # 'pi_echam6_1d_201_3.60',
-    # 'pi_echam6_1d_202_3.60',
-    # 'pi_echam6_1d_203_3.60',
-    # 'pi_echam6_1d_204_3.60',
-    
-    # 'pi_echam6_1y_201_3.60',
-    # 'pi_echam6_1y_202_3.60',
-    # 'pi_echam6_1y_203_3.60',
-    # 'pi_echam6_1y_204_3.60',
-    # 'pi_echam6_1y_205_3.60',
-    # 'pi_echam6_1y_206_3.60',
-    # 'pi_echam6_1y_207_3.60',
-    # 'pi_echam6_1y_208_3.60',
-    # 'pi_echam6_1y_209_3.60',
-    # 'pi_echam6_1y_210_3.60',
-    # 'pi_echam6_1y_211_3.60',
-    # 'pi_echam6_1y_212_3.60',
-    # 'pi_echam6_1y_213_3.60',
-    # 'pi_echam6_1y_214_3.60',
-    # 'pi_echam6_1y_215_3.60',
-    # 'pi_echam6_1y_216_3.60',
-    # 'pi_echam6_1y_217_3.60',
-    # 'pi_echam6_1y_218_3.65',
-    # 'pi_echam6_1y_219_3.66',
-    # 'pi_echam6_1y_220_3.69',
+    'pi_echam6_1y_309_4.3',
     ]
 
 exp_org_o = {}
@@ -112,7 +79,20 @@ for i in range(len(expid)):
     
     print(str(i) + '/' + str(len(expid) - 1))
 
+
+
 '''
+#-------- check the restarted simulation
+expid = ['pi_echam6_1d_315_4.1_second', ]
+i=0
+expid[i]
+exp_org_o = {}
+exp_org_o[expid[i]] = {}
+exp_org_o[expid[i]]['echam'] = xr.open_dataset( 'output/echam-6.3.05p2-wiso/pi/pi_echam6_1d_315_4.1/unknown/pi_echam6_1d_315_4.1_200002.01_echam.nc' )
+exp_org_o[expid[i]]['wiso'] = xr.open_dataset( 'output/echam-6.3.05p2-wiso/pi/pi_echam6_1d_315_4.1/unknown/pi_echam6_1d_315_4.1_200002.01_wiso.nc' )
+
+
+
 # (exp_org_o[expid[i]]['echam'].hyam + exp_org_o[expid[i]]['echam'].hybm * 101325)[46]
 '''
 # endregion
@@ -131,6 +111,7 @@ stats.describe(exp_org_o[expid[i]]['wiso'].tagmap[:, 3:, :, :].sum(axis=1), axis
 
 #---------------- check evap conservation
 echam_evap = exp_org_o[expid[i]]['echam'].evap[:, :, :]
+np.max(echam_evap - exp_org_o[expid[i]]['wiso'].wisoevap[:, 0, :, :])
 (echam_evap == exp_org_o[expid[i]]['wiso'].wisoevap[:, 0, :, :]).all()
 wiso_evap = exp_org_o[expid[i]]['wiso'].wisoevap[:, 3:, :, :].sum(axis=1)
 diff_evap = echam_evap - wiso_evap
@@ -157,6 +138,417 @@ i=2
 np.max(abs(exp_org_o[expid[i]]['wiso'].wisoevap[:, 3, :, :] - exp_org_o[expid[i]]['wiso'].wisoevap[:, 0, :, :]))
 # global 0
 np.max(abs(exp_org_o[expid[i]]['wiso'].wisoevap[:, 4, :, :]))
+'''
+# endregion
+# =============================================================================
+
+
+# =============================================================================
+# =============================================================================
+# region check humidity conservation - q, xl, xi
+
+#---------------- check humidity coservation
+
+i = 0
+expid[i]
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '_sum_humidity.pkl', 'rb') as f:
+    sum_humidity = pickle.load(f)
+
+diff_q = sum_humidity['q'] - exp_org_o[expid[i]]['wiso'].q16o
+# diff_q.values[exp_org_o[expid[i]]['wiso'].q16o.values < 0] = np.nan
+np.max(abs(diff_q[:, :, :, :]))
+diff_q.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '_diff_q.nc')
+
+diff_xl = sum_humidity['xl'] - exp_org_o[expid[i]]['wiso'].xl16o
+# diff_xl.values[exp_org_o[expid[i]]['wiso'].xl16o.values < 0] = np.nan
+np.max(abs(diff_xl[:, :, :, :]))
+# diff_xl.to_netcdf('scratch/test/diff_xl.nc')
+
+diff_xi = sum_humidity['xi'] - exp_org_o[expid[i]]['wiso'].xi16o
+# diff_xi.values[exp_org_o[expid[i]]['wiso'].xi16o.values < 0] = np.nan
+np.max(abs(diff_xi[:, :, :, :]))
+# diff_xi.to_netcdf('scratch/test/diff_xi.nc')
+
+
+#---------------- check humidity coservation in detail
+i1, i2, i3, i4 = np.where(abs(diff_q[:, :, :, :]) == np.max(abs(diff_q[:, :, :, :])))
+# i1, i2, i3, i4 = np.where(abs(diff_q[:, :, :, :]) > 0)
+# i1[0:5]
+# i2[0:5]
+# i3[0:5]
+# i4[0:5]
+
+np.max(abs(diff_q[:, :, :, :]))
+diff_q[i1[0], i2[0], i3[0], i4[0]].values
+sum_humidity['q'][i1[0], i2[0], i3[0], i4[0]].values
+exp_org_o[expid[i]]['wiso'].q16o[i1[0], i2[0], i3[0], i4[0]].values
+
+# q_wiso = np.array((
+#     exp_org_o[expid[i]]['wiso'].q_01[i1[0], i2[0], i3[0], i4[0]].values,
+#     exp_org_o[expid[i]]['wiso'].q_02[i1[0], i2[0], i3[0], i4[0]].values,
+#     # exp_org_o[expid[i]]['wiso'].q_03[i1[0], i2[0], i3[0], i4[0]].values,
+#     # exp_org_o[expid[i]]['wiso'].q_04[i1[0], i2[0], i3[0], i4[0]].values,
+#     ))
+# q_wiso.sum()
+
+
+i1, i2, i3, i4 = np.where(abs(diff_xl[:, :, :, :]) == np.max(abs(diff_xl[:, :, :, :])))
+# i1, i2, i3, i4 = np.where(abs(diff_xl[:, :, :, :]) > 0)
+# (i1 == 1).sum()
+# i1[0:5]
+# i2[0:5]
+# i3[0:5]
+# i4[0:5]
+
+np.max(abs(diff_xl[:, :, :, :]))
+diff_xl[i1[0], i2[0], i3[0], i4[0]].values
+sum_humidity['xl'][i1[0], i2[0], i3[0], i4[0]].values
+exp_org_o[expid[i]]['wiso'].xl16o[i1[0], i2[0], i3[0], i4[0]].values
+
+# np.max(sum_humidity['xl'].values[np.where(abs(diff_xl[:, :, :, :]) > 0)])
+# np.max(exp_org_o[expid[i]]['wiso'].xl16o.values[np.where(abs(diff_xl[:, :, :, :]) > 0)])
+
+i1, i2, i3, i4 = np.where(abs(diff_xi[:, :, :, :]) == np.max(abs(diff_xi[:, :, :, :])))
+# i1, i2, i3, i4 = np.where(abs(diff_xi[:, :, :, :]) > 0)
+# (i1 == 1).sum()
+# i1[0:29]
+# i2[0:29]
+# i3[0:29]
+# i4[0:29]
+
+diff_xi[i1[0], i2[0], i3[0], i4[0]].values
+sum_humidity['xi'][i1[0], i2[0], i3[0], i4[0]].values
+exp_org_o[expid[i]]['wiso'].xi16o[i1[0], i2[0], i3[0], i4[0]].values
+exp_org_o[expid[i]]['echam'].xi[i1[0], i2[0], i3[0], i4[0]].values
+# xi_wiso = np.array((
+#     exp_org_o[expid[i]]['wiso'].xi_01[i1[0], i2[0], i3[0], i4[0]].values,
+#     exp_org_o[expid[i]]['wiso'].xi_02[i1[0], i2[0], i3[0], i4[0]].values,
+#     # exp_org_o[expid[i]]['wiso'].xi_03[i1[0], i2[0], i3[0], i4[0]].values,
+#     # exp_org_o[expid[i]]['wiso'].xi_04[i1[0], i2[0], i3[0], i4[0]].values,
+#     ))
+# xi_wiso.sum()
+
+
+'''
+# diff_q_mean = diff_q.mean(axis=(0, 1))
+# diff_q_mean.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '_diff_q_mean.nc')
+# del diff_q
+
+exp_org_o[expid[i]]['echam'].xl
+exp_org_o[expid[i]]['echam'].xi
+
+i = 0
+np.max(abs(exp_org_o[expid[i]]['echam'].q - exp_org_o[expid[i]]['wiso'].q16o.values))
+
+# check humidity conservation
+diff_q = (exp_org_o[expid[i]]['wiso'].q_01 + exp_org_o[expid[i]]['wiso'].q_02 + exp_org_o[expid[i]]['wiso'].q_03 + exp_org_o[expid[i]]['wiso'].q_04) - exp_org_o[expid[i]]['wiso'].q16o
+diff_q.values[exp_org_o[expid[i]]['wiso'].q16o < 0] = np.nan
+print(np.max(abs(diff_q)))
+
+diff_xl = (exp_org_o[expid[i]]['wiso'].xl_01 + exp_org_o[expid[i]]['wiso'].xl_02 + exp_org_o[expid[i]]['wiso'].xl_03 + exp_org_o[expid[i]]['wiso'].xl_04) - exp_org_o[expid[i]]['wiso'].xl16o
+print(np.max(abs(diff_xl)))
+diff_xi = (exp_org_o[expid[i]]['wiso'].xi_01 + exp_org_o[expid[i]]['wiso'].xi_02 + exp_org_o[expid[i]]['wiso'].xi_03 + exp_org_o[expid[i]]['wiso'].xi_04) - exp_org_o[expid[i]]['wiso'].xi16o
+print(np.max(abs(diff_xi)))
+
+
+# check negative q
+neg_q_01 = exp_org_o[expid[i]]['wiso'].q_01.values[exp_org_o[expid[i]]['wiso'].q_01 < 0]
+neg_q16o = exp_org_o[expid[i]]['wiso'].q16o.values[exp_org_o[expid[i]]['wiso'].q16o < 0]
+
+test = exp_org_o[expid[i]]['wiso'].q_01
+test.values[test > -1e-18] = 0
+test.to_netcdf('scratch/test/test.nc')
+(test < -1e-15).sum()
+
+#---------------- check global 0 works as expected
+
+i = 0
+expid[i]
+
+q_global0 = exp_org_o[expid[i]]['wiso'].q_02
+np.max(abs(q_global0))
+# stats.describe(abs(q_global0), axis=None)
+# q_global0.to_netcdf('scratch/test/q_02.nc')
+
+where_max_q = np.where(abs(q_global0) == np.max(abs(q_global0)))
+q_global0[where_max_q]
+exp_org_o[expid[i]]['wiso'].q_01[where_max_q].values
+exp_org_o[expid[i]]['echam'].q[where_max_q].values
+
+np.max(abs(exp_org_o[expid[i]]['wiso'].xl_02))
+np.max(abs(exp_org_o[expid[i]]['wiso'].xi_02))
+
+np.max(abs(exp_org_o[expid[i]]['wiso'].wisosnsic[:, 4, :, :]))
+
+
+#---------------- check global 1
+
+i = 2
+expid[i]
+
+q_echam = exp_org_o[expid[i]]['echam'].q
+# q_wiso = exp_org_o[expid[i]]['wiso'].q16o
+# (q_echam == q_wiso).all()
+q_global1 = exp_org_o[expid[i]]['wiso'].q_01
+(q_echam == q_global1).all()
+
+(exp_org_o[expid[i]]['echam'].q == exp_org_o[expid[i]]['wiso'].q_01).all()
+(exp_org_o[expid[i]]['echam'].xl == exp_org_o[expid[i]]['wiso'].xl_01).all()
+(exp_org_o[expid[i]]['echam'].xi == exp_org_o[expid[i]]['wiso'].xi_01).all()
+
+np.max(abs(exp_org_o[expid[i]]['echam'].xl - exp_org_o[expid[i]]['wiso'].xl_01))
+np.max(abs(exp_org_o[expid[i]]['echam'].xi - exp_org_o[expid[i]]['wiso'].xi_01))
+
+diff_xl = exp_org_o[expid[i]]['echam'].xl - exp_org_o[expid[i]]['wiso'].xl_01
+where_max_diff_xl = np.where(abs(diff_xl) == np.max(abs(diff_xl)))
+diff_xl.values[where_max_diff_xl]
+exp_org_o[expid[i]]['echam'].xl.values[where_max_diff_xl]
+exp_org_o[expid[i]]['wiso'].xl_01.values[where_max_diff_xl]
+
+'''
+# endregion
+# =============================================================================
+
+
+# =============================================================================
+# =============================================================================
+# region check precipitation conservation
+
+
+#-------------------------------- check precipitation conservation
+
+i = 0
+expid[i]
+
+echam_apr = exp_org_o[expid[i]]['echam'].aprl[:, :, :] + exp_org_o[expid[i]]['echam'].aprc[:, :, :]
+# echam_apr.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.echam_apr.nc')
+np.max(abs(echam_apr - (exp_org_o[expid[i]]['wiso'].wisoaprl[:, 0, :, :] + exp_org_o[expid[i]]['wiso'].wisoaprc[:, 0, :, :])))
+wiso_apr = exp_org_o[expid[i]]['wiso'].wisoaprl[:, 3:, :, :].sum(axis=1) + exp_org_o[expid[i]]['wiso'].wisoaprc[:, 3:, :, :].sum(axis=1)
+np.max(abs(wiso_apr - (exp_org_o[expid[i]]['wiso'].wisoaprl[:, 0, :, :] + exp_org_o[expid[i]]['wiso'].wisoaprc[:, 0, :, :])))
+# wiso_apr.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wiso_apr.nc')
+diff_apr = wiso_apr - echam_apr
+diff_apr.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.diff_apr.nc')
+stats.describe(abs(diff_apr[:, :, :]), axis=None)
+
+# diff_apr_mean = abs(diff_apr).mean(axis=0)
+# diff_apr_mean.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.diff_apr_mean.nc')
+
+
+rel_diff_apr = diff_apr / echam_apr
+rel_diff_apr.values[echam_apr.values < 1e-9] = np.nan
+rel_diff_apr.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.rel_diff_apr.nc')
+stats.describe(rel_diff_apr, axis=None, nan_policy='omit')
+
+
+# diff_apr_mean = wiso_apr.mean(axis=0) - echam_apr.mean(axis=0)
+# diff_apr_mean.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.diff_apr_mean.nc')
+# rel_diff_apr_mean = (wiso_apr.mean(axis=0) - echam_apr.mean(axis=0)) / echam_apr.mean(axis=0)
+# rel_diff_apr_mean.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.rel_diff_apr_mean.nc')
+
+
+#-------------------------------- check the first time step
+# wiso_aprl = exp_org_o[expid[i]]['wiso'].wisoaprl[:, 3:, :, :].sum(axis=1)
+# wiso_aprc = exp_org_o[expid[i]]['wiso'].wisoaprc[:, 3:, :, :].sum(axis=1)
+# echam_aprl = exp_org_o[expid[i]]['echam'].aprl[:, :, :]
+# echam_aprc = exp_org_o[expid[i]]['echam'].aprc[:, :, :]
+
+# i1 = 0
+# i2, i3 = np.where(abs(diff_apr[i1, :, :]) == np.max(abs(diff_apr[i1, :, :])))
+# diff_apr[i1, i2[0], i3[0]].values
+# wiso_apr[i1, i2[0], i3[0]].values
+# echam_apr[i1, i2[0], i3[0]].values
+
+# wiso_apr[i1, i2[0], i3[0]].values
+# wiso_aprl[i1, i2[0], i3[0]].values
+# wiso_aprc[i1, i2[0], i3[0]].values
+
+# echam_apr[i1, i2[0], i3[0]].values
+# echam_aprl[i1, i2[0], i3[0]].values
+# echam_aprc[i1, i2[0], i3[0]].values
+
+#-------------------------------- check precipitation conservation in detail
+
+where_max_diff_apr = np.where(abs(diff_apr) == np.max(abs(diff_apr)))
+diff_apr.values[where_max_diff_apr]
+wiso_apr.values[where_max_diff_apr]
+echam_apr.values[where_max_diff_apr]
+
+where_max_rel_diff_apr = np.where(abs(rel_diff_apr) == np.max(abs(rel_diff_apr)))
+rel_diff_apr.values[where_max_rel_diff_apr]
+diff_apr.values[where_max_rel_diff_apr]
+wiso_apr.values[where_max_rel_diff_apr]
+echam_apr.values[where_max_rel_diff_apr]
+
+
+#-------------------------------- check l. scale & conv. precipitation
+
+echam_aprl = exp_org_o[expid[i]]['echam'].aprl[:, :, :]
+wiso_aprl = exp_org_o[expid[i]]['wiso'].wisoaprl[:, 3:, :, :].sum(axis=1)
+diff_aprl = wiso_aprl - echam_aprl
+diff_aprl.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.diff_aprl.nc')
+stats.describe(abs(diff_aprl[:, :, :]), axis=None)
+
+echam_aprc = exp_org_o[expid[i]]['echam'].aprc[:, :, :]
+wiso_aprc = exp_org_o[expid[i]]['wiso'].wisoaprc[:, 3:, :, :].sum(axis=1)
+diff_aprc = wiso_aprc - echam_aprc
+where_max_diff_aprc = np.where(abs(diff_aprc) == np.max(abs(diff_aprc)))
+diff_aprc.values[where_max_diff_aprc]
+echam_aprc.values[where_max_diff_aprc]
+wiso_aprc.values[where_max_diff_aprc]
+diff_aprc.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.diff_aprc.nc')
+stats.describe(abs(diff_aprc[:, :, :]), axis=None)
+
+echam_aprs = exp_org_o[expid[i]]['echam'].aprs[:, :, :]
+wiso_aprs = exp_org_o[expid[i]]['wiso'].wisoaprs[:, 3:, :, :].sum(axis=1)
+diff_aprs = wiso_aprs - echam_aprs
+# diff_aprs.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.diff_aprs.nc')
+stats.describe(abs(diff_aprs[:, :, :]), axis=None)
+
+# echam_aprr = exp_org_o[expid[i]]['echam'].aprl[:, :, :] - exp_org_o[expid[i]]['echam'].aprs[:, :, :]
+# wiso_aprr = exp_org_o[expid[i]]['wiso'].wisoaprl[:, 3:, :, :].sum(axis=1) - exp_org_o[expid[i]]['wiso'].wisoaprs[:, 3:, :, :].sum(axis=1)
+# diff_aprr = wiso_aprr - echam_aprr
+# # diff_aprs.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.diff_aprs.nc')
+# stats.describe(abs(diff_aprr[:, :, :]), axis=None)
+
+#-------------------------------- plot tracer precipitation percentage deviation
+
+pltlevel = np.arange(-4, 4.001, 0.01)
+pltticks = np.arange(-4, 4.001, 1)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False)
+pltcmp = cm.get_cmap('BrBG', len(pltlevel))
+
+fig, ax = framework_plot1("global", figsize=np.array([8.8*2, 11]) / 2.54)
+
+plt_cmp = ax.pcolormesh(
+    exp_org_o[expid[i]]['echam'].lon,
+    exp_org_o[expid[i]]['echam'].lat,
+    rel_diff_apr[-1, :, :] * 10**3,
+    # abs(rel_diff_apr[:, :, :]).mean(axis=0) * 10**2,
+    # rel_diff_apr_mean * 10**3,
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, orientation="horizontal",  pad=0.02,
+    fraction=0.14, shrink=0.6, aspect=40, anchor=(0.5, 0.7),
+    ticks=pltticks, extend="both",)
+
+cbar.ax.set_xlabel(
+    u'Differences between tracer and normal precipitation, as fraction of normal precipitation [$10^{-3}$]\n' + expid[i],
+    linespacing=1.5)
+
+fig.subplots_adjust(left=0.06, right=0.97, bottom=0.08, top=0.995)
+fig.savefig(exp_odir+expid[i]+'/viz/echam/'+expid[i]+'.rel_diff_apr.png')
+
+
+#-------------------------------- plot tracer precipitation deviation
+
+pltlevel = np.arange(-2, 2.001, 0.01)
+pltticks = np.arange(-2, 2.001, 0.4)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False)
+pltcmp = cm.get_cmap('PRGn', len(pltlevel))
+
+fig, ax = framework_plot1("global", figsize=np.array([8.8*2, 11]) / 2.54)
+
+plt_cmp = ax.pcolormesh(
+    exp_org_o[expid[i]]['echam'].lon,
+    exp_org_o[expid[i]]['echam'].lat,
+    diff_apr[-1, :, :] * 10**8,
+    # diff_apr_mean * 10**7,
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, orientation="horizontal",  pad=0.02,
+    fraction=0.14, shrink=0.6, aspect=40, anchor=(0.5, 0.7),
+    ticks=pltticks, extend="both",)
+
+cbar.ax.set_xlabel(
+    u'Differences between tracer and normal precipitation [$10^{-8} \; mm \; s^{-1}$]\n' + expid[i],
+    linespacing=1.5)
+
+fig.subplots_adjust(left=0.06, right=0.97, bottom=0.08, top=0.995)
+fig.savefig(exp_odir+expid[i]+'/viz/echam/'+expid[i]+'.diff_apr.png')
+
+
+
+'''
+
+# check large-scale precipitation conservation
+diff_aprl = exp_org_o[expid[i]]['wiso'].wisoaprl[:, 0, :, :] - exp_org_o[expid[i]]['wiso'].wisoaprl[:, 3:, :, :].sum(axis=1)
+
+# stats.describe(abs(diff_aprl), axis=None)
+np.max(abs(diff_aprl))
+np.mean(abs(diff_aprl))
+
+i1, i2, i3 = np.where(abs(diff_aprl) == np.max(abs(diff_aprl)))
+
+diff_aprl[i1[0], i2[0], i3[0]].values
+exp_org_o[expid[i]]['echam'].aprl[i1[0], i2[0], i3[0]].values
+exp_org_o[expid[i]]['wiso'].wisoaprl[i1[0], 3:, i2[0], i3[0]].values.sum()
+
+
+# check convective precipitation conservation
+diff_aprc = exp_org_o[expid[i]]['echam'].aprc[:, :, :] - exp_org_o[expid[i]]['wiso'].wisoaprc[:, 3:, :, :].sum(axis=1)
+stats.describe(abs(diff_aprc), axis=None)
+np.max(abs(diff_aprc))
+
+i1, i2, i3 = np.where(abs(diff_aprc) == np.max(abs(diff_aprc)))
+
+diff_aprc[i1[0], i2[0], i3[0]].values
+exp_org_o[expid[i]]['echam'].aprc[i1[0], i2[0], i3[0]].values
+exp_org_o[expid[i]]['wiso'].wisoaprc[i1[0], 3:, i2[0], i3[0]].values.sum()
+
+#-------------------------------- check precipitation conservation in detail
+
+i = 0
+expid[i]
+
+#---------------- global 0 works as expected
+
+aprl_global0 = exp_org_o[expid[i]]['wiso'].wisoaprl[:, 4, :, :]
+np.max(abs(aprl_global0))
+# aprl_global0.to_netcdf('scratch/test/test.nc')
+# where_nonzero_aprl = np.where(abs(aprl_global0) > 1e-10)
+# aprl_global0.values[where_nonzero_aprl]
+aprc_global0 = exp_org_o[expid[i]]['wiso'].wisoaprc[:, 4, :, :]
+np.max(abs(aprc_global0))
+# aprc_global0.to_netcdf('scratch/test/test1.nc')
+# where_nonzero_aprc = np.where(abs(aprc_global0) > 1e-10)
+# aprc_global0.values[where_nonzero_aprc]
+
+#---------------- global 1
+
+echam_apr_global1 = exp_org_o[expid[i]]['echam'].aprl[:, :, :] + exp_org_o[expid[i]]['echam'].aprc[:, :, :]
+wiso_apr_global1 = (exp_org_o[expid[i]]['wiso'].wisoaprl[:, 3, :, :] + exp_org_o[expid[i]]['wiso'].wisoaprc[:, 3, :, :])
+diff_apr_global1 = wiso_apr_global1 - echam_apr_global1
+# diff_apr_global1.to_netcdf('scratch/test/test2.nc')
+stats.describe(abs(diff_apr_global1), axis=None)
+
+where_max = np.where(abs(diff_apr_global1) == np.max(abs(diff_apr_global1)))
+diff_apr_global1.values[where_max]
+echam_apr_global1.values[where_max]
+wiso_apr_global1.values[where_max]
+
+# where_large_diff = np.where(abs(diff_apr_global1) > 1e-10)
+# diff_apr_global1.values[where_large_diff]
+# echam_apr_global1.values[where_large_diff]
+# wiso_apr_global1.values[where_large_diff]
+
+
+diff_aprl_global1 = exp_org_o[expid[i]]['echam'].aprl[:, :, :] - exp_org_o[expid[i]]['wiso'].wisoaprl[:, 3, :, :]
+np.max(diff_aprl_global1)
+(abs(diff_aprl_global1) > 0).sum()
+# diff_aprl_global1_1 = exp_org_o[expid[i]]['wiso'].wisoaprl[:, 0, :, :] - exp_org_o[expid[i]]['wiso'].wisoaprl[:, 3, :, :]
+# np.max(diff_aprl_global1_1)
+# diff_aprl_global1.to_netcdf('scratch/test/test3.nc')
+
+diff_aprc_global1 = exp_org_o[expid[i]]['echam'].aprc[:, :, :] - exp_org_o[expid[i]]['wiso'].wisoaprc[:, 3, :, :]
+np.max(diff_aprc_global1)
+# diff_aprc_global1.to_netcdf('scratch/test/test4.nc')
+
+diff_aprs_global1 = exp_org_o[expid[i]]['echam'].aprs[:, :, :] - exp_org_o[expid[i]]['wiso'].wisoaprs[:, 3, :, :]
+np.max(diff_aprs_global1)
+
 '''
 # endregion
 # =============================================================================
@@ -412,379 +804,6 @@ fig.subplots_adjust(left=0.06, right=0.97, bottom=0.08, top=0.995)
 fig.savefig( exp_odir + expid[i] + '/viz/echam/' + expid[i] + '_org_var_relative corrections to q.png')
 
 
-# endregion
-# =============================================================================
-
-
-# =============================================================================
-# =============================================================================
-# region check humidity conservation - q, xl, xi
-
-#---------------- check humidity coservation
-
-i = 0
-expid[i]
-
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '_sum_humidity.pkl', 'rb') as f:
-    sum_humidity = pickle.load(f)
-
-diff_q = sum_humidity['q'] - exp_org_o[expid[i]]['wiso'].q16o
-# diff_q.values[exp_org_o[expid[i]]['wiso'].q16o.values < 0] = np.nan
-np.max(abs(diff_q[:, :, :, :]))
-# np.max(abs(diff_q[3, :, :, :]))
-# diff_q.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '_diff_q.nc')
-# exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '_diff_q.nc'
-
-# diff_q_mean = diff_q.mean(axis=(0, 1))
-# diff_q_mean.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '_diff_q_mean.nc')
-# del diff_q
-
-diff_xl = sum_humidity['xl'] - exp_org_o[expid[i]]['wiso'].xl16o
-# diff_xl.values[exp_org_o[expid[i]]['wiso'].xl16o.values < 0] = np.nan
-np.max(abs(diff_xl))
-# np.max(abs(diff_xl[1, :, :, :]))
-# diff_xl.to_netcdf('scratch/test/diff_xl.nc')
-
-# del diff_xl
-
-diff_xi = sum_humidity['xi'] - exp_org_o[expid[i]]['wiso'].xi16o
-# diff_xi.values[exp_org_o[expid[i]]['wiso'].xi16o.values < 0] = np.nan
-np.max(abs(diff_xi))
-# np.max(abs(diff_xi[0, :, :, :]))
-# diff_xi.to_netcdf('scratch/test/diff_xi.nc')
-
-# del diff_xi
-
-
-#---------------- check humidity coservation in detail
-i1, i2, i3, i4 = np.where(abs(diff_q[:, :, :, :]) == np.max(abs(diff_q[:, :, :, :])))
-# i1, i2, i3, i4 = np.where(abs(diff_q[:, :, :, :]) > 0)
-# i1[0:5]
-# i2[0:5]
-# i3[0:5]
-# i4[0:5]
-
-np.max(abs(diff_q[:, :, :, :]))
-diff_q[i1[0], i2[0], i3[0], i4[0]].values
-sum_humidity['q'][i1[0], i2[0], i3[0], i4[0]].values
-exp_org_o[expid[i]]['wiso'].q16o[i1[0], i2[0], i3[0], i4[0]].values
-
-# q_wiso = np.array((
-#     exp_org_o[expid[i]]['wiso'].q_01[i1[0], i2[0], i3[0], i4[0]].values,
-#     exp_org_o[expid[i]]['wiso'].q_02[i1[0], i2[0], i3[0], i4[0]].values,
-#     # exp_org_o[expid[i]]['wiso'].q_03[i1[0], i2[0], i3[0], i4[0]].values,
-#     # exp_org_o[expid[i]]['wiso'].q_04[i1[0], i2[0], i3[0], i4[0]].values,
-#     ))
-# q_wiso.sum()
-
-
-i1, i2, i3, i4 = np.where(abs(diff_xl[:, :, :, :]) == np.max(abs(diff_xl[:, :, :, :])))
-# i1, i2, i3, i4 = np.where(abs(diff_xl[:, :, :, :]) > 0)
-# (i1 == 1).sum()
-# i1[0:5]
-# i2[0:5]
-# i3[0:5]
-# i4[0:5]
-
-np.max(abs(diff_xl[:, :, :, :]))
-diff_xl[i1[0], i2[0], i3[0], i4[0]].values
-sum_humidity['xl'][i1[0], i2[0], i3[0], i4[0]].values
-exp_org_o[expid[i]]['wiso'].xl16o[i1[0], i2[0], i3[0], i4[0]].values
-
-# np.max(sum_humidity['xl'].values[np.where(abs(diff_xl[:, :, :, :]) > 0)])
-# np.max(exp_org_o[expid[i]]['wiso'].xl16o.values[np.where(abs(diff_xl[:, :, :, :]) > 0)])
-
-i1, i2, i3, i4 = np.where(abs(diff_xi[:, :, :, :]) == np.max(abs(diff_xi[:, :, :, :])))
-# i1, i2, i3, i4 = np.where(abs(diff_xi[:, :, :, :]) > 0)
-# (i1 == 1).sum()
-# i1[0:29]
-# i2[0:29]
-# i3[0:29]
-# i4[0:29]
-
-diff_xi[i1[0], i2[0], i3[0], i4[0]].values
-sum_humidity['xi'][i1[0], i2[0], i3[0], i4[0]].values
-exp_org_o[expid[i]]['wiso'].xi16o[i1[0], i2[0], i3[0], i4[0]].values
-
-# xi_wiso = np.array((
-#     exp_org_o[expid[i]]['wiso'].xi_01[i1[0], i2[0], i3[0], i4[0]].values,
-#     exp_org_o[expid[i]]['wiso'].xi_02[i1[0], i2[0], i3[0], i4[0]].values,
-#     # exp_org_o[expid[i]]['wiso'].xi_03[i1[0], i2[0], i3[0], i4[0]].values,
-#     # exp_org_o[expid[i]]['wiso'].xi_04[i1[0], i2[0], i3[0], i4[0]].values,
-#     ))
-# xi_wiso.sum()
-
-
-'''
-exp_org_o[expid[i]]['echam'].xl
-exp_org_o[expid[i]]['echam'].xi
-
-i = 0
-np.max(abs(exp_org_o[expid[i]]['echam'].q - exp_org_o[expid[i]]['wiso'].q16o.values))
-
-# check humidity conservation
-diff_q = (exp_org_o[expid[i]]['wiso'].q_01 + exp_org_o[expid[i]]['wiso'].q_02 + exp_org_o[expid[i]]['wiso'].q_03 + exp_org_o[expid[i]]['wiso'].q_04) - exp_org_o[expid[i]]['wiso'].q16o
-diff_q.values[exp_org_o[expid[i]]['wiso'].q16o < 0] = np.nan
-print(np.max(abs(diff_q)))
-
-diff_xl = (exp_org_o[expid[i]]['wiso'].xl_01 + exp_org_o[expid[i]]['wiso'].xl_02 + exp_org_o[expid[i]]['wiso'].xl_03 + exp_org_o[expid[i]]['wiso'].xl_04) - exp_org_o[expid[i]]['wiso'].xl16o
-print(np.max(abs(diff_xl)))
-diff_xi = (exp_org_o[expid[i]]['wiso'].xi_01 + exp_org_o[expid[i]]['wiso'].xi_02 + exp_org_o[expid[i]]['wiso'].xi_03 + exp_org_o[expid[i]]['wiso'].xi_04) - exp_org_o[expid[i]]['wiso'].xi16o
-print(np.max(abs(diff_xi)))
-
-
-# check negative q
-neg_q_01 = exp_org_o[expid[i]]['wiso'].q_01.values[exp_org_o[expid[i]]['wiso'].q_01 < 0]
-neg_q16o = exp_org_o[expid[i]]['wiso'].q16o.values[exp_org_o[expid[i]]['wiso'].q16o < 0]
-
-test = exp_org_o[expid[i]]['wiso'].q_01
-test.values[test > -1e-18] = 0
-test.to_netcdf('scratch/test/test.nc')
-(test < -1e-15).sum()
-
-#---------------- check global 0 works as expected
-
-i = 0
-expid[i]
-
-q_global0 = exp_org_o[expid[i]]['wiso'].q_02
-np.max(abs(q_global0))
-# stats.describe(abs(q_global0), axis=None)
-# q_global0.to_netcdf('scratch/test/q_02.nc')
-
-where_max_q = np.where(abs(q_global0) == np.max(abs(q_global0)))
-q_global0[where_max_q]
-exp_org_o[expid[i]]['wiso'].q_01[where_max_q].values
-exp_org_o[expid[i]]['echam'].q[where_max_q].values
-
-np.max(abs(exp_org_o[expid[i]]['wiso'].xl_02))
-np.max(abs(exp_org_o[expid[i]]['wiso'].xi_02))
-
-np.max(abs(exp_org_o[expid[i]]['wiso'].wisosnsic[:, 4, :, :]))
-
-
-#---------------- check global 1
-
-i = 2
-expid[i]
-
-q_echam = exp_org_o[expid[i]]['echam'].q
-# q_wiso = exp_org_o[expid[i]]['wiso'].q16o
-# (q_echam == q_wiso).all()
-q_global1 = exp_org_o[expid[i]]['wiso'].q_01
-(q_echam == q_global1).all()
-
-(exp_org_o[expid[i]]['echam'].q == exp_org_o[expid[i]]['wiso'].q_01).all()
-(exp_org_o[expid[i]]['echam'].xl == exp_org_o[expid[i]]['wiso'].xl_01).all()
-(exp_org_o[expid[i]]['echam'].xi == exp_org_o[expid[i]]['wiso'].xi_01).all()
-
-np.max(abs(exp_org_o[expid[i]]['echam'].xl - exp_org_o[expid[i]]['wiso'].xl_01))
-np.max(abs(exp_org_o[expid[i]]['echam'].xi - exp_org_o[expid[i]]['wiso'].xi_01))
-
-diff_xl = exp_org_o[expid[i]]['echam'].xl - exp_org_o[expid[i]]['wiso'].xl_01
-where_max_diff_xl = np.where(abs(diff_xl) == np.max(abs(diff_xl)))
-diff_xl.values[where_max_diff_xl]
-exp_org_o[expid[i]]['echam'].xl.values[where_max_diff_xl]
-exp_org_o[expid[i]]['wiso'].xl_01.values[where_max_diff_xl]
-
-'''
-# endregion
-# =============================================================================
-
-
-# =============================================================================
-# =============================================================================
-# region check precipitation conservation
-
-#-------------------------------- check precipitation conservation
-
-i = 0
-expid[i]
-
-echam_apr = exp_org_o[expid[i]]['echam'].aprl[:, :, :] + exp_org_o[expid[i]]['echam'].aprc[:, :, :]
-echam_apr.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.echam_apr.nc')
-# np.max(abs(echam_apr - (exp_org_o[expid[i]]['wiso'].wisoaprl[:, 0, :, :] + exp_org_o[expid[i]]['wiso'].wisoaprc[:, 0, :, :])))
-wiso_apr = exp_org_o[expid[i]]['wiso'].wisoaprl[:, 3:, :, :].sum(axis=1) + exp_org_o[expid[i]]['wiso'].wisoaprc[:, 3:, :, :].sum(axis=1)
-wiso_apr.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wiso_apr.nc')
-diff_apr = wiso_apr - echam_apr
-diff_apr.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.diff_apr.nc')
-stats.describe(abs(diff_apr), axis=None)
-
-# diff_apr_mean = diff_apr.mean(axis=0)
-# diff_apr_mean.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.diff_apr_mean.nc')
-# stats.describe(abs(echam_apr[:, :, :]), axis=None)
-
-rel_diff_apr = diff_apr / echam_apr
-rel_diff_apr.values[echam_apr.values < 1e-9] = np.nan
-rel_diff_apr.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.rel_diff_apr.nc')
-stats.describe(rel_diff_apr, axis=None, nan_policy='omit')
-
-#-------------------------------- check precipitation conservation in detail
-i1 = 62
-i2 = 1
-i3 = 126
-rel_diff_apr[i1, i2, i3]
-echam_apr[i1, i2, i3]
-wiso_apr[i1, i2, i3]
-
-where_max_diff_apr = np.where(abs(diff_apr) == np.max(abs(diff_apr)))
-diff_apr.values[where_max_diff_apr]
-wiso_apr.values[where_max_diff_apr]
-echam_apr.values[where_max_diff_apr]
-
-where_max_rel_diff_apr = np.where(abs(rel_diff_apr) == np.max(abs(rel_diff_apr)))
-rel_diff_apr.values[where_max_rel_diff_apr]
-wiso_apr.values[where_max_rel_diff_apr]
-echam_apr.values[where_max_rel_diff_apr]
-
-
-#-------------------------------- check l. scale & conv. precipitation
-
-echam_aprl = exp_org_o[expid[i]]['echam'].aprl[:, :, :]
-wiso_aprl = exp_org_o[expid[i]]['wiso'].wisoaprl[:, 3:, :, :].sum(axis=1)
-diff_aprl = wiso_aprl - echam_aprl
-stats.describe(abs(diff_aprl[:, :, :]), axis=None)
-
-echam_aprc = exp_org_o[expid[i]]['echam'].aprc[:, :, :]
-wiso_aprc = exp_org_o[expid[i]]['wiso'].wisoaprc[:, 3:, :, :].sum(axis=1)
-diff_aprc = wiso_aprc - echam_aprc
-stats.describe(abs(diff_aprc[:, :, :]), axis=None)
-
-
-#-------------------------------- plot tracer precipitation percentage deviation
-pltlevel = np.arange(-5, 5.001, 0.01)
-pltticks = np.arange(-5, 5.001, 1)
-pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False)
-pltcmp = cm.get_cmap('BrBG', len(pltlevel))
-
-fig, ax = framework_plot1("global", figsize=np.array([8.8*2, 11]) / 2.54)
-
-plt_cmp = ax.pcolormesh(
-    exp_org_o[expid[i]]['echam'].lon,
-    exp_org_o[expid[i]]['echam'].lat,
-    rel_diff_apr[-1, :, :] * 100,
-    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
-
-cbar = fig.colorbar(
-    plt_cmp, ax=ax, orientation="horizontal",  pad=0.02,
-    fraction=0.14, shrink=0.6, aspect=40, anchor=(0.5, 0.7),
-    ticks=pltticks, extend="both",)
-
-cbar.ax.set_xlabel(
-    u'Differences between tracer and normal precipitation, as percentage of normal precipitation [$\%$]\n' + expid[i],
-    linespacing=1.5)
-
-fig.subplots_adjust(left=0.06, right=0.97, bottom=0.08, top=0.995)
-fig.savefig(exp_odir+expid[i]+'/viz/echam/'+expid[i]+'.rel_diff_apr.png')
-
-
-#-------------------------------- plot tracer precipitation deviation
-pltlevel = np.arange(-2, 2.001, 0.01)
-pltticks = np.arange(-2, 2.001, 0.4)
-pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False)
-pltcmp = cm.get_cmap('PRGn', len(pltlevel))
-
-fig, ax = framework_plot1("global", figsize=np.array([8.8*2, 11]) / 2.54)
-
-plt_cmp = ax.pcolormesh(
-    exp_org_o[expid[i]]['echam'].lon,
-    exp_org_o[expid[i]]['echam'].lat,
-    diff_apr[-1, :, :] * 10**7,
-    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
-
-cbar = fig.colorbar(
-    plt_cmp, ax=ax, orientation="horizontal",  pad=0.02,
-    fraction=0.14, shrink=0.6, aspect=40, anchor=(0.5, 0.7),
-    ticks=pltticks, extend="both",)
-
-cbar.ax.set_xlabel(
-    u'Differences between tracer and normal precipitation [$10^{-7} \; mm \; s^{-1}$]\n' + expid[i],
-    linespacing=1.5)
-
-fig.subplots_adjust(left=0.06, right=0.97, bottom=0.08, top=0.995)
-fig.savefig(exp_odir+expid[i]+'/viz/echam/'+expid[i]+'.diff_apr.png')
-
-
-
-'''
-
-# check large-scale precipitation conservation
-diff_aprl = exp_org_o[expid[i]]['wiso'].wisoaprl[:, 0, :, :] - exp_org_o[expid[i]]['wiso'].wisoaprl[:, 3:, :, :].sum(axis=1)
-
-# stats.describe(abs(diff_aprl), axis=None)
-np.max(abs(diff_aprl))
-np.mean(abs(diff_aprl))
-
-i1, i2, i3 = np.where(abs(diff_aprl) == np.max(abs(diff_aprl)))
-
-diff_aprl[i1[0], i2[0], i3[0]].values
-exp_org_o[expid[i]]['echam'].aprl[i1[0], i2[0], i3[0]].values
-exp_org_o[expid[i]]['wiso'].wisoaprl[i1[0], 3:, i2[0], i3[0]].values.sum()
-
-
-# check convective precipitation conservation
-diff_aprc = exp_org_o[expid[i]]['echam'].aprc[:, :, :] - exp_org_o[expid[i]]['wiso'].wisoaprc[:, 3:, :, :].sum(axis=1)
-stats.describe(abs(diff_aprc), axis=None)
-np.max(abs(diff_aprc))
-
-i1, i2, i3 = np.where(abs(diff_aprc) == np.max(abs(diff_aprc)))
-
-diff_aprc[i1[0], i2[0], i3[0]].values
-exp_org_o[expid[i]]['echam'].aprc[i1[0], i2[0], i3[0]].values
-exp_org_o[expid[i]]['wiso'].wisoaprc[i1[0], 3:, i2[0], i3[0]].values.sum()
-
-#-------------------------------- check precipitation conservation in detail
-
-i = 0
-expid[i]
-
-#---------------- global 0 works as expected
-
-aprl_global0 = exp_org_o[expid[i]]['wiso'].wisoaprl[:, 4, :, :]
-np.max(abs(aprl_global0))
-# aprl_global0.to_netcdf('scratch/test/test.nc')
-# where_nonzero_aprl = np.where(abs(aprl_global0) > 1e-10)
-# aprl_global0.values[where_nonzero_aprl]
-aprc_global0 = exp_org_o[expid[i]]['wiso'].wisoaprc[:, 4, :, :]
-np.max(abs(aprc_global0))
-# aprc_global0.to_netcdf('scratch/test/test1.nc')
-# where_nonzero_aprc = np.where(abs(aprc_global0) > 1e-10)
-# aprc_global0.values[where_nonzero_aprc]
-
-#---------------- global 1
-
-echam_apr_global1 = exp_org_o[expid[i]]['echam'].aprl[:, :, :] + exp_org_o[expid[i]]['echam'].aprc[:, :, :]
-wiso_apr_global1 = (exp_org_o[expid[i]]['wiso'].wisoaprl[:, 3, :, :] + exp_org_o[expid[i]]['wiso'].wisoaprc[:, 3, :, :])
-diff_apr_global1 = wiso_apr_global1 - echam_apr_global1
-# diff_apr_global1.to_netcdf('scratch/test/test2.nc')
-stats.describe(abs(diff_apr_global1), axis=None)
-
-where_max = np.where(abs(diff_apr_global1) == np.max(abs(diff_apr_global1)))
-diff_apr_global1.values[where_max]
-echam_apr_global1.values[where_max]
-wiso_apr_global1.values[where_max]
-
-# where_large_diff = np.where(abs(diff_apr_global1) > 1e-10)
-# diff_apr_global1.values[where_large_diff]
-# echam_apr_global1.values[where_large_diff]
-# wiso_apr_global1.values[where_large_diff]
-
-
-diff_aprl_global1 = exp_org_o[expid[i]]['echam'].aprl[:, :, :] - exp_org_o[expid[i]]['wiso'].wisoaprl[:, 3, :, :]
-np.max(diff_aprl_global1)
-(abs(diff_aprl_global1) > 0).sum()
-# diff_aprl_global1_1 = exp_org_o[expid[i]]['wiso'].wisoaprl[:, 0, :, :] - exp_org_o[expid[i]]['wiso'].wisoaprl[:, 3, :, :]
-# np.max(diff_aprl_global1_1)
-# diff_aprl_global1.to_netcdf('scratch/test/test3.nc')
-
-diff_aprc_global1 = exp_org_o[expid[i]]['echam'].aprc[:, :, :] - exp_org_o[expid[i]]['wiso'].wisoaprc[:, 3, :, :]
-np.max(diff_aprc_global1)
-# diff_aprc_global1.to_netcdf('scratch/test/test4.nc')
-
-diff_aprs_global1 = exp_org_o[expid[i]]['echam'].aprs[:, :, :] - exp_org_o[expid[i]]['wiso'].wisoaprs[:, 3, :, :]
-np.max(diff_aprs_global1)
-
-'''
 # endregion
 # =============================================================================
 
@@ -1309,8 +1328,8 @@ exp_org_o[expid[i]]['wiso'].wisoevapwac[0, 4, 27, 77].values
 # =============================================================================
 # region check bit identity
 
-i = 4
-j = 5
+i = 0
+j = 1
 expid[i] + '   ' + expid[j]
 
 
@@ -1334,7 +1353,6 @@ expid[i] + '   ' + expid[j]
 (exp_org_o[expid[i]]['wiso'].wisoaprc.values == exp_org_o[expid[j]]['wiso'].wisoaprc.values).all()
 (exp_org_o[expid[i]]['wiso'].wisows.values == exp_org_o[expid[j]]['wiso'].wisows.values).all()
 
-(exp_org_o[expid[i]]['wiso'].tagmap.values == exp_org_o[expid[j]]['wiso'].tagmap.values).all()
 
 
 

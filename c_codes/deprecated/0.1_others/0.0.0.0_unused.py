@@ -1,6 +1,208 @@
 
 
 # =============================================================================
+# =============================================================================
+# region refined calculation of seasonal average
+
+#-------------------------------- scaled SST
+
+minsst = {}
+maxsst = {}
+minsst['pi_echam6_1y_204_3.60'] = 260
+maxsst['pi_echam6_1y_204_3.60'] = 310
+i = 0
+expid[i]
+
+ocean_pre = {}
+sst_scaled_pre = {}
+pre_weighted_tsw = {}
+ocean_pre_sea = {}
+sst_scaled_pre_sea = {}
+pre_weighted_tsw_sea = {}
+ocean_pre_am = {}
+sst_scaled_pre_am = {}
+pre_weighted_tsw_am = {}
+
+ocean_pre[expid[i]] = (exp_org_o[expid[i]]['wiso'].wisoaprl[:, 4:, :, :] +  exp_org_o[expid[i]]['wiso'].wisoaprc[:, 4:, :, :]).sum(axis=1)
+sst_scaled_pre[expid[i]] = (exp_org_o[expid[i]]['wiso'].wisoaprl[:, 4, :, :] + exp_org_o[expid[i]]['wiso'].wisoaprc[:, 4, :, :])
+
+
+#---------------- seasonal values
+
+# spin up: one year
+ocean_pre_sea[expid[i]] = ocean_pre[expid[i]][12:, :, :].groupby('time.season').sum(dim="time", skipna=True)
+sst_scaled_pre_sea[expid[i]] = sst_scaled_pre[expid[i]][12:, :, :].groupby('time.season').sum(dim="time", skipna=True)
+
+pre_weighted_tsw_sea[expid[i]] = sst_scaled_pre_sea[expid[i]] / ocean_pre_sea[expid[i]] * (maxsst[expid[i]] - minsst[expid[i]]) + minsst[expid[i]] - zerok
+pre_weighted_tsw_sea[expid[i]].values[np.where(ocean_pre_sea[expid[i]] < 1e-9)] = np.nan
+pre_weighted_tsw_sea[expid[i]] = pre_weighted_tsw_sea[expid[i]].rename('pre_weighted_tsw_sea')
+
+
+#---------------- annual mean values
+
+# spin up: one year
+ocean_pre_am[expid[i]] = ocean_pre[expid[i]][12:, :, :].mean(dim="time", skipna=True)
+sst_scaled_pre_am[expid[i]] = sst_scaled_pre[expid[i]][12:, :, :].mean(dim="time", skipna=True)
+
+pre_weighted_tsw_am[expid[i]] = sst_scaled_pre_am[expid[i]] / ocean_pre_am[expid[i]] * (maxsst[expid[i]] - minsst[expid[i]]) + minsst[expid[i]] - zerok
+pre_weighted_tsw_am[expid[i]].values[np.where(ocean_pre_am[expid[i]] < 1e-9)] = np.nan
+pre_weighted_tsw_am[expid[i]] = pre_weighted_tsw_am[expid[i]].rename('pre_weighted_tsw_am')
+
+
+#-------------------------------- binned SST
+
+i = 1
+expid[i]
+
+sstbins = np.concatenate((np.array([-100]), np.arange(0, 28.1, 2), np.array([100])))
+sstbins_mid = np.arange(-1, 29.1, 2)
+
+sst_binned_pre = {}
+sst_binned_pre_sea = {}
+sst_binned_pre_am = {}
+
+
+sst_binned_pre[expid[i]] = (exp_org_o[expid[i]]['wiso'].wisoaprl[:, 4:, :, :] + exp_org_o[expid[i]]['wiso'].wisoaprc[:, 4:, :, :])
+ocean_pre[expid[i]] = sst_binned_pre[expid[i]].sum(axis=1)
+
+#---------------- seasonal values
+# spin up: one year
+
+sst_binned_pre_sea[expid[i]] = sst_binned_pre[expid[i]][60:, :, :, :].groupby('time.season').sum(dim="time", skipna=True)
+ocean_pre_sea[expid[i]] = ocean_pre[expid[i]][60:, :, :].groupby('time.season').sum(dim="time", skipna=True)
+
+pre_weighted_tsw_sea[expid[i]] = ( sst_binned_pre_sea[expid[i]] * sstbins_mid[None, :, None, None]).sum(axis=1) / ocean_pre_sea[expid[i]]
+pre_weighted_tsw_sea[expid[i]].values[ocean_pre_sea[expid[i]].values < 1e-9] = np.nan
+pre_weighted_tsw_sea[expid[i]] = pre_weighted_tsw_sea[expid[i]].rename('pre_weighted_tsw_sea')
+
+
+#---------------- annual mean values
+
+# spin up: one year
+
+sst_binned_pre_am[expid[i]] = sst_binned_pre[expid[i]][60:, :, :, :].mean(dim="time", skipna=True)
+ocean_pre_am[expid[i]] = ocean_pre[expid[i]][60:, :, :].mean(dim="time", skipna=True)
+
+pre_weighted_tsw_am[expid[i]] = ( sst_binned_pre_am[expid[i]] * sstbins_mid[:, None, None]).sum(axis=0) / ocean_pre_am[expid[i]]
+pre_weighted_tsw_am[expid[i]].values[ocean_pre_am[expid[i]].values < 1e-9] = np.nan
+pre_weighted_tsw_am[expid[i]] = pre_weighted_tsw_am[expid[i]].rename('pre_weighted_tsw_am')
+
+#-------- basic set
+i = 0
+j = 1
+lon = pre_weighted_tsw_am[expid[i]].lon
+lat = pre_weighted_tsw_am[expid[i]].lat
+print('#-------- ' + expid[i] + ' & '+ expid[j])
+mpl.rc('font', family='Times New Roman', size=10)
+
+#-------- plot configuration
+output_png = 'figures/6_awi/6.1_echam6/6.1.0_tagging_test/6.1.0.0_sst/' + '6.1.0.0.2_8' + expid[i] + '_and_' + expid[j] + '_pre_weighted_tsw_compare.png'
+cbar_label1 = 'Precipitation-weighted source SST [$°C$]'
+cbar_label2 = 'Differences in precipitation-weighted source SST [$°C$]'
+
+pltlevel = np.arange(0, 32.01, 2)
+pltticks = np.arange(0, 32.01, 4)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False)
+pltcmp = cm.get_cmap('RdBu', len(pltlevel)).reversed()
+# pltcmp = rb_colormap(pltlevel, right_c = 'Blues_r', left_c = 'Reds')
+
+pltlevel2 = np.arange(-2, 2.01, 0.25)
+pltticks2 = np.arange(-2, 2.01, 0.5)
+pltnorm2 = BoundaryNorm(pltlevel2, ncolors=len(pltlevel2), clip=False)
+pltcmp2 = cm.get_cmap('BrBG', len(pltlevel2)).reversed()
+# pltcmp2 = rb_colormap(pltlevel, right_c = 'Blues_r', left_c = 'Reds')
+
+nrow = 3
+ncol = 3
+fm_bottom = 2.5 / (4.6*nrow + 2.5)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([8.8*ncol, 4.6*nrow + 2.5]) / 2.54,
+    subplot_kw={'projection': ccrs.PlateCarree()},
+    gridspec_kw={'hspace': 0.15, 'wspace': 0.02},)
+
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = globe_plot(ax_org = axs[irow, jcol],
+                                     add_grid_labels=False)
+
+#-------- annual mean values
+axs[0, 0].pcolormesh(
+    lon, lat, pre_weighted_tsw_am[expid[i]],
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+axs[1, 0].pcolormesh(
+    lon, lat, pre_weighted_tsw_am[expid[j]],
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+axs[2, 0].pcolormesh(
+    lon, lat, pre_weighted_tsw_am[expid[i]] - \
+        pre_weighted_tsw_am[expid[j]],
+    norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
+
+#-------- DJF values
+axs[0, 1].pcolormesh(
+    lon, lat, pre_weighted_tsw_sea[expid[i]].sel(season='DJF'),
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+axs[1, 1].pcolormesh(
+    lon, lat, pre_weighted_tsw_sea[expid[j]].sel(season='DJF'),
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+axs[2, 1].pcolormesh(
+    lon, lat, pre_weighted_tsw_sea[expid[i]].sel(season='DJF') - pre_weighted_tsw_sea[expid[j]].sel(season='DJF'),
+    norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
+
+#-------- JJA values
+axs[0, 2].pcolormesh(
+    lon, lat, pre_weighted_tsw_sea[expid[i]].sel(season='JJA'),
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+axs[1, 2].pcolormesh(
+    lon, lat, pre_weighted_tsw_sea[expid[j]].sel(season='JJA'),
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+axs[2, 2].pcolormesh(
+    lon, lat, pre_weighted_tsw_sea[expid[i]].sel(season='JJA') - pre_weighted_tsw_sea[expid[j]].sel(season='JJA'),
+    norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
+
+
+plt.text(
+    0.5, 1.05, 'Annual mean', transform=axs[0, 0].transAxes,
+    ha='center', va='center', rotation='horizontal')
+plt.text(
+    0.5, 1.05, 'DJF', transform=axs[0, 1].transAxes,
+    ha='center', va='center', rotation='horizontal')
+plt.text(
+    0.5, 1.05, 'JJA', transform=axs[0, 2].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+plt.text(
+    -0.05, 0.5, 'Scaling tag map with SST', transform=axs[0, 0].transAxes,
+    ha='center', va='center', rotation='vertical')
+plt.text(
+    -0.05, 0.5, 'Partitioning tag map based on SST', transform=axs[1, 0].transAxes,
+    ha='center', va='center', rotation='vertical')
+plt.text(
+    -0.05, 0.5, 'Differences', transform=axs[2, 0].transAxes,
+    ha='center', va='center', rotation='vertical')
+
+cbar1 = fig.colorbar(
+    cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=axs,
+    orientation="horizontal",shrink=0.5,aspect=40,extend='both',
+    anchor=(-0.2, -0.2), ticks=pltticks)
+cbar1.ax.set_xlabel(cbar_label1, linespacing=2)
+
+cbar2 = fig.colorbar(
+    cm.ScalarMappable(norm=pltnorm2, cmap=pltcmp2), ax=axs,
+    orientation="horizontal",shrink=0.5,aspect=40,extend='both',
+    anchor=(1.1,-3.8),ticks=pltticks2)
+cbar2.ax.set_xlabel(cbar_label2, linespacing=2)
+
+fig.subplots_adjust(left=0.04, right = 0.99, bottom = fm_bottom, top = 0.96)
+fig.savefig(output_png)
+
+
+
+# endregion
+# =============================================================================
+
+
+# =============================================================================
 # region create tagmap_nhsh_qg1
 
 echam_t63_slm = xr.open_dataset(
