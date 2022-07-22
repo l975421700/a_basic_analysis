@@ -2,7 +2,7 @@ general:
     setup_name: "echam"
     compute_time: "00:30:00"
     initial_date: "2000-01-01"
-    final_date: "2000-02-01"
+    final_date: "2003-01-01"
     model_dir: "/work/ollie/qigao001/model_codes/echam-6.3.05p2-wiso/"
     base_dir: "/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/"
     nmonth: 1
@@ -11,7 +11,7 @@ general:
 
 echam:
     version: "6.3.05p2-wiso"
-    executable: echam6_0711_4.3
+    executable: echam6_0720_4.10
     bin_sources:
             echam_bin: "${bin_dir}/${executable}"
     bin_in_work:
@@ -46,8 +46,8 @@ echam:
                 wisoctl:
                     lwiso: True
                     lwiso_rerun: ${lresume}
-                    nwiso: 22
-                    ntag: 19
+                    nwiso: 47
+                    ntag: 0
                     ntag1: 0
                     ntag2: 0
                     ntag3: 0
@@ -57,16 +57,25 @@ echam:
                     ntags3_sst: 0
                     ntags4_rh2m: 0
                     ntags5_wind10: 0
-                    ntag_sum: 19
+                    ntag_geo7: 7
+                    ntags6_sinlon: 0
+                    ntags7_coslon: 0
+                    ntag5: 37
+                    ntag_sum: 44
                     lupdate_tagmap: True
                     tag_minsst: 268.15
                     tag_maxsst: 318.15
-                    lcorrfac: True
+                    tag_minrh2m: 0
+                    tag_maxrh2m: 1.6
+                    tag_minwind10: 0
+                    tag_maxwind10: 28.0
                     ltag_corr1: True
-                    ltag_corr2: False
                     ltag_corr3: True
-                    ltag_corr3_m: False
                     latm_water: True
+                    ltag_corr2: False
+                    ltag_corr3_m: False
+                    ltag_corr_xtec: False
+                    lcorrfac: False
     file_movements:
         forcing:
             all_directions: "link"
@@ -74,13 +83,19 @@ echam:
             all_directions: "link"
     forcing_sources:
         wiso_sw_observed: "/home/ollie/mwerner/model_input/ECHAM6-wiso/PI_ctrl/T63/T63_wisosw_d.nc"
-        wiso_tagmap_1: "/work/ollie/qigao001/startdump/tagging/tagmap/tagmap_l_18latbin.nc"
+        wiso_tagmap_1: "/work/ollie/qigao001/startdump/tagging/tagmap/pi_binned_lon_tagmap_1_a.nc"
+        sic_1: "/work/ollie/qigao001/startdump/model_input/pi/alex/T63_amipsic_pcmdi_187001-189912.nc"
+        sst_1: "/work/ollie/qigao001/startdump/model_input/pi/alex/T63_amipsst_pcmdi_187001-189912.nc"
     add_forcing_files:
         wiso_sw: wiso_sw_observed
         wiso_tagmap: wiso_tagmap_1
+        sic: sic_1
+        sst: sst_1
     forcing_in_work:
         wiso_sw: "unit.25"
         wiso_tagmap: "unit.26"
+        sic: "unit.96"
+        sst: "unit.20"
 
 jsbach:
     file_movements:

@@ -3,7 +3,7 @@
 expid = ['pi_echam6_1d_211_3.69',]
 print('#---- ' + expid[0])
 
-exp_odir = '/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 
 #-------- region import packages
 

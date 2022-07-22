@@ -1,6 +1,6 @@
 
 
-expid = ['pi_echam6_1y_311_4.3',]
+expid = ['pi_d_437_4.10',]
 print('#---- ' + expid[0])
 
 exp_odir = '/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/'

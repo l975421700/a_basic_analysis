@@ -63,7 +63,7 @@ from a_basic_analysis.b_module.namelist import (
 
 #---------------- import simulation
 
-exp_odir = '/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 
 expid = ['pi_echam6_1d_214_3.70',]
 
@@ -86,6 +86,8 @@ analysed_sst = esacci_echam6_t63_trim.analysed_sst.values
 cell_area = {}
 cell_area['echam6_t63'] = xr.open_dataset('scratch/others/land_sea_masks/ECHAM6_T63_slm_area.nc')
 
+isocean = np.broadcast_to(np.isfinite(analysed_sst), exp_org_o[expid[i]]['echam'].tsw.shape )
+b_cell_area = np.broadcast_to(cell_area['echam6_t63'].cell_area.values, exp_org_o[expid[i]]['echam'].tsw.shape )
 
 '''
 exp_org_o[expid[i]]['echam'].tsw
@@ -102,22 +104,11 @@ exp_org_o[expid[i]]['echam'].rh2m
 
 #-------- get SST and cell area
 
-oceanic_tsw = np.array([])
-oceanic_cell_area = np.array([])
+oceanic_tsw = exp_org_o[expid[i]]['echam'].tsw.values[
+    isocean & (exp_org_o[expid[i]]['echam'].seaice == 0)]
 
-for itime in range(len(exp_org_o[expid[i]]['echam'].time)):
-    # itime = 0
-    
-    oceanic_tsw = np.concatenate(
-        (oceanic_tsw,
-        exp_org_o[expid[i]]['echam'].tsw[itime, :, :].values[np.isfinite(analysed_sst)]),)
-    
-    oceanic_cell_area = np.concatenate(
-        (oceanic_cell_area,
-        cell_area['echam6_t63'].cell_area.values[np.isfinite(analysed_sst)]),)
-    
-    if (itime%20 == 0):
-        print(str(itime) + '/' + str(len(exp_org_o[expid[i]]['echam'].time)))
+oceanic_cell_area = b_cell_area[
+    isocean & (exp_org_o[expid[i]]['echam'].seaice == 0)]
 
 
 #-------- plot it
@@ -128,7 +119,7 @@ plt_hist = plt.hist(
     x=(oceanic_tsw - zerok,),
     weights=(oceanic_cell_area,),
     color=['lightgray', ],
-    bins=np.arange(-2, 32, 1),
+    bins=np.arange(-2, 32, 2),
     density=True,
     rwidth=1,
 )
@@ -142,8 +133,8 @@ ax.set_yticklabels(np.arange(0, 0.081, 0.02), size=8)
 ax.set_ylabel('Area-weighted frequency', size=10)
 
 ax.grid(True, linewidth=0.25, color='gray', alpha=0.5, linestyle='--')
-ax.axvline(x=0, linewidth=1, color='b', linestyle='-')
-ax.axvline(x=28, linewidth=1, color='b', linestyle='-')
+# ax.axvline(x=0, linewidth=1, color='b', linestyle='-')
+# ax.axvline(x=28, linewidth=1, color='b', linestyle='-')
 fig.subplots_adjust(left=0.1, right=0.99, bottom=0.14, top=0.97)
 
 fig.savefig(
@@ -151,11 +142,27 @@ fig.savefig(
 
 
 '''
-(np.isfinite(analysed_sst)).sum()
-(np.isnan(analysed_sst)).sum()
-
 271.38 - 273.15 = -1.77
 ((oceanic_tsw - zerok) > 30).sum()
+
+
+# oceanic_tsw = np.array([])
+# oceanic_cell_area = np.array([])
+
+# for itime in range(len(exp_org_o[expid[i]]['echam'].time)):
+#     # itime = 0
+    
+#     oceanic_tsw = np.concatenate(
+#         (oceanic_tsw,
+#         exp_org_o[expid[i]]['echam'].tsw[itime, :, :].values[np.isfinite(analysed_sst)]),)
+    
+#     oceanic_cell_area = np.concatenate(
+#         (oceanic_cell_area,
+#         cell_area['echam6_t63'].cell_area.values[np.isfinite(analysed_sst)]),)
+    
+#     if (itime%20 == 0):
+#         print(str(itime) + '/' + str(len(exp_org_o[expid[i]]['echam'].time)))
+
 '''
 # endregion
 # =============================================================================
@@ -167,22 +174,11 @@ fig.savefig(
 
 #-------- get rh2m and cell area
 
-oceanic_rh2m = np.array([])
-oceanic_cell_area = np.array([])
+oceanic_rh2m = exp_org_o[expid[i]]['echam'].rh2m.values[
+    isocean & (exp_org_o[expid[i]]['echam'].seaice == 0)]
 
-for itime in range(len(exp_org_o[expid[i]]['echam'].time)):
-    # itime = 0
-    
-    oceanic_rh2m = np.concatenate(
-        (oceanic_rh2m,
-        exp_org_o[expid[i]]['echam'].rh2m[itime, :, :].values[np.isfinite(analysed_sst)]),)
-    
-    oceanic_cell_area = np.concatenate(
-        (oceanic_cell_area,
-        cell_area['echam6_t63'].cell_area.values[np.isfinite(analysed_sst)]),)
-    
-    if (itime%20 == 0):
-        print(str(itime) + '/' + str(len(exp_org_o[expid[i]]['echam'].time)))
+oceanic_cell_area = b_cell_area[
+    isocean & (exp_org_o[expid[i]]['echam'].seaice == 0)]
 
 
 #-------- plot it
@@ -193,13 +189,13 @@ plt_hist = plt.hist(
     x=(oceanic_rh2m * 100,),
     weights=(oceanic_cell_area,),
     color=['lightgray', ],
-    bins=np.arange(50, 120.1, 2.5),
+    bins=np.arange(50, 110.1, 5),
     density=True,
     rwidth=1,
 )
 
-ax.set_xticks(np.arange(50, 125, 5))
-ax.set_xticklabels(np.arange(50, 125, 5), size=8)
+ax.set_xticks(np.arange(50, 115, 5))
+ax.set_xticklabels(np.arange(50, 115, 5), size=8)
 ax.set_xlabel('2 metre relative humidity [%]', size=10)
 
 ax.set_yticks(np.arange(0, 0.051, 0.01))
@@ -207,13 +203,33 @@ ax.set_yticklabels(np.arange(0, 0.051, 0.01), size=8)
 ax.set_ylabel('Area-weighted frequency', size=10)
 
 ax.grid(True, linewidth=0.25, color='gray', alpha=0.5, linestyle='--')
-ax.axvline(x=55, linewidth=1, color='b', linestyle='-')
-ax.axvline(x=105, linewidth=1, color='b', linestyle='-')
+# ax.axvline(x=55, linewidth=1, color='b', linestyle='-')
+# ax.axvline(x=105, linewidth=1, color='b', linestyle='-')
 fig.subplots_adjust(left=0.1, right=0.99, bottom=0.14, top=0.97)
 
 fig.savefig(
     'figures/6_awi/6.1_echam6/6.1.1_variable distribution/6.1.1.1_rh2m distribution_in_a_nine_day_ECHAM6_simulation.png',)
 
+'''
+# oceanic_rh2m = np.array([])
+# oceanic_cell_area = np.array([])
+
+# for itime in range(len(exp_org_o[expid[i]]['echam'].time)):
+#     # itime = 0
+    
+#     oceanic_rh2m = np.concatenate(
+#         (oceanic_rh2m,
+#         exp_org_o[expid[i]]['echam'].rh2m[itime, :, :].values[np.isfinite(analysed_sst)]),)
+    
+#     oceanic_cell_area = np.concatenate(
+#         (oceanic_cell_area,
+#         cell_area['echam6_t63'].cell_area.values[np.isfinite(analysed_sst)]),)
+    
+#     if (itime%20 == 0):
+#         print(str(itime) + '/' + str(len(exp_org_o[expid[i]]['echam'].time)))
+
+
+'''
 # endregion
 # =============================================================================
 
@@ -224,22 +240,11 @@ fig.savefig(
 
 #-------- get wind10 and cell area
 
-oceanic_wind10 = np.array([])
-oceanic_cell_area = np.array([])
+oceanic_wind10 = exp_org_o[expid[i]]['echam'].wind10.values[
+    isocean & (exp_org_o[expid[i]]['echam'].seaice == 0)]
 
-for itime in range(len(exp_org_o[expid[i]]['echam'].time)):
-    # itime = 0
-    
-    oceanic_wind10 = np.concatenate(
-        (oceanic_wind10,
-        exp_org_o[expid[i]]['echam'].wind10[itime, :, :].values[np.isfinite(analysed_sst)]),)
-    
-    oceanic_cell_area = np.concatenate(
-        (oceanic_cell_area,
-        cell_area['echam6_t63'].cell_area.values[np.isfinite(analysed_sst)]),)
-    
-    if (itime%20 == 0):
-        print(str(itime) + '/' + str(len(exp_org_o[expid[i]]['echam'].time)))
+oceanic_cell_area = b_cell_area[
+    isocean & (exp_org_o[expid[i]]['echam'].seaice == 0)]
 
 
 #-------- plot it
@@ -250,13 +255,13 @@ plt_hist = plt.hist(
     x=(oceanic_wind10,),
     weights=(oceanic_cell_area,),
     color=['lightgray', ],
-    bins=np.arange(0, 21, 1),
+    bins=np.arange(0, 18, 1),
     density=True,
     rwidth=1,
 )
 
-ax.set_xticks(np.arange(0, 21, 1))
-ax.set_xticklabels(np.arange(0, 21, 1), size=8)
+ax.set_xticks(np.arange(0, 18, 1))
+ax.set_xticklabels(np.arange(0, 18, 1), size=8)
 ax.set_xlabel('10 metre wind speed [$m \; s^{-1}$]', size=10)
 
 ax.set_yticks(np.arange(0, 0.121, 0.02))
@@ -264,8 +269,8 @@ ax.set_yticklabels(np.arange(0, 0.121, 0.02, dtype=np.float64), size=8)
 ax.set_ylabel('Area-weighted frequency', size=10)
 
 ax.grid(True, linewidth=0.25, color='gray', alpha=0.5, linestyle='--')
-ax.axvline(x=1, linewidth=1, color='b', linestyle='-')
-ax.axvline(x=16, linewidth=1, color='b', linestyle='-')
+# ax.axvline(x=1, linewidth=1, color='b', linestyle='-')
+# ax.axvline(x=16, linewidth=1, color='b', linestyle='-')
 fig.subplots_adjust(left=0.1, right=0.99, bottom=0.14, top=0.97)
 
 fig.savefig(
@@ -273,6 +278,26 @@ fig.savefig(
 
 '''
 (oceanic_wind10 < 0).sum()
+
+# oceanic_wind10 = np.array([])
+# oceanic_cell_area = np.array([])
+
+# for itime in range(len(exp_org_o[expid[i]]['echam'].time)):
+#     # itime = 0
+    
+#     oceanic_wind10 = np.concatenate(
+#         (oceanic_wind10,
+#         exp_org_o[expid[i]]['echam'].wind10[itime, :, :].values[np.isfinite(analysed_sst)]),)
+    
+#     oceanic_cell_area = np.concatenate(
+#         (oceanic_cell_area,
+#         cell_area['echam6_t63'].cell_area.values[np.isfinite(analysed_sst)]),)
+    
+#     if (itime%20 == 0):
+#         print(str(itime) + '/' + str(len(exp_org_o[expid[i]]['echam'].time)))
+
+
+
 '''
 # endregion
 # =============================================================================

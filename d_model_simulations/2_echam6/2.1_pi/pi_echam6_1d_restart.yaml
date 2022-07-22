@@ -19,8 +19,8 @@ echam:
     scenario: "PI-CTRL"
     res: T63
     lresume: True
-    ini_parent_exp_id: "pi_echam6_1y_309_4.3"
-    ini_parent_date:  "2000-12-31"
+    ini_parent_exp_id: "pi_m_402_4.7"
+    ini_parent_date:  "2000-12-31T23:52:30"
     ini_parent_dir: "/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/${ini_parent_exp_id}/restart/echam/"
     with_wiso: True
     wiso_code: True
@@ -40,9 +40,9 @@ echam:
                 runctl:
                     default_output: True
                     out_filetype: 2
-                    # putdata: [ 450, 'seconds', 'first', 0 ]
+                    putdata: [ 450, 'seconds', 'first', 0 ]
                     # putdata: [ 6, 'hours', 'last', 0 ]
-                    # dt_stop: [ 2000, 1, 1, 2, 00, 00 ]
+                    dt_stop: [ 2000, 1, 1, 2, 00, 00 ]
                 radctl:
                     lrad_async: False
                 wisoctl:

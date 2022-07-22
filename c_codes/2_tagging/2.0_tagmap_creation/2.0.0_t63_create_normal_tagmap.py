@@ -540,7 +540,7 @@ np.min(tagmap_l_18latbin.tagmap[3:, :, :].sum(axis=0))
 
 
 # =============================================================================
-# region create tagmap_ls_10
+# region create tagmap_ls_11
 
 esacci_echam6_t63_trim = xr.open_dataset(
     'startdump/tagging/tagmap/auxiliaries/sst_mon_ESACCI-2.1_198201_201612_am_rg_echam6_t63_slm_trim.nc')
@@ -548,9 +548,9 @@ lon = esacci_echam6_t63_trim.lon.values
 lat = esacci_echam6_t63_trim.lat.values
 analysed_sst = esacci_echam6_t63_trim.analysed_sst.values
 
-ntag = 2 + 2 + 2 + 2 + 2 + 2 + 2 + 2 + 2 + 2
+ntag = 2 + 2 + 2 + 2 + 2 + 2 + 2 + 2 + 2 + 2 + 2
 
-tagmap_ls_10 = xr.Dataset(
+tagmap_ls_11 = xr.Dataset(
     {"tagmap": (
         ("level", "lat", "lon"),
         np.zeros((ntag+3, len(lat), len(lon)), dtype=np.double)),
@@ -562,27 +562,27 @@ tagmap_ls_10 = xr.Dataset(
     }
 )
 
-tagmap_ls_10.tagmap.sel(level=slice(1, 3))[:, :] = 1
+tagmap_ls_11.tagmap.sel(level=slice(1, 3))[:, :] = 1
 
 # land
-for i in np.arange(4, 23, 2):
-    tagmap_ls_10.tagmap.sel(level=i).values[np.isnan(analysed_sst)] = 1
+for i in np.arange(4, 25, 2):
+    tagmap_ls_11.tagmap.sel(level=i).values[np.isnan(analysed_sst)] = 1
 
 # sea
-for i in np.arange(5, 24, 2):
-    tagmap_ls_10.tagmap.sel(level=i).values[np.isfinite(analysed_sst)] = 1
+for i in np.arange(5, 26, 2):
+    tagmap_ls_11.tagmap.sel(level=i).values[np.isfinite(analysed_sst)] = 1
 
 
-tagmap_ls_10.to_netcdf(
-    'startdump/tagging/tagmap/tagmap_ls_10.nc',)
+tagmap_ls_11.to_netcdf(
+    'startdump/tagging/tagmap/tagmap_ls_11.nc',)
 
 
 '''
 # check
-tagmap_ls_10 = xr.open_dataset(
-    'startdump/tagging/tagmap/tagmap_ls_10.nc',)
-np.max(tagmap_ls_10.tagmap[3:6, :, :].sum(axis=0))
-np.min(tagmap_ls_10.tagmap[3:6, :, :].sum(axis=0))
+tagmap_ls_11 = xr.open_dataset(
+    'startdump/tagging/tagmap/tagmap_ls_11.nc',)
+np.max(tagmap_ls_11.tagmap[3:6, :, :].sum(axis=0))
+np.min(tagmap_ls_11.tagmap[3:6, :, :].sum(axis=0))
 '''
 # endregion
 # =============================================================================

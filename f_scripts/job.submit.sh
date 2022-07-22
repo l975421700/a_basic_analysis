@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --time=03:30:00        # Set a limit on the total run time
+#SBATCH --time=00:30:00        # Set a limit on the total run time
 #SBATCH --partition=mpp       # Specify partition name
 #SBATCH --ntasks=1             # Specify max. number of tasks to be invoked
 #SBATCH --cpus-per-task=1
@@ -9,13 +9,12 @@
 # yrstart=2000
 # yrend=2009
 # pp_dir='/work/ollie/qigao001/a_basic_analysis/c_codes/3_shell_scripts/3.0_awiesm_post_processing'
-
 # ${pp_dir}/job.get.echam.sh ${output_dir} ${expid} ${yrstart} ${yrend}
 # ${pp_dir}/job.get.wiso.sh ${output_dir} ${expid} ${yrstart} ${yrend}
 # ${pp_dir}/job.get.wiso_d.sh ${output_dir} ${expid} ${yrstart} ${yrend}
 
 
-/work/ollie/qigao001/a_basic_analysis/f_shell_scripts/short_run_get_echam_nc.sh
+/work/ollie/qigao001/a_basic_analysis/f_scripts/short_run_get_echam_nc.sh
 
 # source /home/ollie/qigao001/miniconda3/bin/activate training
 # which python

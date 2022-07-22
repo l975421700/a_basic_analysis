@@ -15,6 +15,7 @@ ssh -X qino@mass-cli.jasmin.ac.uk
 
 # /gws/nopw/j04/bas_palaeoclim
 # ssh-keygen -t rsa -b 2048 -C "qino@bas.ac.uk" -f ~/.ssh/id_rsa
+# ssh-keygen -t ed25519 -b 2048 -C "gaoqg229@gmail.com" -f ~/.ssh/id_ed25519_dkrz
 
 # module load jaspy
 # module load jasmin-sci
@@ -25,7 +26,7 @@ ssh -X qino@mass-cli.jasmin.ac.uk
 
 
 # =============================================================================
-# region
+# region monsoon
 ssh lander
 ssh -XY xcsc
 
@@ -36,11 +37,3 @@ ssh -XY xcsc
 # =============================================================================
 
 
-# =============================================================================
-# region Ollie
-
-ssh-copy-id -i .ssh/id_rsa.pub qigao001@ollie0.awi.de
-
-
-# endregion
-# =============================================================================
