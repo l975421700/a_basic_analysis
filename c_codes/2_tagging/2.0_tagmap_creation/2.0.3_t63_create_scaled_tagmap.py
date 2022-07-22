@@ -1,6 +1,6 @@
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region import packages
 
 # management
@@ -52,10 +52,10 @@ from a_basic_analysis.b_module.namelist import (
 )
 
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region import data
 
 # import 1-day model simulation
@@ -122,11 +122,11 @@ pi_sic_t63 = xr.open_dataset('/work/ollie/pool/ECHAM6/input/r0007/T63/T63GR15_pi
 # fig.savefig(output_png)
 '''
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
-# =============================================================================
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # region create tsw scaled tagmap pi_tsw_tagmap
 
 minsst = zerok - 5
@@ -191,10 +191,10 @@ pi_echam_1d_t63.seaice[0, :, :].values[7, 73]
 
 '''
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region create rh2m scaled tagmap pi_rh2m_tagmap
 
 
@@ -263,10 +263,10 @@ pi_echam_1d_t63.seaice[0, :, :].values[7, 73]
 
 '''
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region create wind10 scaled tagmap pi_wind10_tagmap [-14, 28]
 
 
@@ -334,10 +334,10 @@ pi_echam_1d_t63.seaice[0, :, :].values[7, 73]
 
 '''
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region create wind10 scaled tagmap pi_wind10_tagmap_0 [0, 28]
 
 
@@ -405,10 +405,10 @@ pi_echam_1d_t63.seaice[0, :, :].values[7, 73]
 
 '''
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region create lat scaled tagmap pi_lat_tagmap
 
 
@@ -478,10 +478,10 @@ pi_echam_1d_t63.seaice.values[0, 7, 73]
 '''
 
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region create lon scaled tagmap pi_lon_tagmap
 
 
@@ -551,10 +551,10 @@ pi_echam_1d_t63.seaice.values[0, 7, 73]
 '''
 
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region create tag map for NH/SH land, Antarctica, NH/SH ocean, NH/SH sea ice
 
 ntag = 7
@@ -606,11 +606,11 @@ pi_geo_tagmap.to_netcdf('startdump/tagging/tagmap/pi_geo_tagmap.nc',)
 
 
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
-# =============================================================================
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # region pi_6tagmap: combine six tagmaps for scaled approach and sea ice one
 
 ! cdo merge -sellevel,1/6 'startdump/tagging/tagmap/pi_lat_tagmap.nc' -sellevel,4/6 'startdump/tagging/tagmap/pi_lon_tagmap.nc' -sellevel,4/6 'startdump/tagging/tagmap/pi_tsw_tagmap.nc' -sellevel,4/6 'startdump/tagging/tagmap/pi_rh2m_tagmap.nc' -sellevel,4/6 'startdump/tagging/tagmap/pi_wind10_tagmap_0.nc' -sellevel,4/10 'startdump/tagging/tagmap/pi_geo_tagmap.nc' 'startdump/tagging/tagmap/pi_6tagmap.nc'
@@ -621,6 +621,8 @@ pi_geo_tagmap.to_netcdf('startdump/tagging/tagmap/pi_geo_tagmap.nc',)
 ! cdo merge -sellevel,1/6 'startdump/tagging/tagmap/pi_rh2m_tagmap.nc' -sellevel,4/10 'startdump/tagging/tagmap/pi_geo_tagmap.nc' 'startdump/tagging/tagmap/pi_rh2m_tagmap_a.nc'
 ! cdo merge -sellevel,1/6 'startdump/tagging/tagmap/pi_wind10_tagmap_0.nc' -sellevel,4/10 'startdump/tagging/tagmap/pi_geo_tagmap.nc' 'startdump/tagging/tagmap/pi_wind10_tagmap_0_a.nc'
 
+
+! cdo merge -sellevel,1/6 'startdump/tagging/archived/pi_lat_tagmap.nc' -sellevel,4/6 'startdump/tagging/archived/pi_tsw_tagmap.nc' -sellevel,4/6 'startdump/tagging/archived/pi_rh2m_tagmap.nc' -sellevel,4/6 'startdump/tagging/archived/pi_wind10_tagmap_0.nc' -sellevel,4/10 'startdump/tagging/tagmap/pi_geo_tagmap.nc' -sellevel,4/9 'startdump/tagging/archived/pi_sincoslon_tagmap.nc' 'startdump/tagging/tagmap/pi_6tagmap_2.nc'
 
 '''
 #-------------------------------- check
@@ -648,10 +650,10 @@ for ifile in range(len(pi_tagmap_files)):
 (pi_tagmaps[6].tagmap[18:25] == pi_tagmaps[5].tagmap[3:10]).all()
 '''
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region create sin- and cos-lon scaled tagmap pi_sincoslon_tagmap
 
 
@@ -737,7 +739,7 @@ pi_echam_1d_t63.seaice.values[0, 7, 73]
 
 ! cdo merge -sellevel,1/10 startdump/tagging/tagmap/pi_geo_tagmap.nc -sellevel,4/9 startdump/tagging/tagmap/pi_sincoslon_tagmap.nc startdump/tagging/tagmap/pi_sincoslon_tagmap_a.nc
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
 
