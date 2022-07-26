@@ -1,7 +1,175 @@
 
 
-# =============================================================================
-# =============================================================================
+# -----------------------------------------------------------------------------
+# region calculate normalized sincoslon
+
+
+#-------- import data
+
+pre_weighted_sinlon = {}
+pre_weighted_sinlon_ann = {}
+pre_weighted_sinlon_sea = {}
+pre_weighted_sinlon_am = {}
+pre_weighted_coslon = {}
+pre_weighted_coslon_ann = {}
+pre_weighted_coslon_sea = {}
+pre_weighted_coslon_am = {}
+
+for i in range(len(expid)):
+    print('#-------- ' + expid[i])
+    pre_weighted_sinlon[expid[i]] = xr.open_dataset(
+        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_sinlon.nc')
+    pre_weighted_sinlon_ann[expid[i]] = xr.open_dataset(
+        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_sinlon_ann.nc')
+    pre_weighted_sinlon_sea[expid[i]] = xr.open_dataset(
+        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_sinlon_sea.nc')
+    pre_weighted_sinlon_am[expid[i]] = xr.open_dataset(
+        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_sinlon_am.nc')
+    pre_weighted_coslon[expid[i]] = xr.open_dataset(
+        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_coslon.nc')
+    pre_weighted_coslon_ann[expid[i]] = xr.open_dataset(
+        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_coslon_ann.nc')
+    pre_weighted_coslon_sea[expid[i]] = xr.open_dataset(
+        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_coslon_sea.nc')
+    pre_weighted_coslon_am[expid[i]] = xr.open_dataset(
+        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_coslon_am.nc')
+
+
+pre_weighted_norm_sincoslon = {}
+pre_weighted_norm_sincoslon_ann = {}
+pre_weighted_norm_sincoslon_sea = {}
+pre_weighted_norm_sincoslon_am = {}
+
+
+i = 0
+expid[i]
+#-------- monthly
+
+pre_weighted_norm_sincoslon[expid[i]] = xr.concat([
+    pre_weighted_sinlon[expid[i]].pre_weighted_sinlon,
+    pre_weighted_coslon[expid[i]].pre_weighted_coslon,], dim='sincos')
+stats.describe(np.linalg.norm(pre_weighted_norm_sincoslon[expid[i]], axis=0, keepdims=True), axis=None, nan_policy='omit')
+
+pre_weighted_norm_sincoslon[expid[i]].values[:] = pre_weighted_norm_sincoslon[expid[i]].values[:] / np.linalg.norm(pre_weighted_norm_sincoslon[expid[i]], axis=0, keepdims=True)
+stats.describe(np.linalg.norm(pre_weighted_norm_sincoslon[expid[i]], axis=0, keepdims=True), axis=None, nan_policy='omit')
+
+pre_weighted_norm_sincoslon[expid[i]] = pre_weighted_norm_sincoslon[expid[i]].rename('pre_weighted_norm_sincoslon')
+
+pre_weighted_norm_sincoslon[expid[i]].to_netcdf(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_norm_sincoslon.nc'
+)
+
+
+#-------- Annual
+
+pre_weighted_norm_sincoslon_ann[expid[i]] = xr.concat([
+    pre_weighted_sinlon_ann[expid[i]].pre_weighted_sinlon_ann,
+    pre_weighted_coslon_ann[expid[i]].pre_weighted_coslon_ann,], dim='sincos')
+stats.describe(np.linalg.norm(pre_weighted_norm_sincoslon_ann[expid[i]], axis=0, keepdims=True), axis=None, nan_policy='omit')
+
+pre_weighted_norm_sincoslon_ann[expid[i]].values[:] = pre_weighted_norm_sincoslon_ann[expid[i]].values[:] / np.linalg.norm(pre_weighted_norm_sincoslon_ann[expid[i]], axis=0, keepdims=True)
+stats.describe(np.linalg.norm(pre_weighted_norm_sincoslon_ann[expid[i]], axis=0, keepdims=True), axis=None, nan_policy='omit')
+
+pre_weighted_norm_sincoslon_ann[expid[i]] = pre_weighted_norm_sincoslon_ann[expid[i]].rename('pre_weighted_norm_sincoslon_ann')
+
+pre_weighted_norm_sincoslon_ann[expid[i]].to_netcdf(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_norm_sincoslon_ann.nc'
+)
+
+
+#-------- seasonal
+
+pre_weighted_norm_sincoslon_sea[expid[i]] = xr.concat([
+    pre_weighted_sinlon_sea[expid[i]].pre_weighted_sinlon_sea,
+    pre_weighted_coslon_sea[expid[i]].pre_weighted_coslon_sea,], dim='sincos')
+stats.describe(np.linalg.norm(pre_weighted_norm_sincoslon_sea[expid[i]], axis=0, keepdims=True), axis=None, nan_policy='omit')
+
+pre_weighted_norm_sincoslon_sea[expid[i]].values[:] = pre_weighted_norm_sincoslon_sea[expid[i]].values[:] / np.linalg.norm(pre_weighted_norm_sincoslon_sea[expid[i]], axis=0, keepdims=True)
+stats.describe(np.linalg.norm(pre_weighted_norm_sincoslon_sea[expid[i]], axis=0, keepdims=True), axis=None, nan_policy='omit')
+
+pre_weighted_norm_sincoslon_sea[expid[i]] = pre_weighted_norm_sincoslon_sea[expid[i]].rename('pre_weighted_norm_sincoslon_sea')
+
+pre_weighted_norm_sincoslon_sea[expid[i]].to_netcdf(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_norm_sincoslon_sea.nc'
+)
+
+
+#-------- Annual mean
+
+pre_weighted_norm_sincoslon_am[expid[i]] = xr.concat([
+    pre_weighted_sinlon_am[expid[i]].pre_weighted_sinlon_am,
+    pre_weighted_coslon_am[expid[i]].pre_weighted_coslon_am,], dim='sincos')
+stats.describe(np.linalg.norm(pre_weighted_norm_sincoslon_am[expid[i]], axis=0, keepdims=True), axis=None, nan_policy='omit')
+
+pre_weighted_norm_sincoslon_am[expid[i]].values[:] = pre_weighted_norm_sincoslon_am[expid[i]].values[:] / np.linalg.norm(pre_weighted_norm_sincoslon_am[expid[i]], axis=0, keepdims=True)
+stats.describe(np.linalg.norm(pre_weighted_norm_sincoslon_am[expid[i]], axis=0, keepdims=True), axis=None, nan_policy='omit')
+
+pre_weighted_norm_sincoslon_am[expid[i]] = pre_weighted_norm_sincoslon_am[expid[i]].rename('pre_weighted_norm_sincoslon_am')
+
+pre_weighted_norm_sincoslon_am[expid[i]].to_netcdf(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_norm_sincoslon_am.nc'
+)
+
+
+'''
+#-------- check two ways of calculating source lon
+i = 0
+expid[i]
+pre_weighted_norm_sincoslon_am = {}
+pre_weighted_lon_am = {}
+pre_weighted_norm_sincoslon_am[expid[i]] = xr.open_dataset(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_norm_sincoslon_am.nc')
+pre_weighted_lon_am[expid[i]] = xr.open_dataset(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lon_am.nc')
+
+
+test = np.arctan2(
+    pre_weighted_norm_sincoslon_am[expid[i]].pre_weighted_norm_sincoslon_am[0],
+    pre_weighted_norm_sincoslon_am[expid[i]].pre_weighted_norm_sincoslon_am[1],
+    )  * 180 / np.pi
+
+test.values[test.values < 0] = test.values[test.values < 0] + 360
+
+(pre_weighted_lon_am[expid[i]].pre_weighted_lon_am.values == test.values).all()
+
+test1 = pre_weighted_lon_am[expid[i]].pre_weighted_lon_am.values - test.values
+wheremax = np.where(abs(test1) == np.max(abs(test1)))
+np.max(abs(test1))
+test1[wheremax]
+pre_weighted_lon_am[expid[i]].pre_weighted_lon_am.values[wheremax]
+test.values[wheremax]
+
+#-------- check the function np.linalg.norm
+(np.sqrt((pre_weighted_norm_sincoslon[expid[i]] ** 2).sum(axis=0)).values == np.linalg.norm(pre_weighted_norm_sincoslon[expid[i]], axis=0)).all()
+
+    #-------- calculate differences in normalized sin-/coslon
+    
+    # diff_pre_weighted_sincoslon_sea[expid[i+1]] = pre_weighted_norm_sincoslon_sea[expid[i+1]].pre_weighted_norm_sincoslon_sea - pre_weighted_norm_sincoslon_sea[expid[0]].pre_weighted_norm_sincoslon_sea
+    # diff_pre_weighted_sincoslon_am[expid[i+1]] = pre_weighted_norm_sincoslon_am[expid[i+1]].pre_weighted_norm_sincoslon_am - pre_weighted_norm_sincoslon_am[expid[0]].pre_weighted_norm_sincoslon_am
+    
+    #-------- calculate the corresponding differences in lon
+    
+    # diff_pre_weighted_lon_sea[expid[i+1]] = np.arctan2(
+    #     diff_pre_weighted_sincoslon_sea[expid[i+1]][0],
+    #     diff_pre_weighted_sincoslon_sea[expid[i+1]][1]) * 180 / np.pi
+    # diff_pre_weighted_lon_sea[expid[i+1]] = diff_pre_weighted_lon_sea[expid[i+1]].rename('diff_pre_weighted_lon_sea')
+    # diff_pre_weighted_lon_sea[expid[i+1]].to_netcdf(
+    #     exp_odir + expid[i+1] + '/analysis/echam/' + expid[i+1] + '.diff_pre_weighted_lon_sea.nc'
+    # )
+    
+    # diff_pre_weighted_lon_am[expid[i+1]] = np.arctan2(
+    #     diff_pre_weighted_sincoslon_am[expid[i+1]][0],
+    #     diff_pre_weighted_sincoslon_am[expid[i+1]][1]) * 180 / np.pi
+    # diff_pre_weighted_lon_am[expid[i+1]] = diff_pre_weighted_lon_am[expid[i+1]].rename('diff_pre_weighted_lon_am')
+    # diff_pre_weighted_lon_am[expid[i+1]].to_netcdf(
+    #     exp_odir + expid[i+1] + '/analysis/echam/' + expid[i+1] + '.diff_pre_weighted_lon_am.nc'
+    # )
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # region calculate source lat - 58 lat bins
 
 i=0
@@ -94,11 +262,11 @@ lat[48:]
 
 '''
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
-# =============================================================================
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # region plot Jun/Sep/Dec source lat
 
 #-------- import data
@@ -238,11 +406,11 @@ fig.savefig(output_png)
 '''
 '''
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
-# =============================================================================
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # region plot lat initial version
 
 i = 0
@@ -288,11 +456,11 @@ fig.savefig(
 
 
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
-# =============================================================================
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # region plot am/DJF/JJA source lat
 
 #-------- import data
@@ -427,11 +595,11 @@ fig.savefig(output_png)
 '''
 '''
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
-# =============================================================================
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # region calculate source SST - 58 SST bins
 
 i = 0
@@ -506,11 +674,11 @@ pre_weighted_tsw_am[expid[i]].to_netcdf(
 )
 
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
-# =============================================================================
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # region plot 36th month source SST, two scaling factors
 
 
@@ -610,11 +778,11 @@ fig.savefig(output_png)
 '''
 '''
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
-# =============================================================================
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # region plot am/DJF/JJA source SST
 
 #-------- import data
@@ -748,11 +916,11 @@ fig.subplots_adjust(left=0.04, right = 0.99, bottom = fm_bottom, top = 0.96)
 fig.savefig(output_png)
 
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
-# =============================================================================
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # region plot source SST - SST bins
 
 
@@ -817,10 +985,10 @@ fig.savefig(output_png)
 
 
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region plot source SST - scaling tagmap with SST
 
 run_length = '12'
@@ -977,11 +1145,11 @@ fig.savefig(
     '0_backup/trial2.png')
 '''
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
-# =============================================================================
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # region refined calculation of seasonal average
 
 #-------------------------------- scaled SST
@@ -1179,10 +1347,10 @@ fig.savefig(output_png)
 
 
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region create tagmap_nhsh_qg1
 
 echam_t63_slm = xr.open_dataset(
@@ -1226,10 +1394,10 @@ np.max(tagmap_nhsh_qg1.tagmap[3:5, :, :].sum(axis=0))
 np.min(tagmap_nhsh_qg1.tagmap[3:5, :, :].sum(axis=0))
 '''
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region create tagmap_nhsh_qg2
 
 echam_t63_slm = xr.open_dataset(
@@ -1271,10 +1439,10 @@ np.max(tagmap_nhsh_qg0.tagmap[3:5, :, :].sum(axis=0))
 np.min(tagmap_nhsh_qg0.tagmap[3:5, :, :].sum(axis=0))
 '''
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region create tagmap_nhsh_qg3
 
 echam_t63_slm = xr.open_dataset(
@@ -1314,10 +1482,10 @@ tagmap_nhsh_qg3.to_netcdf(
 '''
 '''
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region create tagmap_nhsh_qg4
 
 echam_t63_slm = xr.open_dataset(
@@ -1357,10 +1525,10 @@ tagmap_nhsh_qg4.to_netcdf(
 '''
 '''
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region create tagmap_g_nhsh_p1
 
 echam_t63_slm = xr.open_dataset(
@@ -1423,10 +1591,10 @@ stats.describe(tagmap_g_nhsh_ew.tagmap.sel(level=5) + tagmap_g_nhsh_ew.tagmap.se
 stats.describe(tagmap_g_nhsh_ew.tagmap.sel(level=7) + tagmap_g_nhsh_ew.tagmap.sel(level=8), axis=None)
 '''
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region create tagmap_g_nhsh_1p
 
 echam_t63_slm = xr.open_dataset(
@@ -1482,10 +1650,10 @@ stats.describe(tagmap_g_nhsh_1p.tagmap.sel(level=5) + tagmap_g_nhsh_1p.tagmap.se
 stats.describe(tagmap_g_nhsh_1p.tagmap.sel(level=7) + tagmap_g_nhsh_1p.tagmap.sel(level=8), axis=None)
 '''
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region create tagmap_nh_s
 
 echam_t63_slm = xr.open_dataset(
@@ -1522,10 +1690,10 @@ cdo --reduce_dim -selvar,slm /work/ollie/qigao001/output/awiesm-2.1-wiso/pi_fina
 
 '''
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region create tagmap_nh_l
 
 echam_t63_slm = xr.open_dataset(
@@ -1560,10 +1728,10 @@ tagmap_nh_l.to_netcdf(
 '''
 '''
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region create tagmap_g_nhsh_sl
 
 echam_t63_slm = xr.open_dataset(
@@ -1613,10 +1781,10 @@ tagmap_g_nhsh_sl.to_netcdf(
 
 
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region create tagmap_g
 
 echam_t63_slm = xr.open_dataset(
@@ -1647,10 +1815,10 @@ tagmap_g.to_netcdf(
 
 
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region create tagmap_g2
 
 echam_t63_slm = xr.open_dataset(
@@ -1682,10 +1850,10 @@ tagmap_g2.to_netcdf(
 
 
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region create tagmap_g2i
 
 echam_t63_slm = xr.open_dataset(
@@ -1717,10 +1885,10 @@ tagmap_g2i.to_netcdf(
 
 
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region attempt to plot Fesom2 original mesh
 
 import pyfesom2 as pf
@@ -1850,10 +2018,10 @@ fig.savefig('figures/0_test/trial5.png')
 
 
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region Don't run Annual mean siconc in AWI-CM-1-1-MR, historical, r1i1p1f1
 
 # Import data
@@ -1960,10 +2128,10 @@ stats.describe(am_siconc_awc_mr_hi_r1.siconc, axis=None, nan_policy='omit')
 stats.describe(am_siconc_awc_mr_hi_r1_80.siconc, axis=None, nan_policy='omit')
 '''
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region Don't run Annual mean siconc in AWI-CM-1-1-MR, historical, r1i1p1f1
 
 # Import data
@@ -2052,10 +2220,10 @@ stats.describe(am_siconc_awc_mr_hi_r1.siconc, axis=None, nan_policy='omit')
 stats.describe(am_siconc_awc_mr_hi_r1_80.siconc, axis=None, nan_policy='omit')
 '''
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # region Handling CloudSat raw data
 
 # Using deepice_pynio environment
@@ -2119,5 +2287,5 @@ cloudsat2007001 = rasterio.open(
 )
 '''
 # endregion
-# =============================================================================
+# -----------------------------------------------------------------------------
 

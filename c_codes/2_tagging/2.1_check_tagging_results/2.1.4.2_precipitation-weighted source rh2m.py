@@ -169,8 +169,8 @@ pre_weighted_rh2m_ann[expid[i]].to_netcdf(
 #---------------- seasonal values
 
 # spin up: one year
-ocean_pre_sea[expid[i]] = ocean_pre[expid[i]][12:].groupby('time.season').sum(dim="time", skipna=True)
-rh2m_scaled_pre_sea[expid[i]] = rh2m_scaled_pre[expid[i]][12:].groupby('time.season').sum(dim="time", skipna=True)
+ocean_pre_sea[expid[i]] = ocean_pre[expid[i]][120:].groupby('time.season').sum(dim="time", skipna=True)
+rh2m_scaled_pre_sea[expid[i]] = rh2m_scaled_pre[expid[i]][120:].groupby('time.season').sum(dim="time", skipna=True)
 
 pre_weighted_rh2m_sea[expid[i]] = rh2m_scaled_pre_sea[expid[i]] / ocean_pre_sea[expid[i]] * (maxrh2m[expid[i]] - minrh2m[expid[i]]) + minrh2m[expid[i]]
 pre_weighted_rh2m_sea[expid[i]].values[ocean_pre_sea[expid[i]].values < 1e-9] = np.nan
@@ -183,8 +183,8 @@ pre_weighted_rh2m_sea[expid[i]].to_netcdf(
 #---------------- annual mean values
 
 # spin up: one year
-ocean_pre_am[expid[i]] = ocean_pre[expid[i]][12:].mean(dim="time", skipna=True)
-rh2m_scaled_pre_am[expid[i]] = rh2m_scaled_pre[expid[i]][12:].mean(dim="time", skipna=True)
+ocean_pre_am[expid[i]] = ocean_pre[expid[i]][120:].mean(dim="time", skipna=True)
+rh2m_scaled_pre_am[expid[i]] = rh2m_scaled_pre[expid[i]][120:].mean(dim="time", skipna=True)
 
 pre_weighted_rh2m_am[expid[i]] = rh2m_scaled_pre_am[expid[i]] / ocean_pre_am[expid[i]] * (maxrh2m[expid[i]] - minrh2m[expid[i]]) + minrh2m[expid[i]]
 pre_weighted_rh2m_am[expid[i]].values[ocean_pre_am[expid[i]].values < 1e-9] = np.nan

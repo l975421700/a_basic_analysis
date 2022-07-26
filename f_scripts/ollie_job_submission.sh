@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH -p mpp                 # Specify partition name
-#SBATCH --time=00:30:00        # Set a limit on the total run time
+#SBATCH -p mpp
+#SBATCH --time=00:30:00
 #SBATCH -o job.out
 #SBATCH -e job.err
-#SBATCH --ntasks=1             # Specify max. number of tasks to be invoked
+#SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --array=2009-2029
+#SBATCH --array=2008-2026
 #SBATCH -o %A_%a.out
 #SBATCH -e %A_%a.err
 

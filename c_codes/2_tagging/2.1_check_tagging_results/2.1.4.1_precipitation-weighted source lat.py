@@ -175,8 +175,8 @@ pre_weighted_lat_ann[expid[i]].to_netcdf(
 
 #---------------- seasonal values
 
-ocean_pre_sea[expid[i]] = ocean_pre[expid[i]][12:].groupby('time.season').sum(dim="time", skipna=True)
-lat_scaled_pre_sea[expid[i]] = lat_scaled_pre[expid[i]][12:].groupby('time.season').sum(dim="time", skipna=True)
+ocean_pre_sea[expid[i]] = ocean_pre[expid[i]][120:].groupby('time.season').sum(dim="time", skipna=True)
+lat_scaled_pre_sea[expid[i]] = lat_scaled_pre[expid[i]][120:].groupby('time.season').sum(dim="time", skipna=True)
 
 pre_weighted_lat_sea[expid[i]] = lat_scaled_pre_sea[expid[i]] / ocean_pre_sea[expid[i]] * (maxlat[expid[i]] - minlat[expid[i]]) + minlat[expid[i]]
 pre_weighted_lat_sea[expid[i]].values[ocean_pre_sea[expid[i]].values < 1e-9] = np.nan
@@ -188,8 +188,8 @@ pre_weighted_lat_sea[expid[i]].to_netcdf(
 
 #---------------- annual mean values
 
-ocean_pre_am[expid[i]] = ocean_pre[expid[i]][12:].mean(dim="time", skipna=True)
-lat_scaled_pre_am[expid[i]] = lat_scaled_pre[expid[i]][12:].mean(dim="time", skipna=True)
+ocean_pre_am[expid[i]] = ocean_pre[expid[i]][120:].mean(dim="time", skipna=True)
+lat_scaled_pre_am[expid[i]] = lat_scaled_pre[expid[i]][120:].mean(dim="time", skipna=True)
 
 pre_weighted_lat_am[expid[i]] = lat_scaled_pre_am[expid[i]] / ocean_pre_am[expid[i]] * (maxlat[expid[i]] - minlat[expid[i]]) + minlat[expid[i]]
 pre_weighted_lat_am[expid[i]].values[ocean_pre_am[expid[i]].values < 1e-9] = np.nan

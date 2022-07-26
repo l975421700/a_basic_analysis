@@ -7,6 +7,7 @@
 import glob
 import warnings
 warnings.filterwarnings('ignore')
+import os
 
 # data analysis
 import numpy as np
@@ -57,15 +58,13 @@ from a_basic_analysis.b_module.namelist import (
 
 
 # -----------------------------------------------------------------------------
-# -----------------------------------------------------------------------------
-# region import output
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-
 expid = [
-    'pi_echam6_1y_209_3.60',
-    # 'pi_echam6_1y_204_3.60'
+    'pi_m_402_4.7',
     ]
+
+# region import output
 
 exp_org_o = {}
 
@@ -74,16 +73,204 @@ for i in range(len(expid)):
     print('#-------- ' + expid[i])
     exp_org_o[expid[i]] = {}
     
-    ## echam
-    exp_org_o[expid[i]]['echam'] = xr.open_dataset(
-        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_echam.nc')
     
-    ## wiso
-    exp_org_o[expid[i]]['wiso'] = xr.open_dataset(
+    file_exists = os.path.exists(
         exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_wiso.nc')
+    
+    if (file_exists):
+        exp_org_o[expid[i]]['wiso'] = xr.open_dataset(
+            exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_wiso.nc')
+    else:
+        filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*monthly.01_wiso.nc'))
+        exp_org_o[expid[i]]['wiso'] = xr.open_mfdataset(filenames_wiso, data_vars='minimal', coords='minimal', parallel=True)
 
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+
+itag = 10
+ntags = [0, 0, 0, 0, 0,   3, 3, 3, 3, 3,   7]
+
+# region set indices for specific set of tracers
+
+kwiso2 = 3
+
+if (itag == 0):
+    kstart = kwiso2 + 0
+    kend   = kwiso2 + ntags[0]
+else:
+    kstart = kwiso2 + sum(ntags[:itag])
+    kend   = kwiso2 + sum(ntags[:(itag+1)])
+
+print(kstart); print(kend)
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region calculate precipitation source fractions: pi_geo_tagmap
+
+# Antarctica, SH sea ice, other Land, other Ocean
+
+i = 0
+expid[i]
+
+pre_alltagged_am  = {}
+pre_Antarctica_am = {}
+pre_SHseaice_am   = {}
+pre_oland_am      = {}
+pre_oocean_am     = {}
+
+pre_Antarctica_am_frc = {}
+pre_SHseaice_am_frc   = {}
+pre_oland_am_frc      = {}
+pre_oocean_am_frc     = {}
+
+pre_alltagged_am[expid[i]]  = ((exp_org_o[expid[i]]['wiso'].wisoaprl[120:].sel(wisotype=slice(kstart+1, kend)) + exp_org_o[expid[i]]['wiso'].wisoaprc[120:].sel(wisotype=slice(kstart+1, kend))).sum(dim='wisotype')).mean(dim='time')
+
+pre_Antarctica_am[expid[i]] = ((exp_org_o[expid[i]]['wiso'].wisoaprl[120:].sel(wisotype=kstart+3) + exp_org_o[expid[i]]['wiso'].wisoaprc[120:].sel(wisotype=kstart+3))).mean(dim='time')
+
+pre_SHseaice_am[expid[i]]   = ((exp_org_o[expid[i]]['wiso'].wisoaprl[120:].sel(wisotype=kend) + exp_org_o[expid[i]]['wiso'].wisoaprc[120:].sel(wisotype=kend))).mean(dim='time')
+
+pre_oland_am[expid[i]]      = ((exp_org_o[expid[i]]['wiso'].wisoaprl[120:].sel(wisotype=slice(kstart+1, kstart+2)) + exp_org_o[expid[i]]['wiso'].wisoaprc[120:].sel(wisotype=slice(kstart+1, kstart+2))).sum(dim='wisotype')).mean(dim='time')
+
+pre_oocean_am[expid[i]]     = ((exp_org_o[expid[i]]['wiso'].wisoaprl[120:].sel(wisotype=slice(kstart+4, kstart+6)) + exp_org_o[expid[i]]['wiso'].wisoaprc[120:].sel(wisotype=slice(kstart+4, kstart+6))).sum(dim='wisotype')).mean(dim='time')
+
+
+# np.max(abs(pre_alltagged_am[expid[i]].values - (pre_Antarctica_am[expid[i]].values + pre_SHseaice_am[expid[i]].values + pre_oland_am[expid[i]].values + pre_oocean_am[expid[i]].values)))
+# np.min(pre_alltagged_am[expid[i]].values)
+
+
+pre_Antarctica_am_frc[expid[i]] = pre_Antarctica_am[expid[i]] / pre_alltagged_am[expid[i]] * 100
+pre_Antarctica_am_frc[expid[i]].to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_Antarctica_am_frc.nc')
+
+pre_SHseaice_am_frc[expid[i]] = pre_SHseaice_am[expid[i]] / pre_alltagged_am[expid[i]] * 100
+pre_SHseaice_am_frc[expid[i]].to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_SHseaice_am_frc.nc')
+
+pre_oland_am_frc[expid[i]] = pre_oland_am[expid[i]] / pre_alltagged_am[expid[i]] * 100
+pre_oland_am_frc[expid[i]].to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_oland_am_frc.nc')
+
+pre_oocean_am_frc[expid[i]] = pre_oocean_am[expid[i]] / pre_alltagged_am[expid[i]] * 100
+pre_oocean_am_frc[expid[i]].to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_oocean_am_frc.nc')
+
+
+
+
+'''
+test = pre_alltagged_am[expid[i]].values - (pre_Antarctica_am[expid[i]].values + pre_SHseaice_am[expid[i]].values + pre_oland_am[expid[i]].values + pre_oocean_am[expid[i]].values)
+wheremax = np.where(abs(test) == np.max(abs(test)))
+np.max(abs(test))
+test[wheremax]
+pre_alltagged_am[expid[i]].values[wheremax]
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot precipitation source fractions pi_geo_tagmap
+
+lon = exp_org_o[expid[i]]['wiso'].lon
+lat = exp_org_o[expid[i]]['wiso'].lat
+
+#-------- precipitation from Antarctica
+
+pltlevel = np.arange(0, 12.01, 1)
+pltticks = np.arange(0, 12.01, 2)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+pltcmp = cm.get_cmap('Purples', len(pltlevel)-1)
+
+fig, ax = hemisphere_plot(northextent=-60)
+
+plt_cmp = ax.pcolormesh(
+    lon, lat, pre_Antarctica_am_frc[expid[i]],
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
+    pad=0.02, fraction=0.2,
+    )
+cbar.ax.set_xlabel('Fraction of annual mean precipitation\nfrom Antarctica [%]', linespacing=2)
+fig.savefig('figures/6_awi/6.1_echam6/6.1.2_precipitation_sources/6.1.2.0.1.0_Antarctica_' + expid[i] + '_precipitation_from_Antarctica.png')
+
+
+#-------- SH sea ice
+
+pltlevel = np.arange(0, 40.01, 5)
+pltticks = np.arange(0, 40.01, 10)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+pltcmp = cm.get_cmap('Blues', len(pltlevel)-1)
+
+fig, ax = hemisphere_plot(northextent=-60)
+
+plt_cmp = ax.pcolormesh(
+    lon, lat, pre_SHseaice_am_frc[expid[i]],
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
+    pad=0.02, fraction=0.2,
+    )
+cbar.ax.set_xlabel('Fraction of annual mean precipitation\nfrom SH sea ice covered area [%]', linespacing=2)
+fig.savefig('figures/6_awi/6.1_echam6/6.1.2_precipitation_sources/6.1.2.0.1.1_Antarctica_' + expid[i] + '_precipitation_from_SHseaice.png')
+
+
+#-------- other Land
+
+pltlevel = np.arange(0, 12.01, 1)
+pltticks = np.arange(0, 12.01, 2)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+pltcmp = cm.get_cmap('Purples', len(pltlevel)-1)
+
+fig, ax = hemisphere_plot(northextent=-60)
+
+plt_cmp = ax.pcolormesh(
+    lon, lat, pre_oland_am_frc[expid[i]],
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
+    pad=0.02, fraction=0.2,
+    )
+cbar.ax.set_xlabel('Fraction of annual mean precipitation\nfrom land excl. Antarctica [%]', linespacing=2)
+fig.savefig('figures/6_awi/6.1_echam6/6.1.2_precipitation_sources/6.1.2.0.1.2_Antarctica_' + expid[i] + '_precipitation_from_oland.png')
+
+
+#-------- other Ocean
+
+pltlevel = np.arange(50, 100.01, 5)
+pltticks = np.arange(50, 100.01, 10)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+pltcmp = cm.get_cmap('Greens', len(pltlevel)-1)
+
+fig, ax = hemisphere_plot(northextent=-60)
+
+plt_cmp = ax.pcolormesh(
+    lon, lat, pre_oocean_am_frc[expid[i]],
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
+    pad=0.02, fraction=0.2,
+    )
+cbar.ax.set_xlabel('Fraction of annual mean precipitation\nfrom ocean excl. SH sea ice covered area [%]', linespacing=2)
+fig.savefig('figures/6_awi/6.1_echam6/6.1.2_precipitation_sources/6.1.2.0.1.3_Antarctica_' + expid[i] + '_precipitation_from_oocean.png')
+
+
+(pre_Antarctica_am_frc[expid[i]] + pre_SHseaice_am_frc[expid[i]] + pre_oland_am_frc[expid[i]] + pre_oocean_am_frc[expid[i]]).all().values
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
 
 
 # -----------------------------------------------------------------------------

@@ -127,16 +127,6 @@ minsst = {}
 maxsst = {}
 minsst['pi_echam6_1y_204_3.60'] = 260
 maxsst['pi_echam6_1y_204_3.60'] = 310
-minsst['pi_echam6_1y_205_3.60'] = 200
-maxsst['pi_echam6_1y_205_3.60'] = 400
-minsst['pi_echam6_1y_206_3.60'] = 0
-maxsst['pi_echam6_1y_206_3.60'] = 400
-minsst['pi_echam6_1y_207_3.60'] = 0
-maxsst['pi_echam6_1y_207_3.60'] = 600
-minsst['pi_echam6_1y_210_3.60'] = 0
-maxsst['pi_echam6_1y_210_3.60'] = 1000
-minsst['pi_echam6_1y_211_3.60'] = 0
-maxsst['pi_echam6_1y_211_3.60'] = 2000
 minsst['pi_m_402_4.7'] = 268.15
 maxsst['pi_m_402_4.7'] = 318.15
 i = 0
@@ -181,8 +171,8 @@ pre_weighted_tsw_ann[expid[i]].to_netcdf(
 #---------------- seasonal values
 
 # spin up: one year
-ocean_pre_sea[expid[i]] = ocean_pre[expid[i]][12:].groupby('time.season').sum(dim="time", skipna=True)
-sst_scaled_pre_sea[expid[i]] = sst_scaled_pre[expid[i]][12:].groupby('time.season').sum(dim="time", skipna=True)
+ocean_pre_sea[expid[i]] = ocean_pre[expid[i]][120:].groupby('time.season').sum(dim="time", skipna=True)
+sst_scaled_pre_sea[expid[i]] = sst_scaled_pre[expid[i]][120:].groupby('time.season').sum(dim="time", skipna=True)
 
 pre_weighted_tsw_sea[expid[i]] = sst_scaled_pre_sea[expid[i]] / ocean_pre_sea[expid[i]] * (maxsst[expid[i]] - minsst[expid[i]]) + minsst[expid[i]] - zerok
 pre_weighted_tsw_sea[expid[i]].values[ocean_pre_sea[expid[i]].values < 1e-9] = np.nan
@@ -195,8 +185,8 @@ pre_weighted_tsw_sea[expid[i]].to_netcdf(
 #---------------- annual mean values
 
 # spin up: one year
-ocean_pre_am[expid[i]] = ocean_pre[expid[i]][12:].mean(dim="time", skipna=True)
-sst_scaled_pre_am[expid[i]] = sst_scaled_pre[expid[i]][12:].mean(dim="time", skipna=True)
+ocean_pre_am[expid[i]] = ocean_pre[expid[i]][120:].mean(dim="time", skipna=True)
+sst_scaled_pre_am[expid[i]] = sst_scaled_pre[expid[i]][120:].mean(dim="time", skipna=True)
 
 pre_weighted_tsw_am[expid[i]] = sst_scaled_pre_am[expid[i]] / ocean_pre_am[expid[i]] * (maxsst[expid[i]] - minsst[expid[i]]) + minsst[expid[i]] - zerok
 pre_weighted_tsw_am[expid[i]].values[ocean_pre_am[expid[i]].values < 1e-9] = np.nan
@@ -648,6 +638,51 @@ fig.savefig(output_png)
 
 
 # endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region check correlation coefficient between source SST and lat
+
+#-------- import data
+
+pre_weighted_tsw = {}
+pre_weighted_tsw_ann = {}
+pre_weighted_tsw_sea = {}
+pre_weighted_tsw_am = {}
+
+for i in range(len(expid)):
+    print('#-------- ' + expid[i])
+    pre_weighted_tsw[expid[i]] = xr.open_dataset(
+        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_tsw.nc')
+    pre_weighted_tsw_ann[expid[i]] = xr.open_dataset(
+        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_tsw_ann.nc')
+    pre_weighted_tsw_sea[expid[i]] = xr.open_dataset(
+        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_tsw_sea.nc')
+    pre_weighted_tsw_am[expid[i]] = xr.open_dataset(
+        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_tsw_am.nc')
+
+pre_weighted_lat = {}
+pre_weighted_lat_ann = {}
+pre_weighted_lat_sea = {}
+pre_weighted_lat_am = {}
+
+for i in range(len(expid)):
+    print('#-------- ' + expid[i])
+    pre_weighted_lat[expid[i]] = xr.open_dataset(
+        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lat.nc')
+    pre_weighted_lat_ann[expid[i]] = xr.open_dataset(
+        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lat_ann.nc')
+    pre_weighted_lat_sea[expid[i]] = xr.open_dataset(
+        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lat_sea.nc')
+    pre_weighted_lat_am[expid[i]] = xr.open_dataset(
+        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lat_am.nc')
+
+
+pre_weighted_lat_am[expid[i]].pre_weighted_lat_am.sel(lat=slice(-60, -90))
+pre_weighted_tsw_am[expid[i]].pre_weighted_tsw_am.sel(lat=slice(-60, -90))
+
+# end region
 # -----------------------------------------------------------------------------
 
 

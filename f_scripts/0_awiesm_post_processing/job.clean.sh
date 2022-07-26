@@ -1,6 +1,6 @@
 
 output_dir='output/echam-6.3.05p2-wiso/pi'
-expid='pi_m_413_4.10'
+expid='pi_m_411_4.9'
 
 echo $'\n#-------- clean model output: ' ${expid}
 
@@ -10,19 +10,19 @@ cd $WORK
 cd ${output_dir}/${expid}/
 
 
-echo '#---- clean config files'
-rm config/${expid}_filelist_*
-rm config/echam/namelist.echam_*
-rm config/echam/${expid}_filelist_*
-rm config/hdmodel/${expid}_filelist_*
-rm config/jsbach/${expid}_filelist_*
+# echo '#---- clean config files'
+# rm config/${expid}_filelist_*
+# # rm config/echam/namelist.echam_*
+# rm config/echam/${expid}_filelist_*
+# rm config/hdmodel/${expid}_filelist_*
+# rm config/jsbach/${expid}_filelist_*
 
-echo '#---- clean log files'
-rm log/*observe_compute*.log
-rm log/*prepcompute*.log
-rm log/*tidy*.log
-rm log/*_echam.log
-rm log/run_folders.log
+# echo '#---- clean log files'
+# rm log/*observe_compute*.log
+# rm log/*prepcompute*.log
+# rm log/*tidy*.log
+# rm log/*_echam.log
+# rm log/run_folders.log
 
 echo '#---- clean echam6 output'
 rm outdata/echam/${expid}_*.01_accw*
@@ -44,8 +44,8 @@ rm outdata/jsbach/${expid}_*.01_jsbach*
 rm outdata/jsbach/${expid}_*.01_la_wiso*
 rm outdata/jsbach/${expid}_*.01_land*
 
-echo '#---- clean runfolders'
-rm -rf run_*
+# echo '#---- clean runfolders'
+# rm -rf run_*
 
 
 echo '#---- clean unknown output'
