@@ -162,9 +162,8 @@ plt_windplev_diff_cbar.ax.set_xlabel(
     'Annual/seasonal mean 500 hPa wind speed difference [$m\;s^{-1}$]')
 
 fig.subplots_adjust(left=0.04, right=0.99, bottom=0.15, top=0.95)
-fig.savefig(
-    'figures/2_cmip6/2.0_hist/2.0.3_windplev/2.0.3.0_sh_windplev_am_sm_comparison.png')
-
+# fig.savefig('figures/2_cmip6/2.0_hist/2.0.3_windplev/2.0.3.0_sh_windplev_am_sm_comparison.png')
+# !!! wrong
 
 '''
 stats.describe(((hist_am_windplev['ERA5'].u.sel(level=500).squeeze() ** 2 + hist_am_windplev['ERA5'].v.sel(level=500).squeeze() ** 2) ** 0.5).sel(lat=slice(-90, -45)), axis=None)
