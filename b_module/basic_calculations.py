@@ -1,4 +1,161 @@
 
+
+# -----------------------------------------------------------------------------
+# region Function to calculate monthly/seasonal/annual (mean) values
+
+def mon_sea_ann(
+    var_daily = None, var_monthly = None, skipna = True,
+    ):
+    '''
+    #---- Input
+    var_daily:   xarray.DataArray, daily variables, must have time dimension
+    var_monthly: xarray.DataArray, monthly variables, must have time dimension
+    
+    #---- Output
+    var_alltime
+    
+    '''
+    
+    var_alltime = {}
+    
+    if var_monthly is None:
+        var_alltime['daily'] = var_daily.copy()
+        
+        #-------- monthly
+        var_alltime['mon'] = var_daily.resample({'time': '1M'}).mean(skipna=skipna).compute()
+        
+        #-------- seasonal
+        var_alltime['sea'] = var_daily.resample({'time': 'Q-FEB'}).mean(skipna=skipna)[1:-1].compute()
+        
+        #-------- annual
+        var_alltime['ann'] = var_daily.resample({'time': '1Y'}).mean(skipna=skipna).compute()
+        
+        #-------- monthly mean
+        var_alltime['mm'] = var_alltime['mon'].groupby('time.month').mean(skipna=skipna).compute()
+        
+        #-------- seasonal mean
+        var_alltime['sm'] = var_alltime['sea'].groupby('time.season').mean(skipna=skipna).compute()
+        
+        #-------- annual mean
+        var_alltime['am'] = var_alltime['ann'].mean(dim='time', skipna=skipna).compute()
+        
+    # else:
+        #-------- monthly
+        
+        
+        #-------- seasonal
+        
+        
+        #-------- annual
+        
+        
+        #-------- monthly mean
+        
+        
+        #-------- seasonal mean
+        
+        
+        #-------- annual mean
+        
+    
+    return(var_alltime)
+
+
+'''
+#-------------------------------- check with daily values
+#-------- monthly pre
+
+ocean_pre_mon = ocean_pre.resample({'time': '1M'}).mean()
+var_scaled_pre_mon = var_scaled_pre.resample({'time': '1M'}).mean()
+
+#-------- seasonal pre
+
+ocean_pre_sea = ocean_pre.resample({'time': 'Q-FEB'}).mean()[1:-1]
+var_scaled_pre_sea = var_scaled_pre.resample({'time': 'Q-FEB'}).mean()[1:-1]
+
+#-------- annual pre
+ocean_pre_ann = ocean_pre.resample({'time': '1Y'}).mean()
+var_scaled_pre_ann = var_scaled_pre.resample({'time': '1Y'}).mean()
+
+#-------- monthly mean pre
+ocean_pre_mm = ocean_pre_mon.groupby('time.month').mean()
+var_scaled_pre_mm = var_scaled_pre_mon.groupby('time.month').mean()
+
+
+#-------- seasonal mean pre
+ocean_pre_sm = ocean_pre_sea.groupby('time.season').mean()
+var_scaled_pre_sm = var_scaled_pre_sea.groupby('time.season').mean()
+
+#-------- annual mean pre
+ocean_pre_am = ocean_pre_ann.mean(dim='time')
+var_scaled_pre_am = var_scaled_pre_ann.mean(dim='time')
+
+(ocean_pre_alltime['mon'] == ocean_pre_mon).all()
+(ocean_pre_alltime['sea'] == ocean_pre_sea).all()
+(ocean_pre_alltime['ann'] == ocean_pre_ann).all()
+(ocean_pre_alltime['mm'] == ocean_pre_mm).all()
+(ocean_pre_alltime['sm'] == ocean_pre_sm).all()
+(ocean_pre_alltime['am'] == ocean_pre_am).all()
+(var_scaled_pre_alltime['mon'] == var_scaled_pre_mon).all()
+(var_scaled_pre_alltime['sea'] == var_scaled_pre_sea).all()
+(var_scaled_pre_alltime['ann'] == var_scaled_pre_ann).all()
+(var_scaled_pre_alltime['mm'] == var_scaled_pre_mm).all()
+(var_scaled_pre_alltime['sm'] == var_scaled_pre_sm).all()
+(var_scaled_pre_alltime['am'] == var_scaled_pre_am).all()
+
+
+#-------------------------------- minor checks during calculation
+
+#---- monthly
+ocean_pre[-31:, 30, 30].values.mean()
+ocean_pre.resample({'time': '1M'}).mean()[-1, 30, 30].values
+
+var_scaled_pre[-31:, 30, 30].values.mean()
+var_scaled_pre.resample({'time': '1M'}).mean()[-1, 30, 30].values
+
+#---- seasonally
+ocean_pre[:60, 30, 30].values.mean()
+ocean_pre.resample({'time': 'Q-FEB'}).mean()[0, 30, 30].values
+
+ocean_pre[-31:, 30, 30].values.mean()
+ocean_pre.resample({'time': 'Q-FEB'}).mean()[-1, 30, 30].values
+# ocean_pre.resample({'time': 'QS-DEC'}).mean()
+
+var_scaled_pre[:60, 30, 30].values.mean()
+var_scaled_pre.resample({'time': 'Q-FEB'}).mean()[0, 30, 30].values
+
+var_scaled_pre[-31:, 30, 30].values.mean()
+var_scaled_pre.resample({'time': 'Q-FEB'}).mean()[-1, 30, 30].values
+
+#---- annual
+ocean_pre.resample({'time': '1Y'}).mean()[0, 40, 50].values
+ocean_pre[:366, 40, 50].mean().values
+var_scaled_pre.resample({'time': '1Y'}).mean()[0, 40, 50].values
+var_scaled_pre[:366, 40, 50].mean().values
+
+#---- monthly mean
+ocean_pre_mon.sel(time=(ocean_pre_mon.time.dt.month==6).values)[:, 30, 30].mean().values
+ocean_pre_mon.groupby('time.month').mean()[5, 30, 30].values
+var_scaled_pre_mon.sel(time=(var_scaled_pre_mon.time.dt.month==6).values)[:, 30, 30].mean().values
+var_scaled_pre_mon.groupby('time.month').mean()[5, 30, 30].values
+
+#---- seasonal mean
+ocean_pre_sea.sel(time=(ocean_pre_sea.time.dt.month==8).values)[:, 30, 30].mean().values
+ocean_pre_sm.sel(season='JJA')[30,30].values
+var_scaled_pre_sea.sel(time=(var_scaled_pre_sea.time.dt.month==8).values)[:, 30, 30].mean().values
+var_scaled_pre_sm.sel(season='JJA')[30,30].values
+
+#---- annual mean
+ocean_pre_ann.mean(dim='time')[30, 30].values
+ocean_pre_ann[:, 30, 30].mean().values
+var_scaled_pre_ann.mean(dim='time')[30, 30].values
+var_scaled_pre_ann[:, 30, 30].mean().values
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
 # -----------------------------------------------------------------------------
 # region functions to calculate monthly/seasonal/annual weighted average
 

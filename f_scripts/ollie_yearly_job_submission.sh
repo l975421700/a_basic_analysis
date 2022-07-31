@@ -5,7 +5,7 @@
 #SBATCH -e job.err
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --array=2008-2026
+#SBATCH --array=2000-2029
 #SBATCH -o %A_%a.out
 #SBATCH -e %A_%a.err
 

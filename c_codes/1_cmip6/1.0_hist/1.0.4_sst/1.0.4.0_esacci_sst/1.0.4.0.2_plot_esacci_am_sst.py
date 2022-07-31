@@ -52,7 +52,7 @@ from a_basic_analysis.b_module.namelist import (
 # -----------------------------------------------------------------------------
 # region import hist am sst
 
-hist_sst_dir = '/home/users/qino/bas_palaeoclim_qino/scratch/cmip6/hist/sst/'
+hist_sst_dir = 'scratch/cmip6/hist/sst/'
 hist_sst_ds = ['ESACCI', ]
 
 hist_am_sst = {}
@@ -64,8 +64,8 @@ hist_am_sst['ESACCI_rg_echam6_t63_trim'] = xr.open_dataset(hist_sst_dir + 'sst_m
 
 cell_area = {}
 
-cell_area['cdo_rg1'] = xr.open_dataset('/home/users/qino/bas_palaeoclim_qino/others/one_degree_grids_cdo_area.nc')
-cell_area['echam6_t63'] = xr.open_dataset('/home/users/qino/bas_palaeoclim_qino/others/land_sea_masks/ECHAM6_T63_slm_area.nc')
+cell_area['cdo_rg1'] = xr.open_dataset('others/one_degree_grids_cdo_area.nc')
+cell_area['echam6_t63'] = xr.open_dataset('others/land_sea_masks/ECHAM6_T63_slm_area.nc')
 
 
 '''
@@ -142,9 +142,9 @@ fig.savefig(
 # region check trimed land sea mask
 # check
 slm = xr.open_dataset(
-    '/home/users/qino/bas_palaeoclim_qino/others/land_sea_masks/ECHAM6_T63_slm.nc')
+    'others/land_sea_masks/ECHAM6_T63_slm.nc')
 trim_sst = xr.open_dataset(
-    '/home/users/qino/bas_palaeoclim_qino/scratch/cmip6/hist/sst/sst_mon_ESACCI-2.1_198201_201612_am_rg_echam6_t63_slm_trim.nc')
+    'scratch/cmip6/hist/sst/sst_mon_ESACCI-2.1_198201_201612_am_rg_echam6_t63_slm_trim.nc')
 
 
 lakes = 1 - slm.slm.values

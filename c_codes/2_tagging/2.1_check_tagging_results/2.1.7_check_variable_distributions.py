@@ -33,7 +33,6 @@ plt.rcParams.update({"mathtext.fontset": "stix"})
 from a_basic_analysis.b_module.mapplot import (
     globe_plot,
     hemisphere_plot,
-    rb_colormap,
     quick_var_plot,
     mesh2plot,
     framework_plot1,
@@ -301,5 +300,68 @@ fig.savefig(
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region ERA5 rh2m spatial distribution
+
+era5_rh2m_am = xr.open_dataset('scratch/cmip6/hist/rh/2m_rh_ERA5_mon_sl_197901_201412_am.nc')
+
+pltlevel = np.arange(60, 90 + 1e-4, 1.5)
+pltticks = np.arange(60, 90 + 1e-4, 3)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=False)
+pltcmp = cm.get_cmap('PRGn', len(pltlevel)-1).reversed()
+
+fig, ax = globe_plot()
+
+plt_cmp = ax.pcolormesh(
+    era5_rh2m_am.longitude,
+    era5_rh2m_am.latitude,
+    era5_rh2m_am.rh2m[0] * 100,
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.7, ticks=pltticks, extend='both',
+    pad=0.1, fraction=0.2,
+    )
+cbar.ax.tick_params(length=2, width=0.4)
+cbar.ax.set_xlabel('Annual mean 2-metre relative humidity [$\%$]\nERA5, 1979-2014', linespacing=2)
+fig.savefig('figures/6_awi/6.1_echam6/6.1.1_variable distribution/6.1.1.3_am rh2m in ERA5.png')
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region ERA5 wind10 spatial distribution
+
+era5_wind10_am = xr.open_dataset('scratch/cmip6/hist/wind10/era5_mon_wind10m_197901_201412_am.nc')
+
+pltlevel = np.arange(4, 14 + 1e-4, 1)
+pltticks = np.arange(4, 14 + 1e-4, 1)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=False)
+pltcmp = cm.get_cmap('PRGn', len(pltlevel)-1).reversed()
+
+fig, ax = globe_plot()
+
+plt_cmp = ax.pcolormesh(
+    era5_wind10_am.longitude,
+    era5_wind10_am.latitude,
+    era5_wind10_am.si10[0],
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.7, ticks=pltticks, extend='both',
+    pad=0.1, fraction=0.2,
+    )
+cbar.ax.tick_params(length=2, width=0.4)
+cbar.ax.set_xlabel('Annual mean 10-metre wind speed [$m \; s^{-1}$]\nERA5, 1979-2014', linespacing=2)
+fig.savefig('figures/6_awi/6.1_echam6/6.1.1_variable distribution/6.1.1.4_am wind10 in ERA5.png')
+
+# endregion
+# -----------------------------------------------------------------------------
+
 
 

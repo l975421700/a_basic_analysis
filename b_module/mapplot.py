@@ -635,6 +635,7 @@ def hemisphere_plot(
     add_grid=True, grid_color='gray', add_grid_labels = False,
     plot_scalebar=False, sb_bars=2, sb_length=1000, sb_location=(-0.13, 0),
     sb_barheight=100, sb_linewidth=0.15, sb_middle_label=False,
+    l45label = True, loceanarcs = True,
     ):
     '''
     ----Input
@@ -654,6 +655,7 @@ def hemisphere_plot(
     import warnings
     warnings.filterwarnings('ignore')
     from cartopy.mpl.ticker import LongitudeFormatter
+    from matplotlib import patches
     
     if not (northextent is None):
         projections = ccrs.SouthPolarStereo()
@@ -688,9 +690,9 @@ def hemisphere_plot(
     
     if add_grid:
         gl = ax.gridlines(
-            crs=transform, linewidth=lw/2, zorder=2,
+            crs=transform, linewidth=lw*1.2, zorder=2,
             draw_labels=add_grid_labels,
-            color=grid_color, alpha=0.5, linestyle='--',
+            color=grid_color, linestyle='--',
             xlocs=ticklabel[0], ylocs=ticklabel[2], rotate_labels=False,
             xformatter=LongitudeFormatter(degree_symbol='° '),
         )
@@ -703,7 +705,30 @@ def hemisphere_plot(
     circle = mpath.Path(verts * radius + center)
     ax.set_boundary(circle, transform=ax.transAxes)
     
-    plt.setp(ax.spines.values(), linewidth=lw*0.8)
+    if loceanarcs:
+        # Atlantic: [-70, 20] => [70, 160], 90
+        atlantic_arc = patches.Arc(
+            [0.5, 0.5], width=1, height=1, angle=0, transform=ax.transAxes,
+            theta1=70, theta2=160,
+            lw=2, linestyle='-', color='gray', fill=False, zorder=2)
+        ax.add_patch(atlantic_arc)
+
+        # Pacific: [140, -70] => [160, 310], 150
+        pacific_arc = patches.Arc(
+            [0.5, 0.5], width=1, height=1, angle=0, transform=ax.transAxes,
+            theta1=160, theta2=310,
+            lw=2, linestyle='--', color='gray', fill=False, zorder=2)
+        ax.add_patch(pacific_arc)
+
+        # Indian: [20, 140] => [310, 70], 150
+        indian_arc = patches.Arc(
+            [0.5, 0.5], width=1, height=1, angle=0, transform=ax.transAxes,
+            theta1=310, theta2=70,
+            lw=2, linestyle=':', color='gray', fill=False, zorder=2)
+        ax.add_patch(indian_arc)
+        plt.setp(ax.spines.values(), linewidth=lw*0)
+    else:
+        plt.setp(ax.spines.values(), linewidth=lw*0.8)
     
     if (ax_org is None):
         fig.subplots_adjust(
@@ -719,6 +744,15 @@ def hemisphere_plot(
             middle_label=sb_middle_label,
             transform=projections)
     
+    if l45label:
+        ticklabel1 = ticks_labels(-135, 135, -90, 0, 90, 30)
+        gl1 = ax.gridlines(
+            crs=transform, linewidth=0, zorder=2, draw_labels=True,
+            xlocs=ticklabel1[0], ylocs=ticklabel1[2], rotate_labels=False,
+            xformatter=LongitudeFormatter(degree_symbol='° ') )
+        gl1.ylabel_style = {'size': 0, 'color': None, 'alpha': 0}
+        gl1.xlabel_style = {'size': 7}
+    
     if (ax_org is None):
         return fig, ax
     else:
@@ -726,27 +760,24 @@ def hemisphere_plot(
 
 
 '''
+
 #-------------------------------- Test one plot
 import numpy as np
 from matplotlib.colors import BoundaryNorm
-from matplotlib import cm
+from matplotlib import cm, pyplot as plt
 import matplotlib as mpl
 mpl.rcParams['figure.dpi'] = 600
 mpl.rc('font', family='Times New Roman', size=9)
 import cartopy.crs as ccrs
+mpl.rcParams['axes.linewidth'] = 0.2
 
-pltlevel = np.arange(0, 32.01, 0.1)
-pltticks = np.arange(0, 32.01, 4)
-pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False)
-pltcmp = cm.get_cmap('RdBu', len(pltlevel)).reversed()
+pltlevel = np.arange(0, 4000 + 1e-4, 250)
+pltticks = np.arange(0, 4000 + 1e-4, 1000)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=False)
+pltcmp = cm.get_cmap('Blues', len(pltlevel)-1)
 
-fig, ax = hemisphere_plot(northextent=-45)
+fig, ax = hemisphere_plot(northextent=-60)
 
-# plt_cmp = ax.pcolormesh(
-#     x,
-#     y,
-#     z,
-#     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
 cbar = fig.colorbar(
     cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=ax, aspect=30,
@@ -754,7 +785,8 @@ cbar = fig.colorbar(
     pad=0.02, fraction=0.2,
     )
 cbar.ax.set_xlabel('1st line\n2nd line', linespacing=2)
-fig.savefig('0_backup/trial1.png')
+fig.savefig('figures/test.png')
+
 
 # fig, ax = hemisphere_plot(northextent=-60)
 # fig, ax = hemisphere_plot(northextent=-30)
@@ -827,39 +859,54 @@ fig.savefig('0_backup/trial2.png')
 #     orientation="horizontal",shrink=0.5,aspect=40,extend='max',
 #     anchor=(1.1,-3.8),ticks=pltticks2)
 # cbar2.ax.set_xlabel('TEXT\nTEXT', linespacing=2)
+
+
+
+# from cartopy.mpl.ticker import LongitudeFormatter
+# ticklabel1 = ticks_labels(-135, 135, -90, 0, 90, int((90)/3))
+
+# gl1 = ax.gridlines(
+#     crs=ccrs.PlateCarree(), linewidth=0, zorder=2, draw_labels=True,
+#     color='gray', linestyle='--',
+#     xlocs=ticklabel1[0], ylocs=ticklabel1[2], rotate_labels=False,
+#     xformatter=LongitudeFormatter(degree_symbol='° ')
+# )
+# gl1.ylabel_style = {'size': 0, 'color': None, 'alpha': 0}
+# gl1.xlabel_style = {'size': 7}
+
+# import xarray as xr
+# import metpy.calc
+# echam6_geography = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/pi_d_410_4.7/input/echam/unit.24')
+
+# plt_cmp = ax.pcolormesh(
+#     echam6_geography.lon,
+#     echam6_geography.lat,
+#     metpy.calc.geopotential_to_height(echam6_geography.GEOSP),
+#     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+# from matplotlib import patches
+# # Atlantic: [-70, 20] => [70, 160], 90
+# atlantic_arc = patches.Arc(
+#     [0.5, 0.5], width=1, height=1, angle=0, transform=ax.transAxes,
+#     theta1=70, theta2=160,
+#     lw=1, linestyle='-', color='black', fill=False, zorder=2)
+# ax.add_patch(atlantic_arc)
+
+# # Pacific: [140, -70] => [160, 310], 150
+# pacific_arc = patches.Arc(
+#     [0.5, 0.5], width=1, height=1, angle=0, transform=ax.transAxes,
+#     theta1=160, theta2=310,
+#     lw=1, linestyle='--', color='black', fill=False, zorder=2)
+# ax.add_patch(pacific_arc)
+
+# # Indian: [20, 140] => [310, 70], 150
+# indian_arc = patches.Arc(
+#     [0.5, 0.5], width=1, height=1, angle=0, transform=ax.transAxes,
+#     theta1=310, theta2=70,
+#     lw=1, linestyle=':', color='black', fill=False, zorder=2)
+# ax.add_patch(indian_arc)
+
 '''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region functions to create a diverging color map
-
-def rb_colormap(pltlevel, right_c = 'Blues_r', left_c = 'Reds'):
-    '''
-    ----Input
-    pltlevel: levels used for the color bar, must be even;
-    
-    ----output
-    cmp_cmap:
-    '''
-    import numpy as np
-    from matplotlib import cm
-    from matplotlib.colors import ListedColormap
-    
-    cmp_top = cm.get_cmap(right_c, int(np.floor(len(pltlevel) / 2)))
-    cmp_bottom = cm.get_cmap(left_c, int(np.floor(len(pltlevel) / 2)))
-    
-    cmp_colors = np.vstack(
-        (cmp_top(np.linspace(0, 1, int(np.floor(len(pltlevel) / 2)))),
-        #  [1, 1, 1, 1],
-        #  [1, 1, 1, 1],
-        #  [1, 1, 1, 1],
-         cmp_bottom(np.linspace(0, 1, int(np.floor(len(pltlevel) / 2))))))
-    cmp_cmap = ListedColormap(cmp_colors)
-    
-    return(cmp_cmap)
-
 # endregion
 # -----------------------------------------------------------------------------
 

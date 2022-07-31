@@ -17,6 +17,9 @@ dask.config.set({"array.slicing.split_large_chunks": False})
 from scipy import stats
 import xesmf as xe
 import pandas as pd
+from dask.diagnostics import ProgressBar
+pbar = ProgressBar()
+pbar.register()
 
 # plot
 import matplotlib as mpl
@@ -34,7 +37,6 @@ plt.rcParams.update({"mathtext.fontset": "stix"})
 from a_basic_analysis.b_module.mapplot import (
     globe_plot,
     hemisphere_plot,
-    rb_colormap,
     quick_var_plot,
     mesh2plot,
 )
@@ -50,6 +52,10 @@ from a_basic_analysis.b_module.namelist import (
     months,
     month_days,
     zerok,
+)
+
+from a_basic_analysis.b_module.source_properties import (
+    source_properties,
 )
 
 # endregion
@@ -80,14 +86,10 @@ for i in range(len(expid)):
         exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_echam.nc')
     
     if (file_exists):
-        exp_org_o[expid[i]]['echam'] = xr.open_dataset(
-            exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_echam.nc')
         exp_org_o[expid[i]]['wiso'] = xr.open_dataset(
             exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_wiso.nc')
     else:
-        filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*monthly.01_echam.nc'))
         filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*monthly.01_wiso.nc'))
-        exp_org_o[expid[i]]['echam'] = xr.open_mfdataset(filenames_echam, data_vars='minimal', coords='minimal', parallel=True)
         exp_org_o[expid[i]]['wiso'] = xr.open_mfdataset(filenames_wiso, data_vars='minimal', coords='minimal', parallel=True)
 
 # endregion
@@ -124,12 +126,13 @@ print(kstart); print(kend)
 # -----------------------------------------------------------------------------
 # region calculate source wind10 - scaling tagmap with wind10
 
+
+#---------------- basic settings
+
 minwind10 = {}
 maxwind10 = {}
 minwind10['pi_m_402_4.7'] = 0
 maxwind10['pi_m_402_4.7'] = 28
-i = 0
-expid[i]
 
 ocean_pre = {}
 wind10_scaled_pre = {}
@@ -144,23 +147,43 @@ ocean_pre_am = {}
 wind10_scaled_pre_am = {}
 pre_weighted_wind10_am = {}
 
-ocean_pre[expid[i]] = (exp_org_o[expid[i]]['wiso'].wisoaprl.sel(wisotype=slice(kstart+2, kstart+3)) +  exp_org_o[expid[i]]['wiso'].wisoaprc.sel(wisotype=slice(kstart+2, kstart+3))).sum(dim='wisotype')
-wind10_scaled_pre[expid[i]] = (exp_org_o[expid[i]]['wiso'].wisoaprl.sel(wisotype=kstart+2) + exp_org_o[expid[i]]['wiso'].wisoaprc.sel(wisotype=kstart+2))
+i = 0
+expid[i]
+
+#---------------- calculate precipitation
+
+#---- monthly pre
+ocean_pre[expid[i]] = (exp_org_o[expid[i]]['wiso'].wisoaprl.sel(wisotype=slice(kstart+2, kstart+3)) +  exp_org_o[expid[i]]['wiso'].wisoaprc.sel(wisotype=slice(kstart+2, kstart+3))).sum(dim='wisotype').compute()[120:]
+wind10_scaled_pre[expid[i]] = (exp_org_o[expid[i]]['wiso'].wisoaprl.sel(wisotype=kstart+2) + exp_org_o[expid[i]]['wiso'].wisoaprc.sel(wisotype=kstart+2)).compute()[120:]
+
+wind10_scaled_pre[expid[i]].values[ocean_pre[expid[i]] < 2e-8] = 0
+ocean_pre[expid[i]].values[ocean_pre[expid[i]] < 2e-8] = 0
+
+#---- annual pre
+ocean_pre_ann[expid[i]] = ocean_pre[expid[i]].groupby('time.year').mean(dim="time", skipna=True).compute()
+wind10_scaled_pre_ann[expid[i]] = wind10_scaled_pre[expid[i]].groupby('time.year').mean(dim="time", skipna=True).compute()
+
+#---- seasonal mean pre
+ocean_pre_sea[expid[i]] = ocean_pre[expid[i]].groupby('time.season').mean(dim="time", skipna=True).compute()
+wind10_scaled_pre_sea[expid[i]] = wind10_scaled_pre[expid[i]].groupby('time.season').mean(dim="time", skipna=True).compute()
+
+#---- annual mean pre
+ocean_pre_am[expid[i]] = ocean_pre[expid[i]].mean(dim="time", skipna=True).compute()
+wind10_scaled_pre_am[expid[i]] = wind10_scaled_pre[expid[i]].mean(dim="time", skipna=True).compute()
+
 
 #---------------- monthly values
 
-pre_weighted_wind10[expid[i]] = wind10_scaled_pre[expid[i]] / ocean_pre[expid[i]] * (maxwind10[expid[i]] - minwind10[expid[i]]) + minwind10[expid[i]]
-pre_weighted_wind10[expid[i]].values[ocean_pre[expid[i]] < 1e-9] = np.nan
+pre_weighted_wind10[expid[i]] = (wind10_scaled_pre[expid[i]] / ocean_pre[expid[i]] * (maxwind10[expid[i]] - minwind10[expid[i]]) + minwind10[expid[i]]).compute()
+pre_weighted_wind10[expid[i]].values[ocean_pre[expid[i]] < 2e-8] = np.nan
 pre_weighted_wind10[expid[i]] = pre_weighted_wind10[expid[i]].rename('pre_weighted_wind10')
 pre_weighted_wind10[expid[i]].to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_wind10.nc')
 
 #---------------- annual values
 
-ocean_pre_ann[expid[i]] = ocean_pre[expid[i]].groupby('time.year').sum(dim="time", skipna=True)
-wind10_scaled_pre_ann[expid[i]] = wind10_scaled_pre[expid[i]].groupby('time.year').sum(dim="time", skipna=True)
 
-pre_weighted_wind10_ann[expid[i]] = wind10_scaled_pre_ann[expid[i]] / ocean_pre_ann[expid[i]] * (maxwind10[expid[i]] - minwind10[expid[i]]) + minwind10[expid[i]]
-pre_weighted_wind10_ann[expid[i]].values[ocean_pre_ann[expid[i]].values < 1e-9] = np.nan
+pre_weighted_wind10_ann[expid[i]] = (wind10_scaled_pre_ann[expid[i]] / ocean_pre_ann[expid[i]] * (maxwind10[expid[i]] - minwind10[expid[i]]) + minwind10[expid[i]]).compute()
+pre_weighted_wind10_ann[expid[i]].values[ocean_pre_ann[expid[i]].values < 2e-8] = np.nan
 pre_weighted_wind10_ann[expid[i]] = pre_weighted_wind10_ann[expid[i]].rename('pre_weighted_wind10_ann')
 pre_weighted_wind10_ann[expid[i]].to_netcdf(
     exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_wind10_ann.nc'
@@ -169,12 +192,8 @@ pre_weighted_wind10_ann[expid[i]].to_netcdf(
 
 #---------------- seasonal values
 
-# spin up: one year
-ocean_pre_sea[expid[i]] = ocean_pre[expid[i]][12:].groupby('time.season').sum(dim="time", skipna=True)
-wind10_scaled_pre_sea[expid[i]] = wind10_scaled_pre[expid[i]][12:].groupby('time.season').sum(dim="time", skipna=True)
-
-pre_weighted_wind10_sea[expid[i]] = wind10_scaled_pre_sea[expid[i]] / ocean_pre_sea[expid[i]] * (maxwind10[expid[i]] - minwind10[expid[i]]) + minwind10[expid[i]]
-pre_weighted_wind10_sea[expid[i]].values[ocean_pre_sea[expid[i]].values < 1e-9] = np.nan
+pre_weighted_wind10_sea[expid[i]] = (wind10_scaled_pre_sea[expid[i]] / ocean_pre_sea[expid[i]] * (maxwind10[expid[i]] - minwind10[expid[i]]) + minwind10[expid[i]]).compute()
+pre_weighted_wind10_sea[expid[i]].values[ocean_pre_sea[expid[i]].values < 2e-8] = np.nan
 pre_weighted_wind10_sea[expid[i]] = pre_weighted_wind10_sea[expid[i]].rename('pre_weighted_wind10_sea')
 pre_weighted_wind10_sea[expid[i]].to_netcdf(
     exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_wind10_sea.nc'
@@ -182,12 +201,8 @@ pre_weighted_wind10_sea[expid[i]].to_netcdf(
 
 #---------------- annual mean values
 
-# spin up: one year
-ocean_pre_am[expid[i]] = ocean_pre[expid[i]][12:].mean(dim="time", skipna=True)
-wind10_scaled_pre_am[expid[i]] = wind10_scaled_pre[expid[i]][12:].mean(dim="time", skipna=True)
-
-pre_weighted_wind10_am[expid[i]] = wind10_scaled_pre_am[expid[i]] / ocean_pre_am[expid[i]] * (maxwind10[expid[i]] - minwind10[expid[i]]) + minwind10[expid[i]]
-pre_weighted_wind10_am[expid[i]].values[ocean_pre_am[expid[i]].values < 1e-9] = np.nan
+pre_weighted_wind10_am[expid[i]] = (wind10_scaled_pre_am[expid[i]] / ocean_pre_am[expid[i]] * (maxwind10[expid[i]] - minwind10[expid[i]]) + minwind10[expid[i]]).compute()
+pre_weighted_wind10_am[expid[i]].values[ocean_pre_am[expid[i]].values < 2e-8] = np.nan
 pre_weighted_wind10_am[expid[i]] = pre_weighted_wind10_am[expid[i]].rename('pre_weighted_wind10_am')
 pre_weighted_wind10_am[expid[i]].to_netcdf(
     exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_wind10_am.nc'
@@ -452,12 +467,12 @@ cbar_label2 = 'Differences in precipitation-weighted open-oceanic source wind10 
 
 pltlevel = np.arange(4, 14 + 1e-4, 1)
 pltticks = np.arange(4, 14 + 1e-4, 1)
-pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=False)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
 pltcmp = cm.get_cmap('PRGn', len(pltlevel)-1).reversed()
 
-pltlevel2 = np.concatenate((np.arange(-6, -1 + 1e-4, 1), np.arange(1, 6 + 1e-4, 1)))
+pltlevel2 = np.arange(-6, 6 + 1e-4, 1)
 pltticks2 = np.arange(-6, 6 + 1e-4, 2)
-pltnorm2 = BoundaryNorm(pltlevel2, ncolors=(len(pltlevel2) - 1), clip=False)
+pltnorm2 = BoundaryNorm(pltlevel2, ncolors=(len(pltlevel2) - 1), clip=True)
 pltcmp2 = cm.get_cmap('BrBG', len(pltlevel2)-1).reversed()
 
 
@@ -476,7 +491,7 @@ for jcol in range(ncol):
                            add_grid_labels=False)
 
 #-------- Am, DJF, JJA values
-axs[0].pcolormesh(
+plt1 = axs[0].pcolormesh(
     lon, lat, pre_weighted_wind10_am[expid[i]].pre_weighted_wind10_am,
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 axs[1].pcolormesh(
@@ -487,7 +502,7 @@ axs[2].pcolormesh(
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 
 #-------- differences
-axs[3].pcolormesh(
+plt2 = axs[3].pcolormesh(
     lon, lat, pre_weighted_wind10_sea[expid[i]].pre_weighted_wind10_sea.sel(season='DJF') - pre_weighted_wind10_sea[expid[i]].pre_weighted_wind10_sea.sel(season='JJA'),
     norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
 
@@ -508,13 +523,13 @@ plt.text(
     ha='center', va='center', rotation='horizontal')
 
 cbar1 = fig.colorbar(
-    cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=axs,
+    plt1, ax=axs,
     orientation="horizontal",shrink=0.5,aspect=40,extend='both',
     anchor=(-0.2, 0.8), ticks=pltticks)
 cbar1.ax.set_xlabel(cbar_label1, linespacing=2)
 
 cbar2 = fig.colorbar(
-    cm.ScalarMappable(norm=pltnorm2, cmap=pltcmp2), ax=axs,
+    plt2, ax=axs,
     orientation="horizontal",shrink=0.5,aspect=40,extend='both',
     anchor=(1.1,-5.5),ticks=pltticks2)
 cbar2.ax.set_xlabel(cbar_label2, linespacing=2)
@@ -566,12 +581,12 @@ cbar_label2 = 'Differences in precipitation-weighted open-oceanic source wind10 
 
 pltlevel = np.arange(8, 13 + 1e-4, 0.5)
 pltticks = np.arange(8, 13 + 1e-4, 1)
-pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=False)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
 pltcmp = cm.get_cmap('PRGn', len(pltlevel)-1).reversed()
 
-pltlevel2 = np.concatenate((np.arange(-4, -0.5 + 1e-4, 0.5), np.arange(0.5, 4 + 1e-4, 0.5)))
+pltlevel2 = np.arange(-4, 4 + 1e-4, 0.5)
 pltticks2 = np.arange(-4, 4 + 1e-4, 1)
-pltnorm2 = BoundaryNorm(pltlevel2, ncolors=(len(pltlevel2) - 1), clip=False)
+pltnorm2 = BoundaryNorm(pltlevel2, ncolors=(len(pltlevel2) - 1), clip=True)
 pltcmp2 = cm.get_cmap('BrBG', len(pltlevel2)-1).reversed()
 
 nrow = 1
@@ -587,7 +602,7 @@ for jcol in range(ncol):
     axs[jcol] = hemisphere_plot(northextent=-60, ax_org = axs[jcol])
 
 #-------- Am, DJF, JJA values
-axs[0].pcolormesh(
+plt1 = axs[0].pcolormesh(
     lon, lat, pre_weighted_wind10_am[expid[i]].pre_weighted_wind10_am,
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 axs[1].pcolormesh(
@@ -598,7 +613,7 @@ axs[2].pcolormesh(
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 
 #-------- differences
-axs[3].pcolormesh(
+plt2 = axs[3].pcolormesh(
     lon, lat, pre_weighted_wind10_sea[expid[i]].pre_weighted_wind10_sea.sel(season='DJF') - pre_weighted_wind10_sea[expid[i]].pre_weighted_wind10_sea.sel(season='JJA'),
     norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
 
@@ -619,13 +634,13 @@ plt.text(
     ha='center', va='center', rotation='horizontal')
 
 cbar1 = fig.colorbar(
-    cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=axs,
+    plt1, ax=axs,
     orientation="horizontal",shrink=0.5,aspect=40,extend='both',
     anchor=(-0.2, 0.4), ticks=pltticks)
 cbar1.ax.set_xlabel(cbar_label1, linespacing=2)
 
 cbar2 = fig.colorbar(
-    cm.ScalarMappable(norm=pltnorm2, cmap=pltcmp2), ax=axs,
+    plt2, ax=axs,
     orientation="horizontal",shrink=0.5,aspect=40,extend='both',
     anchor=(1.1,-3.7),ticks=pltticks2)
 cbar2.ax.set_xlabel(cbar_label2, linespacing=2)

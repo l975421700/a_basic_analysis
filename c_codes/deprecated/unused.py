@@ -1,6 +1,38 @@
 
 
 # -----------------------------------------------------------------------------
+# region functions to create a diverging color map
+
+def rb_colormap(pltlevel, right_c = 'Blues_r', left_c = 'Reds'):
+    '''
+    ----Input
+    pltlevel: levels used for the color bar, must be even;
+    
+    ----output
+    cmp_cmap:
+    '''
+    import numpy as np
+    from matplotlib import cm
+    from matplotlib.colors import ListedColormap
+    
+    cmp_top = cm.get_cmap(right_c, int(np.floor(len(pltlevel) / 2)))
+    cmp_bottom = cm.get_cmap(left_c, int(np.floor(len(pltlevel) / 2)))
+    
+    cmp_colors = np.vstack(
+        (cmp_top(np.linspace(0, 1, int(np.floor(len(pltlevel) / 2)))),
+        #  [1, 1, 1, 1],
+        #  [1, 1, 1, 1],
+        #  [1, 1, 1, 1],
+         cmp_bottom(np.linspace(0, 1, int(np.floor(len(pltlevel) / 2))))))
+    cmp_cmap = ListedColormap(cmp_colors)
+    
+    return(cmp_cmap)
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
 # region calculate normalized sincoslon
 
 

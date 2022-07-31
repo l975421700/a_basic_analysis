@@ -34,7 +34,6 @@ plt.rcParams.update({"mathtext.fontset": "stix"})
 from a_basic_analysis.b_module.mapplot import (
     globe_plot,
     hemisphere_plot,
-    rb_colormap,
     quick_var_plot,
     mesh2plot,
     framework_plot1,

@@ -53,7 +53,7 @@ from a_basic_analysis.b_module.namelist import (
 # =============================================================================
 # region calculate 2m RH from tem and prs
 
-era5_2m_tem_prs = xr.open_dataset('/home/users/qino/bas_palaeoclim_qino/scratch/cmip6/hist/rh/2m_tem_prs_ERA5_mon_sl_197901_201412.nc')
+era5_2m_tem_prs = xr.open_dataset('scratch/cmip6/hist/rh/2m_tem_prs_ERA5_mon_sl_197901_201412.nc')
 
 # era5_2m_tem_prs.d2m
 # era5_2m_tem_prs.t2m
@@ -63,7 +63,9 @@ era5_2m_rh = mpcalc.relative_humidity_from_dewpoint(
     era5_2m_tem_prs.d2m * units('K'),
 )
 
-era5_2m_rh.to_netcdf('/home/users/qino/bas_palaeoclim_qino/scratch/cmip6/hist/rh/2m_rh_ERA5_mon_sl_197901_201412.nc')
+era5_2m_rh = era5_2m_rh.rename('rh2m')
+
+era5_2m_rh.to_netcdf('scratch/cmip6/hist/rh/2m_rh_ERA5_mon_sl_197901_201412.nc')
 
 '''
 i = 10
@@ -83,11 +85,11 @@ mpcalc.relative_humidity_from_dewpoint(
 # =============================================================================
 # region plot 2m RH
 
-era5_2m_rh_am = xr.open_dataset('/home/users/qino/bas_palaeoclim_qino/scratch/cmip6/hist/rh/2m_rh_ERA5_mon_sl_197901_201412_am.nc')
+era5_2m_rh_am = xr.open_dataset('scratch/cmip6/hist/rh/2m_rh_ERA5_mon_sl_197901_201412_am.nc')
 
-era5_gridarea = xr.open_dataset('/home/users/qino/bas_palaeoclim_qino/scratch/cmip6/constants/ERA5_gridarea.nc')
+era5_gridarea = xr.open_dataset('scratch/cmip6/constants/ERA5_gridarea.nc')
 era5_gridarea_values = era5_gridarea.cell_area
-era5_lsm = xr.open_dataset('/home/users/qino/bas_palaeoclim_qino/observations/reanalysis/ERA5/mon_sl_79_present/era5_mon_sl_79_21_lsmask.nc')
+era5_lsm = xr.open_dataset('observations/reanalysis/ERA5/mon_sl_79_present/era5_mon_sl_79_21_lsmask.nc')
 
 
 stats.describe(era5_2m_rh_am.rel_hum.squeeze().values[era5_lsm.lsm.squeeze() == 0] * 100)
