@@ -20,6 +20,7 @@ def mon_sea_ann(
     
     if var_monthly is None:
         var_alltime['daily'] = var_daily.copy()
+        var_alltime['daily'].values[var_alltime['daily'].values < 2e-8] = 0
         
         #-------- monthly
         var_alltime['mon'] = var_daily.resample({'time': '1M'}).mean(skipna=skipna).compute()
@@ -299,133 +300,126 @@ transform=ccrs.PlateCarree(), linewidths=1, linestyles='solid')
 # -----------------------------------------------------------------------------
 # region function to generate mask for three AIS
 
-
-def create_ais_mask(lon_lat_file = None, ais_file = None):
+def create_ais_mask(lon, lat, ais_shpfile, cellarea):
     '''
-    ---- Input
-    lon_lat_file: a file contains the desired lon/lat
-    ais_file: a shapefile contains the AIS.
+    #---- Input
+    lon:         numpy.ndarray, 1D longitude
+    lat:         numpy.ndarray, 1D latitude
+    ais_shpfile: geopandas.geodataframe.GeoDataFrame, returned by gpd.read_file('*.shp')
+    cellarea:    numpy.ndarray, 2D cell areas
     
-    ---- Output
-    
+    #---- Output
+    ais_mask: dictionary, {'mask', 'mask01', 'cellarea'}
     '''
     
     import numpy as np
-    import xarray as xr
     import geopandas as gpd
     from geopandas.tools import sjoin
     
-    if (lon_lat_file is None):
-        lon_lat_file = 'bas_palaeoclim_qino/others/one_degree_grids_cdo_area.nc'
-    
-    ncfile = xr.open_dataset(lon_lat_file)
-    lon, lat = np.meshgrid(ncfile.lon, ncfile.lat,)
-    
-    if (ais_file is None):
-        ais_file = 'bas_palaeoclim_qino/observations/products/IMBIE_2016_drainage_basins/Rignot_Basins/ANT_IceSheets_IMBIE2/ANT_IceSheets_IMBIE2_v1.6.shp'
-    
-    shpfile = gpd.read_file(ais_file)
+    lon_2d, lat_2d = np.meshgrid(lon, lat,)
     
     lon_lat = gpd.GeoDataFrame(
         crs="EPSG:4326", geometry=gpd.points_from_xy(
-            lon.reshape(-1, 1), lat.reshape(-1, 1))).to_crs(3031)
-    
-    pointInPolys = sjoin(lon_lat, shpfile, how='left')
+            lon_2d.reshape(-1, 1), lat_2d.reshape(-1, 1))).to_crs(3031)
+    pointInPolys = sjoin(lon_lat, ais_shpfile, how='left')
     regions = pointInPolys.Regions.to_numpy().reshape(
-        lon.shape[0], lon.shape[1])
+        lon_2d.shape[0], lon_2d.shape[1])
     
-    eais_mask = (regions == 'East')
-    eais_mask01 = np.zeros(eais_mask.shape)
-    eais_mask01[eais_mask] = 1
+    ais_mask = {}
+    ais_mask['mask'] = {}
+    ais_mask['mask']['eais'] = (regions == 'East')
+    ais_mask['mask']['wais'] = (regions == 'West')
+    ais_mask['mask']['ap'] = (regions == 'Peninsula')
+    ais_mask['mask']['ais'] = (ais_mask['mask']['eais'] | ais_mask['mask']['wais'] | ais_mask['mask']['ap'])
     
-    wais_mask = (regions == 'West')
-    wais_mask01 = np.zeros(wais_mask.shape)
-    wais_mask01[wais_mask] = 1
+    ais_mask['mask01'] = {}
+    ais_mask['mask01']['eais'] = np.zeros(regions.shape)
+    ais_mask['mask01']['eais'][ais_mask['mask']['eais']] = 1
     
-    ap_mask = (regions == 'Peninsula')
-    ap_mask01 = np.zeros(ap_mask.shape)
-    ap_mask01[ap_mask] = 1
+    ais_mask['mask01']['wais'] = np.zeros(regions.shape)
+    ais_mask['mask01']['wais'][ais_mask['mask']['wais']] = 1
     
-    ais_mask = (eais_mask | wais_mask | ap_mask)
-    ais_mask01 = np.zeros(ais_mask.shape)
-    ais_mask01[ais_mask] = 1
+    ais_mask['mask01']['ap'] = np.zeros(regions.shape)
+    ais_mask['mask01']['ap'][ais_mask['mask']['ap']] = 1
     
-    eais_area = ncfile.cell_area.values[eais_mask].sum()
-    wais_area = ncfile.cell_area.values[wais_mask].sum()
-    ap_area = ncfile.cell_area.values[ap_mask].sum()
+    ais_mask['mask01']['ais'] = np.zeros(regions.shape)
+    ais_mask['mask01']['ais'][ais_mask['mask']['ais']] = 1
     
-    return (lon, lat, eais_mask, eais_mask01, wais_mask, wais_mask01, ap_mask,
-            ap_mask01, ais_mask, ais_mask01, eais_area, wais_area, ap_area)
+    ais_mask['cellarea'] = {}
+    ais_mask['cellarea']['eais'] = cellarea[ais_mask['mask']['eais']].sum() / 10**6
+    ais_mask['cellarea']['wais'] = cellarea[ais_mask['mask']['wais']].sum() / 10**6
+    ais_mask['cellarea']['ap'] = cellarea[ais_mask['mask']['ap']].sum() / 10**6
+    ais_mask['cellarea']['ais'] = cellarea[ais_mask['mask']['ais']].sum() / 10**6
+    
+    return(ais_mask)
 
 
 '''
-# Production run to create area and masks files
-import pickle
-(lon, lat, eais_mask, eais_mask01, wais_mask, wais_mask01, ap_mask,
- ap_mask01, ais_mask, ais_mask01, eais_area, wais_area, ap_area
- ) = create_ais_mask()
-
-ais_masks = {'lon': lon, 'lat': lat, 'eais_mask': eais_mask,
-             'eais_mask01': eais_mask01, 'wais_mask': wais_mask,
-             'wais_mask01': wais_mask01, 'ap_mask': ap_mask,
-             'ap_mask01': ap_mask01, 'ais_mask': ais_mask,
-             'ais_mask01': ais_mask01,}
-ais_area = {'eais': eais_area, 'wais': wais_area, 'ap': ap_area,
-            'ais': eais_area + wais_area + ap_area,}
-
-with open('bas_palaeoclim_qino/others/ais_masks.pickle', 'wb') as handle:
-    pickle.dump(ais_masks, handle, protocol=pickle.HIGHEST_PROTOCOL)
-with open('bas_palaeoclim_qino/others/ais_area.pickle', 'wb') as handle:
-    pickle.dump(ais_area, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-'''
-
-
-'''
-# check
-from a00_basic_analysis.b_module.mapplot import (
-    framework_plot1,hemisphere_plot,)
+#-------------------------------- check
+from a_basic_analysis.b_module.mapplot import (
+    hemisphere_plot,)
+from matplotlib.colors import BoundaryNorm
+from matplotlib import cm, pyplot as plt
+import matplotlib as mpl
+mpl.rcParams['figure.dpi'] = 600
+mpl.rc('font', family='Times New Roman', size=9)
+mpl.rcParams['axes.linewidth'] = 0.2
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-import numpy as np
 import pickle
+import xarray as xr
+import numpy as np
 
-with open('bas_palaeoclim_qino/others/ais_masks.pickle', 'rb') as handle:
-    ais_masks = pickle.load(handle)
-with open('bas_palaeoclim_qino/others/ais_area.pickle', 'rb') as handle:
-    ais_area = pickle.load(handle)
-ais_area
-# 9761642.045593847, 9620521.647740476, 2110804.571811703, 2038875.6430063567, 232127.50065176177, 232678.32105463636
+echam6_t63_slm = xr.open_dataset('scratch/others/land_sea_masks/echam6_t63_slm.nc')
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
 
-fig, ax = hemisphere_plot(
-    northextent=-60,
-    add_grid_labels=False, plot_scalebar=False, grid_color='black',
-    fm_left=0.06, fm_right=0.94, fm_bottom=0.04, fm_top=0.98, add_atlas=False,)
+#-------- cell area is on the right order
+echam6_t63_ais_mask['cellarea']
+# 9759740.151912227 + 2144474.2285643886 + 265318.13031548966 = 12169532.510792103
 
-# fig, ax = framework_plot1("global")
+
+#-------- mask01 looks right
+
+fig, ax = hemisphere_plot(northextent=-60)
+
+# ax.contour(
+#     echam6_t63_slm.lon.values, echam6_t63_slm.lat.values,
+#     echam6_t63_ais_mask['mask01']['eais'],
+#     colors='blue', levels=np.array([0.5]),
+#     transform=ccrs.PlateCarree(), linewidths=0.5, linestyles='solid')
+# ax.contour(
+#     echam6_t63_slm.lon.values, echam6_t63_slm.lat.values,
+#     echam6_t63_ais_mask['mask01']['wais'],
+#     colors='red', levels=np.array([0.5]),
+#     transform=ccrs.PlateCarree(), linewidths=0.5, linestyles='solid')
+# ax.contour(
+#     echam6_t63_slm.lon.values, echam6_t63_slm.lat.values,
+#     echam6_t63_ais_mask['mask01']['ap'],
+#     colors='yellow', levels=np.array([0.5]),
+#     transform=ccrs.PlateCarree(), linewidths=0.5, linestyles='solid')
 ax.contour(
-    ais_masks['lon'], ais_masks['lat'], ais_masks['eais_mask01'],
-    colors='blue', levels=np.array([0.5]),
+    echam6_t63_slm.lon.values, echam6_t63_slm.lat.values,
+    echam6_t63_ais_mask['mask01']['ais'],
+    colors='m', levels=np.array([0.5]),
     transform=ccrs.PlateCarree(), linewidths=0.5, linestyles='solid')
-ax.contour(
-    ais_masks['lon'], ais_masks['lat'], ais_masks['wais_mask01'],
-    colors='red', levels=np.array([0.5]),
-    transform=ccrs.PlateCarree(), linewidths=0.5, linestyles='solid')
-ax.contour(
-    ais_masks['lon'], ais_masks['lat'], ais_masks['ap_mask01'],
-    colors='yellow', levels=np.array([0.5]),
-    transform=ccrs.PlateCarree(), linewidths=0.5, linestyles='solid')
+
 coastline = cfeature.NaturalEarthFeature(
     'physical', 'coastline', '10m', edgecolor='black',
-    facecolor='none', lw=0.25)
+    facecolor='none', lw=0.1)
 ax.add_feature(coastline, zorder=2)
 
-fig.savefig('figures/0_test/trial.png')
-'''
+fig.savefig('figures/test.png')
+
+((echam6_t63_ais_mask['mask01']['eais'] == 1) == echam6_t63_ais_mask['mask']['eais']).all()
+((echam6_t63_ais_mask['mask01']['wais'] == 1) == echam6_t63_ais_mask['mask']['wais']).all()
+((echam6_t63_ais_mask['mask01']['ap'] == 1) == echam6_t63_ais_mask['mask']['ap']).all()
+((echam6_t63_ais_mask['mask01']['ais'] == 1) == echam6_t63_ais_mask['mask']['ais']).all()
 
 
-'''
-# derivation
+
+#-------------------------------- derivation
+
 one_degree_grids_cdo_area = xr.open_dataset(
     'bas_palaeoclim_qino/others/one_degree_grids_cdo_area.nc')
 lon, lat = np.meshgrid(

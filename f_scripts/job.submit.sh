@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --time=00:30:00
-#SBATCH --partition=fat
+#SBATCH --time=05:00:00
+#SBATCH --partition=mpp
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 
@@ -11,7 +11,7 @@ which cdo
 
 cd $WORK
 
-python /work/ollie/qigao001/a_basic_analysis/c_codes/2_tagging/2.1_check_tagging_results/2.1.4.6_source_var_scaled_daily.py
+python /work/ollie/qigao001/a_basic_analysis/c_codes/0_basics/0.1_scripts/0.1.0_long_scripts_to_run.py
 
 
 #Xsrun  I know what I am doing

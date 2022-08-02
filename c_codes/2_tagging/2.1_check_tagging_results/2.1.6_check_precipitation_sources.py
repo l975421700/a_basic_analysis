@@ -194,7 +194,7 @@ cbar = fig.colorbar(
     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
     pad=0.02, fraction=0.2,
     )
-cbar.ax.set_xlabel('Fraction of annual mean precipitation\nfrom Antarctica [%]', linespacing=2)
+cbar.ax.set_xlabel('Fraction of annual mean precipitation from\nAntarctica [%]', linespacing=2)
 fig.savefig('figures/6_awi/6.1_echam6/6.1.2_precipitation_sources/6.1.2.0.1.0_Antarctica_' + expid[i] + '_precipitation_from_Antarctica.png')
 
 
@@ -216,7 +216,7 @@ cbar = fig.colorbar(
     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
     pad=0.02, fraction=0.2,
     )
-cbar.ax.set_xlabel('Fraction of annual mean precipitation\nfrom SH sea ice covered area [%]', linespacing=2)
+cbar.ax.set_xlabel('Fraction of annual mean precipitation from\nSH sea ice covered area [%]', linespacing=2)
 fig.savefig('figures/6_awi/6.1_echam6/6.1.2_precipitation_sources/6.1.2.0.1.1_Antarctica_' + expid[i] + '_precipitation_from_SHseaice.png')
 
 
@@ -238,7 +238,7 @@ cbar = fig.colorbar(
     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
     pad=0.02, fraction=0.2,
     )
-cbar.ax.set_xlabel('Fraction of annual mean precipitation\nfrom land excl. Antarctica [%]', linespacing=2)
+cbar.ax.set_xlabel('Fraction of annual mean precipitation from\nland excl. Antarctica [%]', linespacing=2)
 fig.savefig('figures/6_awi/6.1_echam6/6.1.2_precipitation_sources/6.1.2.0.1.2_Antarctica_' + expid[i] + '_precipitation_from_oland.png')
 
 
@@ -257,18 +257,21 @@ plt_cmp = ax.pcolormesh(
 
 cbar = fig.colorbar(
     cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=ax, aspect=30,
-    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='min',
     pad=0.02, fraction=0.2,
     )
-cbar.ax.set_xlabel('Fraction of annual mean precipitation\nfrom ocean excl. SH sea ice covered area [%]', linespacing=2)
+cbar.ax.set_xlabel('Fraction of annual mean precipitation from\nocean excl. SH sea ice covered area [%]', linespacing=2)
 fig.savefig('figures/6_awi/6.1_echam6/6.1.2_precipitation_sources/6.1.2.0.1.3_Antarctica_' + expid[i] + '_precipitation_from_oocean.png')
 
 
-(pre_Antarctica_am_frc[expid[i]] + pre_SHseaice_am_frc[expid[i]] + pre_oland_am_frc[expid[i]] + pre_oocean_am_frc[expid[i]]).all().values
 
+'''
+np.max(abs((pre_Antarctica_am_frc[expid[i]] + pre_SHseaice_am_frc[expid[i]] + pre_oland_am_frc[expid[i]] + pre_oocean_am_frc[expid[i]]).values - 100))
+'''
 
 # endregion
 # -----------------------------------------------------------------------------
+
 
 
 
@@ -460,3 +463,7 @@ fig.savefig('figures/6_awi/6.1_echam6/6.1.2_precipitation_sources/6.1.2.0.0.1_' 
 
 # endregion
 # -----------------------------------------------------------------------------
+
+
+
+

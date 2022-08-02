@@ -446,3 +446,33 @@ fig.savefig(output_png)
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region plot annual mean values
+
+
+pltlevel = np.arange(0, 360 + 1e-4, 15)
+pltticks = np.arange(0, 360 + 1e-4, 45)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+pltcmp = cm.get_cmap('BrBG', len(pltlevel)-1).reversed()
+
+fig, ax = hemisphere_plot(northextent=-60, figsize=np.array([5.8, 7]) / 2.54)
+
+plt1 = ax.pcolormesh(
+    pre_weighted_lon[expid[i]]['am'].lon,
+    pre_weighted_lon[expid[i]]['am'].lat,
+    pre_weighted_lon[expid[i]]['am'],
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    plt1, ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='neither',
+    pad=0.02, fraction=0.15,
+    )
+cbar.ax.set_xlabel('Source longitude [$°$]\n ', linespacing=2)
+fig.savefig('figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/6.1.3.1.0.4_Antarctica am pre_weighted_lon ' + expid[i] + '.png')
+
+
+# endregion
+# -----------------------------------------------------------------------------
+

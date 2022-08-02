@@ -129,6 +129,8 @@ ocean_pre.values[ocean_pre.values < 2e-8] = 0
 ocean_pre_alltime      = mon_sea_ann(ocean_pre)
 var_scaled_pre_alltime = mon_sea_ann(var_scaled_pre)
 
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_pre_alltime.pkl', 'wb') as f:
+    pickle.dump(ocean_pre_alltime, f)
 
 #-------------------------------- pre-weighted var
 

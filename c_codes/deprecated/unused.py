@@ -1,6 +1,173 @@
 
 
 # -----------------------------------------------------------------------------
+# region function to generate mask for three AIS
+
+
+def create_ais_mask(lon_lat_file = None, ais_file = None):
+    '''
+    ---- Input
+    lon_lat_file: a file contains the desired lon/lat
+    ais_file: a shapefile contains the AIS.
+    
+    ---- Output
+    
+    '''
+    
+    import numpy as np
+    import xarray as xr
+    import geopandas as gpd
+    from geopandas.tools import sjoin
+    
+    if (lon_lat_file is None):
+        lon_lat_file = 'bas_palaeoclim_qino/others/one_degree_grids_cdo_area.nc'
+    
+    ncfile = xr.open_dataset(lon_lat_file)
+    lon, lat = np.meshgrid(ncfile.lon, ncfile.lat,)
+    
+    if (ais_file is None):
+        ais_file = 'bas_palaeoclim_qino/observations/products/IMBIE_2016_drainage_basins/Rignot_Basins/ANT_IceSheets_IMBIE2/ANT_IceSheets_IMBIE2_v1.6.shp'
+    
+    shpfile = gpd.read_file(ais_file)
+    
+    lon_lat = gpd.GeoDataFrame(
+        crs="EPSG:4326", geometry=gpd.points_from_xy(
+            lon.reshape(-1, 1), lat.reshape(-1, 1))).to_crs(3031)
+    
+    pointInPolys = sjoin(lon_lat, shpfile, how='left')
+    regions = pointInPolys.Regions.to_numpy().reshape(
+        lon.shape[0], lon.shape[1])
+    
+    eais_mask = (regions == 'East')
+    eais_mask01 = np.zeros(eais_mask.shape)
+    eais_mask01[eais_mask] = 1
+    
+    wais_mask = (regions == 'West')
+    wais_mask01 = np.zeros(wais_mask.shape)
+    wais_mask01[wais_mask] = 1
+    
+    ap_mask = (regions == 'Peninsula')
+    ap_mask01 = np.zeros(ap_mask.shape)
+    ap_mask01[ap_mask] = 1
+    
+    ais_mask = (eais_mask | wais_mask | ap_mask)
+    ais_mask01 = np.zeros(ais_mask.shape)
+    ais_mask01[ais_mask] = 1
+    
+    eais_area = ncfile.cell_area.values[eais_mask].sum()
+    wais_area = ncfile.cell_area.values[wais_mask].sum()
+    ap_area = ncfile.cell_area.values[ap_mask].sum()
+    
+    return (lon, lat, eais_mask, eais_mask01, wais_mask, wais_mask01, ap_mask,
+            ap_mask01, ais_mask, ais_mask01, eais_area, wais_area, ap_area)
+
+
+'''
+# Production run to create area and masks files
+import pickle
+(lon, lat, eais_mask, eais_mask01, wais_mask, wais_mask01, ap_mask,
+ ap_mask01, ais_mask, ais_mask01, eais_area, wais_area, ap_area
+ ) = create_ais_mask()
+
+ais_masks = {'lon': lon, 'lat': lat, 'eais_mask': eais_mask,
+             'eais_mask01': eais_mask01, 'wais_mask': wais_mask,
+             'wais_mask01': wais_mask01, 'ap_mask': ap_mask,
+             'ap_mask01': ap_mask01, 'ais_mask': ais_mask,
+             'ais_mask01': ais_mask01,}
+ais_area = {'eais': eais_area, 'wais': wais_area, 'ap': ap_area,
+            'ais': eais_area + wais_area + ap_area,}
+
+with open('bas_palaeoclim_qino/others/ais_masks.pickle', 'wb') as handle:
+    pickle.dump(ais_masks, handle, protocol=pickle.HIGHEST_PROTOCOL)
+with open('bas_palaeoclim_qino/others/ais_area.pickle', 'wb') as handle:
+    pickle.dump(ais_area, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+'''
+
+
+'''
+# check
+from a_basic_analysis.b_module.mapplot import (
+    framework_plot1,hemisphere_plot,)
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+import numpy as np
+import pickle
+
+with open('others/ais_masks.pickle', 'rb') as handle:
+    ais_masks = pickle.load(handle)
+with open('others/ais_area.pickle', 'rb') as handle:
+    ais_area = pickle.load(handle)
+ais_area
+# 9761642.045593847, 9620521.647740476, 2110804.571811703, 2038875.6430063567, 232127.50065176177, 232678.32105463636
+
+fig, ax = hemisphere_plot(
+    northextent=-60,
+    add_grid_labels=False, plot_scalebar=False, grid_color='black',
+    fm_left=0.06, fm_right=0.94, fm_bottom=0.04, fm_top=0.98, add_atlas=False,)
+
+# fig, ax = framework_plot1("global")
+ax.contour(
+    ais_masks['lon'], ais_masks['lat'], ais_masks['eais_mask01'],
+    colors='blue', levels=np.array([0.5]),
+    transform=ccrs.PlateCarree(), linewidths=0.5, linestyles='solid')
+ax.contour(
+    ais_masks['lon'], ais_masks['lat'], ais_masks['wais_mask01'],
+    colors='red', levels=np.array([0.5]),
+    transform=ccrs.PlateCarree(), linewidths=0.5, linestyles='solid')
+ax.contour(
+    ais_masks['lon'], ais_masks['lat'], ais_masks['ap_mask01'],
+    colors='yellow', levels=np.array([0.5]),
+    transform=ccrs.PlateCarree(), linewidths=0.5, linestyles='solid')
+coastline = cfeature.NaturalEarthFeature(
+    'physical', 'coastline', '10m', edgecolor='black',
+    facecolor='none', lw=0.25)
+ax.add_feature(coastline, zorder=2)
+
+fig.savefig('figures/0_test/trial.png')
+'''
+
+
+'''
+# derivation
+one_degree_grids_cdo_area = xr.open_dataset(
+    'bas_palaeoclim_qino/others/one_degree_grids_cdo_area.nc')
+lon, lat = np.meshgrid(
+    one_degree_grids_cdo_area.lon, one_degree_grids_cdo_area.lat, )
+
+ais_imbie2 = gpd.read_file(
+    'bas_palaeoclim_qino/observations/products/IMBIE_2016_drainage_basins/Rignot_Basins/ANT_IceSheets_IMBIE2/ANT_IceSheets_IMBIE2_v1.6.shp'
+)
+
+#1 geopandas.tools.sjoin point and polygon geometry
+lon_lat = gpd.GeoDataFrame(
+    crs="EPSG:4326", geometry=gpd.points_from_xy(
+        lon.reshape(-1, 1), lat.reshape(-1, 1))).to_crs(3031)
+
+from geopandas.tools import sjoin
+pointInPolys = sjoin(lon_lat, ais_imbie2, how='left')
+# pointInPolys = pointInPolys.groupby([pointInPolys.index], as_index=False).nth(0)
+regions = pointInPolys.Regions.to_numpy().reshape(lon.shape[0], lon.shape[1])
+# pointInPolys.Regions.value_counts(dropna=False)
+
+eais_mask = (regions == 'East')
+eais_mask01 = np.zeros(eais_mask.shape)
+eais_mask01[eais_mask] = 1
+
+wais_mask = (regions == 'West')
+wais_mask01 = np.zeros(wais_mask.shape)
+wais_mask01[wais_mask] = 1
+
+ap_mask = (regions == 'Peninsula')
+ap_mask01 = np.zeros(ap_mask.shape)
+ap_mask01[ap_mask] = 1
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
 # region functions to create a diverging color map
 
 def rb_colormap(pltlevel, right_c = 'Blues_r', left_c = 'Reds'):

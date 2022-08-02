@@ -1,6 +1,6 @@
 
 output_dir='output/echam-6.3.05p2-wiso/pi'
-expid='pi_m_414_4.9'
+expid='pi_m_411_4.9'
 
 echo $'\n#-------- clean model output: ' ${expid}
 
@@ -35,7 +35,9 @@ rm outdata/echam/${expid}_*.01_glim*
 rm outdata/echam/${expid}_*.01_jsbid*
 rm outdata/echam/${expid}_*.01_sp6h*
 rm outdata/echam/${expid}_*.01_spim*
-
+rm outdata/echam/${expid}_*.01_co2*
+rm outdata/echam/${expid}_*.01_ma*
+rm outdata/echam/${expid}_*.01_surf*
 
 echo '#---- clean jsbach output'
 rm outdata/jsbach/${expid}_*.01_js_wiso*
@@ -43,8 +45,8 @@ rm outdata/jsbach/${expid}_*.01_jsbach*
 rm outdata/jsbach/${expid}_*.01_la_wiso*
 rm outdata/jsbach/${expid}_*.01_land*
 
-echo '#---- clean runfolders'
-rm -rf run_*
+# echo '#---- clean runfolders'
+# rm -rf run_*
 
 
 echo '#---- clean unknown output'
