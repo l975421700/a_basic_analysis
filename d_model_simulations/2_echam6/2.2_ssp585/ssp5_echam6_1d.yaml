@@ -106,6 +106,7 @@ jsbach:
         namelist.jsbach:
             jsbach_ctl:
                 with_hd: False
+    dataset: r0010
     add_streams:
         - jsbach
         - js_wiso

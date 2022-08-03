@@ -1289,3 +1289,59 @@ pre_all[expid[i]].values[pre_land[expid[i]] < 0]
 # endregion
 # -----------------------------------------------------------------------------
 
+ncfile1 = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/test/unknown/test_200001.01_echam.nc')
+ncfile2 = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/test1/unknown/test1_200001.01_echam.nc')
+
+(ncfile1.evap == ncfile2.evap).all()
+(ncfile1.aprl == ncfile2.aprl).all()
+(ncfile1.temp2 == ncfile2.temp2).all()
+(ncfile1.u10 == ncfile2.u10).all()
+(ncfile1.q2m == ncfile2.q2m).all()
+(ncfile1.q == ncfile2.q).all()
+(ncfile1.evapwac == ncfile2.evapwac).all()
+
+
+ncfile3 = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/test/unknown/test_200001.01_wiso.nc')
+ncfile4 = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/test1/unknown/test1_200001.01_wiso.nc')
+
+test = ncfile3.wisoevap.squeeze() - ncfile4.wisoevap.mean(dim='time').values
+wheremax = np.where(abs(test) == np.max(abs(test)))
+np.max(abs(test.values))
+test.values[wheremax]
+ncfile3.wisoevap.squeeze().values[wheremax]
+ncfile4.wisoevap.mean(dim='time').values[wheremax]
+stats.describe(abs(test), axis=None)
+test.to_netcdf('scratch/test/test.nc')
+
+
+np.max(abs(ncfile3.wisoaprl.squeeze() - ncfile4.wisoaprl.mean(dim='time').values))
+test = ncfile3.wisoaprl.squeeze() - ncfile4.wisoaprl.mean(dim='time').values
+wheremax = np.where(abs(test) == np.max(abs(test)))
+np.max(abs(test.values))
+test.values[wheremax]
+ncfile3.wisoaprl.squeeze().values[wheremax]
+ncfile4.wisoaprl.mean(dim='time').values[wheremax]
+stats.describe(abs(test), axis=None)
+
+
+test = ncfile3.wisoaprc.squeeze() - ncfile4.wisoaprc.mean(dim='time').values
+wheremax = np.where(abs(test) == np.max(abs(test)))
+np.max(abs(test.values))
+test.values[wheremax]
+ncfile3.wisoaprc.squeeze().values[wheremax]
+ncfile4.wisoaprc.mean(dim='time').values[wheremax]
+stats.describe(abs(test), axis=None)
+
+
+ncfile5 = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/test2/unknown/test2_200001.01_wiso.nc')
+ncfile6 = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/test3/unknown/test3_200001.01_wiso.nc')
+
+test = ncfile5.wisoevap.squeeze() - ncfile6.wisoevap.mean(dim='time').values
+wheremax = np.where(abs(test) == np.max(abs(test)))
+np.max(abs(test.values))
+test.values[wheremax]
+ncfile5.wisoevap.squeeze().values[wheremax]
+ncfile6.wisoevap.mean(dim='time').values[wheremax]
+stats.describe(abs(test), axis=None)
+test.to_netcdf('scratch/test/test.nc')
+

@@ -2,7 +2,7 @@ general:
     setup_name: "echam"
     compute_time: "00:30:00"
     initial_date: "2000-01-01"
-    final_date: "2000-03-01"
+    final_date: "2001-01-01"
     model_dir: "/work/ollie/qigao001/model_codes/echam-6.3.05p2-wiso/"
     base_dir: "/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/"
     nmonth: 1
@@ -16,6 +16,8 @@ echam:
             echam_bin: "${bin_dir}/${executable}"
     bin_in_work:
             echam_bin: "${executable}"
+    # namelist_dir: '/work/ollie/qigao001/esm_tools/namelists/echam/6.3.05p2-wiso/PI-CTRL/'
+    namelist_dir: '/work/ollie/qigao001/a_basic_analysis/g_namelists/pi/'
     scenario: "PI-CTRL"
     res: T63
     lresume: False
@@ -38,7 +40,7 @@ echam:
                     default_output: True
                     out_filetype: 2
                     # putdata: [ 450, 'seconds', 'first', 0 ]
-                    putdata: [ 6, 'hours', 'last', 0 ]
+                    # putdata: [ 6, 'hours', 'last', 0 ]
                     # putdata: [ 1, 'days', 'last', 0 ]
                     # dt_stop: [ 2000, 1, 31 ]
                 radctl:
@@ -71,7 +73,7 @@ echam:
                     tag_maxwind10: 28.0
                     ltag_corr1: True
                     ltag_corr3: True
-                    latm_water: True
+                    latm_water: False
                     ltag_corr2: False
                     ltag_corr3_m: False
                     ltag_corr_xtec: False
@@ -107,13 +109,13 @@ jsbach:
         namelist.jsbach:
             jsbach_ctl:
                 with_hd: False
-    add_streams:
-        - jsbach
-        - js_wiso
-        - land
-        - la_wiso
-        - surf
-        - sf_wiso
+    # add_streams:
+    #     - jsbach
+    #     - js_wiso
+    #     - land
+    #     - la_wiso
+    #     - surf
+    #     - sf_wiso
 
 
 
