@@ -1,6 +1,6 @@
 
 output_dir='output/echam-6.3.05p2-wiso/pi'
-expid='pi_m_411_4.9'
+expid='pi_m_416_4.9'
 
 echo $'\n#-------- clean model output: ' ${expid}
 
@@ -20,53 +20,29 @@ echo '#---- clean log files'
 rm log/*observe_compute*.log
 rm log/*prepcompute*.log
 rm log/*tidy*.log
-rm log/*_echam.log
 rm log/run_folders.log
 
-echo '#---- clean echam6 output'
-rm outdata/echam/${expid}_*.01_accw*
-rm outdata/echam/${expid}_*.01_aclcim*
-rm outdata/echam/${expid}_*.01_g3b1hi*
-rm outdata/echam/${expid}_*.01_g3bday*
-rm outdata/echam/${expid}_*.01_g3bid*
-rm outdata/echam/${expid}_*.01_g3bim*
-rm outdata/echam/${expid}_*.01_glday*
-rm outdata/echam/${expid}_*.01_glim*
-rm outdata/echam/${expid}_*.01_jsbid*
-rm outdata/echam/${expid}_*.01_sp6h*
-rm outdata/echam/${expid}_*.01_spim*
-rm outdata/echam/${expid}_*.01_co2*
-rm outdata/echam/${expid}_*.01_ma*
-rm outdata/echam/${expid}_*.01_surf*
+# echo '#---- clean echam6 output'
+# rm outdata/echam/${expid}_*.01_accw*
+# rm outdata/echam/${expid}_*.01_aclcim*
+# rm outdata/echam/${expid}_*.01_g3b1hi*
+# rm outdata/echam/${expid}_*.01_g3bday*
+# rm outdata/echam/${expid}_*.01_g3bid*
+# rm outdata/echam/${expid}_*.01_g3bim*
+# rm outdata/echam/${expid}_*.01_glday*
+# rm outdata/echam/${expid}_*.01_glim*
+# rm outdata/echam/${expid}_*.01_jsbid*
+# rm outdata/echam/${expid}_*.01_sp6h*
+# rm outdata/echam/${expid}_*.01_spim*
+# rm outdata/echam/${expid}_*.01_co2*
+# rm outdata/echam/${expid}_*.01_ma*
+# rm outdata/echam/${expid}_*.01_surf*
 
-echo '#---- clean jsbach output'
-rm outdata/jsbach/${expid}_*.01_js_wiso*
-rm outdata/jsbach/${expid}_*.01_jsbach*
-rm outdata/jsbach/${expid}_*.01_la_wiso*
-rm outdata/jsbach/${expid}_*.01_land*
-
-# echo '#---- clean runfolders'
-# rm -rf run_*
-
-
-echo '#---- clean unknown output'
-rm unknown/echam6.log*
-rm unknown/${expid}_*.01_co2*
-rm unknown/${expid}_*.01_ma*
-rm unknown/${expid}_*.01_sf_wiso*
-rm unknown/${expid}_*.01_surf*
-rm unknown/${expid}_*.01_aclcim*
-rm unknown/${expid}_*.01_g3b1hi*
-rm unknown/${expid}_*.01_g3bday*
-rm unknown/${expid}_*.01_g3bid*
-rm unknown/${expid}_*.01_g3bim*
-rm unknown/${expid}_*.01_glday*
-rm unknown/${expid}_*.01_glim*
-rm unknown/${expid}_*.01_jsbid*
-rm unknown/${expid}_*.01_sp6h*
-rm unknown/${expid}_*.01_spim*
-rm unknown/restart*.bak*
-
+# echo '#---- clean jsbach output'
+# rm outdata/jsbach/${expid}_*.01_js_wiso*
+# rm outdata/jsbach/${expid}_*.01_jsbach*
+# rm outdata/jsbach/${expid}_*.01_la_wiso*
+# rm outdata/jsbach/${expid}_*.01_land*
 
 echo '#---- clean restart files'
 
@@ -74,6 +50,28 @@ for MONTH in 01 02 03 04 05 06 07 08 09 10 11; do
     rm restart/echam/restart_${expid}_*_????${MONTH}??.nc
     rm restart/jsbach/restart_${expid}_????${MONTH}*.nc
 done
+
+echo '#---- clean runfolders'
+rm -rf run_*
+
+
+echo '#---- clean unknown output'
+# rm unknown/${expid}_*.01_co2*
+# rm unknown/${expid}_*.01_ma*
+# rm unknown/${expid}_*.01_sf_wiso*
+# rm unknown/${expid}_*.01_surf*
+# rm unknown/${expid}_*.01_aclcim*
+# rm unknown/${expid}_*.01_g3b1hi*
+# rm unknown/${expid}_*.01_g3bday*
+# rm unknown/${expid}_*.01_g3bid*
+# rm unknown/${expid}_*.01_g3bim*
+# rm unknown/${expid}_*.01_glday*
+# rm unknown/${expid}_*.01_glim*
+# rm unknown/${expid}_*.01_jsbid*
+# rm unknown/${expid}_*.01_sp6h*
+# rm unknown/${expid}_*.01_spim*
+rm unknown/restart*
+
 
 echo 'job done'
 cd $WORK

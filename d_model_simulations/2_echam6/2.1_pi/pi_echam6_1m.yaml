@@ -2,12 +2,13 @@ general:
     setup_name: "echam"
     compute_time: "00:30:00"
     initial_date: "2000-01-01"
-    final_date: "2001-01-01"
+    final_date: "2000-02-01"
     model_dir: "/work/ollie/qigao001/model_codes/echam-6.3.05p2-wiso/"
     base_dir: "/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/"
     nmonth: 1
     nyear: 0
     use_venv: False
+    clean_old_rundirs_except: 120
 
 echam:
     version: "6.3.05p2-wiso"
@@ -17,7 +18,7 @@ echam:
     bin_in_work:
             echam_bin: "${executable}"
     # namelist_dir: '/work/ollie/qigao001/esm_tools/namelists/echam/6.3.05p2-wiso/PI-CTRL/'
-    namelist_dir: '/work/ollie/qigao001/a_basic_analysis/g_namelists/pi/'
+    namelist_dir: '/work/ollie/qigao001/a_basic_analysis/g_namelists/test/'
     scenario: "PI-CTRL"
     res: T63
     lresume: False
@@ -37,7 +38,7 @@ echam:
                     nprocar: 0
                     nprocbr: 0
                 runctl:
-                    default_output: True
+                    # default_output: True
                     out_filetype: 2
                     # putdata: [ 450, 'seconds', 'first', 0 ]
                     # putdata: [ 6, 'hours', 'last', 0 ]

@@ -1289,59 +1289,126 @@ pre_all[expid[i]].values[pre_land[expid[i]] < 0]
 # endregion
 # -----------------------------------------------------------------------------
 
-ncfile1 = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/test/unknown/test_200001.01_echam.nc')
-ncfile2 = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/test1/unknown/test1_200001.01_echam.nc')
 
-(ncfile1.evap == ncfile2.evap).all()
-(ncfile1.aprl == ncfile2.aprl).all()
-(ncfile1.temp2 == ncfile2.temp2).all()
-(ncfile1.u10 == ncfile2.u10).all()
-(ncfile1.q2m == ncfile2.q2m).all()
-(ncfile1.q == ncfile2.q).all()
-(ncfile1.evapwac == ncfile2.evapwac).all()
+# -----------------------------------------------------------------------------
+# region check mvstreamctl
+#-------- check mvstreamctl works under different main stream output intervals
 
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+expid = [
+    'pi_m_416_4.9',
+    'pi_m_417_4.9',
+    ]
 
-ncfile3 = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/test/unknown/test_200001.01_wiso.nc')
-ncfile4 = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/test1/unknown/test1_200001.01_wiso.nc')
+# suffix = 'echam'
+# suffix = 'g3b_1m'
+# suffix = 'gl_1m'
+# suffix = 'sf_wiso'
+# suffix = 'sp_1m'
+# suffix = 'wiso_q_1m'
+#---- suffix = 'wiso_qvi_1d'
+#---- suffix = 'wiso'
 
-test = ncfile3.wisoevap.squeeze() - ncfile4.wisoevap.mean(dim='time').values
-wheremax = np.where(abs(test) == np.max(abs(test)))
-np.max(abs(test.values))
-test.values[wheremax]
-ncfile3.wisoevap.squeeze().values[wheremax]
-ncfile4.wisoevap.mean(dim='time').values[wheremax]
-stats.describe(abs(test), axis=None)
-test.to_netcdf('scratch/test/test.nc')
+i = 0
+file1 = exp_odir+expid[i]+'/unknown/'+expid[i]+'_200001.01_' + suffix + '.nc'
 
-
-np.max(abs(ncfile3.wisoaprl.squeeze() - ncfile4.wisoaprl.mean(dim='time').values))
-test = ncfile3.wisoaprl.squeeze() - ncfile4.wisoaprl.mean(dim='time').values
-wheremax = np.where(abs(test) == np.max(abs(test)))
-np.max(abs(test.values))
-test.values[wheremax]
-ncfile3.wisoaprl.squeeze().values[wheremax]
-ncfile4.wisoaprl.mean(dim='time').values[wheremax]
-stats.describe(abs(test), axis=None)
+j = 1
+file2 = exp_odir+expid[j]+'/unknown/'+expid[j]+'_200001.01_' + suffix + '.nc'
 
 
-test = ncfile3.wisoaprc.squeeze() - ncfile4.wisoaprc.mean(dim='time').values
-wheremax = np.where(abs(test) == np.max(abs(test)))
-np.max(abs(test.values))
-test.values[wheremax]
-ncfile3.wisoaprc.squeeze().values[wheremax]
-ncfile4.wisoaprc.mean(dim='time').values[wheremax]
-stats.describe(abs(test), axis=None)
+ncfile1 = xr.open_dataset(file1)
+ncfile2 = xr.open_dataset(file2)
+
+# var_names = ['evap', 'aprl', 'temp2', 'u10', 'q2m', 'q', 'evapwac']
+# var_names = ['q2m', 'rh2m', 'aps', 'wind10', 'seaice', 'relhum', 'tpot', 'tsw', 'temp2']
+# var_names = ['q', 'xl', 'xi']
+# var_names = ['wisoevap']
+# var_names = ['st', 'svo', 'sd']
+# var_names = ['q16o', 'xl16o', 'xi16o', 'q18o', 'xl18o', 'xi18o',
+#              'qhdo', 'xlhdo', 'xihdo', 'q_25', 'xl_25', 'xi_25']
+# var_names = ['wisoxivi', 'wisoqvi', 'wisoxlvi']
+# var_names = ['wisoaprl', 'wisoaprc']
+for var in var_names:
+    print((ncfile1[var] == ncfile2[var]).all())
 
 
-ncfile5 = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/test2/unknown/test2_200001.01_wiso.nc')
-ncfile6 = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/test3/unknown/test3_200001.01_wiso.nc')
+#-------- check mvstreamctl works similar under different output intervals
 
-test = ncfile5.wisoevap.squeeze() - ncfile6.wisoevap.mean(dim='time').values
-wheremax = np.where(abs(test) == np.max(abs(test)))
-np.max(abs(test.values))
-test.values[wheremax]
-ncfile5.wisoevap.squeeze().values[wheremax]
-ncfile6.wisoevap.mean(dim='time').values[wheremax]
-stats.describe(abs(test), axis=None)
-test.to_netcdf('scratch/test/test.nc')
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+expid = [
+    'pi_m_417_4.9',
+    ]
 
+suffix1 = 'g3b_1d'
+suffix2 = 'g3b_1m'
+# suffix1 = 'gl_1d'
+# suffix2 = 'gl_1m'
+# suffix1 = 'sp_1d'
+# suffix2 = 'sp_1m'
+# suffix1 = 'wiso_q_1d'
+# suffix2 = 'wiso_q_1m'
+# suffix1 = 'wiso_q_1d'
+# suffix2 = 'wiso_q_1m'
+
+
+i = 0
+file1 = exp_odir+expid[i]+'/unknown/'+expid[i]+'_200001.01_' + suffix1 + '.nc'
+file2 = exp_odir+expid[i]+'/unknown/'+expid[i]+'_200001.01_' + suffix2 + '.nc'
+
+# file1 = 'output/echam-6.3.05p2-wiso/pi/pi_m_416_4.9/unknown/pi_m_416_4.9_200001.01_wiso_qvi_1d.nc'
+# file2 = 'output/echam-6.3.05p2-wiso/pi/pi_m_417_4.9/unknown/pi_m_417_4.9_200001.01_wiso_qvi_1m.nc'
+
+ncfile1 = xr.open_dataset(file1)
+ncfile2 = xr.open_dataset(file2)
+
+var_names = ['q2m', 'rh2m', 'aps', 'seaice', 'relhum', 'tpot', 'tsw', 'temp2']
+# 'wind10',
+# var_names = ['q', 'xl', 'xi']
+# var_names = ['st', 'svo', 'sd']
+# var_names = ['q16o', 'xl16o', 'xi16o', 'q18o', 'xl18o', 'xi18o',
+#              'qhdo', 'xlhdo', 'xihdo', 'q_25', 'xl_25', 'xi_25']
+# var_names = ['wisoxivi', 'wisoqvi', 'wisoxlvi']
+for var in var_names:
+    # var = 'q2m'
+    print('#---------------- ' + var)
+    print(np.max(abs(ncfile1[var].mean(dim='time').values - ncfile2[var].squeeze().values)))
+    
+    test = ncfile1[var].mean(dim='time').values - ncfile2[var].squeeze().values
+    wheremax = np.where(abs(test) == np.max(abs(test)))
+    print(np.max(abs(test)))
+    print(test[wheremax])
+    print(ncfile1[var].mean(dim='time').values[wheremax])
+    print(ncfile2[var].squeeze().values[wheremax])
+
+
+#-------- check sf_wiso and wiso stream
+file1 = 'output/echam-6.3.05p2-wiso/pi/pi_m_416_4.9/unknown/pi_m_416_4.9_200001.01_sf_wiso.nc'
+file2 = 'output/echam-6.3.05p2-wiso/pi/pi_m_417_4.9/unknown/pi_m_417_4.9_200001.01_wiso.nc'
+ncfile1 = xr.open_dataset(file1)
+ncfile2 = xr.open_dataset(file2)
+
+(ncfile1.wisoevap.values == ncfile2.wisoevap.values).all()
+
+
+#-------- check two wiso streams
+
+file1 = 'output/echam-6.3.05p2-wiso/pi/pi_m_416_4.9/unknown/pi_m_416_4.9_200001.01_wiso.nc'
+file2 = 'output/echam-6.3.05p2-wiso/pi/pi_m_417_4.9/unknown/pi_m_417_4.9_200001.01_wiso.nc'
+ncfile1 = xr.open_dataset(file1)
+ncfile2 = xr.open_dataset(file2)
+
+var_names = ['wisoaprl', 'wisoaprc']
+for var in var_names:
+    # var = 'q2m'
+    print('#---------------- ' + var)
+    print(np.max(abs(ncfile1[var].mean(dim='time').values - ncfile2[var].squeeze().values)))
+    
+    test = ncfile1[var].mean(dim='time').values - ncfile2[var].squeeze().values
+    wheremax = np.where(abs(test) == np.max(abs(test)))
+    print(np.max(abs(test)))
+    print(test[wheremax])
+    print(ncfile1[var].mean(dim='time').values[wheremax])
+    print(ncfile2[var].squeeze().values[wheremax])
+
+# endregion
+# -----------------------------------------------------------------------------

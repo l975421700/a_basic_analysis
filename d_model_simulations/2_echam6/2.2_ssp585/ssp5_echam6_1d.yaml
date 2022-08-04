@@ -10,6 +10,7 @@ general:
     use_venv: False
 
 echam:
+    dataset: r0008
     version: "6.3.05p2-wiso"
     executable: echam6_0720_4.9
     bin_sources:
