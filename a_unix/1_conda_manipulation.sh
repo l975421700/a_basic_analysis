@@ -1,7 +1,7 @@
 
 
 # -----------------------------------------------------------------------------
-# region miniconda management on jasmin 2021-10-17 (Conda 4.10.3 Python 3.9.5)
+# region miniconda management
 
 # bash Miniconda3-latest-Linux-x86_64.sh
 
@@ -11,9 +11,8 @@
 # conda list
 # conda update -n base -c defaults conda
 
-# source /home/ollie/qigao001/miniconda3/bin/activate training
-source /home/users/qino/miniconda3/bin/activate
-conda activate deepice
+# source ${HOME}/miniconda3/bin/activate training
+source ${HOME}/miniconda3/bin/activate deepice
 
 conda install -c conda-forge mamba
 mamba install -c conda-forge matplotlib
@@ -56,10 +55,7 @@ mamba install -c conda-forge proplot
 mamba install -c conda-forge cmip6_preprocessing
 mamba install -c conda-forge bottleneck
 mamba install -c conda-forge gh
-# gh auth login
-mamba install -c ncas -c conda-forge cf-python cf-plot udunits2
 mamba install -c conda-forge mpich esmpy
-pip install cf-view
 mamba install -c conda-forge nc-time-axis
 mamba install -c conda-forge jupyter_contrib_nbextensions
 mamba install -c conda-forge notebook
@@ -72,6 +68,7 @@ mamba install -c conda-forge pyfesom2
 mamba install -c conda-forge geopandas
 mamba install -c conda-forge pymannkendall
 mamba install -c conda-forge fortls
+mamba install -c conda-forge ncl
 
 # clean conda installed pkgs
 # conda clean -a
@@ -101,19 +98,4 @@ mamba install -c conda-forge urllib3
 # endregion
 # -----------------------------------------------------------------------------
 
-
-# -----------------------------------------------------------------------------
-# region miniconda management on jasmin 2021-12-16 (Using pynio)
-
-# conda create --name deepice_pynio --channel conda-forge/label/cf201901 pynio pyngl
-
-conda activate deepice_pynio
-
-conda install -c conda-forge mamba
-mamba install -c conda-forge xarray
-mamba install -c conda-forge dask
-mamba install -c conda-forge ipykernel
-
-# endregion
-# -----------------------------------------------------------------------------
 
