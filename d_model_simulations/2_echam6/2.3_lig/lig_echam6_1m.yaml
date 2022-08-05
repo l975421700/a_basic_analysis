@@ -4,7 +4,7 @@ general:
     initial_date: "2000-01-01"
     final_date: "2000-02-01"
     model_dir: "/work/ollie/qigao001/model_codes/echam-6.3.05p2-wiso/"
-    base_dir: "/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/"
+    base_dir: "/work/ollie/qigao001/output/echam-6.3.05p2-wiso/lig/"
     nmonth: 1
     nyear: 0
     use_venv: False
@@ -17,8 +17,8 @@ echam:
     bin_in_work:
             echam_bin: "${executable}"
     # namelist_dir: '/work/ollie/qigao001/esm_tools/namelists/echam/6.3.05p2-wiso/PI-CTRL/'
-    namelist_dir: '/work/ollie/qigao001/a_basic_analysis/g_namelists/test/'
-    scenario: "PI-CTRL"
+    namelist_dir: '/work/ollie/qigao001/a_basic_analysis/g_namelists/pi/'
+    scenario: "PALEO"
     res: T63
     lresume: False
     with_wiso: True
@@ -42,8 +42,16 @@ echam:
                     # putdata: [ 450, 'seconds', 'first', 0 ]
                     # putdata: [ 6, 'hours', 'last', 0 ]
                     # putdata: [ 1, 'days', 'last', 0 ]
-                    # dt_stop: [ 2000, 1, 31 ]
+                    # dt_stop: [ 2000, 1, 2 ]
+                    l_orbvsop87: False
                 radctl:
+                    CO2VMR: 275.0e-6
+                    CH4VMR: 0.685e-6
+                    N2OVMR: 0.255e-6
+                    cecc: 0.039378
+                    cobld: 24.04
+                    clonp: 95.41
+                    yr_perp: -99999
                     lrad_async: False
                 wisoctl:
                     lwiso: True
@@ -79,15 +87,15 @@ echam:
                     ltag_corr_xtec: False
                     lcorrfac: False
     # file_movements:
-        # forcing:
-        #     all_directions: "link"
-        # input:
-        #     all_directions: "link"
+    #     forcing:
+    #         all_directions: "link"
+    #     input:
+    #         all_directions: "link"
     forcing_sources:
-        wiso_sw_observed: "/home/ollie/mwerner/model_input/ECHAM6-wiso/PI_ctrl/T63/T63_wisosw_d.nc"
+        wiso_sw_observed: "/work/ollie/qigao001/startdump/model_input/lig/bc_lig_pi_final/wisosw_d.echam.2900_2999.lig_final_t63_bias_corrected.nc"
         wiso_tagmap_1: "/work/ollie/qigao001/startdump/tagging/tagmap/pi_6tagmap_2.nc"
-        sic_1: "/work/ollie/qigao001/startdump/model_input/pi/alex/T63_amipsic_pcmdi_187001-189912.nc"
-        sst_1: "/work/ollie/qigao001/startdump/model_input/pi/alex/T63_amipsst_pcmdi_187001-189912.nc"
+        sic_1: "/work/ollie/qigao001/startdump/model_input/lig/bc_lig_pi_final/sic.fesom.2900_2999.lig_final_t63_bias_corrected.nc"
+        sst_1: "/work/ollie/qigao001/startdump/model_input/lig/bc_lig_pi_final/sst.fesom.2900_2999.lig_final_t63_bias_corrected.nc"
     add_forcing_files:
         wiso_sw: wiso_sw_observed
         wiso_tagmap: wiso_tagmap_1
@@ -98,17 +106,24 @@ echam:
         wiso_tagmap: "unit.26"
         sic: "unit.96"
         sst: "unit.20"
+    input_sources:
+        jansurf: '/work/ollie/qigao001/startdump/model_input/lig/bc_lig_pi_final/T63CORE2_jan_surf.nc'
+        vltclim: '/work/ollie/qigao001/startdump/model_input/lig/bc_lig_pi_final/T63CORE2_VLTCLIM.nc'
+        vgratclim: '/work/ollie/qigao001/startdump/model_input/lig/bc_lig_pi_final/T63CORE2_VGRATCLIM.nc'
 
 jsbach:
+    namelist_dir: "/home/ollie/qigao001/esm_tools/namelists//jsbach/3.20/PI-CTRL/no_dynveg"
     # file_movements:
-        # forcing:
-        #     all_directions: "link"
-        # input:
-        #     all_directions: "link"
+    #     forcing:
+    #         all_directions: "link"
+    #     input:
+    #         all_directions: "link"
     add_namelist_changes:
         namelist.jsbach:
             jsbach_ctl:
                 with_hd: False
+    input_sources:
+        jsbach_1850: "/work/ollie/qigao001/startdump/model_input/lig/bc_lig_pi_final/jsbach_T63CORE2_11tiles_5layers_natural-veg.nc"
     # add_streams:
     #     - jsbach
     #     - js_wiso
