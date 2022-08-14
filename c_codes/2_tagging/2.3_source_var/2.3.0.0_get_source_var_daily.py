@@ -1,10 +1,21 @@
 
 
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+# -----------------------------------------------------------------------------
+# region basic settings
+
+exp_odir = 'output/echam-6.3.05p2-wiso/lig/'
+
 expid = [
     # 'pi_m_402_4.7',
-    'pi_m_411_4.9',
+    # 'pi_m_411_4.9',
+    # 'pi_m_416_4.9',
+    'lig_m_000_4.9',
     ]
+
+ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
+# ntags = [0, 0, 0, 0, 0,   3, 3, 3, 3, 3,   7]
+# ntags = [0, 0, 0, 0, 0,   0, 0, 0, 0, 0,   7, 3, 3, 0]
+
 
 # var_name  = 'sst'
 # itag      = 7
@@ -26,9 +37,6 @@ expid = [
 # min_sf    = 0
 # max_sf    = 28
 
-# ntags = [0, 0, 0, 0, 0,   3, 3, 3, 3, 3,   7]
-
-
 # var_name  = 'sinlon'
 # itag      = 11
 # min_sf    = -1
@@ -39,7 +47,8 @@ itag      = 12
 min_sf    = -1
 max_sf    = 1
 
-ntags = [0, 0, 0, 0, 0,   0, 0, 0, 0, 0,   7, 3, 3, 0]
+# endregion
+# -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
@@ -81,10 +90,13 @@ pbar.register()
 i=0
 print('#-------- ' + expid[i])
 fl_wiso_daily = sorted(glob.glob(
-    exp_odir + expid[i] + '/outdata/echam/' + \
-        expid[i] + '_??????_daily.01_wiso.nc'))
+    # exp_odir + expid[i] + '/outdata/echam/' + \
+    #     expid[i] + '_??????_daily.01_wiso.nc'
+    exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'
+        ))
+# ten-year spin up, 19 years for analysis
 exp_out_wiso_daily = xr.open_mfdataset(
-    fl_wiso_daily[120:], data_vars='minimal', coords='minimal', parallel=True)
+    fl_wiso_daily[60:132], data_vars='minimal', coords='minimal', parallel=True)
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -109,9 +121,6 @@ print(kstart); print(kend)
 
 #-------------------------------- precipitation
 
-
-#-------- daily pre
-#!!!!!!!! remember to discard spinup period
 ocean_pre = (
     exp_out_wiso_daily.wisoaprl.sel(wisotype=slice(kstart+2, kstart+3)) + \
         exp_out_wiso_daily.wisoaprc.sel(wisotype=slice(kstart+2, kstart+3))
@@ -151,10 +160,6 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_'
     pickle.dump(pre_weighted_var, f)
 
 
-
-
-
-
 '''
 
 #-------- other checks
@@ -162,6 +167,13 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_'
 
 print(np.max(var_scaled_pre.values[ocean_pre.values < 2e-8]))
 print(np.max(ocean_pre.values[ocean_pre.values < 2e-8]))
+
+
+#-------- import data
+pre_weighted_lat = {}
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lat.pkl', 'rb') as f:
+    pre_weighted_lat[expid[i]] = pickle.load(f)
 
 '''
 # endregion

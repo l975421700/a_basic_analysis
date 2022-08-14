@@ -69,6 +69,7 @@ mamba install -c conda-forge geopandas
 mamba install -c conda-forge pymannkendall
 mamba install -c conda-forge fortls
 mamba install -c conda-forge ncl
+pip install pympler
 
 # clean conda installed pkgs
 # conda clean -a

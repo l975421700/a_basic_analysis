@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --time=05:00:00
+#SBATCH --time=00:30:00
 #SBATCH --partition=mpp
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
@@ -9,9 +9,7 @@ source /home/ollie/qigao001/miniconda3/bin/activate training
 which python
 which cdo
 
-cd $WORK
-
-python /work/ollie/qigao001/a_basic_analysis/c_codes/0_basics/0.1_scripts/0.1.0_long_scripts_to_run.py
+python /work/ollie/qigao001/a_basic_analysis/c_codes/2_tagging/2.3_source_var/2.3.0.0_source_var_scaled_daily.py
 
 
 #Xsrun  I know what I am doing

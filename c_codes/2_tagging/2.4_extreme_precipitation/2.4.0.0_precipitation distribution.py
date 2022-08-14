@@ -33,7 +33,7 @@ from matplotlib import cm
 import cartopy.crs as ccrs
 plt.rcParams['pcolor.shading'] = 'auto'
 mpl.rcParams['figure.dpi'] = 300
-mpl.rc('font', family='Times New Roman', size=9)
+mpl.rc('font', family='Times New Roman', size=10)
 mpl.rcParams['axes.linewidth'] = 0.2
 plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
@@ -74,13 +74,30 @@ from a_basic_analysis.b_module.source_properties import (
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'pi_m_402_4.7',
-    'pi_m_411_4.9',
+    # 'pi_m_402_4.7',
+    # 'pi_m_411_4.9',
+    'pi_m_416_4.9',
     ]
 
 # region import output
 
 exp_org_o = {}
+
+i = 0
+exp_org_o[expid[i]] = {}
+
+filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'))
+exp_org_o[expid[i]]['wiso'] = xr.open_mfdataset(filenames_wiso[120:348], data_vars='minimal', coords='minimal', parallel=True)
+
+
+
+'''
+#-------- check pre
+filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_echam.nc'))
+exp_org_o[expid[i]]['echam'] = xr.open_mfdataset(filenames_echam[120:348], data_vars='minimal', coords='minimal', parallel=True)
+
+np.max(abs(exp_org_o[expid[i]]['echam'].aprl[-1].values - exp_org_o[expid[i]]['wiso'].wisoaprl[-31:, 0].mean(dim='time').values))
+
 
 for i in range(len(expid)):
     # i=0
@@ -109,6 +126,7 @@ for i in range(len(expid)):
         filenames_echam_daily = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*daily.01_echam.nc'))
         exp_org_o[expid[i]]['echam_daily'] = xr.open_mfdataset(filenames_echam_daily[120:], data_vars='minimal', coords='minimal', parallel=True)
 
+'''
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -119,21 +137,52 @@ for i in range(len(expid)):
 i = 0
 expid[i]
 
-tot_pre = {}
+wisoaprt = {}
 
-tot_pre[expid[i]] = (
-    exp_org_o[expid[i]]['echam_daily'].aprl + \
-    exp_org_o[expid[i]]['echam_daily'].aprc.values).compute()
-tot_pre[expid[i]] = tot_pre[expid[i]].rename('tot_pre')
-tot_pre[expid[i]].values[tot_pre[expid[i]].values < 2e-8] = 0
 
-tot_pre_alltime = {}
-tot_pre_alltime[expid[i]] = mon_sea_ann(tot_pre[expid[i]])
+wisoaprt[expid[i]] = (
+    exp_org_o[expid[i]]['wiso'].wisoaprl[:, :3] + exp_org_o[expid[i]]['wiso'].wisoaprc[:, :3].values).compute()
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.tot_pre_alltime.pkl',
+wisoaprt[expid[i]] = wisoaprt[expid[i]].rename('wisoaprt')
+
+wisoaprt_alltime = {}
+wisoaprt_alltime[expid[i]] = mon_sea_ann(wisoaprt[expid[i]])
+
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl',
           'wb') as f:
-    pickle.dump(tot_pre_alltime[expid[i]], f)
+    pickle.dump(wisoaprt_alltime[expid[i]], f)
 
+
+'''
+#-------- check
+i = 0
+exp_org_o = {}
+exp_org_o[expid[i]] = {}
+
+filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_echam.nc'))
+exp_org_o[expid[i]]['echam'] = xr.open_mfdataset(filenames_echam[120:348], data_vars='minimal', coords='minimal', parallel=True)
+
+wisoaprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
+    wisoaprt_alltime[expid[i]] = pickle.load(f)
+
+np.max(abs(exp_org_o[expid[i]]['echam'].aprl.values + exp_org_o[expid[i]]['echam'].aprc.values - wisoaprt_alltime[expid[i]]['mon'][:, 0].values))
+
+#-------- memory profiling
+
+sys.getsizeof(wisoaprt[expid[i]])
+
+import psutil
+process = psutil.Process(os.getpid())
+print(process.memory_info().rss / 2**30)
+
+import gc
+gc.collect()
+
+from pympler import asizeof
+from pympler import muppy
+'''
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -144,10 +193,16 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.tot_pre_alltim
 i = 0
 expid[i]
 
-tot_pre_alltime = {}
+wisoaprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
+    wisoaprt_alltime[expid[i]] = pickle.load(f)
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.tot_pre_alltime.pkl', 'rb') as f:
-    tot_pre_alltime[expid[i]] = pickle.load(f)
+????
+
+
+
+
+
 
 
 with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:

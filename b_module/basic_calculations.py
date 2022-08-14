@@ -5,11 +5,15 @@
 
 def mon_sea_ann(
     var_daily = None, var_monthly = None, skipna = True,
+    lcopy = True, lthreshold = True,
     ):
     '''
     #---- Input
     var_daily:   xarray.DataArray, daily variables, must have time dimension
     var_monthly: xarray.DataArray, monthly variables, must have time dimension
+    skipna:      whether to skip NA
+    lcopy:       whether to use copy of original var
+    lthreshold:  whether to apply threshold of 2e-8
     
     #---- Output
     var_alltime
@@ -19,8 +23,13 @@ def mon_sea_ann(
     var_alltime = {}
     
     if var_monthly is None:
-        var_alltime['daily'] = var_daily.copy()
-        var_alltime['daily'].values[var_alltime['daily'].values < 2e-8] = 0
+        if lcopy:
+            var_alltime['daily'] = var_daily.copy()
+        else:
+            var_alltime['daily'] = var_daily
+        
+        if lthreshold:
+            var_alltime['daily'].values[var_alltime['daily'].values < 2e-8] = 0
         
         #-------- monthly
         var_alltime['mon'] = var_daily.resample({'time': '1M'}).mean(skipna=skipna).compute()

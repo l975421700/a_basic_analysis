@@ -3,7 +3,8 @@
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_m_402_4.7',
-    'pi_m_411_4.9'
+    # 'pi_m_411_4.9',
+    'pi_m_416_4.9',
     ]
 i = 0
 
@@ -37,7 +38,7 @@ from matplotlib import cm
 import cartopy.crs as ccrs
 plt.rcParams['pcolor.shading'] = 'auto'
 mpl.rcParams['figure.dpi'] = 600
-mpl.rc('font', family='Times New Roman', size=8)
+mpl.rc('font', family='Times New Roman', size=10)
 mpl.rcParams['axes.linewidth'] = 0.2
 plt.rcParams.update({"mathtext.fontset": "stix"})
 
@@ -102,11 +103,10 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_c
 
 lon = pre_weighted_lon[expid[i]]['am'].lon
 lat = pre_weighted_lon[expid[i]]['am'].lat
-mpl.rc('font', family='Times New Roman', size=10)
 
 
 #-------- plot configuration
-output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/' + '6.1.3.1.0.1_am_DJF_JJA pre_weighted_lon ' + expid[i] + '.png'
+output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/' + '6.1.3.1 ' + expid[i] + ' pre_weighted_lon am_DJF_JJA.png'
 cbar_label1 = 'Precipitation-weighted open-oceanic source longitude [$°$]'
 cbar_label2 = 'Differences in precipitation-weighted open-oceanic source longitude [$°$]'
 
@@ -201,11 +201,10 @@ fig.savefig(output_png)
 
 lon = pre_weighted_lon[expid[i]]['am'].lon
 lat = pre_weighted_lon[expid[i]]['am'].lat
-mpl.rc('font', family='Times New Roman', size=10)
 
 
 #-------- plot configuration
-output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/' + '6.1.3.1.0.0_Antarctica am_DJF_JJA pre_weighted_lon ' + expid[i] + '.png'
+output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/' + '6.1.3.1 ' + expid[i] + ' pre_weighted_lon am_DJF_JJA Antarctica.png'
 cbar_label1 = 'Precipitation-weighted open-oceanic source longitude [$°$]'
 cbar_label2 = 'Differences in precipitation-weighted open-oceanic source longitude [$°$]'
 
@@ -295,11 +294,10 @@ fig.savefig(output_png)
 
 lon = pre_weighted_lon[expid[i]]['am'].lon
 lat = pre_weighted_lon[expid[i]]['am'].lat
-mpl.rc('font', family='Times New Roman', size=10)
 
 
 #-------- plot configuration
-output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/' + '6.1.3.1.0.2_ann_DJF_JJA std pre_weighted_lon ' + expid[i] + '.png'
+output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/' + '6.1.3.1 ' + expid[i] + ' pre_weighted_lon ann_DJF_JJA std.png'
 cbar_label1 = 'Standard deviation of precipitation-weighted open-oceanic source longitude [$°$]'
 
 pltlevel = np.arange(0, 10 + 1e-4, 1)
@@ -373,83 +371,9 @@ np.isnan(pre_weighted_lon[expid[i]]['sea'].sel(
 
 
 # -----------------------------------------------------------------------------
-# region plot ann/DJF/JJA standard deviation of source lat Antarctic
-
-
-#-------- basic set
-
-lon = pre_weighted_lat[expid[i]]['am'].lon
-lat = pre_weighted_lat[expid[i]]['am'].lat
-mpl.rc('font', family='Times New Roman', size=10)
-
-
-#-------- plot configuration
-output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.0_lat/' + '6.1.3.0.0.3_Antarctica ann_DJF_JJA std pre_weighted_lat ' + expid[i] + '.png'
-cbar_label1 = 'Standard deviation of precipitation-weighted open-oceanic source latitude [$°$]'
-
-pltlevel = np.arange(0, 5 + 1e-4, 0.5)
-pltticks = np.arange(0, 5 + 1e-4, 1)
-pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
-pltcmp = cm.get_cmap('Blues', len(pltlevel)-1)
-
-
-nrow = 1
-ncol = 3
-fm_bottom = 2 / (5.8*nrow + 2)
-
-fig, axs = plt.subplots(
-    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
-    subplot_kw={'projection': ccrs.SouthPolarStereo()},
-    gridspec_kw={'hspace': 0.05, 'wspace': 0.05},)
-
-for jcol in range(ncol):
-    axs[jcol] = hemisphere_plot(northextent=-60, ax_org = axs[jcol])
-
-#-------- Annual, DJF, JJA std
-plt1 = axs[0].pcolormesh(
-    lon, lat, pre_weighted_lat[expid[i]]['ann'].std(dim='time', skipna=True),
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-axs[1].pcolormesh(
-    lon, lat, pre_weighted_lat[expid[i]]['sea'].sel(
-        time=(pre_weighted_lat[expid[i]]['sea'].time.dt.month == 2)
-        ).std(dim='time', skipna=True),
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-axs[2].pcolormesh(
-    lon, lat, pre_weighted_lat[expid[i]]['sea'].sel(
-        time=(pre_weighted_lat[expid[i]]['sea'].time.dt.month == 8)
-        ).std(dim='time', skipna=True),
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-
-plt.text(
-    0.5, 1.05, 'Annual', transform=axs[0].transAxes,
-    ha='center', va='center', rotation='horizontal')
-
-plt.text(
-    0.5, 1.05, 'DJF', transform=axs[1].transAxes,
-    ha='center', va='center', rotation='horizontal')
-
-plt.text(
-    0.5, 1.05, 'JJA', transform=axs[2].transAxes,
-    ha='center', va='center', rotation='horizontal')
-
-cbar1 = fig.colorbar(
-    plt1, ax=axs,
-    orientation="horizontal",shrink=0.5,aspect=40,extend='max',
-    anchor=(0.5, 0.4), ticks=pltticks)
-cbar1.ax.set_xlabel(cbar_label1, linespacing=2)
-
-fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom * 0.8, top = 0.94)
-fig.savefig(output_png)
-
-'''
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
 # region plot annual mean values
 
+output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/6.1.3.1 ' + expid[i] + ' pre_weighted_lon am Antarctica.png'
 
 pltlevel = np.arange(0, 360 + 1e-4, 15)
 pltticks = np.arange(0, 360 + 1e-4, 45)
@@ -470,7 +394,7 @@ cbar = fig.colorbar(
     pad=0.02, fraction=0.15,
     )
 cbar.ax.set_xlabel('Source longitude [$°$]\n ', linespacing=2)
-fig.savefig('figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/6.1.3.1.0.4_Antarctica am pre_weighted_lon ' + expid[i] + '.png')
+fig.savefig(output_png)
 
 
 # endregion
