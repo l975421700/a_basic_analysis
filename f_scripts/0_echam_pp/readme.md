@@ -1,5 +1,6 @@
 
-File directories (8 files: 642M):
+
+#-------- File directories (8 files: 642M):
 
 echam:      monthly standdard output.   35M
 
@@ -24,6 +25,11 @@ wiso_qvi_1d: daily timmean output.      184M
 wiso:       daily timmean output.       123M
             wisoaprl, wisoaprc
 
+
+#-------- more variables to output and investigate later
+
+sp_1d:      daily timmean output.
+            svo, sd => u, v
 
 
 <!-- Template for post processing -->

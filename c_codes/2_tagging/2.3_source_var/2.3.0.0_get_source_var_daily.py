@@ -3,16 +3,14 @@
 # -----------------------------------------------------------------------------
 # region basic settings
 
-exp_odir = 'output/echam-6.3.05p2-wiso/lig/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 
 expid = [
-    # 'pi_m_402_4.7',
-    # 'pi_m_411_4.9',
-    # 'pi_m_416_4.9',
-    'lig_m_000_4.9',
+    'pi_m_416_4.9',
     ]
 
 ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
+
 # ntags = [0, 0, 0, 0, 0,   3, 3, 3, 3, 3,   7]
 # ntags = [0, 0, 0, 0, 0,   0, 0, 0, 0, 0,   7, 3, 3, 0]
 
@@ -94,9 +92,9 @@ fl_wiso_daily = sorted(glob.glob(
     #     expid[i] + '_??????_daily.01_wiso.nc'
     exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'
         ))
-# ten-year spin up, 19 years for analysis
+# ten-year spin up, 30 years for analysis
 exp_out_wiso_daily = xr.open_mfdataset(
-    fl_wiso_daily[60:132], data_vars='minimal', coords='minimal', parallel=True)
+    fl_wiso_daily[120:], data_vars='minimal', coords='minimal', parallel=True)
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -174,6 +172,33 @@ pre_weighted_lat = {}
 
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lat.pkl', 'rb') as f:
     pre_weighted_lat[expid[i]] = pickle.load(f)
+
+#-------- check consistency
+
+with open('output/echam-6.3.05p2-wiso/pi/pi_m_402_4.7/analysis/echam/pi_m_402_4.7.pre_weighted_sst.pkl', 'rb') as f:
+    pre_weighted_sst = pickle.load(f)
+
+
+with open('output/echam-6.3.05p2-wiso/pi/pi_m_402_4.7/analysis/echam/pi_m_402_4.7.pre_weighted_sst1.pkl', 'rb') as f:
+    pre_weighted_sst1 = pickle.load(f)
+
+
+(pre_weighted_sst['daily'].values[np.isfinite(pre_weighted_sst['daily'].values)] == pre_weighted_sst1['daily'].values[np.isfinite(pre_weighted_sst1['daily'].values)]).all()
+
+np.max(abs(pre_weighted_sst['daily'].values[np.isfinite(pre_weighted_sst['daily'].values)] - pre_weighted_sst1['daily'].values[np.isfinite(pre_weighted_sst1['daily'].values)]))
+
+test = pre_weighted_sst['daily'].values - pre_weighted_sst1['daily'].values
+
+where_max = np.where(abs(test) == np.nanmax(abs(test)))
+np.nanmax(abs(test))
+test[where_max]
+pre_weighted_sst['daily'].values[where_max]
+pre_weighted_sst1['daily'].values[where_max]
+
+var_scaled_pre_alltime['daily'].values[where_max]
+ocean_pre_alltime['daily'].values[where_max]
+ocean_pre.values[where_max]
+var_scaled_pre.values[where_max]
 
 '''
 # endregion

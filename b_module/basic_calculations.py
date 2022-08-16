@@ -1,11 +1,25 @@
 
 
 # -----------------------------------------------------------------------------
+# region Function to calculate time weighted mean values
+
+def time_weighted_mean(ds):
+    '''
+    #---- Input
+    ds: xarray.DataArray
+    '''
+    
+    return ds.weighted(ds.time.dt.days_in_month).mean('time', skipna=True)
+
+# endregion
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
 # region Function to calculate monthly/seasonal/annual (mean) values
 
 def mon_sea_ann(
     var_daily = None, var_monthly = None, skipna = True,
-    lcopy = True, lthreshold = True,
+    lcopy = True,
     ):
     '''
     #---- Input
@@ -13,7 +27,6 @@ def mon_sea_ann(
     var_monthly: xarray.DataArray, monthly variables, must have time dimension
     skipna:      whether to skip NA
     lcopy:       whether to use copy of original var
-    lthreshold:  whether to apply threshold of 2e-8
     
     #---- Output
     var_alltime
@@ -22,14 +35,11 @@ def mon_sea_ann(
     
     var_alltime = {}
     
-    if var_monthly is None:
+    if not var_daily is None:
         if lcopy:
             var_alltime['daily'] = var_daily.copy()
         else:
             var_alltime['daily'] = var_daily
-        
-        if lthreshold:
-            var_alltime['daily'].values[var_alltime['daily'].values < 2e-8] = 0
         
         #-------- monthly
         var_alltime['mon'] = var_daily.resample({'time': '1M'}).mean(skipna=skipna).compute()
@@ -40,126 +50,120 @@ def mon_sea_ann(
         #-------- annual
         var_alltime['ann'] = var_daily.resample({'time': '1Y'}).mean(skipna=skipna).compute()
         
-        #-------- monthly mean
-        var_alltime['mm'] = var_alltime['mon'].groupby('time.month').mean(skipna=skipna).compute()
-        
-        #-------- seasonal mean
-        var_alltime['sm'] = var_alltime['sea'].groupby('time.season').mean(skipna=skipna).compute()
-        
-        #-------- annual mean
-        var_alltime['am'] = var_alltime['ann'].mean(dim='time', skipna=skipna).compute()
-        
-    # else:
+    elif not var_monthly is None:
         #-------- monthly
-        
+        var_alltime['mon'] = var_monthly.copy()
         
         #-------- seasonal
-        
+        var_alltime['sea'] = var_monthly.resample({'time': 'Q-FEB'}).map(time_weighted_mean)[1:-1].compute()
         
         #-------- annual
+        var_alltime['ann'] = var_monthly.resample({'time': '1Y'}).map(time_weighted_mean).compute()
         
-        
-        #-------- monthly mean
-        
-        
-        #-------- seasonal mean
-        
-        
-        #-------- annual mean
-        
+    #-------- monthly mean
+    var_alltime['mm'] = var_alltime['mon'].groupby('time.month').mean(skipna=skipna).compute()
     
+    #-------- seasonal mean
+    var_alltime['sm'] = var_alltime['sea'].groupby('time.season').mean(skipna=skipna).compute()
+    
+    #-------- annual mean
+    var_alltime['am'] = var_alltime['ann'].mean(dim='time', skipna=skipna).compute()
     return(var_alltime)
 
 
+
 '''
-#-------------------------------- check with daily values
-#-------- monthly pre
+#-------------------------------- check
+import xarray as xr
+import pandas as pd
+import numpy as np
 
-ocean_pre_mon = ocean_pre.resample({'time': '1M'}).mean()
-var_scaled_pre_mon = var_scaled_pre.resample({'time': '1M'}).mean()
+x = np.arange(0, 360, 1)
+y = np.arange(-90, 90, 1)
 
-#-------- seasonal pre
+#-------- check daily data
 
-ocean_pre_sea = ocean_pre.resample({'time': 'Q-FEB'}).mean()[1:-1]
-var_scaled_pre_sea = var_scaled_pre.resample({'time': 'Q-FEB'}).mean()[1:-1]
+time = pd.date_range( "2001-01-01-00", "2009-12-31-00", freq="1D")
 
-#-------- annual pre
-ocean_pre_ann = ocean_pre.resample({'time': '1Y'}).mean()
-var_scaled_pre_ann = var_scaled_pre.resample({'time': '1Y'}).mean()
+ds = xr.DataArray(
+    data = np.random.rand(len(time),len(x), len(y)),
+    coords={
+            "time": time,
+            "x": x,
+            "y": y,
+        }
+)
 
-#-------- monthly mean pre
-ocean_pre_mm = ocean_pre_mon.groupby('time.month').mean()
-var_scaled_pre_mm = var_scaled_pre_mon.groupby('time.month').mean()
+ds_alltime = mon_sea_ann(ds)
 
-
-#-------- seasonal mean pre
-ocean_pre_sm = ocean_pre_sea.groupby('time.season').mean()
-var_scaled_pre_sm = var_scaled_pre_sea.groupby('time.season').mean()
-
-#-------- annual mean pre
-ocean_pre_am = ocean_pre_ann.mean(dim='time')
-var_scaled_pre_am = var_scaled_pre_ann.mean(dim='time')
-
-(ocean_pre_alltime['mon'] == ocean_pre_mon).all()
-(ocean_pre_alltime['sea'] == ocean_pre_sea).all()
-(ocean_pre_alltime['ann'] == ocean_pre_ann).all()
-(ocean_pre_alltime['mm'] == ocean_pre_mm).all()
-(ocean_pre_alltime['sm'] == ocean_pre_sm).all()
-(ocean_pre_alltime['am'] == ocean_pre_am).all()
-(var_scaled_pre_alltime['mon'] == var_scaled_pre_mon).all()
-(var_scaled_pre_alltime['sea'] == var_scaled_pre_sea).all()
-(var_scaled_pre_alltime['ann'] == var_scaled_pre_ann).all()
-(var_scaled_pre_alltime['mm'] == var_scaled_pre_mm).all()
-(var_scaled_pre_alltime['sm'] == var_scaled_pre_sm).all()
-(var_scaled_pre_alltime['am'] == var_scaled_pre_am).all()
+# calculation in function and manually
+(ds_alltime['mon'] == ds.resample({'time': '1M'}).mean()).all().values
+(ds_alltime['sea'] == ds.resample({'time': 'Q-FEB'}).mean()[1:-1]).all().values
+(ds_alltime['ann'] == ds.resample({'time': '1Y'}).mean()).all().values
+(ds_alltime['mm'] == ds_alltime['mon'].groupby('time.month').mean()).all().values
+(ds_alltime['sm'] == ds_alltime['sea'].groupby('time.season').mean()).all().values
+(ds_alltime['am'] == ds_alltime['ann'].mean(dim='time')).all().values
 
 
-#-------------------------------- minor checks during calculation
+ds[-31:, 30, 30].values.mean()
+ds.resample({'time': '1M'}).mean()[-1, 30, 30].values
+ds.resample({'time': 'Q-FEB'}).mean()[-1, 30, 30].values
 
-#---- monthly
-ocean_pre[-31:, 30, 30].values.mean()
-ocean_pre.resample({'time': '1M'}).mean()[-1, 30, 30].values
+ds[:59, 30, 30].values.mean()
+ds.resample({'time': 'Q-FEB'}).mean()[0, 30, 30].values
 
-var_scaled_pre[-31:, 30, 30].values.mean()
-var_scaled_pre.resample({'time': '1M'}).mean()[-1, 30, 30].values
+ds[:365, 40, 50].mean().values
+ds.resample({'time': '1Y'}).mean()[0, 40, 50].values
 
-#---- seasonally
-ocean_pre[:60, 30, 30].values.mean()
-ocean_pre.resample({'time': 'Q-FEB'}).mean()[0, 30, 30].values
+ds_alltime['mon'].sel(time=(ds_alltime['mon'].time.dt.month==6).values)[:, 30, 30].mean().values
+ds_alltime['mon'].groupby('time.month').mean()[5, 30, 30].values
 
-ocean_pre[-31:, 30, 30].values.mean()
-ocean_pre.resample({'time': 'Q-FEB'}).mean()[-1, 30, 30].values
-# ocean_pre.resample({'time': 'QS-DEC'}).mean()
+ds_alltime['sea'].sel(time=(ds_alltime['sea'].time.dt.month==8).values)[:, 30, 30].mean().values
+ds_alltime['sm'].sel(season='JJA')[30,30].values
 
-var_scaled_pre[:60, 30, 30].values.mean()
-var_scaled_pre.resample({'time': 'Q-FEB'}).mean()[0, 30, 30].values
 
-var_scaled_pre[-31:, 30, 30].values.mean()
-var_scaled_pre.resample({'time': 'Q-FEB'}).mean()[-1, 30, 30].values
+ds_alltime['ann'].mean(dim='time')[30, 30].values
+ds_alltime['ann'][:, 30, 30].mean().values
 
-#---- annual
-ocean_pre.resample({'time': '1Y'}).mean()[0, 40, 50].values
-ocean_pre[:366, 40, 50].mean().values
-var_scaled_pre.resample({'time': '1Y'}).mean()[0, 40, 50].values
-var_scaled_pre[:366, 40, 50].mean().values
+#-------- check monthly data
 
-#---- monthly mean
-ocean_pre_mon.sel(time=(ocean_pre_mon.time.dt.month==6).values)[:, 30, 30].mean().values
-ocean_pre_mon.groupby('time.month').mean()[5, 30, 30].values
-var_scaled_pre_mon.sel(time=(var_scaled_pre_mon.time.dt.month==6).values)[:, 30, 30].mean().values
-var_scaled_pre_mon.groupby('time.month').mean()[5, 30, 30].values
+time = pd.date_range( "2001-01-01-00", "2009-12-31-00", freq="1M")
 
-#---- seasonal mean
-ocean_pre_sea.sel(time=(ocean_pre_sea.time.dt.month==8).values)[:, 30, 30].mean().values
-ocean_pre_sm.sel(season='JJA')[30,30].values
-var_scaled_pre_sea.sel(time=(var_scaled_pre_sea.time.dt.month==8).values)[:, 30, 30].mean().values
-var_scaled_pre_sm.sel(season='JJA')[30,30].values
+ds = xr.DataArray(
+    data = np.random.rand(len(time),len(x), len(y)),
+    coords={
+            "time": time,
+            "x": x,
+            "y": y,
+        }
+)
 
-#---- annual mean
-ocean_pre_ann.mean(dim='time')[30, 30].values
-ocean_pre_ann[:, 30, 30].mean().values
-var_scaled_pre_ann.mean(dim='time')[30, 30].values
-var_scaled_pre_ann[:, 30, 30].mean().values
+ds_alltime = mon_sea_ann(var_monthly = ds)
+
+(ds_alltime['mon'] == ds).all().values
+(ds_alltime['sea'] == ds.resample({'time': 'Q-FEB'}).map(time_weighted_mean)[1:-1].compute()).all().values
+(ds_alltime['ann'] == ds.resample({'time': '1Y'}).map(time_weighted_mean).compute()).all().values
+(ds_alltime['mm'] == ds_alltime['mon'].groupby('time.month').mean()).all().values
+(ds_alltime['sm'] == ds_alltime['sea'].groupby('time.season').mean()).all().values
+(ds_alltime['am'] == ds_alltime['ann'].mean(dim='time')).all().values
+
+# seasonal
+i1 = 30
+i3 = 40
+i4 = 60
+ds[(i1*3 + 2):(i1*3 + 5), i3, i4]
+ds_alltime['sea'][i1, i3, i4].values
+np.average(ds[(i1*3 + 2):(i1*3 + 5), i3, i4], weights = ds[(i1*3 + 2):(i1*3 + 5), i3, i4].time.dt.days_in_month)
+
+# annual
+i1 = 6
+i3 = 40
+i4 = 60
+ds[(i1*12 + 0):(i1*12 + 12), i3, i4]
+ds_alltime['ann'][i1, i3, i4].values
+np.average(ds[(i1*12 + 0):(i1*12 + 12), i3, i4], weights = ds[(i1*12 + 0):(i1*12 + 12), i3, i4].time.dt.days_in_month)
+
+
 
 '''
 # endregion
@@ -288,17 +292,17 @@ def points_in_polygon(lon, lat, polygon,):
     return (mask, mask01)
 
 '''
-eais_mask, eais_mask01 = points_in_polygon(
+EAIS_mask, EAIS_mask01 = points_in_polygon(
     lon, lat, Path(list(ais_imbie2.to_crs(4326).geometry[2].exterior.coords),
                    closed=True))
 
-# eais_path = Path(list(ais_imbie2.to_crs(4326).geometry[2].exterior.coords))
-# wais_path = Path(list(ais_imbie2.to_crs(4326).geometry[1].exterior.coords))
+# EAIS_path = Path(list(ais_imbie2.to_crs(4326).geometry[2].exterior.coords))
+# WAIS_path = Path(list(ais_imbie2.to_crs(4326).geometry[1].exterior.coords))
 # ap_path = Path(list(ais_imbie2.to_crs(4326).geometry[3].exterior.coords))
 # np.unique(Path(list(ais_imbie2.to_crs(4326).geometry[2].exterior.coords),
 # closed=True).codes, return_counts=True)
 
-ax.contour(lon, lat, eais_mask01, colors='blue', levels=np.array([0.5]),
+ax.contour(lon, lat, EAIS_mask01, colors='blue', levels=np.array([0.5]),
 transform=ccrs.PlateCarree(), linewidths=1, linestyles='solid')
 
 '''
@@ -336,29 +340,29 @@ def create_ais_mask(lon, lat, ais_shpfile, cellarea):
     
     ais_mask = {}
     ais_mask['mask'] = {}
-    ais_mask['mask']['eais'] = (regions == 'East')
-    ais_mask['mask']['wais'] = (regions == 'West')
-    ais_mask['mask']['ap'] = (regions == 'Peninsula')
-    ais_mask['mask']['ais'] = (ais_mask['mask']['eais'] | ais_mask['mask']['wais'] | ais_mask['mask']['ap'])
+    ais_mask['mask']['EAIS'] = (regions == 'East')
+    ais_mask['mask']['WAIS'] = (regions == 'West')
+    ais_mask['mask']['AP'] = (regions == 'Peninsula')
+    ais_mask['mask']['AIS'] = (ais_mask['mask']['EAIS'] | ais_mask['mask']['WAIS'] | ais_mask['mask']['AP'])
     
     ais_mask['mask01'] = {}
-    ais_mask['mask01']['eais'] = np.zeros(regions.shape)
-    ais_mask['mask01']['eais'][ais_mask['mask']['eais']] = 1
+    ais_mask['mask01']['EAIS'] = np.zeros(regions.shape)
+    ais_mask['mask01']['EAIS'][ais_mask['mask']['EAIS']] = 1
     
-    ais_mask['mask01']['wais'] = np.zeros(regions.shape)
-    ais_mask['mask01']['wais'][ais_mask['mask']['wais']] = 1
+    ais_mask['mask01']['WAIS'] = np.zeros(regions.shape)
+    ais_mask['mask01']['WAIS'][ais_mask['mask']['WAIS']] = 1
     
-    ais_mask['mask01']['ap'] = np.zeros(regions.shape)
-    ais_mask['mask01']['ap'][ais_mask['mask']['ap']] = 1
+    ais_mask['mask01']['AP'] = np.zeros(regions.shape)
+    ais_mask['mask01']['AP'][ais_mask['mask']['AP']] = 1
     
-    ais_mask['mask01']['ais'] = np.zeros(regions.shape)
-    ais_mask['mask01']['ais'][ais_mask['mask']['ais']] = 1
+    ais_mask['mask01']['AIS'] = np.zeros(regions.shape)
+    ais_mask['mask01']['AIS'][ais_mask['mask']['AIS']] = 1
     
     ais_mask['cellarea'] = {}
-    ais_mask['cellarea']['eais'] = cellarea[ais_mask['mask']['eais']].sum() / 10**6
-    ais_mask['cellarea']['wais'] = cellarea[ais_mask['mask']['wais']].sum() / 10**6
-    ais_mask['cellarea']['ap'] = cellarea[ais_mask['mask']['ap']].sum() / 10**6
-    ais_mask['cellarea']['ais'] = cellarea[ais_mask['mask']['ais']].sum() / 10**6
+    ais_mask['cellarea']['EAIS'] = cellarea[ais_mask['mask']['EAIS']].sum() / 10**6
+    ais_mask['cellarea']['WAIS'] = cellarea[ais_mask['mask']['WAIS']].sum() / 10**6
+    ais_mask['cellarea']['AP'] = cellarea[ais_mask['mask']['AP']].sum() / 10**6
+    ais_mask['cellarea']['AIS'] = cellarea[ais_mask['mask']['AIS']].sum() / 10**6
     
     return(ais_mask)
 
@@ -392,26 +396,26 @@ echam6_t63_ais_mask['cellarea']
 
 fig, ax = hemisphere_plot(northextent=-60)
 
-# ax.contour(
-#     echam6_t63_slm.lon.values, echam6_t63_slm.lat.values,
-#     echam6_t63_ais_mask['mask01']['eais'],
-#     colors='blue', levels=np.array([0.5]),
-#     transform=ccrs.PlateCarree(), linewidths=0.5, linestyles='solid')
-# ax.contour(
-#     echam6_t63_slm.lon.values, echam6_t63_slm.lat.values,
-#     echam6_t63_ais_mask['mask01']['wais'],
-#     colors='red', levels=np.array([0.5]),
-#     transform=ccrs.PlateCarree(), linewidths=0.5, linestyles='solid')
-# ax.contour(
-#     echam6_t63_slm.lon.values, echam6_t63_slm.lat.values,
-#     echam6_t63_ais_mask['mask01']['ap'],
-#     colors='yellow', levels=np.array([0.5]),
-#     transform=ccrs.PlateCarree(), linewidths=0.5, linestyles='solid')
 ax.contour(
     echam6_t63_slm.lon.values, echam6_t63_slm.lat.values,
-    echam6_t63_ais_mask['mask01']['ais'],
-    colors='m', levels=np.array([0.5]),
+    echam6_t63_ais_mask['mask01']['EAIS'],
+    colors='blue', levels=np.array([0.5]),
     transform=ccrs.PlateCarree(), linewidths=0.5, linestyles='solid')
+ax.contour(
+    echam6_t63_slm.lon.values, echam6_t63_slm.lat.values,
+    echam6_t63_ais_mask['mask01']['WAIS'],
+    colors='red', levels=np.array([0.5]),
+    transform=ccrs.PlateCarree(), linewidths=0.5, linestyles='solid')
+ax.contour(
+    echam6_t63_slm.lon.values, echam6_t63_slm.lat.values,
+    echam6_t63_ais_mask['mask01']['AP'],
+    colors='yellow', levels=np.array([0.5]),
+    transform=ccrs.PlateCarree(), linewidths=0.5, linestyles='solid')
+# ax.contour(
+#     echam6_t63_slm.lon.values, echam6_t63_slm.lat.values,
+#     echam6_t63_ais_mask['mask01']['AIS'],
+#     colors='m', levels=np.array([0.5]),
+#     transform=ccrs.PlateCarree(), linewidths=0.5, linestyles='solid')
 
 coastline = cfeature.NaturalEarthFeature(
     'physical', 'coastline', '10m', edgecolor='black',
@@ -420,10 +424,10 @@ ax.add_feature(coastline, zorder=2)
 
 fig.savefig('figures/test.png')
 
-((echam6_t63_ais_mask['mask01']['eais'] == 1) == echam6_t63_ais_mask['mask']['eais']).all()
-((echam6_t63_ais_mask['mask01']['wais'] == 1) == echam6_t63_ais_mask['mask']['wais']).all()
-((echam6_t63_ais_mask['mask01']['ap'] == 1) == echam6_t63_ais_mask['mask']['ap']).all()
-((echam6_t63_ais_mask['mask01']['ais'] == 1) == echam6_t63_ais_mask['mask']['ais']).all()
+((echam6_t63_ais_mask['mask01']['EAIS'] == 1) == echam6_t63_ais_mask['mask']['EAIS']).all()
+((echam6_t63_ais_mask['mask01']['WAIS'] == 1) == echam6_t63_ais_mask['mask']['WAIS']).all()
+((echam6_t63_ais_mask['mask01']['AP'] == 1) == echam6_t63_ais_mask['mask']['AP']).all()
+((echam6_t63_ais_mask['mask01']['AIS'] == 1) == echam6_t63_ais_mask['mask']['AIS']).all()
 
 
 
@@ -449,13 +453,13 @@ pointInPolys = sjoin(lon_lat, ais_imbie2, how='left')
 regions = pointInPolys.Regions.to_numpy().reshape(lon.shape[0], lon.shape[1])
 # pointInPolys.Regions.value_counts(dropna=False)
 
-eais_mask = (regions == 'East')
-eais_mask01 = np.zeros(eais_mask.shape)
-eais_mask01[eais_mask] = 1
+EAIS_mask = (regions == 'East')
+EAIS_mask01 = np.zeros(EAIS_mask.shape)
+EAIS_mask01[EAIS_mask] = 1
 
-wais_mask = (regions == 'West')
-wais_mask01 = np.zeros(wais_mask.shape)
-wais_mask01[wais_mask] = 1
+WAIS_mask = (regions == 'West')
+WAIS_mask01 = np.zeros(WAIS_mask.shape)
+WAIS_mask01[WAIS_mask] = 1
 
 ap_mask = (regions == 'Peninsula')
 ap_mask01 = np.zeros(ap_mask.shape)

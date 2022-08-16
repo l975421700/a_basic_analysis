@@ -621,7 +621,7 @@ middle_label=scalebar_elements['middle_label']
 
 
 # -----------------------------------------------------------------------------
-# region functions to plot two hemisphere
+# region Function to plot two hemisphere
 
 
 import numpy as np
@@ -912,7 +912,7 @@ fig.savefig('0_backup/trial2.png')
 
 
 # -----------------------------------------------------------------------------
-# region functions to plot high and low pressure systems
+# region Function to plot high and low pressure systems
 
 
 def plot_maxmin_points(lon, lat, data, ax, extrema, nsize, symbol, color='k',
@@ -970,7 +970,7 @@ def plot_maxmin_points(lon, lat, data, ax, extrema, nsize, symbol, color='k',
 
 
 # -----------------------------------------------------------------------------
-# region quickly plot variables
+# region Function to quickly plot variables
 
 def quick_var_plot(
     var=None, varname=None, xlabel=' \n ', whicharea='global',
@@ -1101,7 +1101,7 @@ def quick_var_plot(
 
 
 # -----------------------------------------------------------------------------
-# region generate mesh components for FESOM2 grid plot
+# region Function to generate mesh components for FESOM2 grid plot
 
 def mesh2plot(
     meshdir='/work/ollie/qigao001/startdump/fesom2/mesh/core2/',
@@ -1134,5 +1134,19 @@ def mesh2plot(
     
     return(tri2plot)
 
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region Function to remove trailing zeros of numbers to strings
+
+def remove_trailing_zero(x):
+    return ('%f' % x).rstrip('0').rstrip('.')
+
+
+'''
+https://stackoverflow.com/questions/2440692/formatting-floats-without-trailing-zeros
+'''
 # endregion
 # -----------------------------------------------------------------------------

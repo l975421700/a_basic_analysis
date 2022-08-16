@@ -1,10 +1,8 @@
 
 
-exp_odir = 'output/echam-6.3.05p2-wiso/lig/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_m_411_4.9',
-    # 'pi_m_416_4.9',
-    'lig_m_000_4.9',
+    'pi_m_416_4.9',
     ]
 
 
