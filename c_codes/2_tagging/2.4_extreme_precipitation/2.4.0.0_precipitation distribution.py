@@ -277,7 +277,7 @@ fig.savefig(output_png)
 
 
 # -----------------------------------------------------------------------------
-# region plot daily precipitation distribution over Antarctica
+# region plot daily precipitation PDF over Antarctica
 
 
 #-------- import data

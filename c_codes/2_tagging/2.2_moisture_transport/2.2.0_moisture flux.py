@@ -75,7 +75,6 @@ from a_basic_analysis.b_module.source_properties import (
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_m_402_4.7',
     'pi_m_416_4.9',
     ]
 
@@ -129,12 +128,15 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.moisture_flux.
 
 
 
-'''
-#-------- check
 
-# calculation in function and manually
+
+
+'''
+#-------------------------------- check
+
+# calculate manually
 def time_weighted_mean(ds):
-    return ds.weighted(ds.time.dt.days_in_month).mean('time', skipna=True)
+    return ds.weighted(ds.time.dt.days_in_month).mean('time', skipna=False)
 
 test = {}
 test['mon'] = zonal_moisture_flux.copy()
@@ -144,6 +146,7 @@ test['mm'] = test['mon'].groupby('time.month').mean(skipna=True).compute()
 test['sm'] = test['sea'].groupby('time.season').mean(skipna=True).compute()
 test['am'] = test['ann'].mean(dim='time', skipna=True).compute()
 
+
 (moisture_flux[expid[i]]['zonal']['mon'].values[np.isfinite(moisture_flux[expid[i]]['zonal']['mon'].values)] == test['mon'].values[np.isfinite(test['mon'].values)]).all()
 (moisture_flux[expid[i]]['zonal']['sea'].values[np.isfinite(moisture_flux[expid[i]]['zonal']['sea'].values)] == test['sea'].values[np.isfinite(test['sea'].values)]).all()
 (moisture_flux[expid[i]]['zonal']['ann'].values[np.isfinite(moisture_flux[expid[i]]['zonal']['ann'].values)] == test['ann'].values[np.isfinite(test['ann'].values)]).all()
@@ -151,14 +154,10 @@ test['am'] = test['ann'].mean(dim='time', skipna=True).compute()
 (moisture_flux[expid[i]]['zonal']['sm'].values[np.isfinite(moisture_flux[expid[i]]['zonal']['sm'].values)] == test['sm'].values[np.isfinite(test['sm'].values)]).all()
 (moisture_flux[expid[i]]['zonal']['am'].values[np.isfinite(moisture_flux[expid[i]]['zonal']['am'].values)] == test['am'].values[np.isfinite(test['am'].values)]).all()
 
-zonal_moisture_flux.weighted(zonal_moisture_flux.time.dt.days_in_month).mean('time', skipna=True).compute()
-zonal_moisture_flux.resample({'time': 'Q-FEB'}).mean()
-
 
 #-------- check
 
 (np.isnan(exp_org_o[expid[i]]['uvq_plev'].q.values) == np.isnan(exp_org_o[expid[i]]['uvq_plev'].xl.values)).all()
-(np.isnan(exp_org_o[expid[i]]['uvq_plev'].q.values) == np.isnan(exp_org_o[expid[i]]['uvq_plev'].xi.values)).all()
 
 zonal_moisture_flux.to_netcdf('scratch/test/test1.nc')
 meridional_moisture_flux.to_netcdf('scratch/test/test2.nc')
@@ -273,4 +272,14 @@ dset_cross['x'] = dset_cross['lon'].values[0, :]
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region calculate mon_sea_ann psl and gh
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
 

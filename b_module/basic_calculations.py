@@ -9,7 +9,7 @@ def time_weighted_mean(ds):
     ds: xarray.DataArray
     '''
     
-    return ds.weighted(ds.time.dt.days_in_month).mean('time', skipna=True)
+    return ds.weighted(ds.time.dt.days_in_month).mean(dim='time', skipna=False)
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -18,14 +18,13 @@ def time_weighted_mean(ds):
 # region Function to calculate monthly/seasonal/annual (mean) values
 
 def mon_sea_ann(
-    var_daily = None, var_monthly = None, skipna = True,
+    var_daily = None, var_monthly = None,
     lcopy = True,
     ):
     '''
     #---- Input
     var_daily:   xarray.DataArray, daily variables, must have time dimension
     var_monthly: xarray.DataArray, monthly variables, must have time dimension
-    skipna:      whether to skip NA
     lcopy:       whether to use copy of original var
     
     #---- Output
@@ -42,37 +41,50 @@ def mon_sea_ann(
             var_alltime['daily'] = var_daily
         
         #-------- monthly
-        var_alltime['mon'] = var_daily.resample({'time': '1M'}).mean(skipna=skipna).compute()
+        var_alltime['mon'] = var_daily.resample({'time': '1M'}).mean(skipna=False).compute()
         
         #-------- seasonal
-        var_alltime['sea'] = var_daily.resample({'time': 'Q-FEB'}).mean(skipna=skipna)[1:-1].compute()
+        # var_alltime['sea'] = var_daily.resample({'time': 'Q-FEB'}).mean(skipna=skipna)[1:-1].compute()
         
         #-------- annual
-        var_alltime['ann'] = var_daily.resample({'time': '1Y'}).mean(skipna=skipna).compute()
+        # var_alltime['ann'] = var_daily.resample({'time': '1Y'}).mean(skipna=skipna).compute()
         
     elif not var_monthly is None:
         #-------- monthly
         var_alltime['mon'] = var_monthly.copy()
-        
-        #-------- seasonal
-        var_alltime['sea'] = var_monthly.resample({'time': 'Q-FEB'}).map(time_weighted_mean)[1:-1].compute()
-        
-        #-------- annual
-        var_alltime['ann'] = var_monthly.resample({'time': '1Y'}).map(time_weighted_mean).compute()
-        
+    
+    #-------- seasonal
+    var_alltime['sea'] = var_alltime['mon'].resample({'time': 'Q-FEB'}).map(time_weighted_mean)[1:-1].compute()
+    
+    #-------- annual
+    var_alltime['ann'] = var_alltime['mon'].resample({'time': '1Y'}).map(time_weighted_mean).compute()
+    
     #-------- monthly mean
-    var_alltime['mm'] = var_alltime['mon'].groupby('time.month').mean(skipna=skipna).compute()
+    var_alltime['mm'] = var_alltime['mon'].groupby('time.month').mean(skipna=True).compute()
     
     #-------- seasonal mean
-    var_alltime['sm'] = var_alltime['sea'].groupby('time.season').mean(skipna=skipna).compute()
+    var_alltime['sm'] = var_alltime['sea'].groupby('time.season').mean(skipna=True).compute()
     
     #-------- annual mean
-    var_alltime['am'] = var_alltime['ann'].mean(dim='time', skipna=skipna).compute()
+    var_alltime['am'] = var_alltime['ann'].mean(dim='time', skipna=True).compute()
     return(var_alltime)
 
 
 
+
 '''
+#---- skipna
+mon:    False
+sea:    False
+ann:    False
+# otherwise, the results will be biased
+
+mm:     True
+sm:     True
+am:     True
+# it's okay to miss several month/season/year
+
+
 #-------------------------------- check
 import xarray as xr
 import pandas as pd
@@ -98,32 +110,52 @@ ds_alltime = mon_sea_ann(ds)
 
 # calculation in function and manually
 (ds_alltime['mon'] == ds.resample({'time': '1M'}).mean()).all().values
-(ds_alltime['sea'] == ds.resample({'time': 'Q-FEB'}).mean()[1:-1]).all().values
-(ds_alltime['ann'] == ds.resample({'time': '1Y'}).mean()).all().values
+(ds_alltime['sea'] == ds_alltime['mon'].resample({'time': 'Q-FEB'}).map(time_weighted_mean)[1:-1].compute()).all().values
+(ds_alltime['ann'] == ds_alltime['mon'].resample({'time': '1Y'}).map(time_weighted_mean).compute()).all().values
 (ds_alltime['mm'] == ds_alltime['mon'].groupby('time.month').mean()).all().values
 (ds_alltime['sm'] == ds_alltime['sea'].groupby('time.season').mean()).all().values
 (ds_alltime['am'] == ds_alltime['ann'].mean(dim='time')).all().values
 
+# mon
+ilat=30
+ilon=20
+ds[-31:, ilat, ilon].values.mean()
+ds_alltime['mon'][-1, ilat, ilon].values
 
-ds[-31:, 30, 30].values.mean()
-ds.resample({'time': '1M'}).mean()[-1, 30, 30].values
-ds.resample({'time': 'Q-FEB'}).mean()[-1, 30, 30].values
+# sea
+ilat=30
+ilon=40
+ds[59:151, ilat, ilon].values.mean()
+np.average(
+    ds_alltime['mon'][2:5, ilat, ilon],
+    weights=ds_alltime['mon'][2:5, ilat, ilon].time.dt.days_in_month,
+)
+ds_alltime['sea'][0, ilat, ilon].values
 
-ds[:59, 30, 30].values.mean()
-ds.resample({'time': 'Q-FEB'}).mean()[0, 30, 30].values
+# ann
+ilat=30
+ilon=40
+ds[:365, ilat, ilon].mean().values
+np.average(
+    ds_alltime['mon'][0:12, ilat, ilon],
+    weights=ds_alltime['mon'][0:12, ilat, ilon].time.dt.days_in_month,
+)
+ds_alltime['ann'][0, ilat, ilon].values
 
-ds[:365, 40, 50].mean().values
-ds.resample({'time': '1Y'}).mean()[0, 40, 50].values
+# mm
+ilat=30
+ilon=60
+ds_alltime['mon'].sel(time=(ds_alltime['mon'].time.dt.month==6).values)[:, ilat, ilon].mean().values
+ds_alltime['mm'][5, ilat, ilon]
 
-ds_alltime['mon'].sel(time=(ds_alltime['mon'].time.dt.month==6).values)[:, 30, 30].mean().values
-ds_alltime['mon'].groupby('time.month').mean()[5, 30, 30].values
+# sm
+ds_alltime['sea'].sel(time=(ds_alltime['sea'].time.dt.month==8).values)[:, ilat, ilon].mean().values
+ds_alltime['sm'].sel(season='JJA')[ilat, ilon].values
 
-ds_alltime['sea'].sel(time=(ds_alltime['sea'].time.dt.month==8).values)[:, 30, 30].mean().values
-ds_alltime['sm'].sel(season='JJA')[30,30].values
+# am
+ds_alltime['ann'][:, ilat, ilon].mean().values
+ds_alltime['am'][ilat, ilon].values
 
-
-ds_alltime['ann'].mean(dim='time')[30, 30].values
-ds_alltime['ann'][:, 30, 30].mean().values
 
 #-------- check monthly data
 
@@ -151,18 +183,30 @@ ds_alltime = mon_sea_ann(var_monthly = ds)
 i1 = 30
 i3 = 40
 i4 = 60
-ds[(i1*3 + 2):(i1*3 + 5), i3, i4]
+np.average(
+    ds[(i1*3 + 2):(i1*3 + 5), i3, i4],
+    weights = ds[(i1*3 + 2):(i1*3 + 5), i3, i4].time.dt.days_in_month)
 ds_alltime['sea'][i1, i3, i4].values
-np.average(ds[(i1*3 + 2):(i1*3 + 5), i3, i4], weights = ds[(i1*3 + 2):(i1*3 + 5), i3, i4].time.dt.days_in_month)
 
 # annual
 i1 = 6
-i3 = 40
+i3 = 30
 i4 = 60
-ds[(i1*12 + 0):(i1*12 + 12), i3, i4]
+np.average(
+    ds[(i1*12 + 0):(i1*12 + 12), i3, i4],
+    weights = ds[(i1*12 + 0):(i1*12 + 12), i3, i4].time.dt.days_in_month)
 ds_alltime['ann'][i1, i3, i4].values
-np.average(ds[(i1*12 + 0):(i1*12 + 12), i3, i4], weights = ds[(i1*12 + 0):(i1*12 + 12), i3, i4].time.dt.days_in_month)
 
+
+test1 = ds.weighted(ds.time.dt.days_in_month).mean(dim='time', skipna=True).compute()
+test2 = test1.values[np.isfinite(test1.values)] - ds_alltime['am'].values[np.isfinite(ds_alltime['am'].values)]
+wheremax = np.where(abs(test2) == np.max(abs(test2)))
+test2[wheremax]
+np.max(abs(test2))
+test1.values[np.isfinite(test1.values)][wheremax]
+ds_alltime['am'].values[np.isfinite(ds_alltime['am'].values)][wheremax]
+
+# (np.isfinite(test1.values) == np.isfinite(ds_alltime['am'].values)).all()
 
 
 '''
@@ -233,12 +277,17 @@ pre_ann_average1 = mon_sea_ann_average(pre, 'time.year')
 # -----------------------------------------------------------------------------
 # region functions to regrid a dataset to another grid
 
-def regrid(ds_in, ds_out=None, grid_spacing=1, method='bilinear',
-           periodic=True, ignore_degenerate=False):
+def regrid(
+    ds_in,
+    ds_out=None, grid_spacing=1,
+    method='bilinear',
+    periodic=True, ignore_degenerate=False):
     '''
     ds_in: original xarray.DataArray
     ds_out: xarray.DataArray with target grid, default None
-    grid_spacing: 0.25
+    grid_spacing: 1
+    periodic: True, When dealing with global grids, we need to set periodic=True, otherwise data along the meridian line will be missing.
+    ignore_degenerate: Ignore degenerate cells when checking the input Grids or Meshes for errors. If this is set to True, then the regridding proceeds, but degenerate cells will be skipped. If set to False, a degenerate cell produces an error. This currently only applies to CONSERVE, other regrid methods currently always skip degenerate cells. If None, defaults to False.
     '''
     
     import xesmf as xe
@@ -468,3 +517,83 @@ ap_mask01[ap_mask] = 1
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region Function to calculate area-weighted average over AIS
+
+def mean_over_ais(
+    ds,
+    ais_mask,
+    cell_area,
+    ):
+    '''
+    #---- Input
+    ds: xarray.DataArray, three dimension (time, lat, lon)
+    ais_mask: np.ndarray, two dimension (lat, lon)
+    cell_area: np.ndarray, two dimension (lat, lon)
+    
+    #---- Output
+    ds_mean_over_ais: xarray.DataArray, one dimension (time)
+    
+    '''
+    
+    import numpy as np
+    
+    ds_mean_over_ais = ds.mean(axis=(1, 2)).compute()
+    ds_mean_over_ais.values[:] = 0
+    
+    for itime in range(len(ds_mean_over_ais)):
+        # itime = 0
+        ds_mean_over_ais.values[itime] = np.average(
+            ds[itime].values[ais_mask],
+            weights = cell_area[ais_mask],
+        )
+    
+    return(ds_mean_over_ais)
+
+
+'''
+#-------------------------------- check
+import xarray as xr
+import pickle
+import numpy as np
+import pandas as pd
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+echam6_t63_cellarea = xr.open_dataset('scratch/others/land_sea_masks/echam6_t63_cellarea.nc')
+
+x = np.linspace(0, 360, echam6_t63_ais_mask['mask']['AIS'].shape[1])
+y = np.linspace(-90, 90, echam6_t63_ais_mask['mask']['AIS'].shape[0])
+time = pd.date_range( "2001-01-01-00", "2009-12-31-00", freq="1M")
+
+ds = xr.DataArray(
+    data = np.random.rand(len(time),len(y), len(x)),
+    coords={
+            "time": time,
+            "y": y,
+            "x": x,
+        }
+)
+
+ds_mean_over_ais = mean_over_ais(
+    ds,
+    echam6_t63_ais_mask['mask']['AIS'],
+    echam6_t63_cellarea.cell_area.values,
+    )
+
+itime = 40
+np.average(
+    ds[itime,].values[echam6_t63_ais_mask['mask']['AIS']],
+    weights = echam6_t63_cellarea.cell_area.values[echam6_t63_ais_mask['mask']['AIS']],
+)
+
+ds_mean_over_ais[itime].values
+
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+

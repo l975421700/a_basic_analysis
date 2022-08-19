@@ -1145,8 +1145,16 @@ def remove_trailing_zero(x):
     return ('%f' % x).rstrip('0').rstrip('.')
 
 
+from matplotlib.ticker import FuncFormatter
+@FuncFormatter
+def remove_trailing_zero_pos(x, pos):
+    return ('%f' % x).rstrip('0').rstrip('.')
+
+
 '''
 https://stackoverflow.com/questions/2440692/formatting-floats-without-trailing-zeros
+
+https://stackoverflow.com/questions/66817786/how-can-i-use-the-formatters-to-make-custom-ticks-in-matplotlib
 '''
 # endregion
 # -----------------------------------------------------------------------------
