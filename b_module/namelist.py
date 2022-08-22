@@ -5,8 +5,14 @@ import cartopy as ctp
 # Seasons
 # -----------------------------------------------------------------------------
 
-month = np.array(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
+month = np.array(
+    ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
+month_num = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+month_dec = np.array(
+    ['Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May',
+     'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov',])
+month_dec_num = np.array([12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
 
 seasons = np.array(['DJF', 'MAM', 'JJA', 'SON'])
 

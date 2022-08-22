@@ -59,6 +59,9 @@ from a_basic_analysis.b_module.basic_calculations import (
 
 from a_basic_analysis.b_module.namelist import (
     month,
+    month_num,
+    month_dec,
+    month_dec_num,
     seasons,
     hours,
     months,
@@ -212,6 +215,7 @@ pltticks2 = np.arange(-10, 10 + 1e-4, 4)
 pltnorm2 = BoundaryNorm(pltlevel2, ncolors=len(pltlevel2)-1, clip=True)
 pltcmp2 = cm.get_cmap('PiYG', len(pltlevel2)-1).reversed()
 
+ctr_level = np.array([1, 2, 3, 4, 5, ])
 
 nrow = 1
 ncol = 4
@@ -229,12 +233,44 @@ for jcol in range(ncol):
 plt1 = axs[0].pcolormesh(
     lon, lat, pre_weighted_lat[expid[i]]['am'],
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_ctr1 = axs[0].contour(
+    lon, lat.sel(lat=slice(-60, -90)),
+    pre_weighted_lat[expid[i]]['ann'].std(
+        dim='time', skipna=True).sel(lat=slice(-60, -90)),
+    levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='solid',
+)
+axs[0].clabel(plt_ctr1, inline=1, colors='b', fmt=remove_trailing_zero,
+          levels=ctr_level, inline_spacing=10, fontsize=7,)
+
 axs[1].pcolormesh(
     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='DJF'),
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_ctr2 = axs[1].contour(
+    lon, lat.sel(lat=slice(-60, -90)),
+    pre_weighted_lat[expid[i]]['sea'].sel(
+        time=(pre_weighted_lat[expid[i]]['sea'].time.dt.month == 2)
+        ).std(dim='time', skipna=True).sel(lat=slice(-60, -90)),
+    levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='solid',
+)
+axs[1].clabel(plt_ctr2, inline=1, colors='b', fmt=remove_trailing_zero,
+          levels=ctr_level, inline_spacing=10, fontsize=7)
+
 axs[2].pcolormesh(
     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='JJA'),
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_ctr3 = axs[2].contour(
+    lon, lat.sel(lat=slice(-60, -90)),
+    pre_weighted_lat[expid[i]]['sea'].sel(
+        time=(pre_weighted_lat[expid[i]]['sea'].time.dt.month == 8)
+        ).std(dim='time', skipna=True).sel(lat=slice(-60, -90)),
+    levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='solid',
+)
+axs[2].clabel(plt_ctr3, inline=1, colors='b', fmt=remove_trailing_zero,
+          levels=ctr_level, inline_spacing=10, fontsize=7,)
+
 
 #-------- differences
 plt2 = axs[3].pcolormesh(
@@ -493,6 +529,7 @@ pltticks2 = np.arange(-20, 20 + 1e-4, 5)
 pltnorm2 = BoundaryNorm(pltlevel2, ncolors=len(pltlevel2)-1, clip=True)
 pltcmp2 = cm.get_cmap('PiYG', len(pltlevel2)-1).reversed()
 
+ctr_level = np.array([1, 2, 3, 4, 5, ])
 
 nrow = 3
 ncol = 4
@@ -516,20 +553,74 @@ for irow in range(nrow):
 plt_mesh1 = axs[0, 0].pcolormesh(
     lon, lat, pre_weighted_lat[expid[i]]['am'],
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_ctr1 = axs[0, 0].contour(
+    lon, lat,
+    pre_weighted_lat[expid[i]]['ann'].std(
+        dim='time', skipna=True),
+    levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='solid',
+)
+axs[0, 0].clabel(plt_ctr1, inline=1, colors='b', fmt=remove_trailing_zero,
+          levels=ctr_level, inline_spacing=10, fontsize=7,)
+
 
 #-------- sm
 axs[1, 0].pcolormesh(
     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='DJF'),
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_ctr2 = axs[1, 0].contour(
+    lon, lat,
+    pre_weighted_lat[expid[i]]['sea'].sel(
+        time=(pre_weighted_lat[expid[i]]['sea'].time.dt.month == 2)
+        ).std(dim='time', skipna=True),
+    levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='solid',
+)
+axs[1, 0].clabel(plt_ctr2, inline=1, colors='b', fmt=remove_trailing_zero,
+          levels=ctr_level, inline_spacing=10, fontsize=7,)
+
 axs[1, 1].pcolormesh(
     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='MAM'),
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_ctr3 = axs[1, 1].contour(
+    lon, lat,
+    pre_weighted_lat[expid[i]]['sea'].sel(
+        time=(pre_weighted_lat[expid[i]]['sea'].time.dt.month == 5)
+        ).std(dim='time', skipna=True),
+    levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='solid',
+)
+axs[1, 1].clabel(plt_ctr3, inline=1, colors='b', fmt=remove_trailing_zero,
+          levels=ctr_level, inline_spacing=10, fontsize=7,)
+
 axs[1, 2].pcolormesh(
     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='JJA'),
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_ctr4 = axs[1, 2].contour(
+    lon, lat,
+    pre_weighted_lat[expid[i]]['sea'].sel(
+        time=(pre_weighted_lat[expid[i]]['sea'].time.dt.month == 8)
+        ).std(dim='time', skipna=True),
+    levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='solid',
+)
+axs[1, 2].clabel(plt_ctr4, inline=1, colors='b', fmt=remove_trailing_zero,
+          levels=ctr_level, inline_spacing=10, fontsize=7,)
+
 axs[1, 3].pcolormesh(
     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='SON'),
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_ctr5 = axs[1, 3].contour(
+    lon, lat,
+    pre_weighted_lat[expid[i]]['sea'].sel(
+        time=(pre_weighted_lat[expid[i]]['sea'].time.dt.month == 11)
+        ).std(dim='time', skipna=True),
+    levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='solid',
+)
+axs[1, 3].clabel(plt_ctr5, inline=1, colors='b', fmt=remove_trailing_zero,
+          levels=ctr_level, inline_spacing=10, fontsize=7,)
+
 
 #-------- am - sm
 plt_mesh2 = axs[2, 0].pcolormesh(
@@ -626,11 +717,12 @@ pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
 pltcmp = cm.get_cmap('PuOr', len(pltlevel)-1).reversed()
 
 
-pltlevel2 = np.arange(-10, 10 + 1e-4, 2)
-pltticks2 = np.arange(-10, 10 + 1e-4, 4)
+pltlevel2 = np.arange(-6, 6 + 1e-4, 1)
+pltticks2 = np.arange(-6, 6 + 1e-4, 2)
 pltnorm2 = BoundaryNorm(pltlevel2, ncolors=len(pltlevel2)-1, clip=True)
 pltcmp2 = cm.get_cmap('PiYG', len(pltlevel2)-1).reversed()
 
+ctr_level = np.array([1, 2, 3, 4, 5, ])
 
 nrow = 3
 ncol = 4
@@ -643,7 +735,7 @@ fig, axs = plt.subplots(
 
 for irow in range(nrow):
     for jcol in range(ncol):
-        if ((irow != 0) | (jcol == 0)):
+        if ((irow != 0) | (jcol != 3)):
             axs[irow, jcol] = hemisphere_plot(northextent=-60, ax_org = axs[irow, jcol])
         else:
             axs[irow, jcol].axis('off')
@@ -652,20 +744,82 @@ for irow in range(nrow):
 plt_mesh1 = axs[0, 0].pcolormesh(
     lon, lat, pre_weighted_lat[expid[i]]['am'],
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_ctr1 = axs[0, 0].contour(
+    lon, lat.sel(lat=slice(-60, -90)),
+    pre_weighted_lat[expid[i]]['ann'].std(
+        dim='time', skipna=True).sel(lat=slice(-60, -90)),
+    levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='solid',
+)
+axs[0, 0].clabel(plt_ctr1, inline=1, colors='b', fmt=remove_trailing_zero,
+          levels=ctr_level, inline_spacing=10, fontsize=7,)
+
+#-------- DJF - JJA
+axs[0, 1].pcolormesh(
+    lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='DJF') - pre_weighted_lat[expid[i]]['sm'].sel(season='JJA'),
+    norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
+#-------- MAM -SON
+axs[0, 2].pcolormesh(
+    lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='MAM') - pre_weighted_lat[expid[i]]['sm'].sel(season='SON'),
+    norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
 
 #-------- sm
 axs[1, 0].pcolormesh(
     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='DJF'),
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_ctr2 = axs[1, 0].contour(
+    lon, lat.sel(lat=slice(-60, -90)),
+    pre_weighted_lat[expid[i]]['sea'].sel(
+        time=(pre_weighted_lat[expid[i]]['sea'].time.dt.month == 2)
+        ).std(dim='time', skipna=True).sel(lat=slice(-60, -90)),
+    levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='solid',
+)
+axs[1, 0].clabel(plt_ctr2, inline=1, colors='b', fmt=remove_trailing_zero,
+          levels=ctr_level, inline_spacing=10, fontsize=7,)
+
 axs[1, 1].pcolormesh(
     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='MAM'),
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_ctr3 = axs[1, 1].contour(
+    lon, lat.sel(lat=slice(-60, -90)),
+    pre_weighted_lat[expid[i]]['sea'].sel(
+        time=(pre_weighted_lat[expid[i]]['sea'].time.dt.month == 5)
+        ).std(dim='time', skipna=True).sel(lat=slice(-60, -90)),
+    levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='solid',
+)
+axs[1, 1].clabel(plt_ctr3, inline=1, colors='b', fmt=remove_trailing_zero,
+          levels=ctr_level, inline_spacing=10, fontsize=7,)
+
 axs[1, 2].pcolormesh(
     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='JJA'),
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_ctr4 = axs[1, 2].contour(
+    lon, lat.sel(lat=slice(-60, -90)),
+    pre_weighted_lat[expid[i]]['sea'].sel(
+        time=(pre_weighted_lat[expid[i]]['sea'].time.dt.month == 8)
+        ).std(dim='time', skipna=True).sel(lat=slice(-60, -90)),
+    levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='solid',
+)
+axs[1, 2].clabel(plt_ctr4, inline=1, colors='b', fmt=remove_trailing_zero,
+          levels=ctr_level, inline_spacing=10, fontsize=7,)
+
 axs[1, 3].pcolormesh(
     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='SON'),
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_ctr5 = axs[1, 3].contour(
+    lon, lat.sel(lat=slice(-60, -90)),
+    pre_weighted_lat[expid[i]]['sea'].sel(
+        time=(pre_weighted_lat[expid[i]]['sea'].time.dt.month == 11)
+        ).std(dim='time', skipna=True).sel(lat=slice(-60, -90)),
+    levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='solid',
+)
+axs[1, 3].clabel(plt_ctr5, inline=1, colors='b', fmt=remove_trailing_zero,
+          levels=ctr_level, inline_spacing=10, fontsize=7,)
+
 
 #-------- differences
 plt_mesh2 = axs[2, 0].pcolormesh(
@@ -683,6 +837,13 @@ axs[2, 3].pcolormesh(
 
 plt.text(
     0.5, 1.05, 'Annual mean', transform=axs[0, 0].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+plt.text(
+    0.5, 1.05, 'DJF - JJA', transform=axs[0, 1].transAxes,
+    ha='center', va='center', rotation='horizontal')
+plt.text(
+    0.5, 1.05, 'MAM - SON', transform=axs[0, 2].transAxes,
     ha='center', va='center', rotation='horizontal')
 
 plt.text(
@@ -733,4 +894,81 @@ fig.savefig(output_png)
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region plot mm source lat Antarctica
+
+
+#-------- basic set
+
+lon = pre_weighted_lat[expid[i]]['am'].lon
+lat = pre_weighted_lat[expid[i]]['am'].lat
+
+
+#-------- plot configuration
+output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.0_lat/' + '6.1.3.0 ' + expid[i] + ' pre_weighted_lat mm Antarctica.png'
+cbar_label1 = 'Precipitation-weighted open-oceanic source latitude [$°$]'
+cbar_label2 = 'Differences in precipitation-weighted open-oceanic source latitude [$°$]'
+
+pltlevel = np.arange(-50, -30 + 1e-4, 2)
+pltticks = np.arange(-50, -30 + 1e-4, 4)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+pltcmp = cm.get_cmap('PuOr', len(pltlevel)-1).reversed()
+
+
+ctr_level = np.array([1, 2, 3, 4, 5, ])
+
+nrow = 3
+ncol = 4
+fm_bottom = 2 / (5.8*nrow + 2)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.1, 'wspace': 0.1},)
+
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(northextent=-60, ax_org = axs[irow, jcol])
+
+
+for jcol in range(ncol):
+    for irow in range(nrow):
+        plt_mesh1 = axs[irow, jcol].pcolormesh(
+            lon, lat, pre_weighted_lat[expid[i]]['mm'].sel(
+                month=month_dec_num[jcol*3+irow]),
+            norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+        plt_ctr1 = axs[irow, jcol].contour(
+            lon, lat.sel(lat=slice(-60, -90)),
+            pre_weighted_lat[expid[i]]['mon'].sel(time=(pre_weighted_lat[expid[
+                i]]['mon'].time.dt.month == month_dec_num[jcol*3+irow])).std(
+            dim='time', skipna=True).sel(lat=slice(-60, -90)),
+            levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+            linewidths=0.5, linestyles='solid',
+        )
+        axs[irow, jcol].clabel(
+            plt_ctr1, inline=1, colors='b', fmt=remove_trailing_zero,
+            levels=ctr_level, inline_spacing=10, fontsize=7,)
+        
+        plt.text(
+            0.5, 1.05, month_dec[jcol*3+irow],
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        
+        print(str(month_dec_num[jcol*3+irow]) + ' ' + month_dec[jcol*3+irow])
+
+
+cbar1 = fig.colorbar(
+    cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=axs,
+    orientation="horizontal",shrink=0.5,aspect=40,extend='both',
+    anchor=(0.5, -0.5), ticks=pltticks)
+cbar1.ax.set_xlabel(cbar_label1, linespacing=2)
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom*0.8, top = 0.98)
+fig.savefig(output_png)
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
 
