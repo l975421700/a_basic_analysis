@@ -2,8 +2,6 @@
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_m_402_4.7',
-    # 'pi_m_411_4.9',
     'pi_m_416_4.9',
     ]
 i = 0
@@ -96,7 +94,7 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_c
 
 
 # -----------------------------------------------------------------------------
-# region plot am/DJF/JJA/DJF-JJA mean source lon
+# region plot am/DJF/JJA/DJF-JJA source lon
 
 
 #-------- basic set
@@ -117,7 +115,7 @@ pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
 pltcmp = cm.get_cmap('BrBG', len(pltlevel)-1).reversed()
 
 
-pltlevel2 = np.arange(-30, 30 + 1e-4, 2.5)
+pltlevel2 = np.arange(-30, 30 + 1e-4, 5)
 pltticks2 = np.arange(-30, 30 + 1e-4, 5)
 pltnorm2 = BoundaryNorm(pltlevel2, ncolors=len(pltlevel2)-1, clip=True)
 pltcmp2 = cm.get_cmap('PiYG', len(pltlevel2)-1).reversed()
@@ -194,7 +192,7 @@ fig.savefig(output_png)
 
 
 # -----------------------------------------------------------------------------
-# region plot am/DJF/JJA/DJF-JJA mean source lon Antarctic
+# region plot am/DJF/JJA/DJF-JJA source lon Antarctic
 
 
 #-------- basic set
@@ -214,7 +212,7 @@ pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
 pltcmp = cm.get_cmap('BrBG', len(pltlevel)-1).reversed()
 
 
-pltlevel2 = np.arange(-30, 30 + 1e-4, 2.5)
+pltlevel2 = np.arange(-30, 30 + 1e-4, 5)
 pltticks2 = np.arange(-30, 30 + 1e-4, 5)
 pltnorm2 = BoundaryNorm(pltlevel2, ncolors=len(pltlevel2)-1, clip=True)
 pltcmp2 = cm.get_cmap('PiYG', len(pltlevel2)-1).reversed()
@@ -230,7 +228,7 @@ fig, axs = plt.subplots(
     gridspec_kw={'hspace': 0.05, 'wspace': 0.05},)
 
 for jcol in range(ncol):
-    axs[jcol] = hemisphere_plot(northextent=-60, ax_org = axs[jcol])
+    axs[jcol] = hemisphere_plot(northextent=-45, ax_org = axs[jcol])
 
 #-------- Am, DJF, JJA values
 plt1 = axs[0].pcolormesh(
@@ -287,90 +285,6 @@ fig.savefig(output_png)
 
 
 # -----------------------------------------------------------------------------
-# region plot ann/DJF/JJA standard deviation of source lon
-
-
-#-------- basic set
-
-lon = pre_weighted_lon[expid[i]]['am'].lon
-lat = pre_weighted_lon[expid[i]]['am'].lat
-
-
-#-------- plot configuration
-output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/' + '6.1.3.1 ' + expid[i] + ' pre_weighted_lon ann_DJF_JJA std.png'
-cbar_label1 = 'Standard deviation of precipitation-weighted open-oceanic source longitude [$°$]'
-
-pltlevel = np.arange(0, 10 + 1e-4, 1)
-pltticks = np.arange(0, 10 + 1e-4, 2)
-pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
-pltcmp = cm.get_cmap('Blues', len(pltlevel)-1)
-
-nrow = 1
-ncol = 3
-fm_bottom = 2.5 / (4.6*nrow + 2.5)
-
-fig, axs = plt.subplots(
-    nrow, ncol, figsize=np.array([8.8*ncol, 4.6*nrow + 2.5]) / 2.54,
-    subplot_kw={'projection': ccrs.PlateCarree()},
-    gridspec_kw={'hspace': 0.15, 'wspace': 0.02},)
-
-for jcol in range(ncol):
-    axs[jcol] = globe_plot(ax_org = axs[jcol],
-                           add_grid_labels=False)
-
-#-------- Annual, DJF, JJA std
-plt1 = axs[0].pcolormesh(
-    lon, lat, pre_weighted_lon[expid[i]]['ann'].std(dim='time', skipna=True),
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-axs[1].pcolormesh(
-    lon, lat, pre_weighted_lon[expid[i]]['sea'].sel(
-        time=(pre_weighted_lon[expid[i]]['sea'].time.dt.month == 2)
-        ).std(dim='time', skipna=True),
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-axs[2].pcolormesh(
-    lon, lat, pre_weighted_lon[expid[i]]['sea'].sel(
-        time=(pre_weighted_lon[expid[i]]['sea'].time.dt.month == 8)
-        ).std(dim='time', skipna=True),
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-
-plt.text(
-    0.5, 1.05, 'Annual', transform=axs[0].transAxes,
-    ha='center', va='center', rotation='horizontal')
-
-plt.text(
-    0.5, 1.05, 'DJF', transform=axs[1].transAxes,
-    ha='center', va='center', rotation='horizontal')
-
-plt.text(
-    0.5, 1.05, 'JJA', transform=axs[2].transAxes,
-    ha='center', va='center', rotation='horizontal')
-
-cbar1 = fig.colorbar(
-    plt1, ax=axs, ticks=pltticks,
-    orientation="horizontal",shrink=0.5,aspect=40,extend='max',
-    anchor=(0.5, 0.8),
-    )
-cbar1.ax.set_xlabel(cbar_label1, linespacing=2)
-
-fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom * 0.75, top = 0.92)
-fig.savefig(output_png)
-
-
-
-'''
-np.isnan(pre_weighted_lon[expid[i]]['sea'].sel(
-        time=(pre_weighted_lon[expid[i]]['sea'].time.dt.month == 8)
-        ).std(dim='time', skipna=True)).sum()
-np.isnan(pre_weighted_lon[expid[i]]['sea'].sel(
-        time=(pre_weighted_lon[expid[i]]['sea'].time.dt.month == 8)
-        ).std(dim='time', skipna=False)).sum()
-
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
 # region plot annual mean values
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/6.1.3.1 ' + expid[i] + ' pre_weighted_lon am Antarctica.png'
@@ -380,7 +294,7 @@ pltticks = np.arange(0, 360 + 1e-4, 45)
 pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
 pltcmp = cm.get_cmap('BrBG', len(pltlevel)-1).reversed()
 
-fig, ax = hemisphere_plot(northextent=-60, figsize=np.array([5.8, 7]) / 2.54)
+fig, ax = hemisphere_plot(northextent=-45, figsize=np.array([5.8, 7]) / 2.54)
 
 plt1 = ax.pcolormesh(
     pre_weighted_lon[expid[i]]['am'].lon,

@@ -263,7 +263,7 @@ cbar = fig.colorbar(
     )
 cbar.ax.tick_params(length=2, width=0.4)
 cbar.ax.set_xlabel('1st line\n2nd line', linespacing=2)
-fig.savefig('0_backup/trial1.png')
+fig.savefig('trial1.png')
 
 
 #-------------------------------- Test n*m plot
@@ -276,13 +276,16 @@ mpl.rc('font', family='Times New Roman', size=9)
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 mpl.rcParams['axes.linewidth'] = 0.2
+from a_basic_analysis.b_module.namelist import (
+    panel_labels,
+)
 
 pltlevel = np.arange(0, 32.01, 0.1)
 pltticks = np.arange(0, 32.01, 4)
 pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False)
 pltcmp = cm.get_cmap('RdBu', len(pltlevel)).reversed()
 
-output_png = '0_backup/trial2.png'
+output_png = 'figures/trial.png'
 cbar_label = 'TEXT\nTEXT'
 
 nrow = 2
@@ -294,10 +297,16 @@ fig, axs = plt.subplots(
     subplot_kw={'projection': ccrs.PlateCarree()},
     gridspec_kw={'hspace': 0.15, 'wspace': 0.02},)
 
+ipanel=0
 for irow in range(nrow):
     for jcol in range(ncol):
         if((irow!=0) | (jcol !=0)):
             axs[irow, jcol] = globe_plot(ax_org = axs[irow, jcol], add_grid_labels=False)
+            plt.text(
+                0, 1.05, panel_labels[ipanel],
+                transform=axs[irow, jcol].transAxes,
+                ha='center', va='center', rotation='horizontal')
+            ipanel += 1
         else:
             axs[irow, jcol].axis('off')
 
@@ -466,7 +475,7 @@ def framework_plot1(
 # https://www.naturalearthdata.com/downloads/
 
 fig, ax = framework_plot1('global')
-fig.savefig('0_backup/trial.png')
+fig.savefig('trial.png')
 
 import os
 os.environ['CARTOPY_USER_BACKGROUNDS'] = 'bas_palaeoclim_qino/others/bg_cartopy'
@@ -785,7 +794,7 @@ cbar = fig.colorbar(
     pad=0.02, fraction=0.2,
     )
 cbar.ax.set_xlabel('1st line\n2nd line', linespacing=2)
-fig.savefig('figures/test.png')
+fig.savefig('figures/trial.png')
 
 
 # fig, ax = hemisphere_plot(northextent=-60)
@@ -803,6 +812,9 @@ mpl.rcParams['figure.dpi'] = 600
 mpl.rc('font', family='Times New Roman', size=9)
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
+from a_basic_analysis.b_module.namelist import (
+    panel_labels,
+)
 
 pltlevel = np.arange(0, 32.01, 0.1)
 pltticks = np.arange(0, 32.01, 4)
@@ -817,10 +829,16 @@ fig, axs = plt.subplots(
     subplot_kw={'projection': ccrs.SouthPolarStereo()},
     gridspec_kw={'hspace': 0.1, 'wspace': 0.1},)
 
+ipanel=0
 for irow in range(nrow):
     for jcol in range(ncol):
         if((irow!=0) | (jcol !=0)):
             axs[irow, jcol] = hemisphere_plot(northextent=-60, ax_org = axs[irow, jcol])
+            plt.text(
+                0, 0.95, panel_labels[ipanel],
+                transform=axs[irow, jcol].transAxes,
+                ha='center', va='center', rotation='horizontal')
+            ipanel += 1
         else:
             axs[irow, jcol].axis('off')
 
@@ -830,7 +848,8 @@ for irow in range(nrow):
 #     z,
 #     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 plt.text(
-    0.5, 1.05, 'TEXT', transform=axs[0, 1].transAxes,
+    0.5, 1.05, 'TEXTTEXTTEXTTEXTTEXTTEXTTEXTTEXTTEXT',
+    transform=axs[0, 1].transAxes,
     ha='center', va='center', rotation='horizontal')
 plt.text(
     -0.05, 0.5, 'TEXT', transform=axs[1, 0].transAxes,
@@ -845,7 +864,7 @@ cbar.ax.set_xlabel('TEXT\nTEXT', linespacing=2)
 
 
 fig.subplots_adjust(left=0.04, right = 0.99, bottom = 0.12, top = 0.96)
-fig.savefig('0_backup/trial2.png')
+fig.savefig('figures/trial.png')
 
 
 # cbar1 = fig.colorbar(
