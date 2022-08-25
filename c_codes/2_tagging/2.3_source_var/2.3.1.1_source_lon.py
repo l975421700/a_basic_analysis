@@ -314,3 +314,25 @@ fig.savefig(output_png)
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+
+import xarray as xr
+import pickle
+data1 = {}
+data1['data1_0'] = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/pi_m_416_4.9/restart/echam/restart_pi_m_416_4.9_accw_20001231.nc')
+data1['data1_1'] = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/pi_m_416_4.9/restart/echam/restart_pi_m_416_4.9_accw_20011231.nc')
+
+with open('scratch/test/test.pkl', 'wb') as f:
+    pickle.dump(data1, f)
+
+
+import pickle
+import xarray as xr
+with open('scratch/test/test.pkl', 'rb') as f:
+    data1 = pickle.load(f)
+
+
+# -----------------------------------------------------------------------------
+
+
