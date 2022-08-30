@@ -94,7 +94,8 @@ fl_wiso_daily = sorted(glob.glob(
         ))
 # 1-year spin up, 10 years for analysis
 exp_out_wiso_daily = xr.open_mfdataset(
-    fl_wiso_daily[12:], data_vars='minimal', coords='minimal', parallel=True)
+    fl_wiso_daily[60:300],
+    data_vars='minimal', coords='minimal', parallel=True)
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -136,8 +137,8 @@ ocean_pre.values[ocean_pre.values < 2e-8] = 0
 ocean_pre_alltime      = mon_sea_ann(ocean_pre)
 var_scaled_pre_alltime = mon_sea_ann(var_scaled_pre)
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_pre_alltime.pkl', 'wb') as f:
-    pickle.dump(ocean_pre_alltime, f)
+# with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_pre_alltime.pkl', 'wb') as f:
+#     pickle.dump(ocean_pre_alltime, f)
 
 #-------------------------------- pre-weighted var
 

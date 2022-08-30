@@ -31,13 +31,19 @@ rsync -avz sci3:/gws/nopw/j04/bas_palaeoclim/qino/* /Volumes/LaCie/jasmin/qino/b
 
 rsync -avzP /work/ollie/qigao001/output/archived_exp levante:/work/ab0246/a270200/output/
 
+rsync -avzP /work/ollie/qigao001/output levante:/work/ab0246/a270200/
+
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
 # region partial backup ollie to jasmin
+
 rsync -avzP /work/ollie/qigao001/output/archived_exp xfer1:/gws/nopw/j04/bas_palaeoclim/qino/output/
+
+rsync -avzP /work/ollie/qigao001/output xfer1:/gws/nopw/j04/bas_palaeoclim/qino/
+
 # endregion
 # -----------------------------------------------------------------------------
 

@@ -45,14 +45,29 @@ mamba install -c conda-forge fortls -y
 mamba install -c conda-forge ncl -y
 mamba install -c conda-forge mne -y
 mamba install -c conda-forge radian -y
-
+mamba install -c conda-forge libgcc -y
+mamba install -c conda-forge nose -y
+pip install pycircstat
+pip install rpy2
 
 '''
-clean conda installed pkgs
-conda clean -a
+#-------------------------------- TEST REGION
 
-pip install igra
-pip install siphon
+source ${HOME}/miniconda3/bin/activate test
+
+
+
+
+
+
+
+#-------------------------------- Others
+
+# clean conda installed pkgs
+# conda clean -a
+
+# pip install igra
+# pip install siphon
 
 # regridding
 # https://github.com/JiaweiZhuang/xESMF/issues/47
@@ -77,13 +92,10 @@ pip install siphon
 # mamba install -c conda-forge autopep8 -y
 # mamba install -c conda-forge ecmwf-api-client -y
 # mamba install -c conda-forge gcc_impl_linux-64 -y
-# mamba install -c conda-forge libgcc -y
 # mamba install -c conda-forge pycwt -y
 # mamba install -c conda-forge proplot -y
 # mamba install -c conda-forge cmip6_preprocessing -y
 # mamba install -c conda-forge jupyter_contrib_nbextensions -y
-# pip install pympler
-# mamba install -c anaconda libffi
 # mamba install -c conda-forge numpy=1.21 -y
 # mamba install -c conda-forge python-cdo -y
 # mamba install -c conda-forge scikit-learn -y
