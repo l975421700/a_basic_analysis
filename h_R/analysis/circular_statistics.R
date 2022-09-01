@@ -1,5 +1,6 @@
 
 # module load R/4.1.0_conda
+# r
 
 suppressPackageStartupMessages(library(circular))
 suppressPackageStartupMessages(library(reticulate))
@@ -12,22 +13,23 @@ import warnings
 warnings.filterwarnings('ignore')
 import pickle
 import xarray as xr
-# from scipy import stats
+import numpy as np
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
     'pi_m_416_4.9',
     ]
 i = 0
-# pre_weighted_lon = {}
 
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lon.pkl', 'rb') as f:
     pre_weighted_lon = pickle.load(f)
 
+with open('scratch/test.npy', 'rb') as f:
+    wwtest_all = np.load(f)
+
 exit
 
-ilat <- 48 + 1
-ilon <- 96 + 1
+# sum(py$wwtest_all) / length(py$wwtest_all)
 
 
 #-------- Watson’s Large-sample Nonparametric Test
@@ -77,7 +79,53 @@ YgVal <- function(cdat, ndat, g) {
         }
 }
 
-sampler1 = circular::circular(
+wwtest_all1 = py$wwtest_all
+wwtest_all2 = py$wwtest_all
+
+for (ilat in 1:dim(wwtest_all1)[1]){
+    for (ilon in 1:dim(wwtest_all1)[2]){
+        # ilat <- 48 + 1
+        # ilon <- 96 + 1
+        sampler1 <- circular::circular(
+            na.omit(py$pre_weighted_lon$sea$values[seq(4, 199, 4), ilat, ilon]) * pi / 180,
+            type = "angles",
+            units = "radians",
+            # template = "geographics",
+            modulo = "2pi",
+            zero = 0,
+            rotation = 'counter',
+        )
+        sampler2 <- circular::circular(
+            na.omit(py$pre_weighted_lon$sea$values[seq(2, 199, 4), ilat, ilon]) * pi / 180,
+            # NaN,
+            type = "angles",
+            units = "radians",
+            # template = "geographics",
+            modulo = "2pi",
+            zero = 0,
+            rotation = 'counter',
+        )
+        if( (length(sampler1) < 10) | (length(sampler2) < 10) ){
+            wwtest_all1[ilat, ilon] <- FALSE
+            wwtest_all2[ilat, ilon] <- FALSE
+        } else{
+            cdat <- c(sampler1, sampler2)
+            ndat <- c(length(sampler1), length(sampler2))
+            g <- 2
+            YgObs <- YgVal(cdat, ndat, g)
+            wwtest_all1[ilat, ilon] <- pchisq(YgObs, g-1, lower.tail=F) < 0.05
+            wwtest_all2[ilat, ilon] <- circular::watson.williams.test(list(sampler1, sampler2))$p.value < 0.05
+        }
+    }
+    print(ilat)
+}
+
+
+
+ilat <- 45 + 1
+ilon <- 90 + 1
+
+sampler1 <- circular::circular(
     py$pre_weighted_lon$sea$values[seq(4, 199, 4), ilat, ilon] * pi / 180,
     type = "angles",
     units = "radians",
@@ -86,7 +134,7 @@ sampler1 = circular::circular(
     zero = 0,
     rotation = 'counter',
     )
-sampler2 = circular::circular(
+sampler2 <- circular::circular(
     py$pre_weighted_lon$sea$values[seq(2, 199, 4), ilat, ilon] * pi / 180,
     type = "angles",
     units = "radians",
@@ -100,9 +148,26 @@ cdat <- c(sampler1, sampler2)
 ndat <- c(length(sampler1), length(sampler2))
 g <- 2
 YgObs <- YgVal(cdat, ndat, g)
-pchisq(YgObs, g-1, lower.tail=F)
+pchisq(YgObs, g-1, lower.tail=F) < 0.05
+wwtest_all1[ilat, ilon]
+
+circular::watson.williams.test(list(sampler1, sampler2))$p.value < 0.05
+wwtest_all2[ilat, ilon]
+
+py$wwtest_all[ilat, ilon]
+
+# Test in python is stricter
+sum(py$wwtest_all) / length(py$wwtest_all) # 0.7431098
+sum(wwtest_all1) / length(wwtest_all1) # 0.7908529
+sum(wwtest_all2) / length(wwtest_all2) # 0.7843967
+
+sum(py$wwtest_all == wwtest_all1) / length(py$wwtest_all) # 0.9506293
+sum(py$wwtest_all == wwtest_all2) / length(py$wwtest_all) # 0.9587131
 
 
+
+
+'''
 cdat1 <- circular(fisherB10$set1*2*pi/360)
 cdat2 <- circular(fisherB10$set2*2*pi/360)
 cdat3 <- circular(fisherB10$set3*2*pi/360)
@@ -121,7 +186,7 @@ ndat <- c(length(cdat1), length(cdat2))
 g <- 2
 YgObs <- YgVal(cdat, ndat, g)
 pchisq(YgObs, g-1, lower.tail=F)
-
+'''
 
 
 

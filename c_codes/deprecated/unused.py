@@ -1,4 +1,388 @@
 
+# region sm plot
+# axs[1, 0].pcolormesh(
+#     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='DJF'),
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_ctr2 = axs[1, 0].contour(
+#     lon, lat.sel(lat=slice(-50, -90)),
+#     pre_weighted_lat[expid[i]]['sea'].sel(
+#         time=(pre_weighted_lat[expid[i]]['sea'].time.dt.month == 2)
+#         ).std(dim='time', skipna=True).sel(lat=slice(-50, -90)),
+#     levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+#     linewidths=0.5, linestyles='solid',
+# )
+# axs[1, 0].clabel(plt_ctr2, inline=1, colors='b', fmt=remove_trailing_zero,
+#           levels=ctr_level, inline_spacing=10, fontsize=7,)
+
+# axs[1, 1].pcolormesh(
+#     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='MAM'),
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_ctr3 = axs[1, 1].contour(
+#     lon, lat.sel(lat=slice(-50, -90)),
+#     pre_weighted_lat[expid[i]]['sea'].sel(
+#         time=(pre_weighted_lat[expid[i]]['sea'].time.dt.month == 5)
+#         ).std(dim='time', skipna=True).sel(lat=slice(-50, -90)),
+#     levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+#     linewidths=0.5, linestyles='solid',
+# )
+# axs[1, 1].clabel(plt_ctr3, inline=1, colors='b', fmt=remove_trailing_zero,
+#           levels=ctr_level, inline_spacing=10, fontsize=7,)
+
+# axs[1, 2].pcolormesh(
+#     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='JJA'),
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_ctr4 = axs[1, 2].contour(
+#     lon, lat.sel(lat=slice(-50, -90)),
+#     pre_weighted_lat[expid[i]]['sea'].sel(
+#         time=(pre_weighted_lat[expid[i]]['sea'].time.dt.month == 8)
+#         ).std(dim='time', skipna=True).sel(lat=slice(-50, -90)),
+#     levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+#     linewidths=0.5, linestyles='solid',
+# )
+# axs[1, 2].clabel(plt_ctr4, inline=1, colors='b', fmt=remove_trailing_zero,
+#           levels=ctr_level, inline_spacing=10, fontsize=7,)
+
+# axs[1, 3].pcolormesh(
+#     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='SON'),
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_ctr5 = axs[1, 3].contour(
+#     lon, lat.sel(lat=slice(-50, -90)),
+#     pre_weighted_lat[expid[i]]['sea'].sel(
+#         time=(pre_weighted_lat[expid[i]]['sea'].time.dt.month == 11)
+#         ).std(dim='time', skipna=True).sel(lat=slice(-50, -90)),
+#     levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+#     linewidths=0.5, linestyles='solid',
+# )
+# axs[1, 3].clabel(plt_ctr5, inline=1, colors='b', fmt=remove_trailing_zero,
+#           levels=ctr_level, inline_spacing=10, fontsize=7,)
+
+
+#-------- sm - am
+# plt_mesh2 = axs[2, 0].pcolormesh(
+#     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='DJF') - pre_weighted_lat[expid[i]]['am'],
+#     norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
+# axs[2, 1].pcolormesh(
+#     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='MAM') - pre_weighted_lat[expid[i]]['am'],
+#     norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
+# axs[2, 2].pcolormesh(
+#     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='JJA') - pre_weighted_lat[expid[i]]['am'],
+#     norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
+# axs[2, 3].pcolormesh(
+#     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='SON') - pre_weighted_lat[expid[i]]['am'],
+#     norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
+
+
+# plt.text(
+#     0.5, 1.05, 'DJF', transform=axs[1, 0].transAxes,
+#     ha='center', va='center', rotation='horizontal')
+# plt.text(
+#     0.5, 1.05, 'MAM', transform=axs[1, 1].transAxes,
+#     ha='center', va='center', rotation='horizontal')
+# plt.text(
+#     0.5, 1.05, 'JJA', transform=axs[1, 2].transAxes,
+#     ha='center', va='center', rotation='horizontal')
+# plt.text(
+#     0.5, 1.05, 'SON', transform=axs[1, 3].transAxes,
+#     ha='center', va='center', rotation='horizontal')
+
+# plt.text(
+#     0.5, 1.05, 'DJF - Annual mean', transform=axs[2, 0].transAxes,
+#     ha='center', va='center', rotation='horizontal')
+# plt.text(
+#     0.5, 1.05, 'MAM - Annual mean', transform=axs[2, 1].transAxes,
+#     ha='center', va='center', rotation='horizontal')
+# plt.text(
+#     0.5, 1.05, 'JJA - Annual mean', transform=axs[2, 2].transAxes,
+#     ha='center', va='center', rotation='horizontal')
+# plt.text(
+#     0.5, 1.05, 'SON - Annual mean', transform=axs[2, 3].transAxes,
+#     ha='center', va='center', rotation='horizontal')
+
+
+
+
+# #-------- sm
+# axs[1, 0].pcolormesh(
+#     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='DJF'),
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_ctr2 = axs[1, 0].contour(
+#     lon, lat,
+#     pre_weighted_lat[expid[i]]['sea'].sel(
+#         time=(pre_weighted_lat[expid[i]]['sea'].time.dt.month == 2)
+#         ).std(dim='time', skipna=True),
+#     levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+#     linewidths=0.5, linestyles='solid',
+# )
+# axs[1, 0].clabel(plt_ctr2, inline=1, colors='b', fmt=remove_trailing_zero,
+#           levels=ctr_level, inline_spacing=10, fontsize=7,)
+
+# axs[1, 1].pcolormesh(
+#     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='MAM'),
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_ctr3 = axs[1, 1].contour(
+#     lon, lat,
+#     pre_weighted_lat[expid[i]]['sea'].sel(
+#         time=(pre_weighted_lat[expid[i]]['sea'].time.dt.month == 5)
+#         ).std(dim='time', skipna=True),
+#     levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+#     linewidths=0.5, linestyles='solid',
+# )
+# axs[1, 1].clabel(plt_ctr3, inline=1, colors='b', fmt=remove_trailing_zero,
+#           levels=ctr_level, inline_spacing=10, fontsize=7,)
+
+# axs[1, 2].pcolormesh(
+#     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='JJA'),
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_ctr4 = axs[1, 2].contour(
+#     lon, lat,
+#     pre_weighted_lat[expid[i]]['sea'].sel(
+#         time=(pre_weighted_lat[expid[i]]['sea'].time.dt.month == 8)
+#         ).std(dim='time', skipna=True),
+#     levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+#     linewidths=0.5, linestyles='solid',
+# )
+# axs[1, 2].clabel(plt_ctr4, inline=1, colors='b', fmt=remove_trailing_zero,
+#           levels=ctr_level, inline_spacing=10, fontsize=7,)
+
+# axs[1, 3].pcolormesh(
+#     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='SON'),
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_ctr5 = axs[1, 3].contour(
+#     lon, lat,
+#     pre_weighted_lat[expid[i]]['sea'].sel(
+#         time=(pre_weighted_lat[expid[i]]['sea'].time.dt.month == 11)
+#         ).std(dim='time', skipna=True),
+#     levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+#     linewidths=0.5, linestyles='solid',
+# )
+# axs[1, 3].clabel(plt_ctr5, inline=1, colors='b', fmt=remove_trailing_zero,
+#           levels=ctr_level, inline_spacing=10, fontsize=7,)
+
+
+# #-------- sm - am
+# plt_mesh2 = axs[2, 0].pcolormesh(
+#     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='DJF') - pre_weighted_lat[expid[i]]['am'],
+#     norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
+# axs[2, 1].pcolormesh(
+#     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='MAM') - pre_weighted_lat[expid[i]]['am'],
+#     norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
+# axs[2, 2].pcolormesh(
+#     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='JJA') - pre_weighted_lat[expid[i]]['am'],
+#     norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
+# axs[2, 3].pcolormesh(
+#     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='SON') - pre_weighted_lat[expid[i]]['am'],
+#     norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
+
+# plt.text(
+#     0.5, 1.05, 'DJF', transform=axs[1, 0].transAxes,
+#     ha='center', va='center', rotation='horizontal')
+
+# plt.text(
+#     0.5, 1.05, 'MAM', transform=axs[1, 1].transAxes,
+#     ha='center', va='center', rotation='horizontal')
+
+# plt.text(
+#     0.5, 1.05, 'JJA', transform=axs[1, 2].transAxes,
+#     ha='center', va='center', rotation='horizontal')
+
+# plt.text(
+#     0.5, 1.05, 'SON', transform=axs[1, 3].transAxes,
+#     ha='center', va='center', rotation='horizontal')
+
+# plt.text(
+#     0.5, 1.05, 'DJF - Annual mean', transform=axs[2, 0].transAxes,
+#     ha='center', va='center', rotation='horizontal')
+
+# plt.text(
+#     0.5, 1.05, 'MAM - Annual mean', transform=axs[2, 1].transAxes,
+#     ha='center', va='center', rotation='horizontal')
+
+# plt.text(
+#     0.5, 1.05, 'JJA - Annual mean', transform=axs[2, 2].transAxes,
+#     ha='center', va='center', rotation='horizontal')
+
+# plt.text(
+#     0.5, 1.05, 'SON - Annual mean', transform=axs[2, 3].transAxes,
+#     ha='center', va='center', rotation='horizontal')
+# endregion
+
+# -----------------------------------------------------------------------------
+# region significancy test
+
+
+djf_mean = pre_weighted_lat[expid[i]]['sm'].sel(season='DJF')
+jja_mean = pre_weighted_lat[expid[i]]['sm'].sel(season='JJA')
+
+djf_data = pre_weighted_lat[expid[i]]['sea'].sel(
+    time=(pre_weighted_lat[expid[i]]['sea'].time.dt.month == 2)
+    )
+jja_data = pre_weighted_lat[expid[i]]['sea'].sel(
+    time=(pre_weighted_lat[expid[i]]['sea'].time.dt.month == 8)
+    )
+ann_data = pre_weighted_lat[expid[i]]['ann']
+
+#-------- check normality
+# check_normality_3d(jja_data.values)
+
+#-------- check variance
+# check_equal_variance_3d(djf_data.values, jja_data.values)
+
+#---- student t test
+
+ttest_fdr_res = ttest_fdr_control(djf_data.values, jja_data.values,)
+
+
+#-------- plot
+
+lon = pre_weighted_lat[expid[i]]['am'].lon
+lat = pre_weighted_lat[expid[i]]['am'].lat
+lon_2d, lat_2d = np.meshgrid(lon, lat,)
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.0_lat/' + '6.1.3.0 ' + expid[i] + ' pre_weighted_lat DJF_JJA significancy test.png'
+cbar_label2 = 'Differences in precipitation-weighted\nopen-oceanic source latitude [$°$]'
+
+pltlevel2 = np.arange(-20, 20 + 1e-4, 2)
+pltticks2 = np.arange(-20, 20 + 1e-4, 4)
+pltnorm2 = BoundaryNorm(pltlevel2, ncolors=len(pltlevel2)-1, clip=True)
+pltcmp2 = cm.get_cmap('PiYG', len(pltlevel2)-1).reversed()
+
+fig, ax = globe_plot(
+    add_grid_labels=False,
+    fm_left=0.01, fm_right=0.99, fm_bottom=0.09, fm_top=0.99,)
+
+plt_mesh = ax.pcolormesh(
+    lon, lat,
+    djf_mean - jja_mean,
+    norm=pltnorm2, cmap=pltcmp2, transform=ccrs.PlateCarree(),)
+
+ax.scatter(
+    x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
+    s=0.1, c='k', marker='.', edgecolors='none'
+    )
+
+cbar = fig.colorbar(
+    plt_mesh, ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.7, ticks=pltticks2, extend='both',
+    pad=0.02, fraction=0.2,
+    )
+cbar.ax.tick_params(length=2, width=0.4)
+cbar.ax.set_xlabel(cbar_label2, linespacing=1.5)
+fig.savefig(output_png)
+
+
+
+'''
+#-------- check normality
+array = ann_data.values
+
+whether_normal = np.full(array.shape[1:], True)
+
+for ilat in range(whether_normal.shape[0]):
+    for ilon in range(whether_normal.shape[1]):
+        # ilat = 48; ilon = 96
+        test_data = array[:, ilat, ilon][np.isfinite(array[:, ilat, ilon])]
+        
+        if (len(test_data) < 3):
+            whether_normal[ilat, ilon] = False
+        else:
+            whether_normal[ilat, ilon] = stats.shapiro(test_data).pvalue > 0.05
+
+whether_normal.sum() / len(whether_normal.flatten())
+
+
+check_normality_3d(array)
+
+#-------- check FDR control
+# method 1
+
+fdr_bh = multitest.fdrcorrection(
+    ttest_djf_jja.reshape(-1),
+    alpha=0.05,
+    method='i',
+)
+bh_test1 = fdr_bh[0].reshape(ttest_djf_jja.shape)
+(bh_test1 == bh_test4).all()
+
+bh_test1.sum()
+(ttest_djf_jja < 0.05).sum()
+
+
+# method 2
+
+bh_fdr = 0.05
+
+sortind = np.argsort(ttest_djf_jja.reshape(-1))
+pvals_sorted = np.take(ttest_djf_jja.reshape(-1), sortind)
+rank = np.arange(1, len(pvals_sorted)+1)
+bh_critic = rank / len(pvals_sorted) * bh_fdr
+
+where_smaller = np.where(pvals_sorted < bh_critic)
+
+bh_test2 = ttest_djf_jja <= pvals_sorted[where_smaller[0][-1]]
+
+(bh_test1 == bh_test2).all()
+
+# method 3
+import mne
+fdr_bh3 = mne.stats.fdr_correction(
+    ttest_djf_jja.reshape(-1), alpha=0.05, method='indep')
+bh_test3 = fdr_bh3[0].reshape(ttest_djf_jja.shape)
+(bh_test1 == bh_test3).all()
+
+#-------- check variance
+
+array1 = djf_data.values
+array2 = jja_data.values
+
+variance_equal = np.full(array1.shape[1:], True)
+for ilat in range(variance_equal.shape[0]):
+    for ilon in range(variance_equal.shape[1]):
+        # ilat = 48; ilon = 96
+        test_data1 = array1[:, ilat, ilon][np.isfinite(array1[:, ilat, ilon])]
+        test_data2 = array2[:, ilat, ilon][np.isfinite(array2[:, ilat, ilon])]
+        variance_equal[ilat, ilon] = stats.fligner(test_data1, test_data2).pvalue > 0.05
+
+variance_equal.sum() / len(variance_equal.flatten())
+
+check_equal_variance_3d(array1, array2)
+
+#-------- check student t test
+
+ttest_djf_jja = stats.ttest_ind(
+    djf_data, jja_data,
+    nan_policy='omit',
+    alternative='two-sided',
+    ).pvalue.data
+ttest_djf_jja[np.isnan(ttest_djf_jja)] = 1
+
+#---- FDR control
+
+bh_test4 = fdr_control_bh(ttest_djf_jja)
+
+bh_test5 = ttest_fdr_control(djf_data, jja_data,)
+ttest_res2 = ttest_fdr_control(djf_data, jja_data, fdr_control=False)
+(bh_test4 == bh_test5).all()
+(ttest_djf_jja == ttest_res2).all()
+
+#-------- test for normality
+ilat = 48
+ilon = 96
+test_data = djf_data[:, ilat, ilon]
+test_data = jja_data[:, ilat, ilon]
+test_data = pre_weighted_lat[expid[i]]['sea'][:, ilat, ilon]
+test_data = pre_weighted_lat[expid[i]]['ann'][:, ilat, ilon]
+stats.shapiro(test_data.values[np.isfinite(test_data.values)],)
+
+# other checks
+np.isnan(jja_data.values).all(axis=0).sum()
+np.isnan(djf_data.values).all(axis=0).sum()
+np.isnan(djf_mean.values).sum()
+
+'''
+
+# endregion
+# -----------------------------------------------------------------------------
+
 
 # -----------------------------------------------------------------------------
 # region plot ann/DJF/JJA standard deviation of source lon

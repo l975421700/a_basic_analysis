@@ -229,13 +229,13 @@ for jcol in range(ncol):
         ha='center', va='center', rotation='horizontal')
 
 cbar1 = fig.colorbar(
-    cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=axs, format=remove_trailing_zero_pos,
+    plt_mesh1, ax=axs, format=remove_trailing_zero_pos,
     orientation="horizontal",shrink=0.5,aspect=40,extend='max',
     anchor=(-0.2, -0.3), ticks=pltticks)
 cbar1.ax.set_xlabel(cbar_label1, linespacing=2)
 
 cbar2 = fig.colorbar(
-    cm.ScalarMappable(norm=pltnorm2, cmap=pltcmp2), ax=axs, format=remove_trailing_zero_pos,
+    plt_mesh2, ax=axs, format=remove_trailing_zero_pos,
     orientation="horizontal",shrink=0.5,aspect=40,extend='both',
     anchor=(1.1,-3.8),ticks=pltticks2)
 cbar2.ax.set_xlabel(cbar_label2, linespacing=2)

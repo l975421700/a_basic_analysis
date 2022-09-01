@@ -810,7 +810,7 @@ plt3 = ax.contour(
 ax.clabel(plt3, inline=True, colors='b', fmt=remove_trailing_zero,
           levels=pltctr2, inline_spacing=10, fontsize=7,)
 
-ax.pcolormesh(
+plt_mesh = ax.pcolormesh(
     ocean_pre_alltime[expid[i]]['daily'].lon,
     ocean_pre_alltime[expid[i]]['daily'].lat.sel(lat=slice(-60, -90)),
     pre_weighted_lon[expid[i]]['daily'][itime_start_djf + itime,].sel(lat=slice(-60, -90)),
@@ -821,7 +821,7 @@ plt.text(
     ha='left', va='bottom', rotation='horizontal')
 
 cbar = fig.colorbar(
-    cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=ax, aspect=30,
+    plt_mesh, ax=ax, aspect=30,
     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='neither',
     pad=0.02, fraction=0.2,
     )

@@ -305,7 +305,7 @@ for irow in range(nrow):
             plt.text(
                 0, 1.05, panel_labels[ipanel],
                 transform=axs[irow, jcol].transAxes,
-                ha='center', va='center', rotation='horizontal')
+                ha='left', va='center', rotation='horizontal')
             ipanel += 1
         else:
             axs[irow, jcol].axis('off')
@@ -669,12 +669,12 @@ def hemisphere_plot(
     if not (northextent is None):
         projections = ccrs.SouthPolarStereo()
         ticklabel = ticks_labels(-180, 180, -90, northextent,
-                                 30, int((northextent+90)/3))
+                                 30, 10)
         extent = (-180, 180, -90, northextent)
     elif not (southextent is None):
         projections = ccrs.NorthPolarStereo()
         ticklabel = ticks_labels(-180, 180, southextent, 90,
-                                 30, int((90-southextent)/3))
+                                 30, 10)
         extent = (-180, 180, southextent, 90)
     
     transform = ccrs.PlateCarree()
@@ -785,7 +785,7 @@ pltticks = np.arange(0, 4000 + 1e-4, 1000)
 pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=False)
 pltcmp = cm.get_cmap('Blues', len(pltlevel)-1)
 
-fig, ax = hemisphere_plot(northextent=-60)
+fig, ax = hemisphere_plot(northextent=-50)
 
 
 cbar = fig.colorbar(

@@ -349,7 +349,7 @@ pltcmp = cm.get_cmap('PiYG', len(pltlevel)-1).reversed()
 
 fig, ax = globe_plot()
 
-ax.pcolormesh(
+plt_mesh1 = ax.pcolormesh(
     moisture_flux[expid[i]]['meridional']['am'].lon,
     moisture_flux[expid[i]]['meridional']['am'].lat,
     moisture_flux[expid[i]]['meridional']['am'].sel(plev=85000) * 10**3,
@@ -357,7 +357,7 @@ ax.pcolormesh(
     zorder = -2)
 
 cbar = fig.colorbar(
-    cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=ax, aspect=30,
+    plt_mesh1, ax=ax, aspect=30,
     orientation="horizontal", shrink=0.7, ticks=pltticks, extend='max',
     pad=0.1, fraction=0.2,
     )

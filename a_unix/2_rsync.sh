@@ -1,7 +1,7 @@
 
 
 # -----------------------------------------------------------------------------
-# region rsync
+# region rsync download figures
 
 # download figures
 rsync -avzP sci8:/home/users/qino/figures /Users/gao/OneDrive\ -\ University\ of\ Cambridge/research/
@@ -28,10 +28,12 @@ rsync -avz sci3:/gws/nopw/j04/bas_palaeoclim/qino/* /Volumes/LaCie/jasmin/qino/b
 
 # -----------------------------------------------------------------------------
 # region partial backup ollie to levante
+# -l, --links                 copy symlinks as symlinks
+# -F --exclude=PATTERN       exclude files matching PATTERN
 
-rsync -avzP /work/ollie/qigao001/output/archived_exp levante:/work/ab0246/a270200/output/
+rsync -avzLP --exclude '**/run_/*' /work/ollie/qigao001/output/archived_exp levante:/work/ab0246/a270200/output/
 
-rsync -avzP /work/ollie/qigao001/output levante:/work/ab0246/a270200/
+rsync -avzLP --exclude '**/run_/*' /work/ollie/qigao001/output levante:/work/ab0246/a270200/
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -40,9 +42,9 @@ rsync -avzP /work/ollie/qigao001/output levante:/work/ab0246/a270200/
 # -----------------------------------------------------------------------------
 # region partial backup ollie to jasmin
 
-rsync -avzP /work/ollie/qigao001/output/archived_exp xfer1:/gws/nopw/j04/bas_palaeoclim/qino/output/
+rsync -avzLP --exclude '**/run_/*' /work/ollie/qigao001/output/archived_exp xfer1:/gws/nopw/j04/bas_palaeoclim/qino/output/
 
-rsync -avzP /work/ollie/qigao001/output xfer1:/gws/nopw/j04/bas_palaeoclim/qino/
+rsync -avzLP --exclude '**/run_/*' /work/ollie/qigao001/output xfer1:/gws/nopw/j04/bas_palaeoclim/qino/
 
 # endregion
 # -----------------------------------------------------------------------------

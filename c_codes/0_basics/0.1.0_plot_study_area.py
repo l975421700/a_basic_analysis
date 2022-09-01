@@ -50,7 +50,6 @@ pbar = ProgressBar()
 pbar.register()
 from geopy import distance
 import rasterio as rio
-import rockhound as rh
 import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Polygon, Point
@@ -637,7 +636,7 @@ polygon_eais.plot(ax=ax, color='grey', zorder=3, transform=ccrs.PlateCarree())
 
 ais_imbie2 = gpd.read_file(
     'data_sources/products/IMBIE_2016_drainage_basins/Rignot_Basins/ANT_IceSheets_IMBIE2/ANT_IceSheets_IMBIE2_v1.6.shp')
-major_ice_core_site = pd.read_csv('data_sources/major_ice_core_site.csv')
+major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
 major_ice_core_site = major_ice_core_site.loc[major_ice_core_site['age (kyr)'] > 120, ]
 
 fig, ax = hemisphere_plot(

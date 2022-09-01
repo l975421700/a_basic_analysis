@@ -1,15 +1,20 @@
 #!/bin/bash
-#SBATCH --time=00:30:00
-#SBATCH --partition=mpp
+#SBATCH --time=10:00:00
+#SBATCH --partition=mini
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
+#SBATCH -o %A_job.out
+#SBATCH -e %A_job.err
 
 
-source /home/ollie/qigao001/miniconda3/bin/activate training
-which python
-which cdo
+rsync -avzLP --exclude '**/run_/*' /work/ollie/qigao001/output levante:/work/ab0246/a270200/
 
-python /work/ollie/qigao001/a_basic_analysis/c_codes/2_tagging/2.3_source_var/2.3.0.0_source_var_scaled_daily.py
+
+# source /home/ollie/qigao001/miniconda3/bin/activate training
+# which python
+# which cdo
+
+# python /work/ollie/qigao001/a_basic_analysis/c_codes/2_tagging/2.3_source_var/2.3.0.0_source_var_scaled_daily.py
 
 
 #Xsrun  I know what I am doing
@@ -27,3 +32,8 @@ python /work/ollie/qigao001/a_basic_analysis/c_codes/2_tagging/2.3_source_var/2.
 # /work/ollie/qigao001/a_basic_analysis/f_scripts/short_run_get_echam_nc.sh
 
 # python /work/ollie/qigao001/a_basic_analysis/c_codes/2_awiesm/2.0._tagging/2.0.1.0_check_tagging_results/2.0.1.0.0_collect_correction_factors.py
+
+
+# partition: https://spaces.awi.de/display/HELP/SLURM
+
+

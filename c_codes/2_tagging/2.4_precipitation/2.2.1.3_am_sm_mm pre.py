@@ -80,10 +80,10 @@ from a_basic_analysis.b_module.source_properties import (
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = ['pi_m_416_4.9',]
+i = 0
 
 # region import output
 
-i = 0
 expid[i]
 
 wisoaprt_alltime = {}
