@@ -24,6 +24,8 @@ from scipy import stats
 import xesmf as xe
 import pandas as pd
 from metpy.interpolate import cross_section
+from statsmodels.stats import multitest
+import pycircstat as circ
 
 # plot
 import matplotlib as mpl
@@ -61,15 +63,28 @@ from a_basic_analysis.b_module.namelist import (
     month_dec_num,
     month_dec,
     seasons,
+    seasons_last_num,
     hours,
     months,
     month_days,
     zerok,
+    panel_labels,
 )
 
 from a_basic_analysis.b_module.source_properties import (
     source_properties,
     calc_lon_diff,
+)
+
+from a_basic_analysis.b_module.statistics import (
+    fdr_control_bh,
+    check_normality_3d,
+    check_equal_variance_3d,
+    ttest_fdr_control,
+)
+
+from a_basic_analysis.b_module.component_plot import (
+    cplot_ice_cores,
 )
 
 # endregion
@@ -79,16 +94,45 @@ from a_basic_analysis.b_module.source_properties import (
 # -----------------------------------------------------------------------------
 # region import data
 
-seaice = {}
+boundary_conditions = {}
+pi_sic_file = 'startdump/model_input/pi/alex/T63_amipsic_pcmdi_187001-189912.nc'
 
+boundary_conditions['sic'] = {}
+boundary_conditions['sic']['pi'] = xr.open_dataset(pi_sic_file)
+
+lon = boundary_conditions['sic']['pi'].lon
+lat = boundary_conditions['sic']['pi'].lat
+lon_2d, lat_2d = np.meshgrid(lon, lat,)
+
+major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
+major_ice_core_site = major_ice_core_site.loc[
+    major_ice_core_site['age (kyr)'] > 120, ]
+
+
+esacci_echam6_t63_trim = xr.open_dataset('startdump/tagging/tagmap/auxiliaries/sst_mon_ESACCI-2.1_198201_201612_am_rg_echam6_t63_slm_trim.nc')
+
+b_slm = np.broadcast_to(
+    np.isnan(esacci_echam6_t63_trim.analysed_sst.values),
+    boundary_conditions['sic']['pi'].sic.shape,
+    )
+
+boundary_conditions['sic']['pi'].sic.values[b_slm] = np.nan
+
+boundary_conditions['sic']['pi'].sic.values[:] = \
+    boundary_conditions['sic']['pi'].sic.clip(0, 100, keep_attrs=True).values
+
+'''
+stats.describe(boundary_conditions['sic']['pi'].sic.values,
+               axis=None, nan_policy='omit')
+
+seaice = {}
 seaice['pi_alex'] = xr.open_dataset('startdump/model_input/pi/alex/T63_amipsic_pcmdi_187001-189912.nc')
 
 echam6_t63_slm = xr.open_dataset('scratch/others/land_sea_masks/echam6_t63_slm.nc')
 
 b_slm = np.broadcast_to(echam6_t63_slm.SLM.values == 1,
                         seaice['pi_alex'].sic.shape,)
-
-
+'''
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -96,14 +140,18 @@ b_slm = np.broadcast_to(echam6_t63_slm.SLM.values == 1,
 # -----------------------------------------------------------------------------
 # region calculate sm/am sic
 
-seaice['pi_alex_alltime'] = {}
 
-seaice['pi_alex_alltime']['mm'] = seaice['pi_alex'].sic.clip(0, 100, keep_attrs=True)
-seaice['pi_alex_alltime']['mm'].values[b_slm] = np.nan
+boundary_conditions['am_sic'] = {}
+boundary_conditions['sm_sic'] = {}
 
-
-seaice['pi_alex_alltime']['sm'] = seaice['pi_alex_alltime']['mm'].groupby('time.season').map(time_weighted_mean)
-seaice['pi_alex_alltime']['am'] = time_weighted_mean(seaice['pi_alex_alltime']['mm'])
+for ikeys in boundary_conditions['sic'].keys():
+    # ikeys = 'pi'
+    print(ikeys)
+    boundary_conditions['am_sic'][ikeys] = \
+        time_weighted_mean(boundary_conditions['sic'][ikeys].sic)
+    boundary_conditions['sm_sic'][ikeys] = \
+        boundary_conditions['sic'][ikeys].sic.groupby(
+            'time.season').map(time_weighted_mean)
 
 
 
@@ -115,6 +163,14 @@ np.unique(echam6_t63_slm.SLM.values)
 
 #-------- check
 # sm
+# seaice['pi_alex_alltime'] = {}
+
+seaice['pi_alex_alltime']['mm'] = seaice['pi_alex'].sic.clip(0, 100, keep_attrs=True)
+seaice['pi_alex_alltime']['mm'].values[b_slm] = np.nan
+
+
+seaice['pi_alex_alltime']['sm'] = seaice['pi_alex_alltime']['mm'].groupby('time.season').map(time_weighted_mean)
+seaice['pi_alex_alltime']['am'] = time_weighted_mean(seaice['pi_alex_alltime']['mm'])
 
 ilon = 30
 ilat = 82
@@ -131,6 +187,7 @@ seaice['pi_alex_alltime']['mm'][:, ilat, ilon].mean()
 np.average(seaice['pi_alex_alltime']['mm'][:, ilat, ilon],
            weights = seaice['pi_alex_alltime']['mm'][:, ilat, ilon].time.dt.days_in_month)
 
+
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -139,26 +196,20 @@ np.average(seaice['pi_alex_alltime']['mm'][:, ilat, ilon],
 # -----------------------------------------------------------------------------
 # region plot am_sm sic Antarctica
 
-#-------- basic set
-
-lon = seaice['pi_alex_alltime']['am'].lon
-lat = seaice['pi_alex_alltime']['am'].lat
-
 
 #-------- plot configuration
-output_png = 'figures/6_awi/6.1_echam6/6.1.4_extreme_precipitation/6.1.4.4_climate_fields/6.1.4.4 pi_alex sic am_sm Antarctica.png'
-cbar_label1 = 'Sea ice concentration [$\%$]'
-cbar_label2 = 'Differences in sea ice concentration [$\%$]'
+output_png = 'figures/6_awi/6.1_echam6/6.1.2_climatology/6.1.2.1_sic/6.1.2.1 amip_pi sic am_sm Antarctica.png'
+cbar_label1 = 'SIC [$\%$]'
+cbar_label2 = 'Differences in SIC [$\%$]'
 
 pltlevel = np.arange(0, 100 + 1e-4, 10)
-pltticks = np.arange(0, 100 + 1e-4, 20)
-pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+pltticks = np.arange(0, 100 + 1e-4, 10)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=False)
 pltcmp = cm.get_cmap('Blues', len(pltlevel)-1)
 
-
-pltlevel2 = np.arange(-50, 50 + 1e-4, 10)
-pltticks2 = np.arange(-50, 50 + 1e-4, 10)
-pltnorm2 = BoundaryNorm(pltlevel2, ncolors=len(pltlevel2)-1, clip=True)
+pltlevel2 = np.arange(-100, 100 + 1e-4, 10)
+pltticks2 = np.arange(-100, 100 + 1e-4, 20)
+pltnorm2 = BoundaryNorm(pltlevel2, ncolors=len(pltlevel2)-1, clip=False)
 pltcmp2 = cm.get_cmap('BrBG', len(pltlevel2)-1)
 
 
@@ -171,39 +222,46 @@ fig, axs = plt.subplots(
     subplot_kw={'projection': ccrs.SouthPolarStereo()},
     gridspec_kw={'hspace': 0.1, 'wspace': 0.1},)
 
+ipanel=0
 for irow in range(nrow):
     for jcol in range(ncol):
         if ((irow != 0) | (jcol != 3)):
             axs[irow, jcol] = hemisphere_plot(northextent=-45, ax_org = axs[irow, jcol])
+            cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, axs[irow, jcol])
+            plt.text(
+                0, 0.95, panel_labels[ipanel],
+                transform=axs[irow, jcol].transAxes,
+                ha='center', va='center', rotation='horizontal')
+            ipanel += 1
         else:
             axs[irow, jcol].axis('off')
 
 #-------- Am
 plt_mesh1 = axs[0, 0].pcolormesh(
     lon, lat,
-    seaice['pi_alex_alltime']['am'],
+    boundary_conditions['am_sic']['pi'],
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 plt_mesh2 = axs[0, 1].pcolormesh(
     lon, lat,
-    seaice['pi_alex_alltime']['sm'].sel(season='DJF') - seaice['pi_alex_alltime']['sm'].sel(season='JJA'),
+    boundary_conditions['sm_sic']['pi'].sel(season='DJF') - boundary_conditions['sm_sic']['pi'].sel(season='JJA'),
     norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
 axs[0, 2].pcolormesh(
     lon, lat,
-    seaice['pi_alex_alltime']['sm'].sel(season='MAM') - seaice['pi_alex_alltime']['sm'].sel(season='SON'),
+    boundary_conditions['sm_sic']['pi'].sel(season='MAM') - boundary_conditions['sm_sic']['pi'].sel(season='SON'),
     norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
 
 for jcol in range(ncol):
     #-------- sm
     axs[1, jcol].pcolormesh(
         lon, lat,
-        seaice['pi_alex_alltime']['sm'].sel(
+        boundary_conditions['sm_sic']['pi'].sel(
             season=seasons[jcol]),
         norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
     
     #-------- sm/am - 1
     axs[2, jcol].pcolormesh(
         lon, lat,
-        seaice['pi_alex_alltime']['sm'].sel(season=seasons[jcol]) - seaice['pi_alex_alltime']['am'],
+        boundary_conditions['sm_sic']['pi'].sel(season=seasons[jcol]) - boundary_conditions['am_sic']['pi'],
         norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
     print(seasons[jcol])
 
@@ -230,13 +288,13 @@ for jcol in range(ncol):
 
 cbar1 = fig.colorbar(
     plt_mesh1, ax=axs, format=remove_trailing_zero_pos,
-    orientation="horizontal",shrink=0.5,aspect=40,extend='max',
+    orientation="horizontal",shrink=0.5,aspect=40,extend='neither',
     anchor=(-0.2, -0.3), ticks=pltticks)
 cbar1.ax.set_xlabel(cbar_label1, linespacing=2)
 
 cbar2 = fig.colorbar(
     plt_mesh2, ax=axs, format=remove_trailing_zero_pos,
-    orientation="horizontal",shrink=0.5,aspect=40,extend='both',
+    orientation="horizontal",shrink=0.5,aspect=40,extend='neither',
     anchor=(1.1,-3.8),ticks=pltticks2)
 cbar2.ax.set_xlabel(cbar_label2, linespacing=2)
 
@@ -247,13 +305,10 @@ fig.savefig(output_png)
 # -----------------------------------------------------------------------------
 
 
+
+
 # -----------------------------------------------------------------------------
 # region plot mm sic Antarctica
-
-#-------- basic set
-
-lon = seaice['pi_alex_alltime']['am'].lon
-lat = seaice['pi_alex_alltime']['am'].lat
 
 
 #-------- plot configuration

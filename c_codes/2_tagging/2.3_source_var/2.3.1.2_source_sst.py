@@ -502,7 +502,7 @@ fig.savefig(output_png)
 
 
 # -----------------------------------------------------------------------------
-# region plot am/sm source lat Antarctica
+# region plot am/sm source sst Antarctica
 
 
 #-------- plot configuration
