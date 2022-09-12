@@ -10,13 +10,14 @@ general:
     use_venv: False
 
 echam:
-    dataset: r0008
     version: "6.3.05p2-wiso"
     executable: echam6_0720_4.9
+    dataset: "r0008"
     bin_sources:
             echam_bin: "${bin_dir}/${executable}"
     bin_in_work:
             echam_bin: "${executable}"
+    namelist_dir: '/work/ollie/qigao001/a_basic_analysis/g_namelists/pi/'
     scenario: "ssp585"
     res: T63
     lresume: False
@@ -38,8 +39,8 @@ echam:
                 runctl:
                     default_output: True
                     out_filetype: 2
-                    putdata: [ 450, 'seconds', 'first', 0 ]
-                    # putdata: [ 6, 'hours', 'last', 0 ]
+                    # putdata: [ 450, 'seconds', 'first', 0 ]
+                    putdata: [ 6, 'hours', 'last', 0 ]
                     dt_stop: [ 2015, 1, 1, 2, 0, 0 ]
                 radctl:
                     lrad_async: False
@@ -98,6 +99,8 @@ echam:
         # sst: "unit.20"
 
 jsbach:
+    dynamic_vegetations: true
+    dataset: r0010
     file_movements:
         forcing:
             all_directions: "link"
@@ -107,7 +110,6 @@ jsbach:
         namelist.jsbach:
             jsbach_ctl:
                 with_hd: False
-    dataset: r0010
     add_streams:
         - jsbach
         - js_wiso

@@ -94,11 +94,22 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-boundary_conditions = {}
-pi_sic_file = 'startdump/model_input/pi/alex/T63_amipsic_pcmdi_187001-189912.nc'
+ds_names = ['pi', 'pi_final', 'lig_final', 'lgm_50']
 
+ds_files = [
+    'startdump/model_input/pi/alex/T63_amipsic_pcmdi_187001-189912.nc',
+    'startdump/model_input/lig/bc_lig_pi_final/sic.fesom.2900_2999.pi_final_t63.nc',
+    'startdump/model_input/lig/bc_lig_pi_final/sic.fesom.2900_2999.lig_final_t63.nc',
+    'startdump/model_input/lgm/lgm-50/sic.fesom.2200_2229.lgm-50_t63.nc'
+]
+
+boundary_conditions = {}
 boundary_conditions['sic'] = {}
-boundary_conditions['sic']['pi'] = xr.open_dataset(pi_sic_file)
+
+for inames, ifiles in zip(ds_names, ds_files):
+    boundary_conditions['sic'][inames] = xr.open_dataset(ifiles)
+    
+    print(inames + '\n' + ifiles)
 
 lon = boundary_conditions['sic']['pi'].lon
 lat = boundary_conditions['sic']['pi'].lat
@@ -108,30 +119,20 @@ major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
 major_ice_core_site = major_ice_core_site.loc[
     major_ice_core_site['age (kyr)'] > 120, ]
 
-
 esacci_echam6_t63_trim = xr.open_dataset('startdump/tagging/tagmap/auxiliaries/sst_mon_ESACCI-2.1_198201_201612_am_rg_echam6_t63_slm_trim.nc')
-
 b_slm = np.broadcast_to(
     np.isnan(esacci_echam6_t63_trim.analysed_sst.values),
-    boundary_conditions['sic']['pi'].sic.shape,
-    )
-
+    boundary_conditions['sic']['pi'].sic.shape,)
 boundary_conditions['sic']['pi'].sic.values[b_slm] = np.nan
-
 boundary_conditions['sic']['pi'].sic.values[:] = \
     boundary_conditions['sic']['pi'].sic.clip(0, 100, keep_attrs=True).values
+
+echam6_t63_cellarea = xr.open_dataset(
+    'scratch/others/land_sea_masks/echam6_t63_cellarea.nc')
 
 '''
 stats.describe(boundary_conditions['sic']['pi'].sic.values,
                axis=None, nan_policy='omit')
-
-seaice = {}
-seaice['pi_alex'] = xr.open_dataset('startdump/model_input/pi/alex/T63_amipsic_pcmdi_187001-189912.nc')
-
-echam6_t63_slm = xr.open_dataset('scratch/others/land_sea_masks/echam6_t63_slm.nc')
-
-b_slm = np.broadcast_to(echam6_t63_slm.SLM.values == 1,
-                        seaice['pi_alex'].sic.shape,)
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -156,36 +157,24 @@ for ikeys in boundary_conditions['sic'].keys():
 
 
 '''
-stats.describe(seaice['pi_alex'].sic, axis=None, nan_policy='omit')
-stats.describe(seaice['pi_alex_alltime']['mm'], axis=None, nan_policy='omit')
-
-np.unique(echam6_t63_slm.SLM.values)
-
 #-------- check
+
 # sm
-# seaice['pi_alex_alltime'] = {}
-
-seaice['pi_alex_alltime']['mm'] = seaice['pi_alex'].sic.clip(0, 100, keep_attrs=True)
-seaice['pi_alex_alltime']['mm'].values[b_slm] = np.nan
-
-
-seaice['pi_alex_alltime']['sm'] = seaice['pi_alex_alltime']['mm'].groupby('time.season').map(time_weighted_mean)
-seaice['pi_alex_alltime']['am'] = time_weighted_mean(seaice['pi_alex_alltime']['mm'])
-
+ikeys = 'pi'
 ilon = 30
 ilat = 82
-seaice['pi_alex_alltime']['sm'][2, ilat, ilon]
-seaice['pi_alex_alltime']['mm'][2:5, ilat, ilon].mean()
-np.average(seaice['pi_alex_alltime']['mm'][2:5, ilat, ilon],
-           weights = seaice['pi_alex_alltime']['mm'][2:5, ilat, ilon].time.dt.days_in_month)
+boundary_conditions['sm_sic'][ikeys][2, ilat, ilon].values
+np.average(boundary_conditions['sic'][ikeys].sic[2:5, ilat, ilon],
+           weights = boundary_conditions['sic'][ikeys].sic[2:5, ilat, ilon].time.dt.days_in_month)
 
 # am
+ikeys = 'pi'
 ilon = 40
 ilat = 82
-seaice['pi_alex_alltime']['am'][ilat, ilon]
-seaice['pi_alex_alltime']['mm'][:, ilat, ilon].mean()
-np.average(seaice['pi_alex_alltime']['mm'][:, ilat, ilon],
-           weights = seaice['pi_alex_alltime']['mm'][:, ilat, ilon].time.dt.days_in_month)
+boundary_conditions['am_sic'][ikeys][ilat, ilon]
+np.average(boundary_conditions['sic'][ikeys].sic[:, ilat, ilon],
+           weights = boundary_conditions['sic'][ikeys].sic[:, ilat, ilon].time.dt.days_in_month)
+
 
 
 '''
@@ -303,6 +292,85 @@ fig.savefig(output_png)
 
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region calculate monthly sea ice extent
+
+seaice_extent = {}
+
+for inames in ds_names:
+    # inames = 'pi'
+    seaice_extent[inames] = {}
+    seaice_extent[inames]['mm'] = xr.DataArray(
+        data = np.zeros(12),
+        coords={'month': np.arange(1, 12+1e-4, 1)},
+    )
+
+    for imonth in range(12):
+        # imonth = 0
+        seaice_extent[inames]['mm'].values[imonth] = \
+            (echam6_t63_cellarea.cell_area.values[
+                (lat_2d < 0) & \
+                    (boundary_conditions['sic'][inames].sic[imonth].values > 15)
+            ]).sum() / 1e12
+    
+    print(inames)
+
+
+
+
+'''
+boundary_conditions['sic']['pi'].sic.to_netcdf('scratch/test/test.nc')
+seaice_extent['pi']['mm']
+seaice_extent['pi_final']['mm']
+seaice_extent['lig_final']['mm']
+seaice_extent['lgm_50']['mm']
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot sea ice extent
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.2_climatology/6.1.2.1_sic/6.1.2.1 amip_pi seaice_extent mm SH.png'
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
+
+ax.set_ylim(0, 46)
+ax.set_yticks(np.arange(0, 45 + 1e-4, 5))
+
+plt_line1 = plt.plot(
+    month, seaice_extent['pi']['mm'],
+    lw=1, ls='-', c='grey', marker='o', ms = 2, label='AMIP PI')
+plt_line2 = plt.plot(
+    month, seaice_extent['pi_final']['mm'],
+    lw=1, ls=':', c='m', marker='o', ms = 2, label='pi_final')
+plt_line3 = plt.plot(
+    month, seaice_extent['lig_final']['mm'],
+    lw=1, ls=':', c='r', marker='o', ms = 2, label='lig_final')
+plt_line4 = plt.plot(
+    month, seaice_extent['lgm_50']['mm'],
+    lw=1, ls=':', c='b', marker='o', ms = 2, label='lgm_50')
+
+plt.legend()
+
+ax.set_xlabel('Antarctic sea ice extent [$10^6 \; km^2$]')
+
+ax.grid(True, linewidth=0.25, color='gray', alpha=0.5, linestyle='--')
+fig.subplots_adjust(left=0.08, right=0.99, bottom=0.15, top=0.99)
+fig.savefig(output_png)
+
+
+'''
+# ax.set_xlabel('Daily precipitation [$mm \; day^{-1}$]')
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+
 
 
 

@@ -779,7 +779,9 @@ pltticks = np.arange(-50, -30 + 1e-4, 4)
 pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
 pltcmp = cm.get_cmap('PuOr', len(pltlevel)-1).reversed()
 
-fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 7]) / 2.54)
+fig, ax = hemisphere_plot(
+    northextent=-50, figsize=np.array([5.8, 7]) / 2.54,
+    llatlabel = True,)
 
 cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
 
@@ -788,13 +790,6 @@ plt1 = ax.pcolormesh(
     pre_weighted_lat[expid[i]]['am'].lat,
     pre_weighted_lat[expid[i]]['am'],
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-
-# ax.scatter(
-#     x = major_ice_core_site.lon, y = major_ice_core_site.lat,
-#     s=3, c='none', linewidths=0.5, marker='o',
-#     transform=ccrs.PlateCarree(), edgecolors = 'black',
-#     )
-
 
 cbar = fig.colorbar(
     plt1, ax=ax, aspect=30,

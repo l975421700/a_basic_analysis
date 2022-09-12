@@ -644,7 +644,7 @@ def hemisphere_plot(
     add_grid=True, grid_color='gray', add_grid_labels = False,
     plot_scalebar=False, sb_bars=2, sb_length=1000, sb_location=(-0.13, 0),
     sb_barheight=100, sb_linewidth=0.15, sb_middle_label=False,
-    l45label = True, loceanarcs = True,
+    l45label = True, loceanarcs = True, llatlabel = False,
     ):
     '''
     ----Input
@@ -663,7 +663,7 @@ def hemisphere_plot(
     import matplotlib.path as mpath
     import warnings
     warnings.filterwarnings('ignore')
-    from cartopy.mpl.ticker import LongitudeFormatter
+    from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
     from matplotlib import patches
     
     if not (northextent is None):
@@ -761,6 +761,15 @@ def hemisphere_plot(
             xformatter=LongitudeFormatter(degree_symbol='° ') )
         gl1.ylabel_style = {'size': 0, 'color': None, 'alpha': 0}
         gl1.xlabel_style = {'size': 7}
+    
+    if llatlabel:
+        gl2 = ax.gridlines(
+            crs=transform, linewidth=0, zorder=2, draw_labels=True,
+            xlocs=ticklabel[0], ylocs=ticklabel[2], rotate_labels=False,
+            yformatter=LatitudeFormatter(degree_symbol='° '),
+        )
+        gl2.xlabel_style = {'size': 0, 'alpha': 0}
+        gl2.ylabel_style = {'size': 5}
     
     if (ax_org is None):
         return fig, ax
@@ -1171,6 +1180,10 @@ def remove_trailing_zero_pos(x, pos):
 
 
 '''
+ax.clabel(fmt=remove_trailing_zero)
+fig.colorbar(format=remove_trailing_zero_pos)
+ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
+
 https://stackoverflow.com/questions/2440692/formatting-floats-without-trailing-zeros
 
 https://stackoverflow.com/questions/66817786/how-can-i-use-the-formatters-to-make-custom-ticks-in-matplotlib

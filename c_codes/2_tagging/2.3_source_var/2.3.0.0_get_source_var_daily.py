@@ -3,11 +3,9 @@
 # -----------------------------------------------------------------------------
 # region basic settings
 
-exp_odir = 'output/echam-6.3.05p2-wiso/lgm/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 
-expid = [
-    'lgm_m_000_4.9',
-    ]
+expid = ['pi_m_416_4.9',]
 
 ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
 
@@ -94,7 +92,7 @@ fl_wiso_daily = sorted(glob.glob(
         ))
 # 1-year spin up, 10 years for analysis
 exp_out_wiso_daily = xr.open_mfdataset(
-    fl_wiso_daily[60:300],
+    fl_wiso_daily[120:720],
     data_vars='minimal', coords='minimal', parallel=True)
 
 # endregion

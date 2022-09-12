@@ -250,3 +250,31 @@ bhtest_res.sum() / len(bhtest_res.flatten())
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region Function to plot stippling points of t-test
+
+def cplot_ttest(
+    array1, array2, ax, lon_2d, lat_2d
+    ):
+    '''
+    #-------- Input
+    array1/array2:  3-D numpy.ndarray. test is done along the 1st dimension
+    ax:             ax to plot the data
+    lon_2d, lat_2d: 2-D numpy.ndarray, longitude and latitude
+    
+    #-------- Output
+    
+    '''
+    
+    import cartopy.crs as ccrs
+    
+    ttest_fdr_res = ttest_fdr_control(array1, array2,)
+    ax.scatter(
+        x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
+        s=0.5, c='k', marker='.', edgecolors='none',
+        transform=ccrs.PlateCarree(),)
+
+# endregion
+# -----------------------------------------------------------------------------
+

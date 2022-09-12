@@ -725,11 +725,12 @@ fig.savefig('figures/test.png')
 # -----------------------------------------------------------------------------
 # region create lig bias corrected boundary conditions
 
-! cdo -add /work/ollie/qigao001/startdump/model_input/lig/bc_lig_pi_final/sst.fesom.2900_2999.lig_final_t63.nc -sub /work/ollie/qigao001/startdump/model_input/pi/alex/T63_amipsst_pcmdi_187001-189912.nc /work/ollie/qigao001/startdump/model_input/lig/bc_lig_pi_final/sst.fesom.2900_2999.pi_final_t63.nc /work/ollie/qigao001/startdump/model_input/lig/bc_lig_pi_final/sst.fesom.2900_2999.lig_final_t63_bias_corrected.nc
+# wrong: ensure no negative SIC
+# ! cdo -add /work/ollie/qigao001/startdump/model_input/lig/bc_lig_pi_final/sst.fesom.2900_2999.lig_final_t63.nc -sub /work/ollie/qigao001/startdump/model_input/pi/alex/T63_amipsst_pcmdi_187001-189912.nc /work/ollie/qigao001/startdump/model_input/lig/bc_lig_pi_final/sst.fesom.2900_2999.pi_final_t63.nc /work/ollie/qigao001/startdump/model_input/lig/bc_lig_pi_final/sst.fesom.2900_2999.lig_final_t63_bias_corrected.nc
 
-! cdo -add /work/ollie/qigao001/startdump/model_input/lig/bc_lig_pi_final/sic.fesom.2900_2999.lig_final_t63.nc -sub /work/ollie/qigao001/startdump/model_input/pi/alex/T63_amipsic_pcmdi_187001-189912.nc /work/ollie/qigao001/startdump/model_input/lig/bc_lig_pi_final/sic.fesom.2900_2999.pi_final_t63.nc /work/ollie/qigao001/startdump/model_input/lig/bc_lig_pi_final/sic.fesom.2900_2999.lig_final_t63_bias_corrected.nc
+# ! cdo -add /work/ollie/qigao001/startdump/model_input/lig/bc_lig_pi_final/sic.fesom.2900_2999.lig_final_t63.nc -sub /work/ollie/qigao001/startdump/model_input/pi/alex/T63_amipsic_pcmdi_187001-189912.nc /work/ollie/qigao001/startdump/model_input/lig/bc_lig_pi_final/sic.fesom.2900_2999.pi_final_t63.nc /work/ollie/qigao001/startdump/model_input/lig/bc_lig_pi_final/sic.fesom.2900_2999.lig_final_t63_bias_corrected.nc
 
-! cdo -add /work/ollie/qigao001/startdump/model_input/lig/bc_lig_pi_final/wisosw_d.echam.2900_2999.lig_final_t63.nc -sub /work/ollie/qigao001/startdump/model_input/pi/mw/T63_wisosw_d.nc /work/ollie/qigao001/startdump/model_input/lig/bc_lig_pi_final/wisosw_d.echam.2900_2999.pi_final.nc /work/ollie/qigao001/startdump/model_input/lig/bc_lig_pi_final/wisosw_d.echam.2900_2999.lig_final_t63_bias_corrected.nc
+# ! cdo -add /work/ollie/qigao001/startdump/model_input/lig/bc_lig_pi_final/wisosw_d.echam.2900_2999.lig_final_t63.nc -sub /work/ollie/qigao001/startdump/model_input/pi/mw/T63_wisosw_d.nc /work/ollie/qigao001/startdump/model_input/lig/bc_lig_pi_final/wisosw_d.echam.2900_2999.pi_final.nc /work/ollie/qigao001/startdump/model_input/lig/bc_lig_pi_final/wisosw_d.echam.2900_2999.lig_final_t63_bias_corrected.nc
 
 
 '''
