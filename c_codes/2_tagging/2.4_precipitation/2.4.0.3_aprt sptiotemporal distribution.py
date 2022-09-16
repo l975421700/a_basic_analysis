@@ -105,13 +105,13 @@ wisoaprt_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
     wisoaprt_alltime[expid[i]] = pickle.load(f)
 
+lon = wisoaprt_alltime[expid[i]]['am'].lon
+lat = wisoaprt_alltime[expid[i]]['am'].lat
+lon_2d, lat_2d = np.meshgrid(lon, lat,)
+
 aprt_geo7_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_geo7_alltime.pkl', 'rb') as f:
     aprt_geo7_alltime[expid[i]] = pickle.load(f)
-
-lon = aprt_geo7_alltime[expid[i]]['am'].lon
-lat = aprt_geo7_alltime[expid[i]]['am'].lat
-lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
 with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
     echam6_t63_ais_mask = pickle.load(f)
@@ -181,32 +181,6 @@ fig.savefig(output_png)
 
 
 '''
-# pltlevel = np.concatenate(
-#     (np.arange(0, 0.5, 0.05), np.arange(0.5, 5 + 1e-4, 0.5)))
-# pltticks = np.concatenate(
-#     (np.arange(0, 0.5, 0.1), np.arange(0.5, 5 + 1e-4, 1)))
-# pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=True)
-# pltcmp = cm.get_cmap('RdBu', len(pltlevel))
-
-# pltctr = np.array([0.004, 0.008, 0.05, 0.1, 0.5, 1, 2, 4, 8])
-
-# plt1 = ax.pcolormesh(
-#     wisoaprt_alltime[expid[i]]['am'].lon, wisoaprt_alltime[expid[i]]['am'].lat,
-#     plt_data,
-#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-
-
-# cbar = fig.colorbar(
-#     plt1, ax=ax, aspect=30,
-#     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
-#     pad=0.02, fraction=0.15,
-#     )
-# cbar.ax.set_xlabel('Annual mean precipitation [$mm \; day^{-1}$]\n ', linespacing=2)
-
-# plt_data[echam6_t63_ais_mask['mask']['ais'] == False] = np.nan
-# output_png = 'figures/6_awi/6.1_echam6/6.1.4_extreme_precipitation/6.1.4.0_precipitation_distribution/6.1.4.0 ' + expid[i] + ' am precipitation AIS.png'
-
-
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -514,346 +488,111 @@ ani.save(
 # -----------------------------------------------------------------------------
 
 
-
-
-
-
-
-
-
 # -----------------------------------------------------------------------------
-# region animate daily 2*2 djf+jja pre and daily pre-weighted longitude
+# region plot am d018
+
+smow_d018 = 0.22279967
+smow_dD = 0.3288266
+
+do18 = (((wisoaprt_alltime[expid[i]]['am'][1] / \
+    wisoaprt_alltime[expid[i]]['am'][0]) / smow_d018 - 1) * 1000).compute()
 
 
-#-------------------------------- import total pre
+pltctr1 = np.array([0.05, 0.1, 0.5, ])
+pltctr2 = np.array([1, 2, 4, ])
 
-# i = 0
-# expid[i]
+plt_data = wisoaprt_alltime[expid[i]]['am'][0] * seconds_per_d
 
-# tot_pre_alltime = {}
+output_png = 'figures/6_awi/6.1_echam6/6.1.6_isotopes/6.1.6.0 ' + expid[i] + ' am d_018 Antarctica.png'
 
-# with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.tot_pre_alltime.pkl', 'rb') as f:
-#     tot_pre_alltime[expid[i]] = pickle.load(f)
+pltlevel = np.arange(-55, -5 + 1e-4, 5)
+pltticks = np.arange(-55, -5 + 1e-4, 10)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+pltcmp = cm.get_cmap('PiYG', len(pltlevel)-1).reversed()
 
+fig, ax = hemisphere_plot(
+    northextent=-60, figsize=np.array([5.8, 7]) / 2.54,
+    llatlabel = True,)
+cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
 
-#-------------------------------- import pre_weighted_lon and ocean pre
+plt2 = ax.contour(
+    lon, lat,
+    plt_data,
+    levels=pltctr1, colors = 'blue', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='dotted',
+)
+ax.clabel(plt2, inline=1, colors='blue', fmt=remove_trailing_zero,
+          levels=pltctr1, inline_spacing=10, fontsize=9,)
 
-j = 0
-expid[j]
+plt3 = ax.contour(
+    lon, lat,
+    plt_data,
+    levels=pltctr2, colors = 'blue', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='solid',
+)
+ax.clabel(plt3, inline=1, colors='blue', fmt=remove_trailing_zero,
+          levels=pltctr2, inline_spacing=5, fontsize=9,)
 
-pre_weighted_lon = {}
-with open(exp_odir + expid[j] + '/analysis/echam/' + expid[j] + '.pre_weighted_lon.pkl', 'rb') as f:
-    pre_weighted_lon[expid[j]] = pickle.load(f)
-
-ocean_pre_alltime = {}
-with open(exp_odir + expid[j] + '/analysis/echam/' + expid[j] + '.ocean_pre_alltime.pkl', 'rb') as f:
-    ocean_pre_alltime[expid[j]] = pickle.load(f)
-
-
-#-------------------------------- basic settings
-
-itimestart_djf = np.where(ocean_pre_alltime[expid[j]]['daily'].time == np.datetime64('2025-12-01T23:52:30'))[0][0]
-itimestart_jja = np.where(ocean_pre_alltime[expid[j]]['daily'].time == np.datetime64('2026-06-01T23:52:30'))[0][0]
-
-
-pltlevel = np.concatenate(
-    (np.arange(0, 0.5, 0.05), np.arange(0.5, 5 + 1e-4, 0.5)))
-pltticks = np.concatenate(
-    (np.arange(0, 0.5, 0.1), np.arange(0.5, 5 + 1e-4, 1)))
-pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=True)
-# pltcmp = cm.get_cmap('RdBu', len(pltlevel))
-pltcmp = cm.get_cmap('PuOr', len(pltlevel))
-
-pltlevel2 = np.arange(0, 360 + 1e-4, 20)
-pltticks2 = np.arange(0, 360 + 1e-4, 60)
-pltnorm2 = BoundaryNorm(pltlevel2, ncolors=len(pltlevel2)-1, clip=True)
-pltcmp2 = cm.get_cmap('BrBG', len(pltlevel2)-1).reversed()
-
-
-#-------------------------------- plot
-
-nrow = 2
-ncol = 2
-
-fig, axs = plt.subplots(
-    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
-    subplot_kw={'projection': ccrs.SouthPolarStereo()},
-    gridspec_kw={'hspace': 0.1, 'wspace': 0.1},)
-
-for irow in range(nrow):
-    for jcol in range(ncol):
-        axs[irow, jcol] = hemisphere_plot(northextent=-60, ax_org = axs[irow, jcol])
-
-djf_pre = ocean_pre_alltime[expid[j]]['daily'][itimestart_djf + 0,].copy() * 3600 * 24
-jja_pre = ocean_pre_alltime[expid[j]]['daily'][itimestart_jja + 0,].copy() * 3600 * 24
-# djf_pre.values[djf_pre.values < 2e-8 * 3600 * 24] = np.nan
-# jja_pre.values[jja_pre.values < 2e-8 * 3600 * 24] = np.nan
-
-plt1 = axs[0, 0].pcolormesh(
-    ocean_pre_alltime[expid[j]]['daily'].lon,
-    ocean_pre_alltime[expid[j]]['daily'].lat.sel(lat=slice(-60, -90)),
-    djf_pre.sel(lat=slice(-60, -90)), 
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-axs[1, 0].pcolormesh(
-    ocean_pre_alltime[expid[j]]['daily'].lon,
-    ocean_pre_alltime[expid[j]]['daily'].lat.sel(lat=slice(-60, -90)),
-    jja_pre.sel(lat=slice(-60, -90)), 
+plt1 = ax.pcolormesh(
+    lon,
+    lat,
+    do18,
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 
-plt3 = axs[0, 1].pcolormesh(
-    ocean_pre_alltime[expid[j]]['daily'].lon,
-    ocean_pre_alltime[expid[j]]['daily'].lat.sel(lat=slice(-60, -90)),
-    pre_weighted_lon[expid[j]]['daily'][itimestart_djf + 0,].sel(lat=slice(-60, -90)),
-    norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(), )
-axs[1, 1].pcolormesh(
-    ocean_pre_alltime[expid[j]]['daily'].lon,
-    ocean_pre_alltime[expid[j]]['daily'].lat.sel(lat=slice(-60, -90)),
-    pre_weighted_lon[expid[j]]['daily'][itimestart_jja + 0,].sel(lat=slice(-60, -90)),
-    norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(), )
+turner_obs = pd.read_csv(
+    'finse_school/data/Antarctic_site_records/Turner_obs.csv')
+cplot_ice_cores(np.negative(turner_obs.lon), turner_obs.lat, ax, marker='*',
+                edgecolors = 'red', zorder=3, s=5, c='red')
 
-plt.text(
-    0.5, 1.05, str(ocean_pre_alltime[expid[j]]['daily'].time[itimestart_djf + 0,].values)[:10], transform=axs[0, 0].transAxes,
-    ha='center', va='center', rotation='horizontal')
-
-plt.text(
-    0.5, 1.05, str(ocean_pre_alltime[expid[j]]['daily'].time[itimestart_jja + 0,].values)[:10], transform=axs[1, 0].transAxes,
-    ha='center', va='center', rotation='horizontal')
-
-plt.text(
-    -0.05, 0.5, 'DJF',
-    transform=axs[0, 0].transAxes,
-    ha='center', va='center', rotation='vertical')
-plt.text(
-    -0.05, 0.5, 'JJA',
-    transform=axs[1, 0].transAxes,
-    ha='center', va='center', rotation='vertical')
-
-cbar1 = fig.colorbar(
-    plt1, ax=axs,
-    orientation="horizontal",shrink=0.55,aspect=40,extend='max',
-    anchor=(-0.3, 0.05), ticks=pltticks)
-cbar1.ax.set_xlabel('Precipitation sourced from\nopen ocean [$mm \; day^{-1}$]', linespacing=1.5)
-
-cbar2 = fig.colorbar(
-    plt3, ax=axs,
-    orientation="horizontal",shrink=0.55,aspect=40,extend='neither',
-    anchor=(1.2,-3.2),ticks=pltticks2)
-cbar2.ax.set_xlabel('Precipitation-weighted open-oceanic\nsource longitude [$°$]', linespacing=1.5)
-
-fig.subplots_adjust(left=0.04, right = 0.99, bottom = 0.14, top = 0.98)
-fig.savefig('figures/test1.png')
+cbar = fig.colorbar(
+    plt1, ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+    pad=0.02, fraction=0.15,
+    )
+cbar.ax.set_xlabel('Annual mean $\delta^{18}O$ [‰]\n ', linespacing=2)
+fig.savefig(output_png)
 
 
-#-------------------------------- animate with animation.FuncAnimation
-
-nrow = 2
-ncol = 2
-
-fig, axs = plt.subplots(
-    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
-    subplot_kw={'projection': ccrs.SouthPolarStereo()},
-    gridspec_kw={'hspace': 0.1, 'wspace': 0.1},)
 
 
-for irow in range(nrow):
-    for jcol in range(ncol):
-        axs[irow, jcol] = hemisphere_plot(northextent=-60, ax_org = axs[irow, jcol])
-
-plt.text(
-    -0.05, 0.5, 'DJF',
-    transform=axs[0, 0].transAxes,
-    ha='center', va='center', rotation='vertical')
-plt.text(
-    -0.05, 0.5, 'JJA',
-    transform=axs[1, 0].transAxes,
-    ha='center', va='center', rotation='vertical')
-
-cbar1 = fig.colorbar(
-    cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=axs,
-    orientation="horizontal",shrink=0.55,aspect=40,extend='max',
-    anchor=(-0.3, 0.05), ticks=pltticks)
-cbar1.ax.set_xlabel('Precipitation sourced from\nopen ocean [$mm \; day^{-1}$]', linespacing=1.5)
-
-cbar2 = fig.colorbar(
-    cm.ScalarMappable(norm=pltnorm2, cmap=pltcmp2), ax=axs,
-    orientation="horizontal",shrink=0.55,aspect=40,extend='neither',
-    anchor=(1.2,-3.2),ticks=pltticks2)
-cbar2.ax.set_xlabel('Precipitation-weighted open-oceanic\nsource longitude [$°$]', linespacing=1.5)
-fig.subplots_adjust(left=0.04, right = 0.99, bottom = 0.14, top = 0.98)
-
-plt_objs = []
-
-def update_frames(itime):
-    global plt_objs
-    for plt_obj in plt_objs:
-        plt_obj.remove()
-    plt_objs = []
-    #---- daily precipitation
-    
-    djf_pre = ocean_pre_alltime[expid[j]]['daily'][
-        itimestart_djf + itime,].copy() * 3600 * 24
-    jja_pre = ocean_pre_alltime[expid[j]]['daily'][
-        itimestart_jja + itime,].copy() * 3600 * 24
-    # djf_pre.values[djf_pre.values < 2e-8 * 3600 * 24] = np.nan
-    # jja_pre.values[jja_pre.values < 2e-8 * 3600 * 24] = np.nan
-    
-    #---- plot daily precipitation
-    plt1 = axs[0, 0].pcolormesh(
-        ocean_pre_alltime[expid[j]]['daily'].lon,
-        ocean_pre_alltime[expid[j]]['daily'].lat.sel(lat=slice(-60, -90)),
-        djf_pre.sel(lat=slice(-60, -90)), 
-        norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-    plt2 = axs[1, 0].pcolormesh(
-        ocean_pre_alltime[expid[j]]['daily'].lon,
-        ocean_pre_alltime[expid[j]]['daily'].lat.sel(lat=slice(-60, -90)),
-        jja_pre.sel(lat=slice(-60, -90)), 
-        norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-    
-    #---- plot daily pre_weighted_lon
-    plt3 = axs[0, 1].pcolormesh(
-        ocean_pre_alltime[expid[j]]['daily'].lon,
-        ocean_pre_alltime[expid[j]]['daily'].lat.sel(lat=slice(-60, -90)),
-        pre_weighted_lon[expid[j]]['daily'][itimestart_djf + itime,].sel(lat=slice(-60, -90)),
-        norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(), )
-    
-    plt4 = axs[1, 1].pcolormesh(
-        ocean_pre_alltime[expid[j]]['daily'].lon,
-        ocean_pre_alltime[expid[j]]['daily'].lat.sel(lat=slice(-60, -90)),
-        pre_weighted_lon[expid[j]]['daily'][itimestart_jja + itime,].sel(lat=slice(-60, -90)),
-        norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(), )
-    
-    plt5 = axs[0, 0].text(
-        0.5, 1.05, str(ocean_pre_alltime[expid[j]]['daily'].time[
-            itimestart_djf + itime,].values)[:10],
-        transform=axs[0, 0].transAxes,
-        ha='center', va='center', rotation='horizontal')
-    
-    plt6 = axs[1, 0].text(
-        0.5, 1.05, str(ocean_pre_alltime[expid[j]]['daily'].time[
-            itimestart_jja + itime,].values)[:10],
-        transform=axs[1, 0].transAxes,
-        ha='center', va='center', rotation='horizontal')
-    
-    plt_objs = [plt1, plt2, plt3, plt4, plt5, plt6]
-    # plt_objs = [plt6]
-    
-    return(plt_objs)
-
-ani = animation.FuncAnimation(
-    fig, update_frames,
-    frames=90, interval=500, blit=False)
-ani.save(
-    'figures/6_awi/6.1_echam6/6.1.4_extreme_precipitation/6.1.4.0_precipitation_distribution/6.1.4.0_Antarctic DJF_JJA daily precipitation and pre_weighted_lon ' + expid[j] + '.mp4',
-    # 'figures/test.mp4',
-    progress_callback=lambda iframe, n: print(f'Saving frame {iframe} of {n}'),)
 
 
 
 
 '''
-ocean_pre_alltime[expid[j]]['daily'].time[itimestart_djf].values
-ocean_pre_alltime[expid[j]]['daily'].time[itimestart_jja].values
+#-------- SMOW values
+smow_standard = xr.open_dataset('/work/ollie/qigao001/startdump/wiso/calc_wiso_d/SMOW.FAC.T63.nwiso_3.nc')
 
-#-------------------------------- animate with animation.ArtistAnimation
+(smow_standard.smow[0, 0]).max().values == (smow_standard.smow[0, 0]).min().values
+(smow_standard.smow[0, 1]).max().values == (smow_standard.smow[0, 1]).min().values
+(smow_standard.smow[0, 2]).max().values == (smow_standard.smow[0, 2]).min().values
 
-nrow = 2
-ncol = 2
+#-------- check with initial plot
 
-fig, axs = plt.subplots(
-    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
-    subplot_kw={'projection': ccrs.SouthPolarStereo()},
-    gridspec_kw={'hspace': 0.1, 'wspace': 0.1},)
+pltlevel = np.arange(-50, 0.01, 0.1)
+pltticks = np.arange(-50, 0.01, 5)
 
-for irow in range(nrow):
-    for jcol in range(ncol):
-        axs[irow, jcol] = hemisphere_plot(northextent=-60, ax_org = axs[irow, jcol])
+fig, ax = framework_plot1("global", figsize=np.array([8.8*2, 11]) / 2.54)
 
-plt.text(
-    -0.05, 0.5, 'DJF',
-    transform=axs[0, 0].transAxes,
-    ha='center', va='center', rotation='vertical')
-plt.text(
-    -0.05, 0.5, 'JJA',
-    transform=axs[1, 0].transAxes,
-    ha='center', va='center', rotation='vertical')
+plt_cmp = ax.pcolormesh(
+    lon,
+    lat,
+    do18,
+    norm=BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=False),
+    cmap=cm.get_cmap('viridis', len(pltlevel)), rasterized=True,
+    transform=ccrs.PlateCarree(),)
 
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, orientation="horizontal",  pad=0.02,
+    fraction=0.14, shrink=0.6, aspect=40, anchor=(0.5, 0.7),
+    ticks=pltticks, extend='both')
 
-ims = []
+cbar.ax.set_xlabel(
+    'Annual mean $\delta^{18}O$ [‰]\nAWI-ESM-2-1-wiso: pi_final_qg 30y',
+    linespacing=1.5,)
 
-for itime in range(2):
-    # itime = 0
-    
-    #---- daily precipitation
-    
-    djf_pre = ocean_pre_alltime[expid[j]]['daily'][
-        itimestart_djf + itime,].copy() * 3600 * 24
-    jja_pre = ocean_pre_alltime[expid[j]]['daily'][
-        itimestart_jja + itime,].copy() * 3600 * 24
-    
-    #---- plot daily precipitation
-    plt1 = axs[0, 0].pcolormesh(
-        ocean_pre_alltime[expid[j]]['daily'].lon,
-        ocean_pre_alltime[expid[j]]['daily'].lat,
-        djf_pre, rasterized = True,
-        norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-    plt2 = axs[1, 0].pcolormesh(
-        ocean_pre_alltime[expid[j]]['daily'].lon,
-        ocean_pre_alltime[expid[j]]['daily'].lat,
-        jja_pre, rasterized = True,
-        norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-    
-    #---- plot daily pre_weighted_lon
-    plt3 = axs[0, 1].pcolormesh(
-        ocean_pre_alltime[expid[j]]['daily'].lon,
-        ocean_pre_alltime[expid[j]]['daily'].lat,
-        pre_weighted_lon[expid[j]]['daily'][itimestart_djf + itime,],
-        norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(), rasterized = True,)
-    
-    plt4 = axs[1, 1].pcolormesh(
-        ocean_pre_alltime[expid[j]]['daily'].lon,
-        ocean_pre_alltime[expid[j]]['daily'].lat,
-        pre_weighted_lon[expid[j]]['daily'][itimestart_jja + itime,],
-        norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(), rasterized = True,)
-    
-    plt5 = plt.text(
-        0.5, 1.05, str(ocean_pre_alltime[expid[j]]['daily'].time[
-            itimestart_djf + itime,].values)[:10],
-        transform=axs[0, 0].transAxes,
-        ha='center', va='center', rotation='horizontal')
-    
-    plt6 = plt.text(
-        0.5, 1.05, str(ocean_pre_alltime[expid[j]]['daily'].time[
-            itimestart_jja + itime,].values)[:10],
-        transform=axs[1, 0].transAxes,
-        ha='center', va='center', rotation='horizontal')
-    
-    ims.append([plt1, plt2, plt3, plt4, plt5, plt6, ])
-    print(str(itime))
-
-
-cbar1 = fig.colorbar(
-    plt1, ax=axs,
-    orientation="horizontal",shrink=0.55,aspect=40,extend='max',
-    anchor=(-0.3, 0.05), ticks=pltticks)
-cbar1.ax.set_xlabel('Precipitation sourced from\nopen ocean [$mm \; day^{-1}$]', linespacing=1.5)
-
-cbar2 = fig.colorbar(
-    plt3, ax=axs,
-    orientation="horizontal",shrink=0.55,aspect=40,extend='neither',
-    anchor=(1.2,-3.2),ticks=pltticks2)
-cbar2.ax.set_xlabel('Precipitation-weighted open-oceanic\nsource longitude [$°$]', linespacing=1.5)
-fig.subplots_adjust(left=0.04, right = 0.99, bottom = 0.14, top = 0.98)
-
-ani = animation.ArtistAnimation(fig, ims, interval=250, blit=True)
-ani.save(
-    'figures/6_awi/6.1_echam6/6.1.4_extreme_precipitation/6.1.4.0_precipitation_distribution/6.1.4.0_Antarctic DJF_JJA daily precipitation and pre_weighted_lon ' + expid[j] + '_1.mp4',
-    # 'figures/test.mp4',
-    progress_callback=lambda iframe, n: print(f'Saving frame {iframe} of {n}'),)
-
-(djf_pre.values < 2e-8).sum()
-(djf_pre.values < 2e-8 * 3600 * 24).sum()
-(ocean_pre_alltime[expid[j]]['daily'].values < 2e-8).sum()
-(ocean_pre_alltime[expid[j]]['daily'].values < 2e-8 * 3600 * 24).sum()
+fig.subplots_adjust(left=0.06, right=0.97, bottom=0.08, top=0.995)
+fig.savefig('figures/trial.png',)
 
 '''
 # endregion

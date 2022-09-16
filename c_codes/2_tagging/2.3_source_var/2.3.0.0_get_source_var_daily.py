@@ -85,14 +85,15 @@ pbar.register()
 
 i=0
 print('#-------- ' + expid[i])
+
 fl_wiso_daily = sorted(glob.glob(
     # exp_odir + expid[i] + '/outdata/echam/' + \
     #     expid[i] + '_??????_daily.01_wiso.nc'
     exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'
         ))
-# 1-year spin up, 10 years for analysis
+
 exp_out_wiso_daily = xr.open_mfdataset(
-    fl_wiso_daily[120:720],
+    fl_wiso_daily[120:1080],
     data_vars='minimal', coords='minimal', parallel=True)
 
 # endregion

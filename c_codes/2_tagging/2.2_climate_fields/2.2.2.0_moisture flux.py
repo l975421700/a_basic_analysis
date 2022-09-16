@@ -275,63 +275,6 @@ dset_cross['x'] = dset_cross['lon'].values[0, :]
 
 
 # -----------------------------------------------------------------------------
-# region calculate mon_sea_ann uv_plev
-
-i = 0
-expid[i]
-
-uv_plev = {}
-uv_plev[expid[i]] = {}
-
-uv_plev[expid[i]]['u'] = mon_sea_ann(var_monthly=exp_org_o[expid[i]]['uvq_plev'].u)
-uv_plev[expid[i]]['v'] = mon_sea_ann(var_monthly=exp_org_o[expid[i]]['uvq_plev'].v)
-
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.uv_plev.pkl', 'wb') as f:
-    pickle.dump(uv_plev[expid[i]], f)
-
-
-
-
-
-'''
-#---------------- check
-i = 0
-expid[i]
-
-uv_plev = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.uv_plev.pkl', 'rb') as f:
-    uv_plev[expid[i]] = pickle.load(f)
-
-# calculate manually
-def time_weighted_mean(ds):
-    return ds.weighted(ds.time.dt.days_in_month).mean('time', skipna=False)
-
-test = {}
-test['mon'] = exp_org_o[expid[i]]['uvq_plev'].u.copy()
-test['sea'] = exp_org_o[expid[i]]['uvq_plev'].u.resample({'time': 'Q-FEB'}).map(time_weighted_mean)[1:-1].compute()
-test['ann'] = exp_org_o[expid[i]]['uvq_plev'].u.resample({'time': '1Y'}).map(time_weighted_mean).compute()
-test['mm'] = test['mon'].groupby('time.month').mean(skipna=True).compute()
-test['sm'] = test['sea'].groupby('time.season').mean(skipna=True).compute()
-test['am'] = test['ann'].mean(dim='time', skipna=True).compute()
-
-
-
-(uv_plev[expid[i]]['u']['mon'].values[np.isfinite(uv_plev[expid[i]]['u']['mon'].values)] == test['mon'].values[np.isfinite(test['mon'].values)]).all()
-(uv_plev[expid[i]]['u']['sea'].values[np.isfinite(uv_plev[expid[i]]['u']['sea'].values)] == test['sea'].values[np.isfinite(test['sea'].values)]).all()
-(uv_plev[expid[i]]['u']['ann'].values[np.isfinite(uv_plev[expid[i]]['u']['ann'].values)] == test['ann'].values[np.isfinite(test['ann'].values)]).all()
-(uv_plev[expid[i]]['u']['mm'].values[np.isfinite(uv_plev[expid[i]]['u']['mm'].values)] == test['mm'].values[np.isfinite(test['mm'].values)]).all()
-(uv_plev[expid[i]]['u']['sm'].values[np.isfinite(uv_plev[expid[i]]['u']['sm'].values)] == test['sm'].values[np.isfinite(test['sm'].values)]).all()
-(uv_plev[expid[i]]['u']['am'].values[np.isfinite(uv_plev[expid[i]]['u']['am'].values)] == test['am'].values[np.isfinite(test['am'].values)]).all()
-
-
-
-
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
 # region plot am moisture flux
 
 i = 0

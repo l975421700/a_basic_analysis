@@ -4,6 +4,9 @@ exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = ['pi_m_416_4.9',]
 i = 0
 
+ifile_start = 120
+ifile_end   = 1080 # 1080
+
 # -----------------------------------------------------------------------------
 # region import packages
 
@@ -87,20 +90,22 @@ exp_org_o[expid[i]] = {}
 filenames_sf_wiso = sorted(glob.glob(
     exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_sf_wiso.nc'))
 exp_org_o[expid[i]]['sf_wiso'] = xr.open_mfdataset(
-    filenames_sf_wiso[120:132],
+    filenames_sf_wiso[ifile_start:ifile_end],
     data_vars='minimal', coords='minimal', parallel=True)
 
 
 '''
 #-------- check evap
+filenames_sf_wiso = sorted(glob.glob(
+    exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_sf_wiso.nc'))
 filenames_echam = sorted(glob.glob(
     exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_echam.nc'))
-exp_org_o[expid[i]]['echam'] = xr.open_mfdataset(
-    filenames_echam[120:132],
-    data_vars='minimal', coords='minimal', parallel=True)
 
-np.max(abs(exp_org_o[expid[i]]['echam'].evap.values - \
-    exp_org_o[expid[i]]['sf_wiso'].wisoevap[:, 0].values))
+ifile = 1000
+ncfile1 = xr.open_dataset(filenames_sf_wiso[ifile_start:ifile_end][ifile])
+ncfile2 = xr.open_dataset(filenames_echam[ifile_start:ifile_end][ifile])
+
+np.max(abs(ncfile1.wisoevap[0, 0] - ncfile2.evap[0])).values
 
 '''
 # endregion
@@ -126,26 +131,22 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoevap_allti
 
 '''
 #-------- check
-exp_org_o = {}
-exp_org_o[expid[i]] = {}
+wisoevap_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoevap_alltime.pkl', 'rb') as f:
+    wisoevap_alltime[expid[i]] = pickle.load(f)
 
+filenames_sf_wiso = sorted(glob.glob(
+    exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_sf_wiso.nc'))
 filenames_echam = sorted(glob.glob(
     exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_echam.nc'))
-exp_org_o[expid[i]]['echam'] = xr.open_mfdataset(
-    filenames_echam[120:132],
-    data_vars='minimal', coords='minimal', parallel=True)
 
-# wisoevap_alltime = {}
-# with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoevap_alltime.pkl', 'rb') as f:
-#     wisoevap_alltime[expid[i]] = pickle.load(f)
+ifile = -2
+ncfile1 = xr.open_dataset(filenames_sf_wiso[ifile_start:ifile_end][ifile])
+ncfile2 = xr.open_dataset(filenames_echam[ifile_start:ifile_end][ifile])
 
-np.max(abs(exp_org_o[expid[i]]['echam'].evap.values - \
-    wisoevap_alltime[expid[i]]['mon'][:, 0].values))
+(wisoevap_alltime[expid[i]]['mon'][ifile, 0] == ncfile2.evap[0]).all().values
+(wisoevap_alltime[expid[i]]['mon'][ifile, :] == ncfile1.wisoevap[0, :3]).all().values
 
-np.max(abs(time_weighted_mean(exp_org_o[expid[i]]['echam'].evap).values - \
-    wisoevap_alltime[expid[i]]['am'][0].values))
-
-(exp_org_o[expid[i]]['echam'].evap.groupby('time.season').map(time_weighted_mean)[1:] == wisoevap_alltime[expid[i]]['sm'][:, 0]).all().values
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -154,26 +155,26 @@ np.max(abs(time_weighted_mean(exp_org_o[expid[i]]['echam'].evap).values - \
 # -----------------------------------------------------------------------------
 # region calculate mon/sea/ann ERA5 evap
 
-evap_era5_79_14 = xr.open_dataset(
-    'scratch/cmip6/hist/evp/evp_ERA5_mon_sl_197901_201412.nc')
+era5_mon_evap_1979_2021 = xr.open_dataset(
+    'scratch/products/era5/evap/era5_mon_evap_1979_2021.nc')
 
 # change units to mm/d
-evap_era5_79_14_alltime = mon_sea_ann(
-    var_monthly = (evap_era5_79_14.e * 1000).compute()
+era5_mon_evap_1979_2021_alltime = mon_sea_ann(
+    var_monthly = (era5_mon_evap_1979_2021.e * 1000).compute()
 )
 
-with open('scratch/cmip6/hist/evp/evap_era5_79_14_alltime.pkl', 'wb') as f:
-    pickle.dump(evap_era5_79_14_alltime, f)
+with open('scratch/products/era5/evap/era5_mon_evap_1979_2021_alltime.pkl', 'wb') as f:
+    pickle.dump(era5_mon_evap_1979_2021_alltime, f)
 
 
 '''
 #-------- check
-with open('scratch/cmip6/hist/evp/evap_era5_79_14_alltime.pkl', 'rb') as f:
-    evap_era5_79_14_alltime = pickle.load(f)
-evap_era5_79_14 = xr.open_dataset(
-    'scratch/cmip6/hist/evp/evp_ERA5_mon_sl_197901_201412.nc')
+with open('scratch/products/era5/evap/era5_mon_evap_1979_2021_alltime.pkl', 'rb') as f:
+    era5_mon_evap_1979_2021_alltime = pickle.load(f)
+era5_mon_evap_1979_2021 = xr.open_dataset(
+    'scratch/products/era5/evap/era5_mon_evap_1979_2021.nc')
 
-(evap_era5_79_14_alltime['mon'] == (evap_era5_79_14.e * 1000)).values.all()
+(era5_mon_evap_1979_2021_alltime['mon'] == (era5_mon_evap_1979_2021.e * 1000)).values.all()
 
 '''
 # endregion

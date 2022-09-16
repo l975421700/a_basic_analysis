@@ -101,18 +101,16 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_geo7_spave.pkl', 'rb') as f:
-    aprt_geo7_spave = pickle.load(f)
-
 wisoaprt_mean_over_ais = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_mean_over_ais.pkl', 'rb') as f:
     wisoaprt_mean_over_ais[expid[i]] = pickle.load(f)
 
-with open('scratch/cmip6/hist/pre/tp_era5_mean_over_ais.pkl', 'rb') as f:
+with open('scratch/products/era5/pre/tp_era5_mean_over_ais.pkl', 'rb') as f:
     tp_era5_mean_over_ais = pickle.load(f)
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc_AIS.pkl', 'rb') as f:
-    aprt_frc_AIS = pickle.load(f)
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc_AIS_alltime.pkl', 'rb') as f:
+    aprt_frc_AIS_alltime = pickle.load(f)
+
 
 '''
 mmaprt1 = aprt_geo7_spave['AIS']['mm'].sum(dim='wisotype') * seconds_per_d * month_days
@@ -163,7 +161,7 @@ plt.legend(loc='upper right', handlelength=1, framealpha = 0.5, )
 
 ax.set_xlabel('Monthly precipitation over AIS [$mm \; mon^{-1}$]')
 ax.set_ylabel(None)
-ax.set_ylim(0, 20)
+# ax.set_ylim(0, 20)
 ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
 
 ax.grid(True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
@@ -199,7 +197,7 @@ imask = 'EAIS'
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.4_precipitation/6.1.4.0_aprt/6.1.4.0.1_aprt_ann_circle/6.1.4.0.1 ' + expid[i] + ' ann circle aprt frc over ' + imask + '.png'
 
-fig, ax = plt.subplots(1, 1, figsize=np.array([13.2, 8]) / 2.54)
+fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
 lgd_handles = []
 colors = ['royalblue', 'darkblue', 'deepskyblue', 'lightblue', ]
 regions = ['Antarctica', 'Land excl. Antarctica', 'SH sea ice', 'Open ocean']
@@ -209,26 +207,80 @@ for count, iregion in enumerate(regions):
     print(str(count) + ': ' + iregion)
     
     sns.barplot(
-        x = 'Month', y = 'frc_AIS',
-        data = aprt_frc_AIS[imask][iregion],
+        x = month, y = aprt_frc_AIS_alltime[imask]['mm'][iregion].frc_AIS,
         color=colors[count],
     )
     lgd_handles += [mpatches.Patch(color=colors[count], label=iregion)]
 
-change_snsbar_width(ax, .5)
+change_snsbar_width(ax, .7)
 
 plt.legend(
     handles=lgd_handles,
     loc='lower right', handlelength=1, framealpha = 1, )
 
-ax.set_xlabel('Fraction of precipitation over ' + imask + ' from each region [%]')
+ax.set_xlabel('Fraction of precipitation over ' + imask + ' from each region [$\%$]')
 ax.set_ylabel(None)
 ax.set_ylim(0, 100)
 ax.set_yticks(np.arange(0, 100+1e-4, 10))
 
 ax.grid(True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
-fig.subplots_adjust(left=0.07, right=0.99, bottom=0.15, top=0.98)
+fig.subplots_adjust(left=0.09, right=0.99, bottom=0.15, top=0.98)
 fig.savefig(output_png)
+
+
+#-------------------------------- ann+std
+
+imask = 'AIS'
+
+#---- Antarctica: 1.0% ± 0.07%
+
+ann_values = (
+    aprt_frc_AIS_alltime[imask]['ann']['Antarctica'].frc_AIS - \
+    aprt_frc_AIS_alltime[imask]['ann']['Land excl. Antarctica'].frc_AIS).values
+am_values = (
+    aprt_frc_AIS_alltime[imask]['am']['Antarctica'].frc_AIS - \
+    aprt_frc_AIS_alltime[imask]['am']['Land excl. Antarctica'].frc_AIS).values
+# ann_values.mean()
+am_values
+ann_values.std()
+
+
+#---- other land: 4.2% ± 0.28%
+
+ann_values = (
+    aprt_frc_AIS_alltime[imask]['ann']['Land excl. Antarctica'].frc_AIS - \
+    aprt_frc_AIS_alltime[imask]['ann']['SH sea ice'].frc_AIS).values
+am_values = (
+    aprt_frc_AIS_alltime[imask]['am']['Land excl. Antarctica'].frc_AIS - \
+    aprt_frc_AIS_alltime[imask]['am']['SH sea ice'].frc_AIS).values
+# ann_values.mean()
+am_values
+ann_values.std()
+
+
+#---- SH sea ice: 11.5% ± 0.72%
+
+ann_values = (
+    aprt_frc_AIS_alltime[imask]['ann']['SH sea ice'].frc_AIS - \
+    aprt_frc_AIS_alltime[imask]['ann']['Open ocean'].frc_AIS).values
+am_values = (
+    aprt_frc_AIS_alltime[imask]['am']['SH sea ice'].frc_AIS - \
+    aprt_frc_AIS_alltime[imask]['am']['Open ocean'].frc_AIS).values
+# ann_values.mean()
+am_values
+ann_values.std()
+
+
+#---- SH sea ice: 83.3% ± 0.80%
+
+ann_values = aprt_frc_AIS_alltime[imask]['ann']['Open ocean'].frc_AIS.values
+am_values = aprt_frc_AIS_alltime[imask]['am']['Open ocean'].frc_AIS.values
+# ann_values.mean()
+am_values
+ann_values.std()
+
+
+
 
 
 

@@ -48,3 +48,41 @@ https://stackoverflow.com/questions/34888058/changing-width-of-bars-in-bar-chart
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region Function to plot wind vectors
+
+
+def cplot_wind_vectors(
+    x, y, u, v, ax,
+    iarrow=3, color='blue', units='height', scale=600,
+    width=0.002, headwidth=3, headlength=5, alpha=1,
+    ):
+    '''
+    #-------- Input
+    x, y: location, 1D
+    u, v: wind conponents, 2D
+    ax
+    
+    iarrow: intervals. plot every iarrow
+    
+    #-------- Output
+    
+    
+    '''
+    
+    import cartopy.crs as ccrs
+    
+    plt_quiver = ax.quiver(
+        x[::iarrow], y[::iarrow],
+        u[::iarrow, ::iarrow], v[::iarrow, ::iarrow],
+        color=color, units=units, scale=scale,
+        width=width, headwidth=headwidth, headlength=headlength, alpha=alpha,
+        transform=ccrs.PlateCarree(),)
+    
+    return(plt_quiver)
+
+
+# endregion
+# -----------------------------------------------------------------------------
+

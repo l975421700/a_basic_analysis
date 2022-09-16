@@ -118,11 +118,11 @@ major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
 major_ice_core_site = major_ice_core_site.loc[
     major_ice_core_site['age (kyr)'] > 120, ]
 
-with open('scratch/cmip6/hist/evp/evap_era5_79_14_alltime.pkl', 'rb') as f:
-    evap_era5_79_14_alltime = pickle.load(f)
+with open('scratch/products/era5/evap/era5_mon_evap_1979_2021_alltime.pkl', 'rb') as f:
+    era5_mon_evap_1979_2021_alltime = pickle.load(f)
 
-lon_era5 = evap_era5_79_14_alltime['am'].longitude
-lat_era5 = evap_era5_79_14_alltime['am'].latitude
+lon_era5 = era5_mon_evap_1979_2021_alltime['am'].longitude
+lat_era5 = era5_mon_evap_1979_2021_alltime['am'].latitude
 lon_2d_era5, lat_2d_era5 = np.meshgrid(lon_era5, lat_era5,)
 
 # endregion
@@ -441,7 +441,7 @@ for irow in range(nrow):
 
 #-------- Am
 plt_mesh1 = axs[0, 0].pcolormesh(
-    lon_era5, lat_era5, evap_era5_79_14_alltime['am'] * (-1),
+    lon_era5, lat_era5, era5_mon_evap_1979_2021_alltime['am'] * (-1),
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 
 for iseason in range(len(seasons)):
@@ -449,7 +449,7 @@ for iseason in range(len(seasons)):
     #-------- sm
     axs[1, iseason].pcolormesh(
         lon_era5, lat_era5,
-        evap_era5_79_14_alltime['sm'].sel(
+        era5_mon_evap_1979_2021_alltime['sm'].sel(
             season=seasons[iseason]) * (-1),
         norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
     
@@ -457,16 +457,16 @@ for iseason in range(len(seasons)):
     
     plt_mesh2 = axs[2, iseason].pcolormesh(
         lon_era5, lat_era5,
-        (evap_era5_79_14_alltime['sm'].sel(season=seasons[iseason]) - \
-            evap_era5_79_14_alltime['am']) * (-1),
+        (era5_mon_evap_1979_2021_alltime['sm'].sel(season=seasons[iseason]) - \
+            era5_mon_evap_1979_2021_alltime['am']) * (-1),
         norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
     
     # cplot_ttest(
-    #     evap_era5_79_14_alltime['sea'].sel(
-    #         time=(evap_era5_79_14_alltime['sea'].time.dt.month == \
+    #     era5_mon_evap_1979_2021_alltime['sea'].sel(
+    #         time=(era5_mon_evap_1979_2021_alltime['sea'].time.dt.month == \
     #             seasons_last_num[iseason])
     #         ),
-    #     evap_era5_79_14_alltime['ann'],
+    #     era5_mon_evap_1979_2021_alltime['ann'],
     #     axs[2, iseason], lon_2d_era5, lat_2d_era5,)
     
     #-------- sm pre label
@@ -486,27 +486,27 @@ for iseason in range(len(seasons)):
 #-------- DJF - JJA
 axs[0, 1].pcolormesh(
     lon_era5, lat_era5,
-    (evap_era5_79_14_alltime['sm'].sel(season='DJF') - \
-            evap_era5_79_14_alltime['sm'].sel(season='JJA')
+    (era5_mon_evap_1979_2021_alltime['sm'].sel(season='DJF') - \
+            era5_mon_evap_1979_2021_alltime['sm'].sel(season='JJA')
             ) * (-1),
     norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
 
 # cplot_ttest(
-#     evap_era5_79_14_alltime['sea'][3::4, ],
-#     evap_era5_79_14_alltime['sea'][1::4, ],
+#     era5_mon_evap_1979_2021_alltime['sea'][3::4, ],
+#     era5_mon_evap_1979_2021_alltime['sea'][1::4, ],
 #     axs[0, 1], lon_2d_era5, lat_2d_era5,)
 
 #-------- MAM -SON
 axs[0, 2].pcolormesh(
     lon_era5, lat_era5,
-    (evap_era5_79_14_alltime['sm'].sel(season='MAM') - \
-            evap_era5_79_14_alltime['sm'].sel(season='SON')
+    (era5_mon_evap_1979_2021_alltime['sm'].sel(season='MAM') - \
+            era5_mon_evap_1979_2021_alltime['sm'].sel(season='SON')
             ) * (-1),
     norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
 
 # cplot_ttest(
-#     evap_era5_79_14_alltime['sea'][0::4, ],
-#     evap_era5_79_14_alltime['sea'][2::4, ],
+#     era5_mon_evap_1979_2021_alltime['sea'][0::4, ],
+#     era5_mon_evap_1979_2021_alltime['sea'][2::4, ],
 #     axs[0, 2], lon_2d_era5, lat_2d_era5,)
 
 plt.text(
@@ -550,16 +550,6 @@ fig.savefig(output_png)
 # -----------------------------------------------------------------------------
 # region plot aprt and evap Antarctica
 
-
-i = 0
-expid[i]
-wisoevap_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoevap_alltime.pkl', 'rb') as f:
-    wisoevap_alltime[expid[i]] = pickle.load(f)
-
-wisoaprt_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
-    wisoaprt_alltime[expid[i]] = pickle.load(f)
 
 
 #-------- basic set

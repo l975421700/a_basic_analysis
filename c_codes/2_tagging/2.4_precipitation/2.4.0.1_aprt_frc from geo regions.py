@@ -154,6 +154,7 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc.pkl',
     pickle.dump(aprt_frc, f)
 
 
+'''
 #-------- check calculation
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc.pkl', 'rb') as f:
     aprt_frc = pickle.load(f)
@@ -169,7 +170,6 @@ print((aprt_frc['Otherland']['mon'] == (aprt_frc['NHland']['mon'] + aprt_frc['SH
 print((aprt_frc['Otherocean']['ann'] == (aprt_frc['NHocean']['ann'] + aprt_frc['NHseaice']['ann'] + aprt_frc['SHocean']['ann'])).all().values)
 
 
-'''
 (100 * (aprt_geo7_alltime[expid[i]]['am'].sel(wisotype=22) / aprt_geo7_alltime[expid[i]]['sum']['am']) == (100 * aprt_geo7_alltime[expid[i]]['am'].sel(wisotype=22) / aprt_geo7_alltime[expid[i]]['sum']['am'])).all()
 np.max(abs(100 * (aprt_geo7_alltime[expid[i]]['am'].sel(wisotype=22) / aprt_geo7_alltime[expid[i]]['sum']['am']) - (100 * aprt_geo7_alltime[expid[i]]['am'].sel(wisotype=22) / aprt_geo7_alltime[expid[i]]['sum']['am'])))
 '''
@@ -182,7 +182,6 @@ np.max(abs(100 * (aprt_geo7_alltime[expid[i]]['am'].sel(wisotype=22) / aprt_geo7
 
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc.pkl', 'rb') as f:
     aprt_frc = pickle.load(f)
-
 
 #-------- precipitation from Antarctica
 
@@ -284,6 +283,14 @@ cbar.ax.set_xlabel('Fraction of annual mean precipitation from\nocean excl. SH s
 fig.savefig(output_png)
 
 
+
+
+'''
+
+stats.describe(
+    aprt_frc['NHseaice']['am'] + aprt_frc['SHseaice']['am'] + aprt_frc['NHocean']['am'] + aprt_frc['SHocean']['am'] + aprt_frc['Antarctica']['am'] + aprt_frc['NHland']['am'] + aprt_frc['SHland']['am'],
+    axis=None, nan_policy='omit')
+
 #-------- precipitation from geo regions
 
 
@@ -294,17 +301,6 @@ np.max(aprt_frc['SHseaice']['am'].sel(lat=slice(-50, -90))) # 42.5
 np.max(aprt_frc['Antarctica']['am'].sel(lat=slice(-50, -90))) # 19.4
 np.max(aprt_frc['NHland']['am'].sel(lat=slice(-50, -90))) # 0.25
 np.max(aprt_frc['SHland']['am'].sel(lat=slice(-50, -90))) # 16.2
-
-
-'''
-stats.describe(
-    aprt_frc['NHseaice']['am'] + aprt_frc['SHseaice']['am'] + aprt_frc['Otherland']['am'] + aprt_frc['Otherocean']['am'],
-    axis=None, nan_policy='omit')
-
-stats.describe(
-    aprt_frc['NHseaice']['am'] + aprt_frc['SHseaice']['am'] + aprt_frc['NHocean']['am'] + aprt_frc['SHocean']['am'] + aprt_frc['Antarctica']['am'] + aprt_frc['NHland']['am'] + aprt_frc['SHland']['am'],
-    axis=None, nan_policy='omit')
-
 
 
 '''

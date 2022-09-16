@@ -1,4 +1,1259 @@
 
+
+# -----------------------------------------------------------------------------
+# region animate daily 2*2 djf+jja pre and daily pre-weighted longitude
+
+
+#-------------------------------- import total pre
+
+# i = 0
+# expid[i]
+
+# tot_pre_alltime = {}
+
+# with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.tot_pre_alltime.pkl', 'rb') as f:
+#     tot_pre_alltime[expid[i]] = pickle.load(f)
+
+
+#-------------------------------- import pre_weighted_lon and ocean pre
+
+j = 0
+expid[j]
+
+pre_weighted_lon = {}
+with open(exp_odir + expid[j] + '/analysis/echam/' + expid[j] + '.pre_weighted_lon.pkl', 'rb') as f:
+    pre_weighted_lon[expid[j]] = pickle.load(f)
+
+ocean_pre_alltime = {}
+with open(exp_odir + expid[j] + '/analysis/echam/' + expid[j] + '.ocean_pre_alltime.pkl', 'rb') as f:
+    ocean_pre_alltime[expid[j]] = pickle.load(f)
+
+
+#-------------------------------- basic settings
+
+itimestart_djf = np.where(ocean_pre_alltime[expid[j]]['daily'].time == np.datetime64('2025-12-01T23:52:30'))[0][0]
+itimestart_jja = np.where(ocean_pre_alltime[expid[j]]['daily'].time == np.datetime64('2026-06-01T23:52:30'))[0][0]
+
+
+pltlevel = np.concatenate(
+    (np.arange(0, 0.5, 0.05), np.arange(0.5, 5 + 1e-4, 0.5)))
+pltticks = np.concatenate(
+    (np.arange(0, 0.5, 0.1), np.arange(0.5, 5 + 1e-4, 1)))
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel), clip=True)
+# pltcmp = cm.get_cmap('RdBu', len(pltlevel))
+pltcmp = cm.get_cmap('PuOr', len(pltlevel))
+
+pltlevel2 = np.arange(0, 360 + 1e-4, 20)
+pltticks2 = np.arange(0, 360 + 1e-4, 60)
+pltnorm2 = BoundaryNorm(pltlevel2, ncolors=len(pltlevel2)-1, clip=True)
+pltcmp2 = cm.get_cmap('BrBG', len(pltlevel2)-1).reversed()
+
+
+#-------------------------------- plot
+
+nrow = 2
+ncol = 2
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.1, 'wspace': 0.1},)
+
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(northextent=-60, ax_org = axs[irow, jcol])
+
+djf_pre = ocean_pre_alltime[expid[j]]['daily'][itimestart_djf + 0,].copy() * 3600 * 24
+jja_pre = ocean_pre_alltime[expid[j]]['daily'][itimestart_jja + 0,].copy() * 3600 * 24
+# djf_pre.values[djf_pre.values < 2e-8 * 3600 * 24] = np.nan
+# jja_pre.values[jja_pre.values < 2e-8 * 3600 * 24] = np.nan
+
+plt1 = axs[0, 0].pcolormesh(
+    ocean_pre_alltime[expid[j]]['daily'].lon,
+    ocean_pre_alltime[expid[j]]['daily'].lat.sel(lat=slice(-60, -90)),
+    djf_pre.sel(lat=slice(-60, -90)), 
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+axs[1, 0].pcolormesh(
+    ocean_pre_alltime[expid[j]]['daily'].lon,
+    ocean_pre_alltime[expid[j]]['daily'].lat.sel(lat=slice(-60, -90)),
+    jja_pre.sel(lat=slice(-60, -90)), 
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+plt3 = axs[0, 1].pcolormesh(
+    ocean_pre_alltime[expid[j]]['daily'].lon,
+    ocean_pre_alltime[expid[j]]['daily'].lat.sel(lat=slice(-60, -90)),
+    pre_weighted_lon[expid[j]]['daily'][itimestart_djf + 0,].sel(lat=slice(-60, -90)),
+    norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(), )
+axs[1, 1].pcolormesh(
+    ocean_pre_alltime[expid[j]]['daily'].lon,
+    ocean_pre_alltime[expid[j]]['daily'].lat.sel(lat=slice(-60, -90)),
+    pre_weighted_lon[expid[j]]['daily'][itimestart_jja + 0,].sel(lat=slice(-60, -90)),
+    norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(), )
+
+plt.text(
+    0.5, 1.05, str(ocean_pre_alltime[expid[j]]['daily'].time[itimestart_djf + 0,].values)[:10], transform=axs[0, 0].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+plt.text(
+    0.5, 1.05, str(ocean_pre_alltime[expid[j]]['daily'].time[itimestart_jja + 0,].values)[:10], transform=axs[1, 0].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+plt.text(
+    -0.05, 0.5, 'DJF',
+    transform=axs[0, 0].transAxes,
+    ha='center', va='center', rotation='vertical')
+plt.text(
+    -0.05, 0.5, 'JJA',
+    transform=axs[1, 0].transAxes,
+    ha='center', va='center', rotation='vertical')
+
+cbar1 = fig.colorbar(
+    plt1, ax=axs,
+    orientation="horizontal",shrink=0.55,aspect=40,extend='max',
+    anchor=(-0.3, 0.05), ticks=pltticks)
+cbar1.ax.set_xlabel('Precipitation sourced from\nopen ocean [$mm \; day^{-1}$]', linespacing=1.5)
+
+cbar2 = fig.colorbar(
+    plt3, ax=axs,
+    orientation="horizontal",shrink=0.55,aspect=40,extend='neither',
+    anchor=(1.2,-3.2),ticks=pltticks2)
+cbar2.ax.set_xlabel('Precipitation-weighted open-oceanic\nsource longitude [$°$]', linespacing=1.5)
+
+fig.subplots_adjust(left=0.04, right = 0.99, bottom = 0.14, top = 0.98)
+fig.savefig('figures/test1.png')
+
+
+#-------------------------------- animate with animation.FuncAnimation
+
+nrow = 2
+ncol = 2
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.1, 'wspace': 0.1},)
+
+
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(northextent=-60, ax_org = axs[irow, jcol])
+
+plt.text(
+    -0.05, 0.5, 'DJF',
+    transform=axs[0, 0].transAxes,
+    ha='center', va='center', rotation='vertical')
+plt.text(
+    -0.05, 0.5, 'JJA',
+    transform=axs[1, 0].transAxes,
+    ha='center', va='center', rotation='vertical')
+
+cbar1 = fig.colorbar(
+    cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=axs,
+    orientation="horizontal",shrink=0.55,aspect=40,extend='max',
+    anchor=(-0.3, 0.05), ticks=pltticks)
+cbar1.ax.set_xlabel('Precipitation sourced from\nopen ocean [$mm \; day^{-1}$]', linespacing=1.5)
+
+cbar2 = fig.colorbar(
+    cm.ScalarMappable(norm=pltnorm2, cmap=pltcmp2), ax=axs,
+    orientation="horizontal",shrink=0.55,aspect=40,extend='neither',
+    anchor=(1.2,-3.2),ticks=pltticks2)
+cbar2.ax.set_xlabel('Precipitation-weighted open-oceanic\nsource longitude [$°$]', linespacing=1.5)
+fig.subplots_adjust(left=0.04, right = 0.99, bottom = 0.14, top = 0.98)
+
+plt_objs = []
+
+def update_frames(itime):
+    global plt_objs
+    for plt_obj in plt_objs:
+        plt_obj.remove()
+    plt_objs = []
+    #---- daily precipitation
+    
+    djf_pre = ocean_pre_alltime[expid[j]]['daily'][
+        itimestart_djf + itime,].copy() * 3600 * 24
+    jja_pre = ocean_pre_alltime[expid[j]]['daily'][
+        itimestart_jja + itime,].copy() * 3600 * 24
+    # djf_pre.values[djf_pre.values < 2e-8 * 3600 * 24] = np.nan
+    # jja_pre.values[jja_pre.values < 2e-8 * 3600 * 24] = np.nan
+    
+    #---- plot daily precipitation
+    plt1 = axs[0, 0].pcolormesh(
+        ocean_pre_alltime[expid[j]]['daily'].lon,
+        ocean_pre_alltime[expid[j]]['daily'].lat.sel(lat=slice(-60, -90)),
+        djf_pre.sel(lat=slice(-60, -90)), 
+        norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+    plt2 = axs[1, 0].pcolormesh(
+        ocean_pre_alltime[expid[j]]['daily'].lon,
+        ocean_pre_alltime[expid[j]]['daily'].lat.sel(lat=slice(-60, -90)),
+        jja_pre.sel(lat=slice(-60, -90)), 
+        norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+    
+    #---- plot daily pre_weighted_lon
+    plt3 = axs[0, 1].pcolormesh(
+        ocean_pre_alltime[expid[j]]['daily'].lon,
+        ocean_pre_alltime[expid[j]]['daily'].lat.sel(lat=slice(-60, -90)),
+        pre_weighted_lon[expid[j]]['daily'][itimestart_djf + itime,].sel(lat=slice(-60, -90)),
+        norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(), )
+    
+    plt4 = axs[1, 1].pcolormesh(
+        ocean_pre_alltime[expid[j]]['daily'].lon,
+        ocean_pre_alltime[expid[j]]['daily'].lat.sel(lat=slice(-60, -90)),
+        pre_weighted_lon[expid[j]]['daily'][itimestart_jja + itime,].sel(lat=slice(-60, -90)),
+        norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(), )
+    
+    plt5 = axs[0, 0].text(
+        0.5, 1.05, str(ocean_pre_alltime[expid[j]]['daily'].time[
+            itimestart_djf + itime,].values)[:10],
+        transform=axs[0, 0].transAxes,
+        ha='center', va='center', rotation='horizontal')
+    
+    plt6 = axs[1, 0].text(
+        0.5, 1.05, str(ocean_pre_alltime[expid[j]]['daily'].time[
+            itimestart_jja + itime,].values)[:10],
+        transform=axs[1, 0].transAxes,
+        ha='center', va='center', rotation='horizontal')
+    
+    plt_objs = [plt1, plt2, plt3, plt4, plt5, plt6]
+    # plt_objs = [plt6]
+    
+    return(plt_objs)
+
+ani = animation.FuncAnimation(
+    fig, update_frames,
+    frames=90, interval=500, blit=False)
+ani.save(
+    'figures/6_awi/6.1_echam6/6.1.4_extreme_precipitation/6.1.4.0_precipitation_distribution/6.1.4.0_Antarctic DJF_JJA daily precipitation and pre_weighted_lon ' + expid[j] + '.mp4',
+    # 'figures/test.mp4',
+    progress_callback=lambda iframe, n: print(f'Saving frame {iframe} of {n}'),)
+
+
+
+
+'''
+ocean_pre_alltime[expid[j]]['daily'].time[itimestart_djf].values
+ocean_pre_alltime[expid[j]]['daily'].time[itimestart_jja].values
+
+#-------------------------------- animate with animation.ArtistAnimation
+
+nrow = 2
+ncol = 2
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.1, 'wspace': 0.1},)
+
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(northextent=-60, ax_org = axs[irow, jcol])
+
+plt.text(
+    -0.05, 0.5, 'DJF',
+    transform=axs[0, 0].transAxes,
+    ha='center', va='center', rotation='vertical')
+plt.text(
+    -0.05, 0.5, 'JJA',
+    transform=axs[1, 0].transAxes,
+    ha='center', va='center', rotation='vertical')
+
+
+ims = []
+
+for itime in range(2):
+    # itime = 0
+    
+    #---- daily precipitation
+    
+    djf_pre = ocean_pre_alltime[expid[j]]['daily'][
+        itimestart_djf + itime,].copy() * 3600 * 24
+    jja_pre = ocean_pre_alltime[expid[j]]['daily'][
+        itimestart_jja + itime,].copy() * 3600 * 24
+    
+    #---- plot daily precipitation
+    plt1 = axs[0, 0].pcolormesh(
+        ocean_pre_alltime[expid[j]]['daily'].lon,
+        ocean_pre_alltime[expid[j]]['daily'].lat,
+        djf_pre, rasterized = True,
+        norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+    plt2 = axs[1, 0].pcolormesh(
+        ocean_pre_alltime[expid[j]]['daily'].lon,
+        ocean_pre_alltime[expid[j]]['daily'].lat,
+        jja_pre, rasterized = True,
+        norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+    
+    #---- plot daily pre_weighted_lon
+    plt3 = axs[0, 1].pcolormesh(
+        ocean_pre_alltime[expid[j]]['daily'].lon,
+        ocean_pre_alltime[expid[j]]['daily'].lat,
+        pre_weighted_lon[expid[j]]['daily'][itimestart_djf + itime,],
+        norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(), rasterized = True,)
+    
+    plt4 = axs[1, 1].pcolormesh(
+        ocean_pre_alltime[expid[j]]['daily'].lon,
+        ocean_pre_alltime[expid[j]]['daily'].lat,
+        pre_weighted_lon[expid[j]]['daily'][itimestart_jja + itime,],
+        norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(), rasterized = True,)
+    
+    plt5 = plt.text(
+        0.5, 1.05, str(ocean_pre_alltime[expid[j]]['daily'].time[
+            itimestart_djf + itime,].values)[:10],
+        transform=axs[0, 0].transAxes,
+        ha='center', va='center', rotation='horizontal')
+    
+    plt6 = plt.text(
+        0.5, 1.05, str(ocean_pre_alltime[expid[j]]['daily'].time[
+            itimestart_jja + itime,].values)[:10],
+        transform=axs[1, 0].transAxes,
+        ha='center', va='center', rotation='horizontal')
+    
+    ims.append([plt1, plt2, plt3, plt4, plt5, plt6, ])
+    print(str(itime))
+
+
+cbar1 = fig.colorbar(
+    plt1, ax=axs,
+    orientation="horizontal",shrink=0.55,aspect=40,extend='max',
+    anchor=(-0.3, 0.05), ticks=pltticks)
+cbar1.ax.set_xlabel('Precipitation sourced from\nopen ocean [$mm \; day^{-1}$]', linespacing=1.5)
+
+cbar2 = fig.colorbar(
+    plt3, ax=axs,
+    orientation="horizontal",shrink=0.55,aspect=40,extend='neither',
+    anchor=(1.2,-3.2),ticks=pltticks2)
+cbar2.ax.set_xlabel('Precipitation-weighted open-oceanic\nsource longitude [$°$]', linespacing=1.5)
+fig.subplots_adjust(left=0.04, right = 0.99, bottom = 0.14, top = 0.98)
+
+ani = animation.ArtistAnimation(fig, ims, interval=250, blit=True)
+ani.save(
+    'figures/6_awi/6.1_echam6/6.1.4_extreme_precipitation/6.1.4.0_precipitation_distribution/6.1.4.0_Antarctic DJF_JJA daily precipitation and pre_weighted_lon ' + expid[j] + '_1.mp4',
+    # 'figures/test.mp4',
+    progress_callback=lambda iframe, n: print(f'Saving frame {iframe} of {n}'),)
+
+(djf_pre.values < 2e-8).sum()
+(djf_pre.values < 2e-8 * 3600 * 24).sum()
+(ocean_pre_alltime[expid[j]]['daily'].values < 2e-8).sum()
+(ocean_pre_alltime[expid[j]]['daily'].values < 2e-8 * 3600 * 24).sum()
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot am/DJF/JJA/DJF-JJA source sst
+
+
+#-------- plot configuration
+output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.2_sst/' + '6.1.3.2 ' + expid[i] + ' pre_weighted_sst am_DJF_JJA.png'
+cbar_label1 = 'Precipitation-weighted open-oceanic source SST [$°C$]'
+cbar_label2 = 'Differences in precipitation-weighted open-oceanic source SST [$°C$]'
+
+
+pltlevel = np.arange(0, 32 + 1e-4, 2)
+pltticks = np.arange(0, 32 + 1e-4, 4)
+pltnorm = BoundaryNorm(pltlevel, ncolors=(len(pltlevel)-1), clip=True)
+pltcmp = cm.get_cmap('RdBu', len(pltlevel)-1).reversed()
+
+pltlevel2 = np.arange(-10, 10 + 1e-4, 1)
+pltticks2 = np.arange(-10, 10 + 1e-4, 2)
+pltnorm2 = BoundaryNorm(pltlevel2, ncolors=(len(pltlevel2) - 1), clip=True)
+pltcmp2 = cm.get_cmap('BrBG', len(pltlevel2)-1).reversed()
+
+
+nrow = 1
+ncol = 4
+fm_bottom = 2.5 / (4.6*nrow + 2.5)
+
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([8.8*ncol, 4.6*nrow + 2.5]) / 2.54,
+    subplot_kw={'projection': ccrs.PlateCarree()},
+    gridspec_kw={'hspace': 0.15, 'wspace': 0.02},)
+
+ipanel=0
+for jcol in range(ncol):
+    axs[jcol] = globe_plot(ax_org = axs[jcol],
+                           add_grid_labels=False)
+    plt.text(
+        0, 1.05, panel_labels[ipanel],
+        transform=axs[jcol].transAxes,
+        ha='left', va='center', rotation='horizontal')
+    ipanel += 1
+
+#-------- Am, DJF, JJA values
+plt_mesh1 = axs[0].pcolormesh(
+    lon, lat, pre_weighted_sst[expid[i]]['am'],
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+axs[1].pcolormesh(
+    lon, lat, pre_weighted_sst[expid[i]]['sm'].sel(season='DJF'),
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+axs[2].pcolormesh(
+    lon, lat, pre_weighted_sst[expid[i]]['sm'].sel(season='JJA'),
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+#-------- differences
+plt_mesh2 = axs[3].pcolormesh(
+    lon, lat, pre_weighted_sst[expid[i]]['sm'].sel(season='DJF') - pre_weighted_sst[expid[i]]['sm'].sel(season='JJA'),
+    norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
+
+ttest_fdr_res = ttest_fdr_control(
+    pre_weighted_sst[expid[i]]['sea'][3::4,],
+    pre_weighted_sst[expid[i]]['sea'][1::4,],)
+axs[3].scatter(
+    x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
+    s=0.5, c='k', marker='.', edgecolors='none',
+    transform=ccrs.PlateCarree(),
+    )
+
+plt.text(
+    0.5, 1.05, 'Annual mean', transform=axs[0].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+plt.text(
+    0.5, 1.05, 'DJF', transform=axs[1].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+plt.text(
+    0.5, 1.05, 'JJA', transform=axs[2].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+plt.text(
+    0.5, 1.05, 'DJF - JJA', transform=axs[3].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+cbar1 = fig.colorbar(
+    plt_mesh1, ax=axs,
+    orientation="horizontal",shrink=0.5,aspect=40,extend='both',
+    anchor=(-0.2, 0.8), ticks=pltticks)
+cbar1.ax.set_xlabel(cbar_label1, linespacing=2)
+
+cbar2 = fig.colorbar(
+    plt_mesh2, ax=axs,
+    orientation="horizontal",shrink=0.5,aspect=40,extend='both',
+    anchor=(1.1,-5.5),ticks=pltticks2)
+cbar2.ax.set_xlabel(cbar_label2, linespacing=2)
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom * 0.75, top = 0.92)
+fig.savefig(output_png)
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot am/DJF/JJA/DJF-JJA source sst Antarctica
+
+
+#-------- plot configuration
+output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.2_sst/' + '6.1.3.2 ' + expid[i] + ' pre_weighted_sst am_DJF_JJA Antarctica.png'
+cbar_label1 = 'Precipitation-weighted open-oceanic source SST [$°C$]'
+cbar_label2 = 'Differences in precipitation-weighted open-oceanic source SST [$°C$]'
+
+pltlevel = np.arange(8, 20 + 1e-4, 1)
+pltticks = np.arange(8, 20 + 1e-4, 1)
+pltnorm = BoundaryNorm(pltlevel, ncolors=(len(pltlevel)-1), clip=True)
+pltcmp = cm.get_cmap('RdBu', len(pltlevel)-1).reversed()
+
+pltlevel2 = np.arange(-6, 6 + 1e-4, 1)
+pltticks2 = np.arange(-6, 6 + 1e-4, 1)
+pltnorm2 = BoundaryNorm(pltlevel2, ncolors=(len(pltlevel2) - 1), clip=True)
+pltcmp2 = cm.get_cmap('BrBG', len(pltlevel2)-1).reversed()
+
+
+nrow = 1
+ncol = 4
+fm_bottom = 2 / (5.8*nrow + 2)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.05, 'wspace': 0.05},)
+
+ipanel=0
+for jcol in range(ncol):
+    axs[jcol] = hemisphere_plot(northextent=-50, ax_org = axs[jcol])
+    cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, axs[jcol])
+    plt.text(
+        0, 0.95, panel_labels[ipanel],
+        transform=axs[jcol].transAxes,
+        ha='center', va='center', rotation='horizontal')
+    ipanel += 1
+
+#-------- Am, DJF, JJA values
+plt1 = axs[0].pcolormesh(
+    lon, lat, pre_weighted_sst[expid[i]]['am'],
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+axs[1].pcolormesh(
+    lon, lat, pre_weighted_sst[expid[i]]['sm'].sel(season='DJF'),
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+axs[2].pcolormesh(
+    lon, lat, pre_weighted_sst[expid[i]]['sm'].sel(season='JJA'),
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+
+#-------- differences
+plt2 = axs[3].pcolormesh(
+    lon, lat, pre_weighted_sst[expid[i]]['sm'].sel(season='DJF') - pre_weighted_sst[expid[i]]['sm'].sel(season='JJA'),
+    norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
+
+ttest_fdr_res = ttest_fdr_control(
+    pre_weighted_sst[expid[i]]['sea'][3::4,],
+    pre_weighted_sst[expid[i]]['sea'][1::4,],)
+axs[3].scatter(
+    x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
+    s=0.5, c='k', marker='.', edgecolors='none',
+    transform=ccrs.PlateCarree(),
+    )
+
+plt.text(
+    0.5, 1.05, 'Annual mean', transform=axs[0].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+plt.text(
+    0.5, 1.05, 'DJF', transform=axs[1].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+plt.text(
+    0.5, 1.05, 'JJA', transform=axs[2].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+plt.text(
+    0.5, 1.05, 'DJF - JJA', transform=axs[3].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+cbar1 = fig.colorbar(
+    plt1, ax=axs,
+    orientation="horizontal",shrink=0.5,aspect=40,extend='both',
+    anchor=(-0.2, 0.4), ticks=pltticks)
+cbar1.ax.set_xlabel(cbar_label1, linespacing=2)
+
+cbar2 = fig.colorbar(
+    plt2, ax=axs,
+    orientation="horizontal",shrink=0.5,aspect=40,extend='both',
+    anchor=(1.1,-3.7),ticks=pltticks2)
+cbar2.ax.set_xlabel(cbar_label2, linespacing=2)
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom * 0.8, top = 0.94)
+fig.savefig(output_png)
+
+
+'''
+# ctr_level = np.array([1, 2, 3, 4, 5, ])
+
+# plt_ctr1 = axs[0].contour(
+#     lon, lat.sel(lat=slice(-50, -90)),
+#     pre_weighted_sst[expid[i]]['ann'].std(
+#         dim='time', skipna=True).sel(lat=slice(-50, -90)),
+#     levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+#     linewidths=0.5, linestyles='solid',
+# )
+# axs[0].clabel(plt_ctr1, inline=1, colors='b', fmt=remove_trailing_zero,
+#           levels=ctr_level, inline_spacing=10, fontsize=7,)
+
+# plt_ctr2 = axs[1].contour(
+#     lon, lat.sel(lat=slice(-50, -90)),
+#     pre_weighted_sst[expid[i]]['sea'].sel(
+#         time=(pre_weighted_sst[expid[i]]['sea'].time.dt.month == 2)
+#         ).std(dim='time', skipna=True).sel(lat=slice(-50, -90)),
+#     levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+#     linewidths=0.5, linestyles='solid',
+# )
+# axs[1].clabel(plt_ctr2, inline=1, colors='b', fmt=remove_trailing_zero,
+#           levels=ctr_level, inline_spacing=10, fontsize=7)
+
+# plt_ctr3 = axs[2].contour(
+#     lon, lat.sel(lat=slice(-50, -90)),
+#     pre_weighted_sst[expid[i]]['sea'].sel(
+#         time=(pre_weighted_sst[expid[i]]['sea'].time.dt.month == 8)
+#         ).std(dim='time', skipna=True).sel(lat=slice(-50, -90)),
+#     levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+#     linewidths=0.5, linestyles='solid',
+# )
+# axs[2].clabel(plt_ctr3, inline=1, colors='b', fmt=remove_trailing_zero,
+#           levels=ctr_level, inline_spacing=10, fontsize=7,)
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot am/DJF/JJA/DJF-JJA source lon
+
+#-------- plot configuration
+output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/' + '6.1.3.1 ' + expid[i] + ' pre_weighted_lon am_DJF_JJA.png'
+cbar_label1 = 'Precipitation-weighted open-oceanic relative source longitude [$°$]'
+cbar_label2 = 'Differences in precipitation-weighted open-oceanic source longitude [$°$]'
+
+pltlevel = np.arange(-180, 180 + 1e-4, 15)
+pltticks = np.arange(-180, 180 + 1e-4, 30)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+pltcmp = cm.get_cmap('BrBG', len(pltlevel)-1).reversed()
+
+pltlevel2 = np.arange(-50, 50 + 1e-4, 10)
+pltticks2 = np.arange(-50, 50 + 1e-4, 10)
+pltnorm2 = BoundaryNorm(pltlevel2, ncolors=len(pltlevel2)-1, clip=True)
+pltcmp2 = cm.get_cmap('PiYG', len(pltlevel2)-1).reversed()
+
+
+nrow = 1
+ncol = 4
+fm_bottom = 2.5 / (4.6*nrow + 2.5)
+
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([8.8*ncol, 4.6*nrow + 2.5]) / 2.54,
+    subplot_kw={'projection': ccrs.PlateCarree()},
+    gridspec_kw={'hspace': 0.15, 'wspace': 0.02},)
+
+ipanel=0
+for jcol in range(ncol):
+    axs[jcol] = globe_plot(ax_org = axs[jcol],
+                           add_grid_labels=False)
+    plt.text(
+        0, 1.05, panel_labels[ipanel],
+        transform=axs[jcol].transAxes,
+        ha='left', va='center', rotation='horizontal')
+    ipanel += 1
+
+#-------- Am, DJF, JJA values
+plt1 = axs[0].pcolormesh(
+    lon, lat,
+    calc_lon_diff(pre_weighted_lon[expid[i]]['am'], lon_2d),
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+axs[1].pcolormesh(
+    lon, lat,
+    calc_lon_diff(pre_weighted_lon[expid[i]]['sm'].sel(season='DJF'), lon_2d),
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+axs[2].pcolormesh(
+    lon, lat,
+    calc_lon_diff(pre_weighted_lon[expid[i]]['sm'].sel(season='JJA'), lon_2d),
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+#-------- differences
+plt2 = axs[3].pcolormesh(
+    lon, lat,
+    calc_lon_diff(
+        pre_weighted_lon[expid[i]]['sm'].sel(season='DJF'),
+        pre_weighted_lon[expid[i]]['sm'].sel(season='JJA')),
+    norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
+
+wwtest_res = circ.watson_williams(
+    pre_weighted_lon[expid[i]]['sea'].sel(
+        time=(pre_weighted_lon[expid[i]]['sea'].time.dt.month == 2)).values * np.pi / 180,
+    pre_weighted_lon[expid[i]]['sea'].sel(
+        time=(pre_weighted_lon[expid[i]]['sea'].time.dt.month == 8)).values * np.pi / 180,
+    axis=0,
+    )[0] < 0.05
+axs[3].scatter(
+    x=lon_2d[wwtest_res], y=lat_2d[wwtest_res],
+    s=0.5, c='k', marker='.', edgecolors='none',
+    transform=ccrs.PlateCarree(),
+    )
+
+plt.text(
+    0.5, 1.05, 'Annual mean', transform=axs[0].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+plt.text(
+    0.5, 1.05, 'DJF', transform=axs[1].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+plt.text(
+    0.5, 1.05, 'JJA', transform=axs[2].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+plt.text(
+    0.5, 1.05, 'DJF - JJA', transform=axs[3].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+cbar1 = fig.colorbar(
+    plt1, ax=axs,
+    orientation="horizontal",shrink=0.5,aspect=40,extend='neither',
+    anchor=(-0.2, 0.8), ticks=pltticks)
+cbar1.ax.set_xlabel(cbar_label1, linespacing=2)
+
+cbar2 = fig.colorbar(
+    plt2, ax=axs,
+    orientation="horizontal",shrink=0.5,aspect=40,extend='both',
+    anchor=(1.1,-5.5),ticks=pltticks2)
+cbar2.ax.set_xlabel(cbar_label2, linespacing=2)
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom * 0.75, top = 0.92)
+fig.savefig(output_png)
+
+
+
+'''
+pltlevel = np.arange(0, 360 + 1e-4, 15)
+pltticks = np.arange(0, 360 + 1e-4, 30)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+pltcmp = cm.get_cmap('BrBG', len(pltlevel)-1).reversed()
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot am/DJF/JJA/DJF-JJA source lon Antarctic
+
+
+#-------- plot configuration
+output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/' + '6.1.3.1 ' + expid[i] + ' pre_weighted_lon am_DJF_JJA Antarctica.png'
+cbar_label1 = 'Precipitation-weighted open-oceanic relative source longitude [$°$]'
+cbar_label2 = 'Differences in precipitation-weighted open-oceanic source longitude [$°$]'
+
+pltlevel = np.arange(-180, 180 + 1e-4, 15)
+pltticks = np.arange(-180, 180 + 1e-4, 30)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+pltcmp = cm.get_cmap('BrBG', len(pltlevel)-1).reversed()
+
+
+pltlevel2 = np.arange(-30, 30 + 1e-4, 5)
+pltticks2 = np.arange(-30, 30 + 1e-4, 5)
+pltnorm2 = BoundaryNorm(pltlevel2, ncolors=len(pltlevel2)-1, clip=True)
+pltcmp2 = cm.get_cmap('PiYG', len(pltlevel2)-1).reversed()
+
+
+nrow = 1
+ncol = 4
+fm_bottom = 2 / (5.8*nrow + 2)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.05, 'wspace': 0.05},)
+
+ipanel=0
+for jcol in range(ncol):
+    axs[jcol] = hemisphere_plot(northextent=-50, ax_org = axs[jcol])
+    cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, axs[jcol])
+    plt.text(
+        0, 0.95, panel_labels[ipanel],
+        transform=axs[jcol].transAxes,
+        ha='center', va='center', rotation='horizontal')
+    ipanel += 1
+
+#-------- Am, DJF, JJA values
+plt1 = axs[0].pcolormesh(
+    lon, lat,
+    calc_lon_diff(pre_weighted_lon[expid[i]]['am'], lon_2d),
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+axs[1].pcolormesh(
+    lon, lat,
+    calc_lon_diff(pre_weighted_lon[expid[i]]['sm'].sel(season='DJF'), lon_2d),
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+axs[2].pcolormesh(
+    lon, lat,
+    calc_lon_diff(pre_weighted_lon[expid[i]]['sm'].sel(season='JJA'), lon_2d),
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+#-------- differences
+plt2 = axs[3].pcolormesh(
+    lon, lat,
+    calc_lon_diff(
+        pre_weighted_lon[expid[i]]['sm'].sel(season='DJF'),
+        pre_weighted_lon[expid[i]]['sm'].sel(season='JJA')),
+    norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
+
+wwtest_res = circ.watson_williams(
+    pre_weighted_lon[expid[i]]['sea'].sel(
+        time=(pre_weighted_lon[expid[i]]['sea'].time.dt.month == 2)).values * np.pi / 180,
+    pre_weighted_lon[expid[i]]['sea'].sel(
+        time=(pre_weighted_lon[expid[i]]['sea'].time.dt.month == 8)).values * np.pi / 180,
+    axis=0,
+    )[0] < 0.05
+axs[3].scatter(
+    x=lon_2d[wwtest_res], y=lat_2d[wwtest_res],
+    s=0.5, c='k', marker='.', edgecolors='none',
+    transform=ccrs.PlateCarree(),
+    )
+
+plt.text(
+    0.5, 1.05, 'Annual mean', transform=axs[0].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+plt.text(
+    0.5, 1.05, 'DJF', transform=axs[1].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+plt.text(
+    0.5, 1.05, 'JJA', transform=axs[2].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+plt.text(
+    0.5, 1.05, 'DJF - JJA', transform=axs[3].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+cbar1 = fig.colorbar(
+    plt1, ax=axs,
+    orientation="horizontal",shrink=0.5,aspect=40,extend='neither',
+    anchor=(-0.2, 0.4), ticks=pltticks)
+cbar1.ax.set_xlabel(cbar_label1, linespacing=2)
+
+cbar2 = fig.colorbar(
+    plt2, ax=axs,
+    orientation="horizontal",shrink=0.5,aspect=40,extend='both',
+    anchor=(1.1,-3.7),ticks=pltticks2)
+cbar2.ax.set_xlabel(cbar_label2, linespacing=2)
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom * 0.8, top = 0.94)
+fig.savefig(output_png)
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot mm source lat Antarctica
+
+
+#-------- plot configuration
+output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.0_lat/' + '6.1.3.0 ' + expid[i] + ' pre_weighted_lat mm Antarctica.png'
+cbar_label1 = 'Precipitation-weighted open-oceanic source latitude [$°$]'
+cbar_label2 = 'Differences in precipitation-weighted open-oceanic source latitude [$°$]'
+
+pltlevel = np.arange(-50, -30 + 1e-4, 2)
+pltticks = np.arange(-50, -30 + 1e-4, 2)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+pltcmp = cm.get_cmap('PuOr', len(pltlevel)-1).reversed()
+
+
+ctr_level = np.array([1, 2, 3, 4, 5, ])
+
+nrow = 3
+ncol = 4
+fm_bottom = 2 / (5.8*nrow + 2)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.1, 'wspace': 0.1},)
+
+ipanel=0
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(northextent=-50, ax_org = axs[irow, jcol])
+        cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, axs[irow, jcol])
+        plt.text(
+            0, 0.95, panel_labels[ipanel],
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        ipanel += 1
+
+
+for jcol in range(ncol):
+    for irow in range(nrow):
+        plt_mesh1 = axs[irow, jcol].pcolormesh(
+            lon, lat, pre_weighted_lat[expid[i]]['mm'].sel(
+                month=month_dec_num[jcol*3+irow]),
+            norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+        # plt_ctr1 = axs[irow, jcol].contour(
+        #     lon, lat.sel(lat=slice(-45, -90)),
+        #     pre_weighted_lat[expid[i]]['mon'].sel(time=(pre_weighted_lat[expid[
+        #         i]]['mon'].time.dt.month == month_dec_num[jcol*3+irow])).std(
+        #     dim='time', skipna=True).sel(lat=slice(-45, -90)),
+        #     levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+        #     linewidths=0.5, linestyles='solid',
+        # )
+        # axs[irow, jcol].clabel(
+        #     plt_ctr1, inline=1, colors='b', fmt=remove_trailing_zero,
+        #     levels=ctr_level, inline_spacing=10, fontsize=7,)
+        
+        plt.text(
+            0.5, 1.05, month_dec[jcol*3+irow],
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        
+        print(str(month_dec_num[jcol*3+irow]) + ' ' + month_dec[jcol*3+irow])
+
+
+cbar1 = fig.colorbar(
+    plt_mesh1, ax=axs,
+    orientation="horizontal",shrink=0.5,aspect=40,extend='both',
+    anchor=(0.5, -0.5), ticks=pltticks)
+cbar1.ax.set_xlabel(cbar_label1, linespacing=2)
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom*0.8, top = 0.98)
+fig.savefig(output_png)
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot am/DJF/JJA/DJF-JJA source lat
+
+
+#-------- plot configuration
+output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.0_lat/' + '6.1.3.0 ' + expid[i] + ' pre_weighted_lat am_DJF_JJA.png'
+cbar_label1 = 'Precipitation-weighted open-oceanic source latitude [$°$]'
+cbar_label2 = 'Differences in precipitation-weighted open-oceanic source latitude [$°$]'
+
+
+pltlevel = np.arange(-60, 60 + 1e-4, 10)
+pltticks = np.arange(-60, 60 + 1e-4, 10)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+pltcmp = cm.get_cmap('PuOr', len(pltlevel)-1).reversed()
+
+pltlevel2 = np.arange(-20, 20 + 1e-4, 2)
+pltticks2 = np.arange(-20, 20 + 1e-4, 4)
+pltnorm2 = BoundaryNorm(pltlevel2, ncolors=len(pltlevel2)-1, clip=True)
+pltcmp2 = cm.get_cmap('PiYG', len(pltlevel2)-1).reversed()
+
+
+nrow = 1
+ncol = 4
+fm_bottom = 2.5 / (4.6*nrow + 2.5)
+
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([8.8*ncol, 4.6*nrow + 2.5]) / 2.54,
+    subplot_kw={'projection': ccrs.PlateCarree()},
+    gridspec_kw={'hspace': 0.15, 'wspace': 0.02},)
+
+ipanel=0
+for jcol in range(ncol):
+    axs[jcol] = globe_plot(ax_org = axs[jcol],
+                           add_grid_labels=False)
+    plt.text(
+        0, 1.05, panel_labels[ipanel],
+        transform=axs[jcol].transAxes,
+        ha='left', va='center', rotation='horizontal')
+    ipanel += 1
+
+#-------- Am, DJF, JJA values
+plt1 = axs[0].pcolormesh(
+    lon, lat, pre_weighted_lat[expid[i]]['am'],
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+axs[1].pcolormesh(
+    lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='DJF'),
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+axs[2].pcolormesh(
+    lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='JJA'),
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+#-------- differences
+plt2 = axs[3].pcolormesh(
+    lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='DJF') - pre_weighted_lat[expid[i]]['sm'].sel(season='JJA'),
+    norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
+
+ttest_fdr_res = ttest_fdr_control(
+    pre_weighted_lat[expid[i]]['sea'][3::4,],
+    pre_weighted_lat[expid[i]]['sea'][1::4,],)
+axs[3].scatter(
+    x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
+    s=0.5, c='k', marker='.', edgecolors='none',
+    transform=ccrs.PlateCarree(),
+    )
+
+plt.text(
+    0.5, 1.05, 'Annual mean', transform=axs[0].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+plt.text(
+    0.5, 1.05, 'DJF', transform=axs[1].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+plt.text(
+    0.5, 1.05, 'JJA', transform=axs[2].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+plt.text(
+    0.5, 1.05, 'DJF - JJA', transform=axs[3].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+cbar1 = fig.colorbar(
+    plt1, ax=axs,
+    orientation="horizontal",shrink=0.5,aspect=40,extend='both',
+    anchor=(-0.2, 0.8), ticks=pltticks)
+cbar1.ax.set_xlabel(cbar_label1, linespacing=2)
+
+cbar2 = fig.colorbar(
+    plt2, ax=axs,
+    orientation="horizontal",shrink=0.5,aspect=40,extend='both',
+    anchor=(1.1,-5.5),ticks=pltticks2)
+cbar2.ax.set_xlabel(cbar_label2, linespacing=2)
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom * 0.75, top = 0.92)
+fig.savefig(output_png)
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot am/DJF/JJA/DJF-JJA source lat Antarctica
+
+
+#-------- plot configuration
+output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.0_lat/' + '6.1.3.0 ' + expid[i] + ' pre_weighted_lat am_DJF_JJA Antarctica.png'
+cbar_label1 = 'Precipitation-weighted open-oceanic source latitude [$°$]'
+cbar_label2 = 'Differences in precipitation-weighted open-oceanic source latitude [$°$]'
+
+pltlevel = np.arange(-50, -30 + 1e-4, 2)
+pltticks = np.arange(-50, -30 + 1e-4, 2)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+pltcmp = cm.get_cmap('PuOr', len(pltlevel)-1).reversed()
+
+
+pltlevel2 = np.arange(-10, 10 + 1e-4, 2)
+pltticks2 = np.arange(-10, 10 + 1e-4, 2)
+pltnorm2 = BoundaryNorm(pltlevel2, ncolors=len(pltlevel2)-1, clip=True)
+pltcmp2 = cm.get_cmap('PiYG', len(pltlevel2)-1).reversed()
+
+ctr_level = np.array([1, 2, 3, 4, 5, ])
+
+nrow = 1
+ncol = 4
+fm_bottom = 2 / (5.8*nrow + 2)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.05, 'wspace': 0.05},)
+
+ipanel=0
+for jcol in range(ncol):
+    axs[jcol] = hemisphere_plot(northextent=-50, ax_org = axs[jcol])
+    cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, axs[jcol])
+    plt.text(
+        0, 0.95, panel_labels[ipanel],
+        transform=axs[jcol].transAxes,
+        ha='center', va='center', rotation='horizontal')
+    ipanel += 1
+
+#-------- Am, DJF, JJA values
+plt1 = axs[0].pcolormesh(
+    lon, lat, pre_weighted_lat[expid[i]]['am'],
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_ctr1 = axs[0].contour(
+#     lon, lat.sel(lat=slice(-50, -90)),
+#     pre_weighted_lat[expid[i]]['ann'].std(
+#         dim='time', skipna=True).sel(lat=slice(-50, -90)),
+#     levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+#     linewidths=0.5, linestyles='solid',
+# )
+# axs[0].clabel(plt_ctr1, inline=1, colors='b', fmt=remove_trailing_zero,
+#           levels=ctr_level, inline_spacing=10, fontsize=7,)
+
+axs[1].pcolormesh(
+    lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='DJF'),
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_ctr2 = axs[1].contour(
+#     lon, lat.sel(lat=slice(-50, -90)),
+#     pre_weighted_lat[expid[i]]['sea'].sel(
+#         time=(pre_weighted_lat[expid[i]]['sea'].time.dt.month == 2)
+#         ).std(dim='time', skipna=True).sel(lat=slice(-50, -90)),
+#     levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+#     linewidths=0.5, linestyles='solid',
+# )
+# axs[1].clabel(plt_ctr2, inline=1, colors='b', fmt=remove_trailing_zero,
+#           levels=ctr_level, inline_spacing=10, fontsize=7)
+
+axs[2].pcolormesh(
+    lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='JJA'),
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_ctr3 = axs[2].contour(
+#     lon, lat.sel(lat=slice(-50, -90)),
+#     pre_weighted_lat[expid[i]]['sea'].sel(
+#         time=(pre_weighted_lat[expid[i]]['sea'].time.dt.month == 8)
+#         ).std(dim='time', skipna=True).sel(lat=slice(-50, -90)),
+#     levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+#     linewidths=0.5, linestyles='solid',
+# )
+# axs[2].clabel(plt_ctr3, inline=1, colors='b', fmt=remove_trailing_zero,
+#           levels=ctr_level, inline_spacing=10, fontsize=7,)
+
+
+#-------- differences
+plt2 = axs[3].pcolormesh(
+    lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='DJF') - pre_weighted_lat[expid[i]]['sm'].sel(season='JJA'),
+    norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
+
+ttest_fdr_res = ttest_fdr_control(
+    pre_weighted_lat[expid[i]]['sea'][3::4,],
+    pre_weighted_lat[expid[i]]['sea'][1::4,],)
+axs[3].scatter(
+    x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
+    s=0.5, c='k', marker='.', edgecolors='none',
+    transform=ccrs.PlateCarree(),
+    )
+
+plt.text(
+    0.5, 1.05, 'Annual mean', transform=axs[0].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+plt.text(
+    0.5, 1.05, 'DJF', transform=axs[1].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+plt.text(
+    0.5, 1.05, 'JJA', transform=axs[2].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+plt.text(
+    0.5, 1.05, 'DJF - JJA', transform=axs[3].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+cbar1 = fig.colorbar(
+    plt1, ax=axs,
+    orientation="horizontal",shrink=0.5,aspect=40,extend='both',
+    anchor=(-0.2, 0.4), ticks=pltticks)
+cbar1.ax.set_xlabel(cbar_label1, linespacing=2)
+
+cbar2 = fig.colorbar(
+    plt2, ax=axs,
+    orientation="horizontal",shrink=0.5,aspect=40,extend='both',
+    anchor=(1.1,-3.7),ticks=pltticks2)
+cbar2.ax.set_xlabel(cbar_label2, linespacing=2)
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom * 0.8, top = 0.94)
+fig.savefig(output_png)
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region calculate annual circle of aprt frac over AIS
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_geo7_spave.pkl', 'rb') as f:
+    aprt_geo7_spave = pickle.load(f)
+
+geo_regions = [
+    'NHland', 'SHland', 'Antarctica',
+    'NHocean', 'NHseaice', 'SHocean', 'SHseaice']
+wisotypes = {'NHland': 16, 'SHland': 17, 'Antarctica': 18,
+             'NHocean': 19, 'NHseaice': 20, 'SHocean': 21, 'SHseaice': 22}
+
+aprt_frc_AIS = {}
+
+
+for imask in aprt_geo7_spave.keys():
+    # imask = 'EAIS'
+    print(imask)
+    
+    aprt_mm_AIS = aprt_geo7_spave[imask]['mm'].sum(dim='wisotype').values
+    
+    aprt_frc_AIS[imask] = {}
+    
+    aprt_frc_AIS[imask]['Open ocean'] = pd.DataFrame(data={
+        'Month': month,
+        'frc_AIS': (aprt_geo7_spave[imask]['mm'].sel(
+            wisotype=[
+                wisotypes['NHocean'], wisotypes['NHseaice'],
+                wisotypes['SHocean'],
+                ]).sum(dim='wisotype').values / aprt_mm_AIS) * 100
+        })
+    
+    aprt_frc_AIS[imask]['SH sea ice'] = pd.DataFrame(data={
+        'Month': month,
+        'frc_AIS': (aprt_geo7_spave[imask]['mm'].sel(
+            wisotype=[
+                wisotypes['NHocean'], wisotypes['NHseaice'],
+                wisotypes['SHocean'], wisotypes['SHseaice'],
+                ]).sum(dim='wisotype').values / aprt_mm_AIS) * 100
+        })
+    
+    aprt_frc_AIS[imask]['Land excl. Antarctica'] = pd.DataFrame(data={
+        'Month': month,
+        'frc_AIS': (aprt_geo7_spave[imask]['mm'].sel(
+            wisotype=[
+                wisotypes['NHocean'], wisotypes['NHseaice'],
+                wisotypes['SHocean'], wisotypes['SHseaice'],
+                wisotypes['NHland'], wisotypes['SHland'],
+                ]).sum(dim='wisotype').values / aprt_mm_AIS) * 100
+        })
+    
+    aprt_frc_AIS[imask]['Antarctica'] = pd.DataFrame(data={
+        'Month': month,
+        'frc_AIS': (aprt_geo7_spave[imask]['mm'].sel(
+            wisotype=[
+                wisotypes['NHocean'], wisotypes['NHseaice'],
+                wisotypes['SHocean'], wisotypes['SHseaice'],
+                wisotypes['NHland'], wisotypes['SHland'],
+                wisotypes['Antarctica'],
+                ]).sum(dim='wisotype').values / aprt_mm_AIS) * 100
+        })
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc_AIS.pkl', 'wb') as f:
+    pickle.dump(aprt_frc_AIS, f)
+
+
+'''
+#-------------------------------- check
+
+#-------- import data
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_geo7_spave.pkl', 'rb') as f:
+    aprt_geo7_spave = pickle.load(f)
+
+geo_regions = [
+    'NHland', 'SHland', 'Antarctica',
+    'NHocean', 'NHseaice', 'SHocean', 'SHseaice']
+wisotypes = {'NHland': 16, 'SHland': 17, 'Antarctica': 18,
+             'NHocean': 19, 'NHseaice': 20, 'SHocean': 21, 'SHseaice': 22}
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc_AIS.pkl', 'rb') as f:
+    aprt_frc_AIS = pickle.load(f)
+
+imask = 'EAIS'
+iregion = 'Open ocean'
+res1 = aprt_frc_AIS[imask][iregion].frc_AIS.values
+
+res2 = (aprt_geo7_spave[imask]['mm'].sel(
+    wisotype=slice(19, 21)).sum(dim='wisotype').values / \
+        aprt_geo7_spave[imask]['mm'].sum(dim='wisotype').values) * 100
+(res1 == res2).all()
+
+
+iregion = 'SH sea ice'
+res1 = aprt_frc_AIS[imask][iregion].frc_AIS.values
+
+res2 = (aprt_geo7_spave[imask]['mm'].sel(
+    wisotype=slice(19, 22)).sum(dim='wisotype').values / \
+        aprt_geo7_spave[imask]['mm'].sum(dim='wisotype').values) * 100
+(res1 == res2).all()
+
+iregion = 'Land excl. Antarctica'
+res1 = aprt_frc_AIS[imask][iregion].frc_AIS.values
+
+res2 = (aprt_geo7_spave[imask]['mm'].sel(
+    wisotype=[16, 17, 19, 20, 21, 22]).sum(dim='wisotype').values / \
+        aprt_geo7_spave[imask]['mm'].sum(dim='wisotype').values) * 100
+(res1 == res2).all()
+np.max(abs(res1 - res2))
+
+iregion = 'Antarctica'
+aprt_frc_AIS[imask][iregion].frc_AIS.values
+
+
+
+aprt_frc_AIS[imask]['SH sea ice'].frc_AIS - aprt_frc_AIS[imask]['Open ocean'].frc_AIS
+aprt_frc_AIS[imask]['Land excl. Antarctica'].frc_AIS - aprt_frc_AIS[imask]['SH sea ice'].frc_AIS
+aprt_frc_AIS[imask]['Antarctica'].frc_AIS - aprt_frc_AIS[imask]['Land excl. Antarctica'].frc_AIS
+
+aprt_geo7_spave['AIS']['mm'].sel(wisotype=20).values / aprt_mm_AIS.values
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
 # region sm plot
 # axs[1, 0].pcolormesh(
 #     lon, lat, pre_weighted_lat[expid[i]]['sm'].sel(season='DJF'),

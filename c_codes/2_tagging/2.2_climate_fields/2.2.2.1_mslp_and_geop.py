@@ -1,5 +1,10 @@
 
 
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+expid = ['pi_m_416_4.9',]
+i = 0
+
+
 # -----------------------------------------------------------------------------
 # region import packages
 
@@ -73,12 +78,6 @@ from a_basic_analysis.b_module.source_properties import (
 
 
 # -----------------------------------------------------------------------------
-
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = [
-    'pi_m_416_4.9',
-    ]
-
 # region import output
 
 i = 0
@@ -442,8 +441,6 @@ psl_era5_79_14_alltime['am'].to_netcdf('scratch/test/test1.nc')
 # -----------------------------------------------------------------------------
 # region plot psl and u/v in ECHAM
 
-i = 0
-expid[i]
 
 uv_plev = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.uv_plev.pkl', 'rb') as f:

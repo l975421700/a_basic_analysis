@@ -6,8 +6,8 @@
 #SBATCH -o %A_job.out
 #SBATCH -e %A_job.err
 
-
-rsync -avzLP --exclude '**/run_/*' /work/ollie/qigao001/output levante:/work/ab0246/a270200/
+# data_sources, output, scratch, startdump
+rsync -avzLP --exclude '**/run_/*' /work/ollie/qigao001/startdump levante:/work/ab0246/a270200/
 
 
 # source /home/ollie/qigao001/miniconda3/bin/activate training

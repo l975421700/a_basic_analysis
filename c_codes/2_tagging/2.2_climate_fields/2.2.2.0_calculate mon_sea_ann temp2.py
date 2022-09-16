@@ -1,5 +1,10 @@
 
 
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+expid = ['pi_m_416_4.9',]
+i = 0
+
+
 # -----------------------------------------------------------------------------
 # region import packages
 
@@ -78,10 +83,6 @@ from a_basic_analysis.b_module.source_properties import (
 
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
-
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_416_4.9',]
-
 # region import output
 
 i = 0
@@ -143,34 +144,5 @@ test['am'] = test['ann'].mean(dim='time', skipna=True).compute()
 # endregion
 # -----------------------------------------------------------------------------
 
-
-# -----------------------------------------------------------------------------
-# region plot am_sm temp2, psl, and 850hPa wind
-
-i = 0
-expid[i]
-
-temp2 = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2.pkl', 'rb') as f:
-    temp2[expid[i]] = pickle.load(f)
-
-psl_zh = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.psl_zh.pkl', 'rb') as f:
-    psl_zh[expid[i]] = pickle.load(f)
-
-uv_plev = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.uv_plev.pkl', 'rb') as f:
-    uv_plev[expid[i]] = pickle.load(f)
-
-
-
-
-
-'''
-stats.describe(temp2[expid[i]]['am'].sel(lat=slice(-45, -90)), axis=None,
-               nan_policy='omit') # -60 - 10
-'''
-# endregion
-# -----------------------------------------------------------------------------
 
 

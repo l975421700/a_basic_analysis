@@ -163,7 +163,7 @@ plt_std2 = (acc_recon_ERAI.recon_acc_bc.sel(
 # stats.describe(plt_std1, axis=None, nan_policy='omit')
 # stats.describe(plt_std2, axis=None, nan_policy='omit')
 
-ctr_level = np.arange(0, 40 + 1e-4, 5)
+ctr_level = np.arange(0, 40 + 1e-4, 10)
 
 nrow = 1
 ncol = 3
