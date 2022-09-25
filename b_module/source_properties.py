@@ -5,6 +5,7 @@
 
 def source_properties(
     var_scaled_pre, ocean_pre, min_sf, max_sf, var_name,
+    prefix = 'pre_weighted_', threshold = 2e-8,
     ):
     '''
     #---- Input
@@ -24,8 +25,8 @@ def source_properties(
     
     #---- estimation on original time intervals
     pre_weighted_var = (var_scaled_pre / ocean_pre.values * (max_sf - min_sf) + min_sf).compute()
-    pre_weighted_var.values[ocean_pre.values < 2e-8] = np.nan
-    pre_weighted_var = pre_weighted_var.rename('pre_weighted_' + var_name)
+    pre_weighted_var.values[ocean_pre.values < threshold] = np.nan
+    pre_weighted_var = pre_weighted_var.rename(prefix + var_name)
     
     if (var_name == 'sst'):
         pre_weighted_var.values[:] = pre_weighted_var.values[:] - 273.15
@@ -48,6 +49,7 @@ def source_properties(
 
 def sincoslon_2_lon(
     sinlon, coslon,
+    var_name='pre_weighted_lon',
     ):
     '''
     #---- Input
@@ -63,7 +65,7 @@ def sincoslon_2_lon(
     pre_weighted_lon = (np.arctan2(sinlon, coslon) * 180 / np.pi).compute()
     pre_weighted_lon.values[pre_weighted_lon.values < 0] += 360
     
-    pre_weighted_lon = pre_weighted_lon.rename('pre_weighted_lon')
+    pre_weighted_lon = pre_weighted_lon.rename(var_name)
     
     return(pre_weighted_lon)
 

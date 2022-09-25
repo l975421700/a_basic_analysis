@@ -86,3 +86,42 @@ def cplot_wind_vectors(
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region Function to plot lon-y plot, from [0, 360] to [-180, 180]
+
+def cplot_lon180(
+    lon,
+    y,
+    ax, pltnorm, pltcmp,
+    plt_data,
+    ):
+    '''
+    #-------- Input
+    lon: 1d, from 0-360
+    y: 1d, y axis
+    plt_data: 2d, with lon from 0-360
+    pltnorm, pltcmp
+    
+    #-------- Output
+    
+    '''
+    
+    import numpy as np
+    import xarray as xr
+    
+    lon_180 = np.concatenate([lon[int(len(lon) / 2):] - 360,
+                              lon[:int(len(lon) / 2)], ])
+    
+    plt_data_180 = xr.concat([
+        plt_data.sel(lon=slice(180, 360)),
+        plt_data.sel(lon=slice(0, 180 - 1e-4))], dim='lon')
+    
+    plt_mesh = ax.pcolormesh(
+        lon_180, y, plt_data_180, norm=pltnorm, cmap=pltcmp,)
+    
+    return(plt_mesh)
+
+# -----------------------------------------------------------------------------
+
+

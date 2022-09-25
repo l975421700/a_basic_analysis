@@ -1,18 +1,18 @@
 #!/bin/bash
-#SBATCH --time=10:00:00
-#SBATCH --partition=mini
+#SBATCH --time=2:00:00
+#SBATCH --partition=xfat
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=14
 #SBATCH -o %A_job.out
 #SBATCH -e %A_job.err
 
 # data_sources, output, scratch, startdump
-rsync -avzLP --exclude '**/run_/*' /work/ollie/qigao001/startdump levante:/work/ab0246/a270200/
+# rsync -avzLP --exclude '**/run_/*' /work/ollie/qigao001/startdump levante:/work/ab0246/a270200/
 
 
-# source /home/ollie/qigao001/miniconda3/bin/activate training
-# which python
-# which cdo
+source /home/ollie/qigao001/miniconda3/bin/activate deepice
+
+python /work/ollie/qigao001/a_basic_analysis/c_codes/0_basics/0.1_scripts/0.1.0_large_memory.py
 
 # python /work/ollie/qigao001/a_basic_analysis/c_codes/2_tagging/2.3_source_var/2.3.0.0_source_var_scaled_daily.py
 

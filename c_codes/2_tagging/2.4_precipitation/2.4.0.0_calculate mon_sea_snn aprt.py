@@ -18,6 +18,7 @@ warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
 sys.path.append('/work/ollie/qigao001')
+import psutil
 
 # data analysis
 import numpy as np
@@ -141,7 +142,7 @@ for i in range(len(expid)):
 
 
 # -----------------------------------------------------------------------------
-# region calculate mon/sea/ann wisoaprt
+# region get mon/sea/ann wisoaprt
 
 wisoaprt = {}
 wisoaprt[expid[i]] = (
@@ -196,7 +197,7 @@ np.max(abs(exp_org_o[expid[i]]['echam'].aprl.values + \
 
 
 # -----------------------------------------------------------------------------
-# region calculate mon/sea/ann wisoaprt averaged over AIS
+# region get mon/sea/ann wisoaprt averaged over AIS
 
 
 wisoaprt_alltime = {}
@@ -296,7 +297,7 @@ wisoaprt_mean_over_ais[expid[i]]['am'].values
 
 
 # -----------------------------------------------------------------------------
-# region calculate mon/sea/ann aprt_geo7
+# region get mon/sea/ann aprt_geo7
 
 
 aprt_geo7 = {}
@@ -367,7 +368,7 @@ aprt_geo7_alltime[expid[i]]['am'].to_netcdf('scratch/test/test1.nc')
 
 
 # -----------------------------------------------------------------------------
-# region calculate mon/sea/ann aprt_geo7 averaged over AIS/WAIS/EAIS/AP
+# region get mon/sea/ann aprt_geo7 averaged over AIS/WAIS/EAIS/AP
 
 aprt_geo7_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_geo7_alltime.pkl', 'rb') as f:
@@ -528,149 +529,7 @@ for imask in ['EAIS', 'WAIS', 'AP', 'AIS']:
 
 
 # -----------------------------------------------------------------------------
-# region calculate mon_sea_ann ERA5 pre
-
-era5_mon_tp_1979_2021 = xr.open_dataset(
-    'scratch/products/era5/pre/era5_mon_tp_1979_2021.nc')
-
-# change units to mm/d
-era5_mon_tp_1979_2021_alltime = mon_sea_ann(
-    var_monthly = (era5_mon_tp_1979_2021.tp * 1000).compute())
-
-with open(
-    'scratch/products/era5/pre/era5_mon_tp_1979_2021_alltime.pkl', 'wb') as f:
-    pickle.dump(era5_mon_tp_1979_2021_alltime, f)
-
-
-'''
-#-------- check
-era5_mon_tp_1979_2021 = xr.open_dataset(
-    'scratch/products/era5/pre/era5_mon_tp_1979_2021.nc')
-with open(
-    'scratch/products/era5/pre/era5_mon_tp_1979_2021_alltime.pkl', 'rb') as f:
-    era5_mon_tp_1979_2021_alltime = pickle.load(f)
-
-(era5_mon_tp_1979_2021.tp * 1000 == era5_mon_tp_1979_2021_alltime['mon']).all()
-
-
-(era5_mon_tp_1979_2021_alltime['mon'].resample({'time': '1Y'}).map(time_weighted_mean).compute() == era5_mon_tp_1979_2021_alltime['ann']).all()
-
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region calculate mon_sea_ann ERA5 averaged over AIS
-
-with open(
-    'scratch/products/era5/pre/era5_mon_tp_1979_2021_alltime.pkl', 'rb') as f:
-    era5_mon_tp_1979_2021_alltime = pickle.load(f)
-
-with open('scratch/others/land_sea_masks/era5_ais_mask.pkl', 'rb') as f:
-    era5_ais_mask = pickle.load(f)
-era5_cellarea = xr.open_dataset('scratch/cmip6/constants/ERA5_gridarea.nc')
-
-tp_era5_mean_over_ais = {}
-
-for ialltime in era5_mon_tp_1979_2021_alltime.keys():
-    # ialltime = 'daily'
-    if (ialltime != 'am'):
-        tp_era5_mean_over_ais[ialltime] = mean_over_ais(
-            era5_mon_tp_1979_2021_alltime[ialltime],
-            era5_ais_mask['mask']['AIS'],
-            era5_cellarea.cell_area.values,
-            )
-    else:
-        # ialltime = 'am'
-        tp_era5_mean_over_ais[ialltime] = mean_over_ais(
-            era5_mon_tp_1979_2021_alltime[ialltime].expand_dims(dim='time'),
-            era5_ais_mask['mask']['AIS'],
-            era5_cellarea.cell_area.values,
-            )
-    print(ialltime)
-
-tp_era5_mean_over_ais['mon_std'] = tp_era5_mean_over_ais['mon'].groupby('time.month').std(skipna=True).compute()
-tp_era5_mean_over_ais['ann_std'] = tp_era5_mean_over_ais['ann'].std(skipna=True).compute()
-
-with open('scratch/products/era5/pre/tp_era5_mean_over_ais.pkl', 'wb') as f:
-    pickle.dump(tp_era5_mean_over_ais, f)
-
-
-
-'''
-#-------------------------------- check
-
-with open(
-    'scratch/products/era5/pre/era5_mon_tp_1979_2021_alltime.pkl', 'rb') as f:
-    era5_mon_tp_1979_2021_alltime = pickle.load(f)
-
-with open('scratch/others/land_sea_masks/era5_ais_mask.pkl', 'rb') as f:
-    era5_ais_mask = pickle.load(f)
-era5_cellarea = xr.open_dataset('scratch/cmip6/constants/ERA5_gridarea.nc')
-
-with open('scratch/products/era5/pre/tp_era5_mean_over_ais.pkl', 'rb') as f:
-    tp_era5_mean_over_ais = pickle.load(f)
-
-#-------- check mm
-itime = 8
-np.average(
-    era5_mon_tp_1979_2021_alltime['mm'][itime].values[era5_ais_mask['mask']['AIS']],
-    weights=era5_cellarea.cell_area.values[era5_ais_mask['mask']['AIS']]
-)
-tp_era5_mean_over_ais['mm'][itime].values
-
-#-------- check mon
-itime = 30
-np.average(
-    era5_mon_tp_1979_2021_alltime['mon'][itime].values[era5_ais_mask['mask']['AIS']],
-    weights=era5_cellarea.cell_area.values[era5_ais_mask['mask']['AIS']]
-)
-tp_era5_mean_over_ais['mon'][itime].values
-
-#-------- check am
-np.average(
-    era5_mon_tp_1979_2021_alltime['am'].values[era5_ais_mask['mask']['AIS']],
-    weights=era5_cellarea.cell_area.values[era5_ais_mask['mask']['AIS']]
-)
-tp_era5_mean_over_ais['am'].values
-
-
-(tp_era5_mean_over_ais['mm'] == mean_over_ais(
-    era5_mon_tp_1979_2021_alltime['mm'],
-    era5_ais_mask['mask']['AIS'],
-    era5_cellarea.cell_area.values,
-    )).all().values
-(tp_era5_mean_over_ais['mon'] == mean_over_ais(
-    era5_mon_tp_1979_2021_alltime['mon'],
-    era5_ais_mask['mask']['AIS'],
-    era5_cellarea.cell_area.values,
-    )).all().values
-
-# check consistency
-
-wisoaprt_mean_over_ais = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_mean_over_ais.pkl', 'rb') as f:
-    wisoaprt_mean_over_ais[expid[i]] = pickle.load(f)
-
-(wisoaprt_mean_over_ais[expid[i]]['mm'] * 3600 * 24 * month_days).sum()
-(tp_era5_mean_over_ais['mm'] * month_days).sum()
-
-wisoaprt_mean_over_ais[expid[i]]['am'].values * 3600 * 24 * 365
-tp_era5_mean_over_ais['am'].values * 365
-
-wisoaprt_mean_over_ais[expid[i]]['ann_std'] * 3600 * 24 * 365
-tp_era5_mean_over_ais['ann_std'] * 365
-
-# ECHAM6:   160.58 ± 7.65 mm/yr,
-# ERA5:     174.66 ± 8.84 mm/yr
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region calculate mon_sea_ann aprt_geo7 frac over AIS
+# region get mon_sea_ann aprt_geo7 frac over AIS
 
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_geo7_spave.pkl', 'rb') as f:
     aprt_geo7_spave = pickle.load(f)
@@ -946,6 +805,278 @@ aprt_geo7_spave['AIS']['ann'].sel(wisotype=18).values / \
 # # NH sea ice
 # aprt_geo7_spave['AIS']['ann'].sel(wisotype=20).values / \
 #     aprt_geo7_spave['AIS']['ann'].sum(dim='wisotype').values
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get mon_sea_ann ERA5 pre
+
+era5_mon_tp_1979_2021 = xr.open_dataset(
+    'scratch/products/era5/pre/era5_mon_tp_1979_2021.nc')
+
+# change units to mm/d
+era5_mon_tp_1979_2021_alltime = mon_sea_ann(
+    var_monthly = (era5_mon_tp_1979_2021.tp * 1000).compute())
+
+with open(
+    'scratch/products/era5/pre/era5_mon_tp_1979_2021_alltime.pkl', 'wb') as f:
+    pickle.dump(era5_mon_tp_1979_2021_alltime, f)
+
+
+'''
+#-------- check
+era5_mon_tp_1979_2021 = xr.open_dataset(
+    'scratch/products/era5/pre/era5_mon_tp_1979_2021.nc')
+with open(
+    'scratch/products/era5/pre/era5_mon_tp_1979_2021_alltime.pkl', 'rb') as f:
+    era5_mon_tp_1979_2021_alltime = pickle.load(f)
+
+(era5_mon_tp_1979_2021.tp * 1000 == era5_mon_tp_1979_2021_alltime['mon']).all()
+
+
+(era5_mon_tp_1979_2021_alltime['mon'].resample({'time': '1Y'}).map(time_weighted_mean).compute() == era5_mon_tp_1979_2021_alltime['ann']).all()
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get mon_sea_ann ERA5 averaged over AIS
+
+with open(
+    'scratch/products/era5/pre/era5_mon_tp_1979_2021_alltime.pkl', 'rb') as f:
+    era5_mon_tp_1979_2021_alltime = pickle.load(f)
+
+with open('scratch/others/land_sea_masks/era5_ais_mask.pkl', 'rb') as f:
+    era5_ais_mask = pickle.load(f)
+era5_cellarea = xr.open_dataset('scratch/cmip6/constants/ERA5_gridarea.nc')
+
+tp_era5_mean_over_ais = {}
+
+for ialltime in era5_mon_tp_1979_2021_alltime.keys():
+    # ialltime = 'daily'
+    if (ialltime != 'am'):
+        tp_era5_mean_over_ais[ialltime] = mean_over_ais(
+            era5_mon_tp_1979_2021_alltime[ialltime],
+            era5_ais_mask['mask']['AIS'],
+            era5_cellarea.cell_area.values,
+            )
+    else:
+        # ialltime = 'am'
+        tp_era5_mean_over_ais[ialltime] = mean_over_ais(
+            era5_mon_tp_1979_2021_alltime[ialltime].expand_dims(dim='time'),
+            era5_ais_mask['mask']['AIS'],
+            era5_cellarea.cell_area.values,
+            )
+    print(ialltime)
+
+tp_era5_mean_over_ais['mon_std'] = tp_era5_mean_over_ais['mon'].groupby('time.month').std(skipna=True).compute()
+tp_era5_mean_over_ais['ann_std'] = tp_era5_mean_over_ais['ann'].std(skipna=True).compute()
+
+with open('scratch/products/era5/pre/tp_era5_mean_over_ais.pkl', 'wb') as f:
+    pickle.dump(tp_era5_mean_over_ais, f)
+
+
+
+'''
+#-------------------------------- check
+
+with open(
+    'scratch/products/era5/pre/era5_mon_tp_1979_2021_alltime.pkl', 'rb') as f:
+    era5_mon_tp_1979_2021_alltime = pickle.load(f)
+
+with open('scratch/others/land_sea_masks/era5_ais_mask.pkl', 'rb') as f:
+    era5_ais_mask = pickle.load(f)
+era5_cellarea = xr.open_dataset('scratch/cmip6/constants/ERA5_gridarea.nc')
+
+with open('scratch/products/era5/pre/tp_era5_mean_over_ais.pkl', 'rb') as f:
+    tp_era5_mean_over_ais = pickle.load(f)
+
+#-------- check mm
+itime = 8
+np.average(
+    era5_mon_tp_1979_2021_alltime['mm'][itime].values[era5_ais_mask['mask']['AIS']],
+    weights=era5_cellarea.cell_area.values[era5_ais_mask['mask']['AIS']]
+)
+tp_era5_mean_over_ais['mm'][itime].values
+
+#-------- check mon
+itime = 30
+np.average(
+    era5_mon_tp_1979_2021_alltime['mon'][itime].values[era5_ais_mask['mask']['AIS']],
+    weights=era5_cellarea.cell_area.values[era5_ais_mask['mask']['AIS']]
+)
+tp_era5_mean_over_ais['mon'][itime].values
+
+#-------- check am
+np.average(
+    era5_mon_tp_1979_2021_alltime['am'].values[era5_ais_mask['mask']['AIS']],
+    weights=era5_cellarea.cell_area.values[era5_ais_mask['mask']['AIS']]
+)
+tp_era5_mean_over_ais['am'].values
+
+
+(tp_era5_mean_over_ais['mm'] == mean_over_ais(
+    era5_mon_tp_1979_2021_alltime['mm'],
+    era5_ais_mask['mask']['AIS'],
+    era5_cellarea.cell_area.values,
+    )).all().values
+(tp_era5_mean_over_ais['mon'] == mean_over_ais(
+    era5_mon_tp_1979_2021_alltime['mon'],
+    era5_ais_mask['mask']['AIS'],
+    era5_cellarea.cell_area.values,
+    )).all().values
+
+# check consistency
+
+wisoaprt_mean_over_ais = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_mean_over_ais.pkl', 'rb') as f:
+    wisoaprt_mean_over_ais[expid[i]] = pickle.load(f)
+
+(wisoaprt_mean_over_ais[expid[i]]['mm'] * 3600 * 24 * month_days).sum()
+(tp_era5_mean_over_ais['mm'] * month_days).sum()
+
+wisoaprt_mean_over_ais[expid[i]]['am'].values * 3600 * 24 * 365
+tp_era5_mean_over_ais['am'].values * 365
+
+wisoaprt_mean_over_ais[expid[i]]['ann_std'] * 3600 * 24 * 365
+tp_era5_mean_over_ais['ann_std'] * 365
+
+# ECHAM6:   160.58 ± 7.65 mm/yr,
+# ERA5:     174.66 ± 8.84 mm/yr
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get mon_sea_ann ocean_aprt
+
+time = exp_org_o[expid[i]]['wiso'].time
+lon  = exp_org_o[expid[i]]['wiso'].lon
+lat  = exp_org_o[expid[i]]['wiso'].lat
+
+ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
+kwiso2 = 3
+var_names = ['lat', 'sst', 'rh2m', 'wind10', 'sinlon', 'coslon', 'geo7']
+itags = [5, 7, 8, 9, 11, 12]
+
+ocean_aprt = {}
+ocean_aprt[expid[i]] = xr.DataArray(
+    data = np.zeros((len(time), len(var_names), len(lat), len(lon))),
+    coords={
+        'time':         time,
+        'var_names':    var_names,
+        'lat':          lat,
+        'lon':          lon,
+    }
+)
+
+for count,var_name in enumerate(var_names[:-1]):
+    # count = 0; var_name = 'lat'
+    kstart = kwiso2 + sum(ntags[:itags[count]])
+    
+    print(str(count) + ' : ' + var_name + ' : ' + str(itags[count]) + \
+        ' : ' + str(kstart))
+    
+    ocean_aprt[expid[i]].sel(var_names=var_name)[:] = \
+        (exp_org_o[expid[i]]['wiso'].wisoaprl.sel(
+            wisotype=slice(kstart+2, kstart+3)) + \
+                exp_org_o[expid[i]]['wiso'].wisoaprc.sel(
+                    wisotype=slice(kstart+2, kstart+3))
+                ).sum(dim='wisotype')
+
+ocean_aprt[expid[i]].sel(var_names='geo7')[:] = \
+    (exp_org_o[expid[i]]['wiso'].wisoaprl.sel(
+        wisotype=[19, 21]) + \
+            exp_org_o[expid[i]]['wiso'].wisoaprc.sel(
+                wisotype=[19, 21])
+            ).sum(dim='wisotype')
+
+ocean_aprt_alltime = {}
+ocean_aprt_alltime[expid[i]] = mon_sea_ann(
+    ocean_aprt[expid[i]], lcopy = False,)
+
+print(psutil.Process().memory_info().rss / (2 ** 30))
+
+del ocean_aprt[expid[i]]
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_aprt_alltime.pkl', 'wb') as f:
+    pickle.dump(ocean_aprt_alltime[expid[i]], f)
+
+
+
+
+
+
+'''
+
+#-------------------------------- check ocean_aprt
+
+ocean_aprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_aprt_alltime.pkl', 'rb') as f:
+    ocean_aprt_alltime[expid[i]] = pickle.load(f)
+
+ocean_aprt = {}
+ocean_aprt[expid[i]] = ocean_aprt_alltime[expid[i]]['daily']
+
+filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'))
+ifile = -1
+ncfile = xr.open_dataset(filenames_wiso[ifile_start:ifile_end][ifile])
+
+ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
+kwiso2 = 3
+var_names = ['lat', 'sst', 'rh2m', 'wind10', 'sinlon', 'coslon']
+itags = [5, 7, 8, 9, 11, 12]
+
+ilat = 48
+ilon = 90
+
+for count in range(6):
+    # count = 5
+    print(count)
+    
+    kstart = kwiso2 + sum(ntags[:itags[count]])
+
+    res1 = ocean_aprt[expid[i]][-31:, :, ilat, ilon].sel(
+        var_names = var_names[count])
+
+    res2 = ncfile.wisoaprl[:, :, ilat, ilon].sel(
+        wisotype=[kstart+2, kstart+3]).sum(dim='wisotype') + \
+            ncfile.wisoaprc[:, :, ilat, ilon].sel(
+        wisotype=[kstart+2, kstart+3]).sum(dim='wisotype')
+
+    print(np.max(abs(res1 - res2)).values)
+
+# check 'geo7'
+res1 = ocean_aprt[expid[i]][-31:, :, ilat, ilon].sel(var_names = 'geo7')
+res2 = ncfile.wisoaprl[:, :, ilat, ilon].sel(
+    wisotype=[19, 21]).sum(dim='wisotype') + \
+        ncfile.wisoaprc[:, :, ilat, ilon].sel(
+    wisotype=[19, 21]).sum(dim='wisotype')
+print(np.max(abs(res1 - res2)).values)
+
+
+#-------------------------------- check alltime calculation
+ocean_aprt_alltime[expid[i]].keys()
+(ocean_aprt_alltime[expid[i]]['daily'] == ocean_aprt[expid[i]]).all().values
+
+(ocean_aprt_alltime[expid[i]]['mon'] == ocean_aprt_alltime[expid[i]]['daily'].resample({'time': '1M'}).mean()).all()
+
+#-------------------------------- check ocean pre consistency
+np.max(abs((ocean_aprt_alltime[expid[i]]['mon'][:, 5] - \
+    ocean_aprt_alltime[expid[i]]['mon'][:, 0]) / \
+        ocean_aprt_alltime[expid[i]]['mon'][:, 5]))
+np.mean(abs(ocean_aprt_alltime[expid[i]]['mon'][:, 5] - ocean_aprt_alltime[expid[i]]['mon'][:, 0]))
+np.mean(abs(ocean_aprt_alltime[expid[i]]['mon'][:, 5]))
+
+np.max(abs((ocean_aprt_alltime[expid[i]]['am'][5] - \
+    ocean_aprt_alltime[expid[i]]['am'][0]) / \
+        ocean_aprt_alltime[expid[i]]['am'][5]))
 
 '''
 # endregion
