@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --time=2:00:00
-#SBATCH --partition=xfat
+#SBATCH --partition=fat
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=14
 #SBATCH -o %A_job.out

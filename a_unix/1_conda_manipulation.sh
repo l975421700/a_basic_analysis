@@ -56,12 +56,6 @@ mamba install -c conda-forge jupyterlab
 
 source ${HOME}/miniconda3/bin/activate test
 
-
-
-
-
-
-
 #-------------------------------- Others
 
 # clean conda installed pkgs

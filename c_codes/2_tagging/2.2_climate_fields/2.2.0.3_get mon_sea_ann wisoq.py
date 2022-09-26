@@ -189,6 +189,10 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_q_alltim
     ocean_q_alltime[expid[i]] = pickle.load(f)
 print(psutil.Process().memory_info().rss / (2 ** 30))
 
+data1 = ocean_q_alltime[expid[i]]['mon'].sel(var_names='lat').values
+data2 = ocean_q_alltime[expid[i]]['mon'].sel(var_names='sinlon').values
+np.max(abs(data1[np.isfinite(data1)] - data2[np.isfinite(data2)]))
+
 filenames_wiso_q_plev = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_wiso_q_plev.nc'))
 ifile = -1
 ncfile = xr.open_dataset(filenames_wiso_q_plev[ifile_start:ifile_end][ifile])
@@ -196,18 +200,18 @@ ncfile = xr.open_dataset(filenames_wiso_q_plev[ifile_start:ifile_end][ifile])
 data1 = (ncfile.q_02[0] + ncfile.q_03[0] + ncfile.xl_02[0] + ncfile.xl_03[0] + \
     ncfile.xi_02[0] + ncfile.xi_03[0]).values
 data2 = (ocean_q_alltime[expid[i]]['mon'][ifile].sel(var_names='lat')).values
-(data1[np.isfinite(data1)] == data1[np.isfinite(data1)]).all()
+(data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all()
 
 data1 = (ncfile.q_24[0] + ncfile.q_25[0] + ncfile.xl_24[0] + ncfile.xl_25[0] + \
     ncfile.xi_24[0] + ncfile.xi_25[0]).values
 data2 = (ocean_q_alltime[expid[i]]['mon'][ifile].sel(var_names='coslon')).values
-(data1[np.isfinite(data1)] == data1[np.isfinite(data1)]).all()
+(data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all()
 
 
-data1 = (ncfile.q_16[0] + ncfile.q_18[0] + ncfile.xl_16[0] + ncfile.xl_18[0] + \
-    ncfile.xi_16[0] + ncfile.xi_18[0]).values
-data2 = (ocean_q_alltime[expid[i]]['mon'][ifile].sel(var_names='geo7')).values
-(data1[np.isfinite(data1)] == data1[np.isfinite(data1)]).all()
+# data1 = (ncfile.q_16[0] + ncfile.q_18[0] + ncfile.xl_16[0] + ncfile.xl_18[0] + \
+#     ncfile.xi_16[0] + ncfile.xi_18[0]).values
+# data2 = (ocean_q_alltime[expid[i]]['mon'][ifile].sel(var_names='geo7')).values
+# (data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all()
 
 #-------- include that of geo7
 var_names = ['lat', 'sst', 'rh2m', 'wind10', 'sinlon', 'coslon', 'geo7']
@@ -220,6 +224,15 @@ ocean_q[expid[i]].sel(var_names='geo7')[:] = \
                         exp_org_o[expid[i]]['wiso_q_plev']['xi_18']
                         )
 '''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get mon_sea_ann wiso_q
+
+
+
 # endregion
 # -----------------------------------------------------------------------------
 
