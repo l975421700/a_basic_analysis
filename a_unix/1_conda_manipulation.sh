@@ -49,6 +49,7 @@ mamba install -c conda-forge libgcc -y
 mamba install -c conda-forge nose -y
 pip install pycircstat
 pip install rpy2
+mamba install -c conda-forge jupyterlab
 
 '''
 #-------------------------------- TEST REGION

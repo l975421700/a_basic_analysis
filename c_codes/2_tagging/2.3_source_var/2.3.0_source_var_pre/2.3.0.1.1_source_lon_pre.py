@@ -476,7 +476,7 @@ output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/6.1.3.1 ' + 
 pltlevel = np.arange(-180, 180 + 1e-4, 15)
 pltticks = np.arange(-180, 180 + 1e-4, 45)
 pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
-pltcmp = cm.get_cmap('BrBG', len(pltlevel)-1).reversed()
+pltcmp = cm.get_cmap('twilight_shifted', len(pltlevel)-1).reversed()
 
 fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 7]) / 2.54)
 
@@ -498,6 +498,13 @@ cbar.ax.set_xlabel('Relative source longitude [$°$]', linespacing=2)
 fig.savefig(output_png, dpi=1200)
 
 
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot pre_weighted_lon am + am aprt
+
 
 #-------------------------------- add am pre
 
@@ -506,7 +513,7 @@ output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/6.1.3.1 ' + 
 pltlevel = np.arange(-180, 180 + 1e-4, 15)
 pltticks = np.arange(-180, 180 + 1e-4, 45)
 pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
-pltcmp = cm.get_cmap('BrBG', len(pltlevel)-1).reversed()
+pltcmp = cm.get_cmap('twilight_shifted', len(pltlevel)-1).reversed()
 
 fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 7]) / 2.54)
 
