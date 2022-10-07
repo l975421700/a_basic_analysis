@@ -279,7 +279,7 @@ cbar = fig.colorbar(
     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='min',
     pad=0.02, fraction=0.2,
     )
-cbar.ax.set_xlabel('Fraction of annual mean precipitation from\nocean excl. SH sea ice covered area [%]', linespacing=1.5, fontsize=8)
+cbar.ax.set_xlabel('Fraction of annual mean precipitation from\nOpen ocean [%]', linespacing=1.5, fontsize=8)
 fig.savefig(output_png)
 
 

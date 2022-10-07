@@ -84,6 +84,7 @@ from a_basic_analysis.b_module.statistics import (
 
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
+    plt_mesh_pars,
 )
 
 # endregion
@@ -427,3 +428,30 @@ fig.savefig(output_png)
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region plot am sst Antarctica
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.2_climatology/6.1.2.0_sst/6.1.2.0 amip_pi sst am Antarctica.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=0, cm_max=32, cm_interval1=2, cm_interval2=4, cmap='RdBu',)
+
+fig, ax = hemisphere_plot(northextent=-20, figsize=np.array([5.8, 7.3]) / 2.54,)
+cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+
+plt_mesh1 = ax.pcolormesh(
+    lon, lat,
+    boundary_conditions['am_sst']['pi'] - zerok,
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    plt_mesh1, ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+    pad=0.02, fraction=0.15,
+    )
+cbar.ax.set_xlabel('Sea surface temperature (SST) [$°C$]', linespacing=1.5,)
+fig.savefig(output_png)
+
+
+# endregion
+# -----------------------------------------------------------------------------

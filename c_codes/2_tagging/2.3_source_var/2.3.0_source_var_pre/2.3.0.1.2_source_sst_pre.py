@@ -66,6 +66,7 @@ from a_basic_analysis.b_module.namelist import (
     month_dec_num,
     seasons,
     seasons_last_num,
+    seconds_per_d,
     hours,
     months,
     month_days,
@@ -87,6 +88,7 @@ from a_basic_analysis.b_module.statistics import (
 
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
+    plt_mesh_pars,
 )
 
 # endregion
@@ -97,7 +99,6 @@ from a_basic_analysis.b_module.component_plot import (
 # region import data
 
 pre_weighted_sst = {}
-
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_sst.pkl', 'rb') as f:
     pre_weighted_sst[expid[i]] = pickle.load(f)
 
@@ -105,10 +106,13 @@ lon = pre_weighted_sst[expid[i]]['am'].lon
 lat = pre_weighted_sst[expid[i]]['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
-
 major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
 major_ice_core_site = major_ice_core_site.loc[
     major_ice_core_site['age (kyr)'] > 120, ]
+
+wisoaprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
+    wisoaprt_alltime[expid[i]] = pickle.load(f)
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -405,9 +409,9 @@ fig.savefig(output_png)
 
 
 # -----------------------------------------------------------------------------
-# region plot pre_weighted_sst am
+# region plot pre_weighted_sst am + am aprt
 
-output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.2_sst/6.1.3.2 ' + expid[i] + ' pre_weighted_sst am Antarctica.png'
+output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.2_sst/6.1.3.2 ' + expid[i] + ' pre_weighted_sst am Antarctica + am aprt.png'
 
 pltlevel = np.arange(9, 17 + 1e-4, 1)
 pltticks = np.arange(9, 17 + 1e-4, 1)
@@ -423,6 +427,29 @@ plt1 = ax.pcolormesh(
     lat,
     pre_weighted_sst[expid[i]]['am'],
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+# plot am aprt
+pltctr1 = np.array([0.05, 0.1, 0.5, ])
+pltctr2 = np.array([1, 2, 4, ])
+plt_data = wisoaprt_alltime[expid[i]]['am'][0] * seconds_per_d
+
+plt2 = ax.contour(
+    lon, lat,
+    plt_data,
+    levels=pltctr1, colors = 'blue', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='dotted',
+)
+ax.clabel(plt2, inline=1, colors='blue', fmt=remove_trailing_zero,
+          levels=pltctr1, inline_spacing=10, fontsize=6,)
+
+plt3 = ax.contour(
+    lon, lat,
+    plt_data,
+    levels=pltctr2, colors = 'blue', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='solid',
+)
+ax.clabel(plt3, inline=1, colors='blue', fmt=remove_trailing_zero,
+          levels=pltctr2, inline_spacing=5, fontsize=6,)
 
 cbar = fig.colorbar(
     plt1, ax=ax, aspect=30,
@@ -479,6 +506,115 @@ cbar.ax.set_xlabel('DJF - JJA source SST [$°C$]', linespacing=2)
 fig.savefig(output_png, dpi=1200)
 
 
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot pre_weighted_sst am_sm
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.2_sst/6.1.3.2 ' + expid[i] + ' pre_weighted_sst am_sm_5 Antarctica.png'
+cbar_label1 = 'Source SST [$°C$]'
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=8, cm_max=20, cm_interval1=1, cm_interval2=1, cmap='RdBu',)
+ctr_level = np.array([1, 2])
+
+nrow = 1
+ncol = 5
+fm_right = 2 / (5.8*ncol + 2)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol + 2, 5.8*nrow+0.5]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.01, 'wspace': 0.01},)
+
+for jcol in range(ncol):
+    axs[jcol] = hemisphere_plot(
+        northextent=-50, ax_org = axs[jcol],
+        l45label = False, loceanarcs = False)
+    cplot_ice_cores(
+        major_ice_core_site.lon, major_ice_core_site.lat, axs[jcol])
+
+#-------- Am
+plt_mesh1 = axs[0].pcolormesh(
+    lon, lat,
+    pre_weighted_sst[expid[i]]['am'],
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_ctr1 = axs[0].contour(
+    lon, lat.sel(lat=slice(-50, -90)),
+    pre_weighted_sst[expid[i]]['ann'].std(
+        dim='time', skipna=True, ddof=1).sel(lat=slice(-50, -90)),
+    levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='solid',)
+axs[0].clabel(
+    plt_ctr1, inline=1, colors='b', fmt=remove_trailing_zero,
+    levels=ctr_level, inline_spacing=10, fontsize=6,)
+plt.text(
+    0.5, 1.04, 'Annual mean', transform=axs[0].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+#-------- sm
+for iseason in range(len(seasons)):
+    axs[1 + iseason].pcolormesh(
+        lon, lat,
+        pre_weighted_sst[expid[i]]['sm'].sel(season=seasons[iseason]),
+        norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+    plt_ctr = axs[1 + iseason].contour(
+        lon, lat.sel(lat=slice(-50, -90)),
+        pre_weighted_sst[expid[i]]['sea'].sel(
+            time=(pre_weighted_sst[expid[i]]['sea'].time.dt.month == \
+                seasons_last_num[iseason])
+            ).std(dim='time', skipna=True, ddof=1).sel(lat=slice(-50, -90)),
+        levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+        linewidths=0.5, linestyles='solid',
+    )
+    axs[1 + iseason].clabel(
+        plt_ctr, inline=1, colors='b', fmt=remove_trailing_zero,
+        levels=ctr_level, inline_spacing=10, fontsize=6,)
+    plt.text(
+        0.5, 1.04, seasons[iseason], transform=axs[1 + iseason].transAxes,
+        ha='center', va='center', rotation='horizontal')
+
+cbar1 = fig.colorbar(
+    plt_mesh1, ax=axs,
+    orientation="vertical",shrink=1,aspect=20,extend='both', ticks=pltticks,
+    anchor=(1.5, 0.5))
+cbar1.ax.set_ylabel(cbar_label1, linespacing=2)
+
+fig.subplots_adjust(left=0.01, right = 1-fm_right, bottom = 0, top = 0.94)
+fig.savefig(output_png)
+
+
+
+
+'''
+# aprt ctr
+pltctr1 = np.array([0.05, 0.1, 0.5, ])
+pltctr2 = np.array([1, 2, 4, ])
+
+# plot am aprt
+plt_data = wisoaprt_alltime[expid[i]]['am'][0] * seconds_per_d
+plt2 = axs[0].contour(
+    lon, lat,
+    plt_data,
+    levels=pltctr1, colors = 'blue', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='dotted',
+)
+axs[0].clabel(plt2, inline=1, colors='blue', fmt=remove_trailing_zero,
+          levels=pltctr1, inline_spacing=5, fontsize=6,)
+
+plt3 = axs[0].contour(
+    lon, lat,
+    plt_data,
+    levels=pltctr2, colors = 'blue', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='solid',
+)
+axs[0].clabel(plt3, inline=1, colors='blue', fmt=remove_trailing_zero,
+          levels=pltctr2, inline_spacing=5, fontsize=6,)
+
+
+
+'''
 # endregion
 # -----------------------------------------------------------------------------
 

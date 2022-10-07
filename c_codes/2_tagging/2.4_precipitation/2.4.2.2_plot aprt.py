@@ -1,5 +1,10 @@
 
 
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+expid = ['pi_m_416_4.9',]
+i = 0
+
+
 # -----------------------------------------------------------------------------
 # region import packages
 
@@ -24,6 +29,8 @@ from scipy import stats
 import xesmf as xe
 import pandas as pd
 from metpy.interpolate import cross_section
+from statsmodels.stats import multitest
+import pycircstat as circ
 
 # plot
 import matplotlib as mpl
@@ -57,13 +64,16 @@ from a_basic_analysis.b_module.basic_calculations import (
 from a_basic_analysis.b_module.namelist import (
     month,
     month_num,
-    month_dec_num,
     month_dec,
+    month_dec_num,
     seasons,
+    seasons_last_num,
     hours,
     months,
     month_days,
     zerok,
+    panel_labels,
+    seconds_per_d,
 )
 
 from a_basic_analysis.b_module.source_properties import (
@@ -71,24 +81,36 @@ from a_basic_analysis.b_module.source_properties import (
     calc_lon_diff,
 )
 
+from a_basic_analysis.b_module.statistics import (
+    fdr_control_bh,
+    check_normality_3d,
+    check_equal_variance_3d,
+    ttest_fdr_control,
+)
+
+from a_basic_analysis.b_module.component_plot import (
+    cplot_ice_cores,
+    plt_mesh_pars,
+)
+
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# -----------------------------------------------------------------------------
-
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_416_4.9',]
-i = 0
-
-# region import output
-
-expid[i]
+# region import data
 
 wisoaprt_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
     wisoaprt_alltime[expid[i]] = pickle.load(f)
+
+lon = wisoaprt_alltime[expid[i]]['am'].lon
+lat = wisoaprt_alltime[expid[i]]['am'].lat
+lon_2d, lat_2d = np.meshgrid(lon, lat,)
+
+major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
+major_ice_core_site = major_ice_core_site.loc[
+    major_ice_core_site['age (kyr)'] > 120, ]
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -205,71 +227,92 @@ fig.savefig(output_png)
 
 
 # -----------------------------------------------------------------------------
-# region plot mm aprt Antarctica
+# region plot aprt am_sm_5
 
+output_png = 'figures/6_awi/6.1_echam6/6.1.4_precipitation/6.1.4.0_aprt/6.1.4.0.2_spatiotemporal_dist/6.1.4.0.2 ' + expid[i] + ' aprt am_sm_5 Antarctica.png'
+cbar_label1 = 'Precipitation [$mm \; day^{-1}$]'
+pltlevel = np.array([0, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 6, 8, 10,])
+pltticks = np.array([0, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 6, 8, 10,])
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+pltcmp = cm.get_cmap('BrBG', len(pltlevel)-1)
 
-#-------- basic set
+ctr_level = np.array([20, 40, 60, ])
 
-lon = wisoaprt_alltime[expid[i]]['am'].lon
-lat = wisoaprt_alltime[expid[i]]['am'].lat
-
-
-#-------- plot configuration
-output_png = 'figures/6_awi/6.1_echam6/6.1.4_extreme_precipitation/6.1.4.1_total_precipitation/' + '6.1.4.1 ' + expid[i] + ' aprt mm Antarctica.png'
-# cbar_label1 = 'Precipitation [$mm \; day^{-1}$]'
-cbar_label2 = 'Differences in precipitation [$\%$]'
-
-# pltlevel = np.array([0, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 6, 8, 10,])
-# pltticks = np.array([0, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 6, 8, 10,])
-# pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
-# pltcmp = cm.get_cmap('BrBG', len(pltlevel)-1)
-
-
-pltlevel2 = np.arange(-50, 50 + 1e-4, 10)
-pltticks2 = np.arange(-50, 50 + 1e-4, 10)
-pltnorm2 = BoundaryNorm(pltlevel2, ncolors=len(pltlevel2)-1, clip=True)
-pltcmp2 = cm.get_cmap('PiYG', len(pltlevel2)-1).reversed()
-
-
-
-nrow = 3
-ncol = 4
-fm_bottom = 2 / (5.8*nrow + 2)
+nrow = 1
+ncol = 5
+fm_right = 2 / (5.8*ncol + 2)
 
 fig, axs = plt.subplots(
-    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    nrow, ncol, figsize=np.array([5.8*ncol + 2, 5.8*nrow+0.5]) / 2.54,
     subplot_kw={'projection': ccrs.SouthPolarStereo()},
-    gridspec_kw={'hspace': 0.1, 'wspace': 0.1},)
-
-for irow in range(nrow):
-    for jcol in range(ncol):
-        axs[irow, jcol] = hemisphere_plot(northextent=-60, ax_org = axs[irow, jcol])
+    gridspec_kw={'hspace': 0.01, 'wspace': 0.01},)
 
 for jcol in range(ncol):
-    for irow in range(nrow):
-        plt_mesh1 = axs[irow, jcol].pcolormesh(
-            lon, lat, (wisoaprt_alltime[expid[i]]['mm'].sel(month=month_dec_num[jcol*3+irow])[0] / wisoaprt_alltime[expid[i]]['am'][0] - 1) * 100,
-            norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
-        
-        plt.text(
-            0.5, 1.05, month_dec[jcol*3+irow],
-            transform=axs[irow, jcol].transAxes,
-            ha='center', va='center', rotation='horizontal')
-        
-        print(str(month_dec_num[jcol*3+irow]) + ' ' + month_dec[jcol*3+irow])
+    axs[jcol] = hemisphere_plot(
+        northextent=-50, ax_org = axs[jcol],
+        l45label = False, loceanarcs = False)
+    cplot_ice_cores(
+        major_ice_core_site.lon, major_ice_core_site.lat, axs[jcol])
 
+#-------- Am
+plt_mesh1 = axs[0].pcolormesh(
+    lon, lat,
+    wisoaprt_alltime[expid[i]]['am'][0] * 3600 * 24,
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_ctr1 = axs[0].contour(
+    lon, lat.sel(lat=slice(-50, -90)),
+    wisoaprt_alltime[expid[i]]['ann'].std(
+        dim='time', skipna=True, ddof=1).sel(lat=slice(-50, -90))[0] / \
+            wisoaprt_alltime[expid[i]]['am'][0] * 100,
+    levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='solid',)
+axs[0].clabel(
+    plt_ctr1, inline=1, colors='b', fmt=remove_trailing_zero,
+    levels=ctr_level, inline_spacing=10, fontsize=6,)
+plt.text(
+    0.5, 1.04, 'Annual mean', transform=axs[0].transAxes,
+    ha='center', va='center', rotation='horizontal')
 
-cbar2 = fig.colorbar(
-    plt_mesh1, ax=axs,
-    orientation="horizontal",shrink=0.5,aspect=40,extend='both',
-    anchor=(0.5, -0.5), ticks=pltticks2)
-cbar2.ax.set_xlabel(cbar_label2, linespacing=2)
+#-------- sm
+for iseason in range(len(seasons)):
+    axs[1 + iseason].pcolormesh(
+        lon, lat,
+        wisoaprt_alltime[expid[i]]['sm'].sel(
+            season=seasons[iseason])[0] * 3600 * 24,
+        norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+    plt_ctr = axs[1 + iseason].contour(
+        lon, lat.sel(lat=slice(-50, -90)),
+        wisoaprt_alltime[expid[i]]['sea'].sel(
+            time=(wisoaprt_alltime[expid[i]]['sea'].time.dt.month == \
+                seasons_last_num[iseason])
+            ).std(dim='time', skipna=True, ddof=1).sel(
+                lat=slice(-50, -90))[0] / \
+                wisoaprt_alltime[expid[i]]['sm'].sel(
+                    season=seasons[iseason])[0] * 100,
+        levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+        linewidths=0.5, linestyles='solid',
+    )
+    axs[1 + iseason].clabel(
+        plt_ctr, inline=1, colors='b', fmt=remove_trailing_zero,
+        levels=ctr_level, inline_spacing=10, fontsize=6,)
+    plt.text(
+        0.5, 1.04, seasons[iseason], transform=axs[1 + iseason].transAxes,
+        ha='center', va='center', rotation='horizontal')
 
-fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom*0.8, top = 0.98)
+cbar1 = fig.colorbar(
+    plt_mesh1, ax=axs, format=remove_trailing_zero_pos,
+    orientation="vertical",shrink=1,aspect=20,extend='max', ticks=pltticks,
+    anchor=(1.45, 0.5))
+cbar1.ax.set_ylabel(cbar_label1, linespacing=2)
+
+fig.subplots_adjust(left=0.01, right = 1-fm_right, bottom = 0, top = 0.94)
 fig.savefig(output_png)
 
 
+
+
 '''
+
 '''
 # endregion
 # -----------------------------------------------------------------------------

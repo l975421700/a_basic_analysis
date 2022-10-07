@@ -147,9 +147,9 @@ pre_mm_over_ais = pd.concat(
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.4_precipitation/6.1.4.0_aprt/6.1.4.0.1_aprt_ann_circle/6.1.4.0.1 ' + expid[i] + ' era5 ann circle histogram over AIS.png'
 
-fig, ax = plt.subplots(1, 1, figsize=np.array([13.2, 8]) / 2.54)
+fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
 
-sns.barplot(
+plt_bar = sns.barplot(
     data = pre_mm_over_ais,
     x = 'Month',
     y = 'pre_mon',
@@ -157,7 +157,13 @@ sns.barplot(
     palette=['tab:blue', 'tab:orange',],
     ci = 'sd', errwidth=0.75, capsize=0.1,
 )
-plt.legend(loc='upper right', handlelength=1, framealpha = 0.5, )
+lgd_handles = [mpatches.Patch(color=x, label=y) for x, y in \
+    zip(['tab:blue', 'tab:orange',], ['ERA5', 'ECHAM6 PI'])]
+
+plt.legend(
+    handles=lgd_handles,
+    labels=['ERA5', 'ECHAM6 PI'],
+    loc='upper right', handlelength=1, framealpha = 0.5, )
 
 ax.set_xlabel('Monthly precipitation over AIS [$mm \; mon^{-1}$]')
 ax.set_ylabel(None)
@@ -165,7 +171,7 @@ ax.set_ylabel(None)
 ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
 
 ax.grid(True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
-fig.subplots_adjust(left=0.07, right=0.99, bottom=0.15, top=0.98)
+fig.subplots_adjust(left=0.1, right=0.99, bottom=0.15, top=0.98)
 fig.savefig(output_png)
 
 
@@ -192,8 +198,8 @@ np.max(abs(
 # -----------------------------------------------------------------------------
 # region histogram: annual circle of aprt frac over AIS
 
-# imask = 'AIS'
-imask = 'EAIS'
+imask = 'AIS'
+# imask = 'EAIS'
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.4_precipitation/6.1.4.0_aprt/6.1.4.0.1_aprt_ann_circle/6.1.4.0.1 ' + expid[i] + ' ann circle aprt frc over ' + imask + '.png'
 
@@ -201,7 +207,6 @@ fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
 lgd_handles = []
 colors = ['royalblue', 'darkblue', 'deepskyblue', 'lightblue', ]
 regions = ['Antarctica', 'Land excl. Antarctica', 'SH sea ice', 'Open ocean']
-
 
 for count, iregion in enumerate(regions):
     print(str(count) + ': ' + iregion)
@@ -216,6 +221,11 @@ change_snsbar_width(ax, .7)
 
 plt.legend(
     handles=lgd_handles,
+    labels=[
+        'Antarctica:   $1.0 \; ± \; 0.07$',
+        'Other land:   $4.2 \; ± \; 0.28$',
+        'SH sea ice:   $11.5 \; ± \; 0.72$',
+        'Open ocean: $83.3 \; ± \; 0.80$'],
     loc='lower right', handlelength=1, framealpha = 1, )
 
 ax.set_xlabel('Fraction of precipitation over ' + imask + ' from each region [$\%$]')

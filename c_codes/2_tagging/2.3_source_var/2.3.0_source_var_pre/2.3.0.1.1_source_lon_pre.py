@@ -30,6 +30,7 @@ import pandas as pd
 from metpy.interpolate import cross_section
 from statsmodels.stats import multitest
 import pycircstat as circ
+from scipy.stats import circstd
 
 # plot
 import matplotlib as mpl
@@ -88,6 +89,7 @@ from a_basic_analysis.b_module.statistics import (
 
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
+    plt_mesh_pars,
 )
 
 # endregion
@@ -510,10 +512,9 @@ fig.savefig(output_png, dpi=1200)
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/6.1.3.1 ' + expid[i] + ' pre_weighted_lon am Antarctica + am aprt.png'
 
-pltlevel = np.arange(-180, 180 + 1e-4, 15)
-pltticks = np.arange(-180, 180 + 1e-4, 45)
-pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
-pltcmp = cm.get_cmap('twilight_shifted', len(pltlevel)-1).reversed()
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-180, cm_max=180, cm_interval1=30, cm_interval2=60,
+    cmap='twilight_shifted',)
 
 fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 7]) / 2.54)
 
@@ -534,19 +535,19 @@ plt2 = ax.contour(
     lon, lat,
     plt_data,
     levels=pltctr1, colors = 'blue', transform=ccrs.PlateCarree(),
-    linewidths=0.6, linestyles='dotted',
+    linewidths=0.5, linestyles='dotted',
 )
 ax.clabel(plt2, inline=1, colors='blue', fmt=remove_trailing_zero,
-          levels=pltctr1, inline_spacing=10, fontsize=8,)
+          levels=pltctr1, inline_spacing=10, fontsize=6,)
 
 plt3 = ax.contour(
     lon, lat,
     plt_data,
     levels=pltctr2, colors = 'blue', transform=ccrs.PlateCarree(),
-    linewidths=0.6, linestyles='solid',
+    linewidths=0.5, linestyles='solid',
 )
 ax.clabel(plt3, inline=1, colors='blue', fmt=remove_trailing_zero,
-          levels=pltctr2, inline_spacing=5, fontsize=8,)
+          levels=pltctr2, inline_spacing=5, fontsize=6,)
 
 cbar = fig.colorbar(
     plt1, ax=ax, aspect=30,
@@ -611,6 +612,100 @@ fig.savefig(output_png, dpi=1200)
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region plot pre_weighted_lon am_sm
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/6.1.3.1 ' + expid[i] + ' pre_weighted_lon am_sm_5 Antarctica.png'
+cbar_label1 = 'Relative source longitude [$°$]'
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-180, cm_max=180, cm_interval1=30, cm_interval2=60,
+    cmap='twilight_shifted',)
+ctr_level = np.array([4, 8, 12, 16, ])
+
+nrow = 1
+ncol = 5
+fm_right = 2 / (5.8*ncol + 2)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol + 2, 5.8*nrow+0.5]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.01, 'wspace': 0.01},)
+
+for jcol in range(ncol):
+    axs[jcol] = hemisphere_plot(
+        northextent=-50, ax_org = axs[jcol],
+        l45label = False, loceanarcs = False)
+    cplot_ice_cores(
+        major_ice_core_site.lon, major_ice_core_site.lat, axs[jcol])
+
+#-------- Am
+plt_mesh1 = axs[0].pcolormesh(
+    lon, lat,
+    calc_lon_diff(pre_weighted_lon[expid[i]]['am'], lon_2d),
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_ctr1 = axs[0].contour(
+    lon, lat.sel(lat=slice(-50, -90)),
+    circstd(pre_weighted_lon[expid[i]]['ann'].sel(lat=slice(-50, -90)),
+            high=360, low=0, axis=0, nan_policy='omit'),
+    levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='solid',)
+axs[0].clabel(
+    plt_ctr1, inline=1, colors='b', fmt=remove_trailing_zero,
+    levels=ctr_level, inline_spacing=10, fontsize=6,)
+plt.text(
+    0.5, 1.04, 'Annual mean', transform=axs[0].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+#-------- sm
+for iseason in range(len(seasons)):
+    axs[1 + iseason].pcolormesh(
+        lon, lat,
+        calc_lon_diff(
+            pre_weighted_lon[expid[i]]['sm'].sel(season=seasons[iseason]),
+            lon_2d),
+        norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+    
+    plt_ctr = axs[1 + iseason].contour(
+        lon, lat.sel(lat=slice(-50, -90)),
+        circstd(
+            pre_weighted_lon[expid[i]]['sea'].sel(
+            time=(pre_weighted_lon[expid[i]]['sea'].time.dt.month == \
+                seasons_last_num[iseason])
+            ).sel(lat=slice(-50, -90)),
+            high=360, low=0, axis=0, nan_policy='omit'),
+        levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+        linewidths=0.5, linestyles='solid',
+    )
+    axs[1 + iseason].clabel(
+        plt_ctr, inline=1, colors='b', fmt=remove_trailing_zero,
+        levels=ctr_level, inline_spacing=10, fontsize=6,)
+    
+    plt.text(
+        0.5, 1.04, seasons[iseason], transform=axs[1 + iseason].transAxes,
+        ha='center', va='center', rotation='horizontal')
+
+cbar1 = fig.colorbar(
+    plt_mesh1, ax=axs,
+    orientation="vertical",shrink=1,aspect=20,extend='neither', ticks=pltticks,
+    anchor=(1.45, 0.5))
+cbar1.ax.set_ylabel(cbar_label1, linespacing=2)
+
+fig.subplots_adjust(left=0.01, right = 1-fm_right, bottom = 0, top = 0.94)
+fig.savefig(output_png)
+
+
+
+
+'''
+# both are the same
+        circstd(calc_lon_diff(pre_weighted_lon[expid[i]]['ann'], lon_2d).sel(lat=slice(-50, -90)),
+                high=180, low=-180, axis=0, nan_policy='omit'),
+    circstd(pre_weighted_lon[expid[i]]['ann'].sel(lat=slice(-50, -90)),
+            high=360, low=0, axis=0, nan_policy='omit'),
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
 
 
 

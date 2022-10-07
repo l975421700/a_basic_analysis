@@ -455,7 +455,7 @@ ani.save(
 
 
 # -----------------------------------------------------------------------------
-# region plot q_weighted_lat am zonal mean
+# region plot q_weighted_lat am zm
 
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.5_source_var_q/6.1.5.0_lat/6.1.5.0 ' + expid[i] + ' q_weighted_lat am zm.png'
@@ -560,3 +560,90 @@ q_weighted_lat_am_zm = q_weighted_lat[expid[i]]['am'].weighted(
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot q_weighted_lat DJF - JJA zm
+
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.5_source_var_q/6.1.5.0_lat/6.1.5.0 ' + expid[i] + ' q_weighted_lat DJF-JJA zm.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-10, cm_max=10, cm_interval1=2, cm_interval2=2, cmap='PiYG',)
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([13.2, 8.8]) / 2.54)
+
+# mesh
+plt_mesh = ax.pcolormesh(
+    lat, plevs / 100,
+    q_weighted_lat[expid[i]]['sm'].sel(season='DJF').weighted(
+        ocean_q_alltime[expid[i]]['sm'].sel(
+            season='DJF', var_names='lat').fillna(0)
+        ).mean(dim='lon').sel(plev=slice(1e+5, 2e+4)) - \
+            q_weighted_lat[expid[i]]['sm'].sel(season='JJA').weighted(
+        ocean_q_alltime[expid[i]]['sm'].sel(
+            season='JJA', var_names='lat').fillna(0)
+        ).mean(dim='lon').sel(plev=slice(1e+5, 2e+4)),
+    norm=pltnorm, cmap=pltcmp,
+)
+
+# contours
+q_intervals = np.array([
+    -2, -1, -0.5, -0.1, -0.05, -0.01, 0, 0.01, 0.05, 0.1, 0.5, 1, 2])
+plt_ctr = ax.contour(
+    lat.sel(lat=slice(-30, -90)), plevs / 100,
+    (q_plev[expid[i]]['sm'].sel(season='DJF') - \
+        q_plev[expid[i]]['sm'].sel(season='JJA')).mean(dim='lon').sel(
+        lat_2=slice(-30, -90), plev=slice(1e+5, 2e+4)) * 1000,
+    colors='b', levels=q_intervals, linewidths=0.3, linestyle='-',
+    clip_on=True, zorder=2)
+ax_clabel = ax.clabel(
+    plt_ctr, inline=1, colors='b', fmt=remove_trailing_zero,
+    levels=q_intervals, inline_spacing=1, fontsize=6,)
+
+# x-axis
+ax.set_xticks(np.arange(-30, -90 - 1e-4, -10))
+ax.set_xlim(-30, -90)
+ax.xaxis.set_major_formatter(LatitudeFormatter(degree_symbol='° '))
+ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+
+# y-axis
+ax.invert_yaxis()
+ax.set_ylim(1000, 200)
+ax.set_ylabel('Pressure [$hPa$]')
+
+# grid
+ax.grid(True, lw=0.5, c='gray', alpha=0.5, linestyle='--', which='both',)
+
+# 2nd y-axis
+height = np.round(
+    pressure_to_height_std(
+        pressure=np.arange(1000, 200 - 1e-4, -100) * units('hPa')), 1,)
+ax2 = ax.twinx()
+ax2.invert_yaxis()
+ax2.set_ylim(1000, 200)
+ax2.set_yticklabels(np.flip(height.magnitude), c = 'gray')
+ax2.set_ylabel('Height assuming a standard atmosphere [$km$]', c = 'gray')
+
+# mesh cbar
+cbar = fig.colorbar(
+    plt_mesh, ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.6, ticks=pltticks, extend='both',
+    pad=0.02, fraction=0.25, anchor=(1.3, -0.6),)
+cbar.ax.set_xlabel('DJF - JJA source latitude [$°$]',)
+
+# contours legend
+h1, _ = plt_ctr.legend_elements()
+ax_legend = ax.legend(
+    [h1[-1]], ['DJF - JJA specific humidity [$g \; kg^{-1}$]'],
+    loc='lower left', frameon=False,
+    bbox_to_anchor=(-0.15, -0.25),
+    handlelength=1, columnspacing=1)
+
+fig.subplots_adjust(left=0.12, right=0.89, bottom=0.23, top=0.98)
+fig.savefig(output_png)
+
+# endregion
+# -----------------------------------------------------------------------------
+
+

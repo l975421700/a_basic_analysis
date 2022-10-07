@@ -1,6 +1,136 @@
 
 
 # -----------------------------------------------------------------------------
+# region plot mm aprt Antarctica
+
+
+#-------- basic set
+
+lon = wisoaprt_alltime[expid[i]]['am'].lon
+lat = wisoaprt_alltime[expid[i]]['am'].lat
+
+
+#-------- plot configuration
+output_png = 'figures/6_awi/6.1_echam6/6.1.4_extreme_precipitation/6.1.4.1_total_precipitation/' + '6.1.4.1 ' + expid[i] + ' aprt mm Antarctica.png'
+# cbar_label1 = 'Precipitation [$mm \; day^{-1}$]'
+cbar_label2 = 'Differences in precipitation [$\%$]'
+
+# pltlevel = np.array([0, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 6, 8, 10,])
+# pltticks = np.array([0, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 6, 8, 10,])
+# pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+# pltcmp = cm.get_cmap('BrBG', len(pltlevel)-1)
+
+
+pltlevel2 = np.arange(-50, 50 + 1e-4, 10)
+pltticks2 = np.arange(-50, 50 + 1e-4, 10)
+pltnorm2 = BoundaryNorm(pltlevel2, ncolors=len(pltlevel2)-1, clip=True)
+pltcmp2 = cm.get_cmap('PiYG', len(pltlevel2)-1).reversed()
+
+
+
+nrow = 3
+ncol = 4
+fm_bottom = 2 / (5.8*nrow + 2)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.1, 'wspace': 0.1},)
+
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(northextent=-60, ax_org = axs[irow, jcol])
+
+for jcol in range(ncol):
+    for irow in range(nrow):
+        plt_mesh1 = axs[irow, jcol].pcolormesh(
+            lon, lat, (wisoaprt_alltime[expid[i]]['mm'].sel(month=month_dec_num[jcol*3+irow])[0] / wisoaprt_alltime[expid[i]]['am'][0] - 1) * 100,
+            norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
+        
+        plt.text(
+            0.5, 1.05, month_dec[jcol*3+irow],
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        
+        print(str(month_dec_num[jcol*3+irow]) + ' ' + month_dec[jcol*3+irow])
+
+
+cbar2 = fig.colorbar(
+    plt_mesh1, ax=axs,
+    orientation="horizontal",shrink=0.5,aspect=40,extend='both',
+    anchor=(0.5, -0.5), ticks=pltticks2)
+cbar2.ax.set_xlabel(cbar_label2, linespacing=2)
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom*0.8, top = 0.98)
+fig.savefig(output_png)
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot mm sic Antarctica
+
+
+#-------- plot configuration
+output_png = 'figures/6_awi/6.1_echam6/6.1.4_extreme_precipitation/6.1.4.4_climate_fields/6.1.4.4 pi_alex sic mm Antarctica.png'
+cbar_label2 = 'Differences in sea ice concentration [$\%$]'
+
+pltlevel2 = np.arange(-50, 50 + 1e-4, 10)
+pltticks2 = np.arange(-50, 50 + 1e-4, 10)
+pltnorm2 = BoundaryNorm(pltlevel2, ncolors=len(pltlevel2)-1, clip=True)
+pltcmp2 = cm.get_cmap('BrBG', len(pltlevel2)-1)
+
+
+nrow = 3
+ncol = 4
+fm_bottom = 2 / (5.8*nrow + 2)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.1, 'wspace': 0.1},)
+
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(northextent=-45, ax_org = axs[irow, jcol])
+
+for jcol in range(ncol):
+    for irow in range(nrow):
+        # irow=0; jcol=0
+        plt_mesh1 = axs[irow, jcol].pcolormesh(
+            lon, lat,
+            seaice['pi_alex_alltime']['mm'].sel(time=(seaice['pi_alex_alltime']['mm'].time.dt.month == month_dec_num[jcol*3+irow])).squeeze() - seaice['pi_alex_alltime']['am'],
+            norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
+        
+        plt.text(
+            0.5, 1.05, month_dec[jcol*3+irow],
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        
+        print(str(month_dec_num[jcol*3+irow]) + ' ' + month_dec[jcol*3+irow])
+
+
+cbar2 = fig.colorbar(
+    plt_mesh1, ax=axs,
+    orientation="horizontal",shrink=0.5,aspect=40,extend='both',
+    anchor=(0.5, -0.5), ticks=pltticks2)
+cbar2.ax.set_xlabel(cbar_label2, linespacing=2)
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom*0.8, top = 0.98)
+fig.savefig(output_png)
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
 # region animate daily 2*2 djf+jja pre and daily pre-weighted longitude
 
 

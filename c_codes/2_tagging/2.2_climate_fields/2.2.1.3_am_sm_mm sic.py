@@ -85,6 +85,7 @@ from a_basic_analysis.b_module.statistics import (
 
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
+    plt_mesh_pars,
 )
 
 # endregion
@@ -370,68 +371,36 @@ fig.savefig(output_png)
 # -----------------------------------------------------------------------------
 
 
-
-
-
-
-
 # -----------------------------------------------------------------------------
-# region plot mm sic Antarctica
+# region plot am sic Antarctica
 
+output_png = 'figures/6_awi/6.1_echam6/6.1.2_climatology/6.1.2.1_sic/6.1.2.1 amip_pi sic am Antarctica.png'
 
-#-------- plot configuration
-output_png = 'figures/6_awi/6.1_echam6/6.1.4_extreme_precipitation/6.1.4.4_climate_fields/6.1.4.4 pi_alex sic mm Antarctica.png'
-cbar_label2 = 'Differences in sea ice concentration [$\%$]'
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=0, cm_max=100, cm_interval1=10, cm_interval2=10, cmap='Blues',
+    reversed=False)
 
-pltlevel2 = np.arange(-50, 50 + 1e-4, 10)
-pltticks2 = np.arange(-50, 50 + 1e-4, 10)
-pltnorm2 = BoundaryNorm(pltlevel2, ncolors=len(pltlevel2)-1, clip=True)
-pltcmp2 = cm.get_cmap('BrBG', len(pltlevel2)-1)
+fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 7.3]) / 2.54,)
+cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
 
+plt_mesh1 = ax.pcolormesh(
+    lon, lat,
+    boundary_conditions['am_sic']['pi'],
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 
-nrow = 3
-ncol = 4
-fm_bottom = 2 / (5.8*nrow + 2)
-
-fig, axs = plt.subplots(
-    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
-    subplot_kw={'projection': ccrs.SouthPolarStereo()},
-    gridspec_kw={'hspace': 0.1, 'wspace': 0.1},)
-
-for irow in range(nrow):
-    for jcol in range(ncol):
-        axs[irow, jcol] = hemisphere_plot(northextent=-45, ax_org = axs[irow, jcol])
-
-for jcol in range(ncol):
-    for irow in range(nrow):
-        # irow=0; jcol=0
-        plt_mesh1 = axs[irow, jcol].pcolormesh(
-            lon, lat,
-            seaice['pi_alex_alltime']['mm'].sel(time=(seaice['pi_alex_alltime']['mm'].time.dt.month == month_dec_num[jcol*3+irow])).squeeze() - seaice['pi_alex_alltime']['am'],
-            norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
-        
-        plt.text(
-            0.5, 1.05, month_dec[jcol*3+irow],
-            transform=axs[irow, jcol].transAxes,
-            ha='center', va='center', rotation='horizontal')
-        
-        print(str(month_dec_num[jcol*3+irow]) + ' ' + month_dec[jcol*3+irow])
-
-
-cbar2 = fig.colorbar(
-    plt_mesh1, ax=axs,
-    orientation="horizontal",shrink=0.5,aspect=40,extend='both',
-    anchor=(0.5, -0.5), ticks=pltticks2)
-cbar2.ax.set_xlabel(cbar_label2, linespacing=2)
-
-fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom*0.8, top = 0.98)
+cbar = fig.colorbar(
+    plt_mesh1, ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='neither',
+    pad=0.02, fraction=0.15,
+    )
+cbar.ax.set_xlabel('Sea ice concentration (SIC) [$\%$]', linespacing=1.5,)
 fig.savefig(output_png)
 
 
-'''
-'''
 # endregion
 # -----------------------------------------------------------------------------
+
+
 
 
 

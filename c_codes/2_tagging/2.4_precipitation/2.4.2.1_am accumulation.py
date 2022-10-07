@@ -157,9 +157,10 @@ plt_data3 = (regrid(plt_data1) / regrid(plt_data2) - 1).compute() * 100
 
 plt_std1 = ((wisoaprt_alltime[expid[i]]['ann'][:, 0] + \
     wisoevap_alltime[expid[i]]['ann'][:, 0]).std(
-        dim = 'time') * seconds_per_d / plt_data1 * 100).compute()
+        dim = 'time', ddof=1) * seconds_per_d / plt_data1 * 100).compute()
 plt_std2 = (acc_recon_ERAI.recon_acc_bc.sel(
-    years=slice(100, 200)).std(dim='years') / 365 / plt_data2 * 100).compute()
+    years=slice(100, 200)).std(
+        dim='years', ddof=1) / 365 / plt_data2 * 100).compute()
 # stats.describe(plt_std1, axis=None, nan_policy='omit')
 # stats.describe(plt_std2, axis=None, nan_policy='omit')
 
