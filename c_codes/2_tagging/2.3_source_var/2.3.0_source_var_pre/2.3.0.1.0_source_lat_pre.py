@@ -583,8 +583,8 @@ fig.savefig(output_png)
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.0_lat/6.1.3.0 ' + expid[i] + ' pre_weighted_lat DJF-JJA Antarctica.png'
 
-pltlevel = np.arange(-10, 10 + 1e-4, 2)
-pltticks = np.arange(-10, 10 + 1e-4, 2)
+pltlevel = np.arange(-6, 6 + 1e-4, 1)
+pltticks = np.arange(-6, 6 + 1e-4, 1)
 pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
 pltcmp = cm.get_cmap('PiYG', len(pltlevel)-1).reversed()
 

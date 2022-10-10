@@ -168,10 +168,10 @@ ctr_level = np.arange(0, 40 + 1e-4, 10)
 
 nrow = 1
 ncol = 3
-fm_bottom = 2 / (5.8*nrow + 2)
+fm_bottom = 2.5 / (5.8*nrow + 2)
 
 fig, axs = plt.subplots(
-    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2.5]) / 2.54,
     subplot_kw={'projection': ccrs.SouthPolarStereo()},
     gridspec_kw={'hspace': 0.05, 'wspace': 0.05},)
 
@@ -198,7 +198,7 @@ axs[1].pcolormesh(
     plt_data2,
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 
-# #-------- differences
+#-------- differences
 plt2 = axs[2].pcolormesh(
     plt_data3.lon,
     plt_data3.lat,
@@ -240,16 +240,22 @@ plt.text(
 cbar1 = fig.colorbar(
     plt1, ax=axs,
     orientation="horizontal",shrink=0.5,aspect=40,extend='max',
-    anchor=(-0.2, 0.4), ticks=pltticks, format=remove_trailing_zero_pos, )
+    anchor=(-0.2, 1), ticks=pltticks, format=remove_trailing_zero_pos, )
 cbar1.ax.set_xlabel(cbar_label1, linespacing=2)
 
 cbar2 = fig.colorbar(
     plt2, ax=axs,
     orientation="horizontal",shrink=0.5,aspect=40,extend='max',
-    anchor=(1.1,-3.3),ticks=pltticks2)
+    anchor=(1.1,-2.2),ticks=pltticks2)
 cbar2.ax.set_xlabel(cbar_label2, linespacing=2)
 
-fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom * 0.8, top = 0.94)
+h1, _ = plt_ctr1.legend_elements()
+plt.legend(
+    [h1[0]], ['Percentage [$\%$] of annual standard deviation to annual mean accumulation'],
+    bbox_to_anchor = (0.5, -0.25), frameon=False)
+
+fig.subplots_adjust(
+    left=0.01, right = 0.99, bottom = fm_bottom * 0.8, top = 0.94)
 fig.savefig(output_png)
 
 '''

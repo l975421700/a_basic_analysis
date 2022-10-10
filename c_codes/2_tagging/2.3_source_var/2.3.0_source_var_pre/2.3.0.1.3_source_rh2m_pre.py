@@ -32,6 +32,7 @@ from statsmodels.stats import multitest
 import pycircstat as circ
 
 # plot
+import proplot as pplt
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm
@@ -44,6 +45,7 @@ mpl.rcParams['axes.linewidth'] = 0.2
 plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
+from matplotlib.ticker import AutoMinorLocator
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -189,8 +191,8 @@ fig.savefig(output_png, dpi=1200)
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.3_rh2m/6.1.3.3 ' + expid[i] + ' pre_weighted_rh2m DJF-JJA Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=0, cm_max=10, cm_interval1=1, cm_interval2=1, cmap='Purples',
-    reversed=False)
+    cm_min=0, cm_max=8, cm_interval1=1, cm_interval2=1, cmap='Purples')
+pltcmp = pplt.Colormap('DryWet', samples=len(pltlevel)-1)
 
 fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 7]) / 2.54,)
 
@@ -217,6 +219,7 @@ cbar = fig.colorbar(
     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
     pad=0.02, fraction=0.15,
     )
+cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel('DJF - JJA source rh2m [$\%$]', linespacing=2)
 fig.savefig(output_png, dpi=1200)

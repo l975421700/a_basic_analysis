@@ -36,6 +36,7 @@ from geopy.distance import geodesic, great_circle
 from haversine import haversine, haversine_vector
 
 # plot
+import proplot as pplt
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm
@@ -48,6 +49,7 @@ mpl.rcParams['axes.linewidth'] = 0.2
 plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
+from matplotlib.ticker import AutoMinorLocator
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -170,7 +172,7 @@ cbar = fig.colorbar(
     pad=0.02, fraction=0.15,
     )
 cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel('Transport distance [$10^{3} \; km$]', linespacing=2)
+cbar.ax.set_xlabel('Travel distance [$10^{3} \; km$]', linespacing=2)
 fig.savefig(output_png, dpi=1200)
 
 
@@ -188,6 +190,7 @@ output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.5_transport_distan
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=-2, cm_max=2, cm_interval1=0.5, cm_interval2=0.5, cmap='PRGn',)
+pltcmp = pplt.Colormap('Curl', samples=len(pltlevel)-1)
 
 fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 7]) / 2.54,)
 
@@ -214,7 +217,8 @@ cbar = fig.colorbar(
     pad=0.02, fraction=0.15,
     )
 cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel('DJF - JJA transport distance [$10^{3} \; km$]', linespacing=2)
+cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
+cbar.ax.set_xlabel('DJF - JJA travel distance [$10^{3} \; km$]', linespacing=2)
 fig.savefig(output_png, dpi=1200)
 
 # endregion

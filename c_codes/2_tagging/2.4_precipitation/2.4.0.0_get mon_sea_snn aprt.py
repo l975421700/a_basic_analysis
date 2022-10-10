@@ -967,7 +967,9 @@ itags = [5, 7, 8, 9, 11, 12]
 
 ocean_aprt = {}
 ocean_aprt[expid[i]] = xr.DataArray(
-    data = np.zeros((len(time), len(var_names), len(lat), len(lon))),
+    data = np.zeros(
+        (len(time), len(var_names), len(lat), len(lon)),
+        dtype=np.float32),
     coords={
         'time':         time,
         'var_names':    var_names,

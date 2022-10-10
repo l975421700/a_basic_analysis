@@ -33,6 +33,7 @@ import pycircstat as circ
 from scipy.stats import circstd
 
 # plot
+import proplot as pplt
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm
@@ -45,6 +46,7 @@ mpl.rcParams['axes.linewidth'] = 0.2
 plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
+from matplotlib.ticker import AutoMinorLocator
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -131,7 +133,7 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_c
 
 
 # -----------------------------------------------------------------------------
-# region plot pre_weighted_lon am/sm
+# region plot rel. pre_weighted_lon am/sm
 
 
 #-------- plot configuration
@@ -302,7 +304,7 @@ fig.savefig(output_png)
 
 
 # -----------------------------------------------------------------------------
-# region plot pre_weighted_lon am/sm Antarctica
+# region plot rel. pre_weighted_lon am/sm Antarctica
 
 
 #-------- plot configuration
@@ -471,41 +473,7 @@ fig.savefig(output_png)
 
 
 # -----------------------------------------------------------------------------
-# region plot pre_weighted_lon am
-
-output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/6.1.3.1 ' + expid[i] + ' pre_weighted_lon am Antarctica.png'
-
-pltlevel = np.arange(-180, 180 + 1e-4, 15)
-pltticks = np.arange(-180, 180 + 1e-4, 45)
-pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
-pltcmp = cm.get_cmap('twilight_shifted', len(pltlevel)-1).reversed()
-
-fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 7]) / 2.54)
-
-cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
-
-plt1 = ax.pcolormesh(
-    lon,
-    lat,
-    calc_lon_diff(pre_weighted_lon[expid[i]]['am'], lon_2d),
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-
-cbar = fig.colorbar(
-    plt1, ax=ax, aspect=30,
-    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='neither',
-    pad=0.02, fraction=0.15,
-    )
-cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel('Relative source longitude [$°$]', linespacing=2)
-fig.savefig(output_png, dpi=1200)
-
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot pre_weighted_lon am + am aprt
+# region plot rel. pre_weighted_lon am + am aprt
 
 
 #-------------------------------- add am pre
@@ -564,7 +532,7 @@ fig.savefig(output_png, dpi=1200)
 
 
 # -----------------------------------------------------------------------------
-# region plot pre_weighted_lon DJF-JJA
+# region plot rel. pre_weighted_lon DJF-JJA
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/6.1.3.1 ' + expid[i] + ' pre_weighted_lon DJF-JJA Antarctica.png'
 
@@ -613,7 +581,7 @@ fig.savefig(output_png, dpi=1200)
 
 
 # -----------------------------------------------------------------------------
-# region plot pre_weighted_lon am_sm
+# region plot rel. pre_weighted_lon am_sm
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/6.1.3.1 ' + expid[i] + ' pre_weighted_lon am_sm_5 Antarctica.png'
 cbar_label1 = 'Relative source longitude [$°$]'
@@ -704,6 +672,66 @@ fig.savefig(output_png)
             high=360, low=0, axis=0, nan_policy='omit'),
 
 '''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot pre_weighted_lon am + am aprt
+
+
+#-------------------------------- add am pre
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/6.1.3.1 ' + expid[i] + ' abs. pre_weighted_lon am Antarctica + am aprt.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=0, cm_max=360, cm_interval1=20, cm_interval2=60,
+    cmap='BrBG',)
+
+fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 7]) / 2.54)
+
+cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+
+plt1 = ax.pcolormesh(
+    lon,
+    lat,
+    pre_weighted_lon[expid[i]]['am'],
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+# plot am aprt
+pltctr1 = np.array([0.05, 0.1, 0.5, ])
+pltctr2 = np.array([1, 2, 4, ])
+plt_data = wisoaprt_alltime[expid[i]]['am'][0] * seconds_per_d
+
+plt2 = ax.contour(
+    lon, lat,
+    plt_data,
+    levels=pltctr1, colors = 'blue', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='dotted',
+)
+ax.clabel(plt2, inline=1, colors='blue', fmt=remove_trailing_zero,
+          levels=pltctr1, inline_spacing=10, fontsize=6,)
+
+plt3 = ax.contour(
+    lon, lat,
+    plt_data,
+    levels=pltctr2, colors = 'blue', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='solid',
+)
+ax.clabel(plt3, inline=1, colors='blue', fmt=remove_trailing_zero,
+          levels=pltctr2, inline_spacing=5, fontsize=6,)
+
+cbar = fig.colorbar(
+    plt1, ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='neither',
+    pad=0.02, fraction=0.15,
+    )
+cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
+cbar.ax.tick_params(labelsize=8)
+cbar.ax.set_xlabel('Source longitude [$°$]', linespacing=2)
+fig.savefig(output_png, dpi=1200)
+
+
 # endregion
 # -----------------------------------------------------------------------------
 

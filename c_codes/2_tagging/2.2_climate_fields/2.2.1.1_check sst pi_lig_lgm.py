@@ -434,7 +434,7 @@ fig.savefig(output_png)
 output_png = 'figures/6_awi/6.1_echam6/6.1.2_climatology/6.1.2.0_sst/6.1.2.0 amip_pi sst am Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=0, cm_max=32, cm_interval1=2, cm_interval2=4, cmap='RdBu',)
+    cm_min=-2, cm_max=26, cm_interval1=2, cm_interval2=4, cmap='RdBu',)
 
 fig, ax = hemisphere_plot(northextent=-20, figsize=np.array([5.8, 7.3]) / 2.54,)
 cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)

@@ -103,12 +103,10 @@ from a_basic_analysis.b_module.component_plot import (
 # region import data
 
 pre_weighted_lon = {}
-
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lon.pkl', 'rb') as f:
     pre_weighted_lon[expid[i]] = pickle.load(f)
 
 pre_weighted_lat = {}
-
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lat.pkl', 'rb') as f:
     pre_weighted_lat[expid[i]] = pickle.load(f)
 

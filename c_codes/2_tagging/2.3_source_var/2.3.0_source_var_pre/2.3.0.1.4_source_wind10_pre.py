@@ -32,6 +32,7 @@ from statsmodels.stats import multitest
 import pycircstat as circ
 
 # plot
+import proplot as pplt
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm
@@ -44,6 +45,7 @@ mpl.rcParams['axes.linewidth'] = 0.2
 plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
+from matplotlib.ticker import AutoMinorLocator
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -130,7 +132,7 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_allti
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.4_wind10/6.1.3.4 ' + expid[i] + ' pre_weighted_wind10 am Antarctica + am aprt.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=9, cm_max=12, cm_interval1=0.5, cm_interval2=0.5, cmap='PiYG',)
+    cm_min=10, cm_max=12, cm_interval1=0.25, cm_interval2=0.25, cmap='PiYG',)
 
 fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 7]) / 2.54,)
 
@@ -189,7 +191,8 @@ fig.savefig(output_png, dpi=1200)
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.4_wind10/6.1.3.4 ' + expid[i] + ' pre_weighted_wind10 DJF-JJA Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-4, cm_max=0, cm_interval1=0.5, cm_interval2=0.5, cmap='Greens',)
+    cm_min=-3, cm_max=-1, cm_interval1=0.25, cm_interval2=0.25, cmap='Greens',)
+pltcmp = pplt.Colormap('broc', samples=len(pltlevel)-1)
 
 fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 7]) / 2.54,)
 
@@ -217,6 +220,7 @@ cbar = fig.colorbar(
     pad=0.02, fraction=0.15,
     )
 cbar.ax.tick_params(labelsize=8)
+cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.set_xlabel('DJF - JJA source wind10 [$m \; s^{-1}$]', linespacing=2)
 fig.savefig(output_png, dpi=1200)
 

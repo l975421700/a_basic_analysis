@@ -475,6 +475,7 @@ def framework_plot1(
 # https://www.naturalearthdata.com/downloads/
 
 fig, ax = framework_plot1('global')
+ax.background_img(name='natural_earth', resolution='high')
 fig.savefig('trial.png')
 
 import os
@@ -644,7 +645,7 @@ def hemisphere_plot(
     add_grid=True, grid_color='gray', add_grid_labels = False,
     plot_scalebar=False, sb_bars=2, sb_length=1000, sb_location=(-0.13, 0),
     sb_barheight=100, sb_linewidth=0.15, sb_middle_label=False,
-    l45label = False, loceanarcs = False, llatlabel = False,
+    l45label = True, loceanarcs = False, llatlabel = False,
     ):
     '''
     ----Input

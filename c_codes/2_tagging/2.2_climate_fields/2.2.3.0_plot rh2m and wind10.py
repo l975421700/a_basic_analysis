@@ -126,7 +126,7 @@ major_ice_core_site = major_ice_core_site.loc[
 output_png = 'figures/6_awi/6.1_echam6/6.1.2_climatology/6.1.2.3_rh2m/6.1.2.3 ' + expid[i] + ' rh2m am Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=60, cm_max=90, cm_interval1=2.5, cm_interval2=5, cmap='PRGn',
+    cm_min=60, cm_max=110, cm_interval1=5, cm_interval2=10, cmap='PRGn',
     reversed=False)
 
 fig, ax = hemisphere_plot(northextent=-20, figsize=np.array([5.8, 7.3]) / 2.54,)
@@ -160,7 +160,7 @@ rh2m_alltime[expid[i]]['am'].to_netcdf('scratch/test/test.nc')
 output_png = 'figures/6_awi/6.1_echam6/6.1.2_climatology/6.1.2.4_wind10/6.1.2.4 ' + expid[i] + ' wind10 am Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=0, cm_max=14, cm_interval1=1, cm_interval2=2, cmap='PiYG')
+    cm_min=1, cm_max=13, cm_interval1=1, cm_interval2=1, cmap='PiYG')
 
 fig, ax = hemisphere_plot(northextent=-20, figsize=np.array([5.8, 7.3]) / 2.54,)
 cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
