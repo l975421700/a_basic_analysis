@@ -102,16 +102,13 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-rh2m_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.rh2m_alltime.pkl', 'rb') as f:
-    rh2m_alltime[expid[i]] = pickle.load(f)
 
-wind10_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wind10_alltime.pkl', 'rb') as f:
-    wind10_alltime[expid[i]] = pickle.load(f)
+temp2_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
+    temp2_alltime[expid[i]] = pickle.load(f)
 
-lon = wind10_alltime[expid[i]]['am'].lon
-lat = wind10_alltime[expid[i]]['am'].lat
+lon = temp2_alltime[expid[i]]['am'].lon
+lat = temp2_alltime[expid[i]]['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
 major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
@@ -123,20 +120,19 @@ major_ice_core_site = major_ice_core_site.loc[
 
 
 # -----------------------------------------------------------------------------
-# region plot am rh2m
+# region plot am temp2 Antarctica
 
-output_png = 'figures/6_awi/6.1_echam6/6.1.2_climatology/6.1.2.3_rh2m/6.1.2.3 ' + expid[i] + ' rh2m am Antarctica.png'
+output_png = 'figures/6_awi/6.1_echam6/6.1.2_climatology/6.1.2.5_temp2/6.1.2.5 ' + expid[i] + ' temp2 am Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=60, cm_max=110, cm_interval1=5, cm_interval2=10, cmap='PRGn',
-    reversed=False)
+    cm_min=-60, cm_max=30, cm_interval1=5, cm_interval2=10, cmap='RdBu')
 
 fig, ax = hemisphere_plot(northextent=-20, figsize=np.array([5.8, 7.3]) / 2.54,)
 cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
 
 plt_mesh1 = ax.pcolormesh(
     lon, lat,
-    rh2m_alltime[expid[i]]['am'] * 100,
+    temp2_alltime[expid[i]]['am'],
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 
 cbar = fig.colorbar(
@@ -144,73 +140,45 @@ cbar = fig.colorbar(
     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
     pad=0.02, fraction=0.15,
     )
-cbar.ax.set_xlabel('2-metre relative humidity (rh2m) [$\%$]', linespacing=1.5,)
+cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
+cbar.ax.set_xlabel('2-metre air temperature (temp2) [$°C$]', linespacing=1.5,)
 fig.savefig(output_png)
 
 
 
+
+
+
 '''
-rh2m_alltime[expid[i]]['am'].to_netcdf('scratch/test/test.nc')
+stats.describe(temp2_alltime[expid[i]]['am'].sel(lat=slice(-20, -90)),
+               axis=None, nan_policy='omit')
+
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region plot am wind10m
+# region plot DJF-JJA temp2 Antarctica
 
-output_png = 'figures/6_awi/6.1_echam6/6.1.2_climatology/6.1.2.4_wind10/6.1.2.4 ' + expid[i] + ' wind10 am Antarctica.png'
-
-pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=1, cm_max=13, cm_interval1=1, cm_interval2=1, cmap='PiYG')
-
-fig, ax = hemisphere_plot(northextent=-20, figsize=np.array([5.8, 7.3]) / 2.54,)
-cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
-
-plt_mesh1 = ax.pcolormesh(
-    lon, lat,
-    wind10_alltime[expid[i]]['am'],
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-
-cbar = fig.colorbar(
-    plt_mesh1, ax=ax, aspect=30,
-    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
-    pad=0.02, fraction=0.15,
-    )
-cbar.ax.set_xlabel('10-metre wind speed (wind10) [$m\;s^{-1}$]',
-                   linespacing=1.5,)
-fig.savefig(output_png)
-
-
-
-'''
-rh2m_alltime[expid[i]]['am'].to_netcdf('scratch/test/test.nc')
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot DJF-JJA rh2m
-
-output_png = 'figures/6_awi/6.1_echam6/6.1.2_climatology/6.1.2.3_rh2m/6.1.2.3 ' + expid[i] + ' rh2m DJF-JJA Antarctica.png'
+output_png = 'figures/6_awi/6.1_echam6/6.1.2_climatology/6.1.2.5_temp2/6.1.2.5 ' + expid[i] + ' temp2 DJF-JJA Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-20, cm_max=20, cm_interval1=5, cm_interval2=5, cmap='RdBu',
+    cm_min=0, cm_max=28, cm_interval1=2, cm_interval2=4, cmap='Oranges',
     reversed=False)
-pltcmp = pplt.Colormap('DryWet', samples=len(pltlevel)-1)
+pltcmp = pplt.Colormap('coolwarm', samples=len(pltlevel)-1)
 
 fig, ax = hemisphere_plot(northextent=-20, figsize=np.array([5.8, 7.3]) / 2.54,)
 cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
 
 plt_mesh1 = ax.pcolormesh(
     lon, lat,
-    (rh2m_alltime[expid[i]]['sm'].sel(season='DJF') - \
-        rh2m_alltime[expid[i]]['sm'].sel(season='JJA')) * 100,
+    temp2_alltime[expid[i]]['sm'].sel(season='DJF') - \
+        temp2_alltime[expid[i]]['sm'].sel(season='JJA'),
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 ttest_fdr_res = ttest_fdr_control(
-    rh2m_alltime[expid[i]]['sea'][3::4],
-    rh2m_alltime[expid[i]]['sea'][1::4]
+    temp2_alltime[expid[i]]['sea'][3::4],
+    temp2_alltime[expid[i]]['sea'][1::4]
     )
 ax.scatter(
     x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
@@ -224,62 +192,18 @@ cbar = fig.colorbar(
     pad=0.02, fraction=0.15,
     )
 cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
-cbar.ax.set_xlabel('DJF - JJA rh2m [$\%$]', linespacing=1.5,)
+cbar.ax.set_xlabel('DJF - JJA temp2 [$°C$]', linespacing=1.5,)
 fig.savefig(output_png)
 
 
-
 '''
-((rh2m_alltime[expid[i]]['sm'].sel(season='DJF') - \
-        rh2m_alltime[expid[i]]['sm'].sel(season='JJA')) * 100).to_netcdf('scratch/test/test.nc')
+stats.describe((temp2_alltime[expid[i]]['sm'].sel(season='DJF') - \
+        temp2_alltime[expid[i]]['sm'].sel(season='JJA')).sel(lat=slice(-20, -90)),
+               axis=None, nan_policy='omit')
+
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
-
-# -----------------------------------------------------------------------------
-# region plot DJF-JJA wind10m
-
-output_png = 'figures/6_awi/6.1_echam6/6.1.2_climatology/6.1.2.4_wind10/6.1.2.4 ' + expid[i] + ' wind10 DJF-JJA Antarctica.png'
-
-pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-4, cm_max=4, cm_interval1=1, cm_interval2=1, cmap='PiYG',)
-pltcmp = pplt.Colormap('broc', samples=len(pltlevel)-1)
-
-fig, ax = hemisphere_plot(northextent=-20, figsize=np.array([5.8, 7.3]) / 2.54,)
-cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
-
-plt_mesh1 = ax.pcolormesh(
-    lon, lat,
-    wind10_alltime[expid[i]]['sm'].sel(season='DJF') - \
-        wind10_alltime[expid[i]]['sm'].sel(season='JJA'),
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-ttest_fdr_res = ttest_fdr_control(
-    wind10_alltime[expid[i]]['sea'][3::4],
-    wind10_alltime[expid[i]]['sea'][1::4]
-    )
-ax.scatter(
-    x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
-    s=0.5, c='k', marker='.', edgecolors='none',
-    transform=ccrs.PlateCarree(),
-    )
-
-cbar = fig.colorbar(
-    plt_mesh1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
-    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
-    pad=0.02, fraction=0.15,
-    )
-cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
-cbar.ax.set_xlabel('DJF - JJA wind10 [$m\;s^{-1}$]',
-                   linespacing=1.5,)
-fig.savefig(output_png)
-
-
-
-'''
-rh2m_alltime[expid[i]]['am'].to_netcdf('scratch/test/test.nc')
-'''
-# endregion
-# -----------------------------------------------------------------------------
 
 

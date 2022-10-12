@@ -1,6 +1,177 @@
 
 
 # -----------------------------------------------------------------------------
+# region plot am aprt Antarctica
+
+#-------- basic settings
+
+pltctr1 = np.array([0.004, 0.008, 0.05, 0.1, 0.5, ])
+pltctr2 = np.array([1, 2, 4, 8, ])
+
+plt_data = wisoaprt_alltime[expid[i]]['am'][0].values * seconds_per_d
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.4_precipitation/6.1.4.0_aprt/6.1.4.0.2_spatiotemporal_dist/6.1.4.0.2 ' + expid[i] + ' am aprt Antarctica.png'
+
+#-------- plot
+
+fig, ax = hemisphere_plot(
+    northextent=-60, figsize=np.array([5.8, 6.5]) / 2.54, lw=0.1,
+    fm_bottom=0.1, fm_top=0.99)
+
+cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+
+plt2 = ax.contour(
+    lon, lat,
+    plt_data,
+    levels=pltctr1, colors = 'b', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='dotted',
+)
+ax.clabel(plt2, inline=1, colors='b', fmt=remove_trailing_zero,
+          levels=pltctr1, inline_spacing=10, fontsize=7,)
+
+plt3 = ax.contour(
+    lon, lat,
+    plt_data,
+    levels=pltctr2, colors = 'b', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='solid',
+)
+ax.clabel(plt3, inline=1, colors='b', fmt=remove_trailing_zero,
+          levels=pltctr2, inline_spacing=10, fontsize=7,)
+
+plt.text(
+    0.5, -0.08, 'Annual mean precipitation [$mm \; day^{-1}$]',
+    transform=ax.transAxes, ha='center', va='center', rotation='horizontal')
+
+fig.savefig(output_png)
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot psl and u/v in ECHAM
+
+
+uv_plev = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.uv_plev.pkl', 'rb') as f:
+    uv_plev[expid[i]] = pickle.load(f)
+
+psl_zh = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.psl_zh.pkl', 'rb') as f:
+    psl_zh[expid[i]] = pickle.load(f)
+
+moisture_flux = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.moisture_flux.pkl', 'rb') as f:
+    moisture_flux[expid[i]] = pickle.load(f)
+
+
+#-------- plot configuration
+output_png = 'figures/6_awi/6.1_echam6/6.1.4_extreme_precipitation/6.1.4.3_moisture_transport/' + '6.1.4.3 ' + expid[i] + ' am psl and 850hPa wind Antarctica.png'
+
+plt_pres = psl_zh[expid[i]]['psl']['am'] / 100
+pres_interval = 5
+pres_intervals = np.arange(
+    np.floor(np.min(plt_pres) / pres_interval - 1) * pres_interval,
+    np.ceil(np.max(plt_pres) / pres_interval + 1) * pres_interval,
+    pres_interval)
+
+pltlevel = np.arange(-6, 6 + 1e-4, 0.5)
+pltticks = np.arange(-6, 6 + 1e-4, 1)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+pltcmp = cm.get_cmap('PiYG', len(pltlevel)-1).reversed()
+
+
+fig, ax = hemisphere_plot(
+    northextent=-45,
+    figsize=np.array([5.8, 8.8]) / 2.54,
+    fm_bottom=0.13,
+    )
+
+plt_ctr = ax.contour(
+    plt_pres.lon, plt_pres.lat, plt_pres,
+    colors='b', levels=pres_intervals, linewidths=0.2,
+    transform=ccrs.PlateCarree(), clip_on=True)
+ax_clabel = ax.clabel(
+    plt_ctr, inline=1, colors='b', fmt='%d',
+    levels=pres_intervals, inline_spacing=10, fontsize=6)
+h1, _ = plt_ctr.legend_elements()
+ax_legend = ax.legend(
+    [h1[0]], ['Mean sea level pressure [$hPa$]'],
+    loc='lower center', frameon=False,
+    bbox_to_anchor=(0.5, -0.14),
+    handlelength=1, columnspacing=1)
+
+# plot H/L symbols
+plot_maxmin_points(
+    plt_pres.lon, plt_pres.lat, plt_pres,
+    ax, 'max', 150, symbol='H', color='b',
+    transform=ccrs.PlateCarree(),)
+plot_maxmin_points(
+    plt_pres.lon, plt_pres.lat, plt_pres,
+    ax, 'min', 150, symbol='L', color='r',
+    transform=ccrs.PlateCarree(),)
+
+# plot wind arrows
+iarrow = 2
+plt_quiver = ax.quiver(
+    plt_pres.lon[::iarrow], plt_pres.lat[::iarrow],
+    uv_plev[expid[i]]['u']['am'].sel(plev=85000).values[::iarrow, ::iarrow],
+    uv_plev[expid[i]]['v']['am'].sel(plev=85000).values[::iarrow, ::iarrow],
+    color='gray', units='height', scale=600,
+    width=0.002, headwidth=3, headlength=5, alpha=1,
+    transform=ccrs.PlateCarree(),)
+
+ax.quiverkey(plt_quiver, X=0.15, Y=-0.14, U=10,
+             label='10 [$m \; s^{-1}$]    850 $hPa$ wind',
+             labelpos='E', labelsep=0.05,)
+
+plt_mesh = ax.pcolormesh(
+    moisture_flux[expid[i]]['meridional']['am'].lon,
+    moisture_flux[expid[i]]['meridional']['am'].lat,
+    moisture_flux[expid[i]]['meridional']['am'].sel(plev=85000) * 10**3,
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),
+    zorder = -2)
+
+cbar1 = fig.colorbar(
+    plt_mesh, ax=ax,
+    fraction=0.1,
+    orientation="horizontal",shrink=1,aspect=40,extend='both',
+    anchor=(0.5, 0.9), ticks=pltticks)
+cbar1.ax.set_xlabel('Meridional moisture flux at 850 $hPa$\n[$10^{-3} \; kg\;kg^{-1} \; m\;s^{-1}$]', linespacing=1.5)
+
+fig.savefig(output_png)
+
+
+
+'''
+stats.describe(abs(moisture_flux[expid[i]]['meridional']['am'].sel(plev=85000, lat=slice(-60, -90)) * 10**3),
+               axis=None, nan_policy='omit')
+
+(np.isfinite(uv_plev[expid[i]]['u']['am'].sel(plev=85000)) == np.isfinite(uv_plev[expid[i]]['v']['am'].sel(plev=85000))).all()
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region calculate mon_sea_ann psl in ERA5
+
+psl_era5_79_14 = xr.open_dataset('scratch/cmip6/hist/psl/psl_ERA5_mon_sl_197901_201412.nc')
+
+psl_era5_79_14_alltime = mon_sea_ann(var_monthly=psl_era5_79_14.msl)
+
+with open('scratch/cmip6/hist/psl/psl_era5_79_14_alltime.pkl', 'wb') as f:
+    pickle.dump(psl_era5_79_14_alltime, f)
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
 # region plot rel. pre_weighted_lon am
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/6.1.3.1 ' + expid[i] + ' pre_weighted_lon am Antarctica.png'

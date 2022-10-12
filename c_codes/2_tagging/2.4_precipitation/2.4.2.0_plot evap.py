@@ -32,6 +32,7 @@ from statsmodels.stats import multitest
 import pycircstat as circ
 
 # plot
+import proplot as pplt
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm
@@ -44,6 +45,7 @@ mpl.rcParams['axes.linewidth'] = 0.2
 plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
+from matplotlib.ticker import AutoMinorLocator
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -539,8 +541,84 @@ fig.savefig(output_png)
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region plot am evap Antarctica
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.4_precipitation/6.1.4.1_evap/6.1.4.1 ' + expid[i] + ' evap am Antarctica.png'
+
+pltlevel = np.array([0, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 6, 8,])
+pltticks = np.array([0, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 6, 8,])
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+pltcmp = cm.get_cmap('BrBG', len(pltlevel)-1)
+
+fig, ax = hemisphere_plot(northextent=-20, figsize=np.array([5.8, 7.3]) / 2.54,)
+cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+
+plt_mesh1 = ax.pcolormesh(
+    lon, lat,
+    wisoevap_alltime[expid[i]]['am'][0] * seconds_per_d * (-1),
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    plt_mesh1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.95, ticks=pltticks, extend='both',
+    pad=0.02, fraction=0.15,
+    )
+cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
+cbar.ax.set_xlabel('Evaporation [$mm \; day^{-1}$]', linespacing=1.5,)
+fig.savefig(output_png)
 
 
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot DJF-JJA evap Antarctica
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.4_precipitation/6.1.4.1_evap/6.1.4.1 ' + expid[i] + ' evap DJF-JJA Antarctica.png'
+
+pltlevel = np.arange(-100, 100 + 1e-4, 20)
+pltticks = np.arange(-100, 100 + 1e-4, 40)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+pltcmp = cm.get_cmap('PiYG', len(pltlevel)-1).reversed()
+
+fig, ax = hemisphere_plot(northextent=-20, figsize=np.array([5.8, 7.3]) / 2.54,)
+cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+
+plt_mesh1 = ax.pcolormesh(
+    lon, lat,
+    100 * (wisoevap_alltime[expid[i]]['sm'].sel(season='DJF', wisotype=1) / \
+        wisoevap_alltime[expid[i]]['sm'].sel(season='JJA', wisotype=1) - 1),
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+ttest_fdr_res = ttest_fdr_control(
+    wisoevap_alltime[expid[i]]['sea'][3::4, 0],
+    wisoevap_alltime[expid[i]]['sea'][1::4, 0],
+    )
+ax.scatter(
+    x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
+    s=0.5, c='k', marker='.', edgecolors='none',
+    transform=ccrs.PlateCarree(),
+    )
+
+cbar = fig.colorbar(
+    plt_mesh1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
+    pad=0.02, fraction=0.15,
+    )
+cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
+cbar.ax.set_xlabel('(DJF/JJA-1) evaporation [$\%$]', linespacing=1.5,)
+fig.savefig(output_png)
+
+
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
 
 
 

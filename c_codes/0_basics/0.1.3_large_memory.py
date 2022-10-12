@@ -129,7 +129,7 @@ transport_distance_epe[expid[i]] = {}
 begin_time = datetime.datetime.now()
 print(begin_time)
 
-for iqtl in ['95%']:
+for iqtl in ['90%', '95%']:
     transport_distance_epe[expid[i]][iqtl] = {}
     
     for ialltime in epe_weighted_lon[expid[i]][iqtl].keys():
@@ -204,6 +204,37 @@ for iqtl in ['95%']:
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance_epe.pkl', 'wb') as f:
     pickle.dump(transport_distance_epe[expid[i]], f)
 
+'''
+#-------------------------------- check
+transport_distance_epe = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance_epe.pkl', 'rb') as f:
+    transport_distance_epe[expid[i]] = pickle.load(f)
+
+iqtl = '95%'
+ilat = 48
+ilon = 98
+
+for ialltime in ['daily', 'mon', 'ann', 'mm', 'sm']:
+    # ialltime = 'mm'
+    itime = -4
+    
+    local = [lat_2d[ilat, ilon], lon_2d[ilat, ilon]]
+    source = [
+        epe_weighted_lat[expid[i]][iqtl][ialltime][itime, ilat, ilon].values,
+        epe_weighted_lon[expid[i]][iqtl][ialltime][itime, ilat, ilon].values,]
+    
+    print(haversine(local, source, normalize=True))
+    print(transport_distance_epe[expid[i]][iqtl][ialltime][itime, ilat, ilon].values)
+
+ialltime = 'am'
+local = [lat_2d[ilat, ilon], lon_2d[ilat, ilon]]
+source = [
+    epe_weighted_lat[expid[i]][iqtl][ialltime][ilat, ilon].values,
+    epe_weighted_lon[expid[i]][iqtl][ialltime][ilat, ilon].values,]
+
+print(haversine(local, source, normalize=True))
+print(transport_distance_epe[expid[i]][iqtl][ialltime][ilat, ilon].values)
+'''
 # endregion
 # -----------------------------------------------------------------------------
 

@@ -53,19 +53,15 @@ from a_basic_analysis.b_module.mapplot import (
     mesh2plot,
     framework_plot1,
     remove_trailing_zero,
-    remove_trailing_zero_pos,
+    plot_maxmin_points,
 )
 
 from a_basic_analysis.b_module.basic_calculations import (
     mon_sea_ann,
-    time_weighted_mean,
 )
 
 from a_basic_analysis.b_module.namelist import (
     month,
-    month_num,
-    month_dec_num,
-    month_dec,
     seasons,
     hours,
     months,
@@ -88,52 +84,65 @@ from a_basic_analysis.b_module.source_properties import (
 exp_org_o = {}
 exp_org_o[expid[i]] = {}
 
-filenames_g3b_1m = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_g3b_1m.nc'))
+filenames_psl_zh = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_psl_zh.nc'))
 
-exp_org_o[expid[i]]['g3b_1m'] = xr.open_mfdataset(
-    filenames_g3b_1m[ifile_start:ifile_end],
+exp_org_o[expid[i]]['psl_zh'] = xr.open_mfdataset(
+    filenames_psl_zh[ifile_start:ifile_end],
     data_vars='minimal', coords='minimal', parallel=True)
 
+
+'''
+'''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region calculate mon_sea_ann temp2
+# region calculate mon_sea_ann psl and gh
 
-temp2_alltime = {}
-temp2_alltime[expid[i]] = mon_sea_ann(var_monthly=(
-    exp_org_o[expid[i]]['g3b_1m'].temp2 - zerok).compute())
+psl_zh = {}
+psl_zh[expid[i]] = {}
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'wb') as f:
-    pickle.dump(temp2_alltime[expid[i]], f)
+psl_zh[expid[i]]['psl'] = mon_sea_ann(var_monthly=exp_org_o[expid[i]]['psl_zh'].psl)
+psl_zh[expid[i]]['zh'] = mon_sea_ann(var_monthly=exp_org_o[expid[i]]['psl_zh'].zh)
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.psl_zh.pkl', 'wb') as f:
+    pickle.dump(psl_zh[expid[i]], f)
 
 
 '''
 #-------------------------------- check
-temp2_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
-    temp2_alltime[expid[i]] = pickle.load(f)
+psl_zh = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.psl_zh.pkl', 'rb') as f:
+    psl_zh[expid[i]] = pickle.load(f)
+
+# calculate manually
+def time_weighted_mean(ds):
+    return ds.weighted(ds.time.dt.days_in_month).mean('time', skipna=False)
 
 test = {}
-test['mon'] = (exp_org_o[expid[i]]['g3b_1m'].temp2 - zerok).compute().copy()
-test['sea'] = (exp_org_o[expid[i]]['g3b_1m'].temp2 - zerok).resample({'time': 'Q-FEB'}).map(time_weighted_mean)[1:-1].compute()
-test['ann'] = (exp_org_o[expid[i]]['g3b_1m'].temp2 - zerok).resample({'time': '1Y'}).map(time_weighted_mean).compute()
+test['mon'] = exp_org_o[expid[i]]['psl_zh'].psl.copy()
+test['sea'] = exp_org_o[expid[i]]['psl_zh'].psl.resample({'time': 'Q-FEB'}).map(time_weighted_mean)[1:-1].compute()
+test['ann'] = exp_org_o[expid[i]]['psl_zh'].psl.resample({'time': '1Y'}).map(time_weighted_mean).compute()
 test['mm'] = test['mon'].groupby('time.month').mean(skipna=True).compute()
 test['sm'] = test['sea'].groupby('time.season').mean(skipna=True).compute()
 test['am'] = test['ann'].mean(dim='time', skipna=True).compute()
 
-(temp2_alltime[expid[i]]['mon'].values[np.isfinite(temp2_alltime[expid[i]]['mon'].values)] == test['mon'].values[np.isfinite(test['mon'].values)]).all()
-(temp2_alltime[expid[i]]['sea'].values[np.isfinite(temp2_alltime[expid[i]]['sea'].values)] == test['sea'].values[np.isfinite(test['sea'].values)]).all()
-(temp2_alltime[expid[i]]['ann'].values[np.isfinite(temp2_alltime[expid[i]]['ann'].values)] == test['ann'].values[np.isfinite(test['ann'].values)]).all()
-(temp2_alltime[expid[i]]['mm'].values[np.isfinite(temp2_alltime[expid[i]]['mm'].values)] == test['mm'].values[np.isfinite(test['mm'].values)]).all()
-(temp2_alltime[expid[i]]['sm'].values[np.isfinite(temp2_alltime[expid[i]]['sm'].values)] == test['sm'].values[np.isfinite(test['sm'].values)]).all()
-(temp2_alltime[expid[i]]['am'].values[np.isfinite(temp2_alltime[expid[i]]['am'].values)] == test['am'].values[np.isfinite(test['am'].values)]).all()
+
+
+(psl_zh[expid[i]]['psl']['mon'].values[np.isfinite(psl_zh[expid[i]]['psl']['mon'].values)] == test['mon'].values[np.isfinite(test['mon'].values)]).all()
+(psl_zh[expid[i]]['psl']['sea'].values[np.isfinite(psl_zh[expid[i]]['psl']['sea'].values)] == test['sea'].values[np.isfinite(test['sea'].values)]).all()
+(psl_zh[expid[i]]['psl']['ann'].values[np.isfinite(psl_zh[expid[i]]['psl']['ann'].values)] == test['ann'].values[np.isfinite(test['ann'].values)]).all()
+(psl_zh[expid[i]]['psl']['mm'].values[np.isfinite(psl_zh[expid[i]]['psl']['mm'].values)] == test['mm'].values[np.isfinite(test['mm'].values)]).all()
+(psl_zh[expid[i]]['psl']['sm'].values[np.isfinite(psl_zh[expid[i]]['psl']['sm'].values)] == test['sm'].values[np.isfinite(test['sm'].values)]).all()
+(psl_zh[expid[i]]['psl']['am'].values[np.isfinite(psl_zh[expid[i]]['psl']['am'].values)] == test['am'].values[np.isfinite(test['am'].values)]).all()
 
 
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
 
 
 

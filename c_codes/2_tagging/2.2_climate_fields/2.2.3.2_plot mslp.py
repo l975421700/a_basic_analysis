@@ -29,8 +29,11 @@ from scipy import stats
 import xesmf as xe
 import pandas as pd
 from metpy.interpolate import cross_section
+from statsmodels.stats import multitest
+import pycircstat as circ
 
 # plot
+import proplot as pplt
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm
@@ -43,6 +46,7 @@ mpl.rcParams['axes.linewidth'] = 0.2
 plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
+from matplotlib.ticker import AutoMinorLocator
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -52,20 +56,27 @@ from a_basic_analysis.b_module.mapplot import (
     mesh2plot,
     framework_plot1,
     remove_trailing_zero,
+    remove_trailing_zero_pos,
     plot_maxmin_points,
 )
 
 from a_basic_analysis.b_module.basic_calculations import (
     mon_sea_ann,
+    time_weighted_mean,
 )
 
 from a_basic_analysis.b_module.namelist import (
     month,
+    month_num,
+    month_dec_num,
+    month_dec,
     seasons,
+    seasons_last_num,
     hours,
     months,
     month_days,
     zerok,
+    panel_labels,
 )
 
 from a_basic_analysis.b_module.source_properties import (
@@ -73,92 +84,36 @@ from a_basic_analysis.b_module.source_properties import (
     calc_lon_diff,
 )
 
+from a_basic_analysis.b_module.statistics import (
+    fdr_control_bh,
+    check_normality_3d,
+    check_equal_variance_3d,
+    ttest_fdr_control,
+)
+
+from a_basic_analysis.b_module.component_plot import (
+    cplot_ice_cores,
+    plt_mesh_pars,
+)
+
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region import output
+# region import data
 
-i = 0
-expid[i]
-
-exp_org_o = {}
-exp_org_o[expid[i]] = {}
-
-
-filenames_psl_zh = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_psl_zh.nc'))
-
-exp_org_o[expid[i]]['psl_zh'] = xr.open_mfdataset(filenames_psl_zh[120:], data_vars='minimal', coords='minimal', parallel=True)
-
-
-'''
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region calculate mon_sea_ann psl and gh
-
-i = 0
-expid[i]
-
-psl_zh = {}
-psl_zh[expid[i]] = {}
-
-psl_zh[expid[i]]['psl'] = mon_sea_ann(var_monthly=exp_org_o[expid[i]]['psl_zh'].psl)
-psl_zh[expid[i]]['zh'] = mon_sea_ann(var_monthly=exp_org_o[expid[i]]['psl_zh'].zh)
-
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.psl_zh.pkl', 'wb') as f:
-    pickle.dump(psl_zh[expid[i]], f)
-
-
-'''
-#-------------------------------- check
-i = 0
-expid[i]
 psl_zh = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.psl_zh.pkl', 'rb') as f:
     psl_zh[expid[i]] = pickle.load(f)
 
-# calculate manually
-def time_weighted_mean(ds):
-    return ds.weighted(ds.time.dt.days_in_month).mean('time', skipna=False)
+lon = psl_zh[expid[i]]['psl']['am'].lon
+lat = psl_zh[expid[i]]['psl']['am'].lat
+lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
-test = {}
-test['mon'] = exp_org_o[expid[i]]['psl_zh'].psl.copy()
-test['sea'] = exp_org_o[expid[i]]['psl_zh'].psl.resample({'time': 'Q-FEB'}).map(time_weighted_mean)[1:-1].compute()
-test['ann'] = exp_org_o[expid[i]]['psl_zh'].psl.resample({'time': '1Y'}).map(time_weighted_mean).compute()
-test['mm'] = test['mon'].groupby('time.month').mean(skipna=True).compute()
-test['sm'] = test['sea'].groupby('time.season').mean(skipna=True).compute()
-test['am'] = test['ann'].mean(dim='time', skipna=True).compute()
-
-
-
-(psl_zh[expid[i]]['psl']['mon'].values[np.isfinite(psl_zh[expid[i]]['psl']['mon'].values)] == test['mon'].values[np.isfinite(test['mon'].values)]).all()
-(psl_zh[expid[i]]['psl']['sea'].values[np.isfinite(psl_zh[expid[i]]['psl']['sea'].values)] == test['sea'].values[np.isfinite(test['sea'].values)]).all()
-(psl_zh[expid[i]]['psl']['ann'].values[np.isfinite(psl_zh[expid[i]]['psl']['ann'].values)] == test['ann'].values[np.isfinite(test['ann'].values)]).all()
-(psl_zh[expid[i]]['psl']['mm'].values[np.isfinite(psl_zh[expid[i]]['psl']['mm'].values)] == test['mm'].values[np.isfinite(test['mm'].values)]).all()
-(psl_zh[expid[i]]['psl']['sm'].values[np.isfinite(psl_zh[expid[i]]['psl']['sm'].values)] == test['sm'].values[np.isfinite(test['sm'].values)]).all()
-(psl_zh[expid[i]]['psl']['am'].values[np.isfinite(psl_zh[expid[i]]['psl']['am'].values)] == test['am'].values[np.isfinite(test['am'].values)]).all()
-
-
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region calculate mon_sea_ann psl in ERA5
-
-psl_era5_79_14 = xr.open_dataset('scratch/cmip6/hist/psl/psl_ERA5_mon_sl_197901_201412.nc')
-
-psl_era5_79_14_alltime = mon_sea_ann(var_monthly=psl_era5_79_14.msl)
-
-with open('scratch/cmip6/hist/psl/psl_era5_79_14_alltime.pkl', 'wb') as f:
-    pickle.dump(psl_era5_79_14_alltime, f)
-
+major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
+major_ice_core_site = major_ice_core_site.loc[
+    major_ice_core_site['age (kyr)'] > 120, ]
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -167,15 +122,8 @@ with open('scratch/cmip6/hist/psl/psl_era5_79_14_alltime.pkl', 'wb') as f:
 # -----------------------------------------------------------------------------
 # region plot am_sm psl in ECHAM6 and ERA5
 
-i = 0
-expid[i]
-psl_zh = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.psl_zh.pkl', 'rb') as f:
-    psl_zh[expid[i]] = pickle.load(f)
-
 with open('scratch/cmip6/hist/psl/psl_era5_79_14_alltime.pkl', 'rb') as f:
     psl_era5_79_14_alltime = pickle.load(f)
-
 
 #-------- plot configuration
 output_png = 'figures/6_awi/6.1_echam6/6.1.4_extreme_precipitation/6.1.4.3_moisture_transport/' + '6.1.4.3 ' + expid[i] + ' and ERA5 am_sm psl Antarctica.png'
@@ -439,106 +387,99 @@ psl_era5_79_14_alltime['am'].to_netcdf('scratch/test/test1.nc')
 
 
 # -----------------------------------------------------------------------------
-# region plot psl and u/v in ECHAM
+# region plot am psl Antarctica
 
+output_png = 'figures/6_awi/6.1_echam6/6.1.2_climatology/6.1.2.6_psl/6.1.2.6 ' + expid[i] + ' psl am Antarctica.png'
 
-uv_plev = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.uv_plev.pkl', 'rb') as f:
-    uv_plev[expid[i]] = pickle.load(f)
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=975, cm_max=1025, cm_interval1=5, cm_interval2=10, cmap='PuOr')
 
-psl_zh = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.psl_zh.pkl', 'rb') as f:
-    psl_zh[expid[i]] = pickle.load(f)
+fig, ax = hemisphere_plot(northextent=-20, figsize=np.array([5.8, 7.3]) / 2.54,)
+cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
 
-moisture_flux = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.moisture_flux.pkl', 'rb') as f:
-    moisture_flux[expid[i]] = pickle.load(f)
-
-
-#-------- plot configuration
-output_png = 'figures/6_awi/6.1_echam6/6.1.4_extreme_precipitation/6.1.4.3_moisture_transport/' + '6.1.4.3 ' + expid[i] + ' am psl and 850hPa wind Antarctica.png'
-
-plt_pres = psl_zh[expid[i]]['psl']['am'] / 100
-pres_interval = 5
-pres_intervals = np.arange(
-    np.floor(np.min(plt_pres) / pres_interval - 1) * pres_interval,
-    np.ceil(np.max(plt_pres) / pres_interval + 1) * pres_interval,
-    pres_interval)
-
-pltlevel = np.arange(-6, 6 + 1e-4, 0.5)
-pltticks = np.arange(-6, 6 + 1e-4, 1)
-pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
-pltcmp = cm.get_cmap('PiYG', len(pltlevel)-1).reversed()
-
-
-fig, ax = hemisphere_plot(
-    northextent=-45,
-    figsize=np.array([5.8, 8.8]) / 2.54,
-    fm_bottom=0.13,
-    )
-
-plt_ctr = ax.contour(
-    plt_pres.lon, plt_pres.lat, plt_pres,
-    colors='b', levels=pres_intervals, linewidths=0.2,
-    transform=ccrs.PlateCarree(), clip_on=True)
-ax_clabel = ax.clabel(
-    plt_ctr, inline=1, colors='b', fmt='%d',
-    levels=pres_intervals, inline_spacing=10, fontsize=6)
-h1, _ = plt_ctr.legend_elements()
-ax_legend = ax.legend(
-    [h1[0]], ['Mean sea level pressure [$hPa$]'],
-    loc='lower center', frameon=False,
-    bbox_to_anchor=(0.5, -0.14),
-    handlelength=1, columnspacing=1)
-
+plt_mesh1 = ax.pcolormesh(
+    lon, lat,
+    psl_zh[expid[i]]['psl']['am'] / 100,
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 # plot H/L symbols
+filter_boxes = 50
 plot_maxmin_points(
-    plt_pres.lon, plt_pres.lat, plt_pres,
-    ax, 'max', 150, symbol='H', color='b',
+    lon, lat,
+    psl_zh[expid[i]]['psl']['am'] / 100,
+    ax, 'max', filter_boxes, symbol='H', color='b',
     transform=ccrs.PlateCarree(),)
 plot_maxmin_points(
-    plt_pres.lon, plt_pres.lat, plt_pres,
-    ax, 'min', 150, symbol='L', color='r',
+    lon, lat,
+    psl_zh[expid[i]]['psl']['am'] / 100,
+    ax, 'min', filter_boxes, symbol='L', color='r',
     transform=ccrs.PlateCarree(),)
 
-# plot wind arrows
-iarrow = 2
-plt_quiver = ax.quiver(
-    plt_pres.lon[::iarrow], plt_pres.lat[::iarrow],
-    uv_plev[expid[i]]['u']['am'].sel(plev=85000).values[::iarrow, ::iarrow],
-    uv_plev[expid[i]]['v']['am'].sel(plev=85000).values[::iarrow, ::iarrow],
-    color='gray', units='height', scale=600,
-    width=0.002, headwidth=3, headlength=5, alpha=1,
-    transform=ccrs.PlateCarree(),)
-
-ax.quiverkey(plt_quiver, X=0.15, Y=-0.14, U=10,
-             label='10 [$m \; s^{-1}$]    850 $hPa$ wind',
-             labelpos='E', labelsep=0.05,)
-
-plt_mesh = ax.pcolormesh(
-    moisture_flux[expid[i]]['meridional']['am'].lon,
-    moisture_flux[expid[i]]['meridional']['am'].lat,
-    moisture_flux[expid[i]]['meridional']['am'].sel(plev=85000) * 10**3,
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),
-    zorder = -2)
-
-cbar1 = fig.colorbar(
-    plt_mesh, ax=ax,
-    fraction=0.1,
-    orientation="horizontal",shrink=1,aspect=40,extend='both',
-    anchor=(0.5, 0.9), ticks=pltticks)
-cbar1.ax.set_xlabel('Meridional moisture flux at 850 $hPa$\n[$10^{-3} \; kg\;kg^{-1} \; m\;s^{-1}$]', linespacing=1.5)
-
+cbar = fig.colorbar(
+    plt_mesh1, ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+    pad=0.02, fraction=0.15,
+    )
+cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
+cbar.ax.set_xlabel('Mean sea level pressure (mslp) [$hPa$]', linespacing=1.5,)
 fig.savefig(output_png)
 
 
 
 '''
-stats.describe(abs(moisture_flux[expid[i]]['meridional']['am'].sel(plev=85000, lat=slice(-60, -90)) * 10**3),
+stats.describe(temp2_alltime[expid[i]]['am'].sel(lat=slice(-20, -90)),
                axis=None, nan_policy='omit')
 
-(np.isfinite(uv_plev[expid[i]]['u']['am'].sel(plev=85000)) == np.isfinite(uv_plev[expid[i]]['v']['am'].sel(plev=85000))).all()
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot DJF-JJA psl Antarctica
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.2_climatology/6.1.2.6_psl/6.1.2.6 ' + expid[i] + ' psl DJF-JJA Antarctica.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-15, cm_max=15, cm_interval1=3, cm_interval2=3, cmap='BrBG')
+
+fig, ax = hemisphere_plot(northextent=-20, figsize=np.array([5.8, 7.3]) / 2.54,)
+cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+
+plt_mesh1 = ax.pcolormesh(
+    lon, lat,
+    (psl_zh[expid[i]]['psl']['sm'].sel(season='DJF') - \
+        psl_zh[expid[i]]['psl']['sm'].sel(season='JJA')) / 100,
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+ttest_fdr_res = ttest_fdr_control(
+    psl_zh[expid[i]]['psl']['sea'][3::4],
+    psl_zh[expid[i]]['psl']['sea'][1::4]
+    )
+ax.scatter(
+    x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
+    s=0.5, c='k', marker='.', edgecolors='none',
+    transform=ccrs.PlateCarree(),
+    )
+
+cbar = fig.colorbar(
+    plt_mesh1, ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.95, ticks=pltticks, extend='both',
+    pad=0.02, fraction=0.15,
+    )
+cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
+cbar.ax.set_xlabel('DJF - JJA mslp [$hPa$]', linespacing=1.5,)
+fig.savefig(output_png)
+
+
+
+'''
+stats.describe(temp2_alltime[expid[i]]['am'].sel(lat=slice(-20, -90)),
+               axis=None, nan_policy='omit')
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+
+
 

@@ -455,3 +455,34 @@ fig.savefig(output_png)
 
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot DJF-JJA sst Antarctica
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.2_climatology/6.1.2.0_sst/6.1.2.0 amip_pi sst DJF-JJA Antarctica.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=0, cm_max=6, cm_interval1=1, cm_interval2=1, cmap='Oranges',
+    reversed=False)
+
+fig, ax = hemisphere_plot(northextent=-20, figsize=np.array([5.8, 7.3]) / 2.54,)
+cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+
+plt_mesh1 = ax.pcolormesh(
+    lon, lat,
+    boundary_conditions['sm_sst']['pi'].sel(season='DJF') - \
+        boundary_conditions['sm_sst']['pi'].sel(season='JJA'),
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    plt_mesh1, ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+    pad=0.02, fraction=0.15,
+    )
+cbar.ax.set_xlabel('DJF - JJA SST [$°C$]', linespacing=1.5,)
+fig.savefig(output_png)
+
+
+# endregion
+# -----------------------------------------------------------------------------

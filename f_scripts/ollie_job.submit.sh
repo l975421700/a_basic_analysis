@@ -12,7 +12,7 @@
 
 source /home/ollie/qigao001/miniconda3/bin/activate deepice
 
-python /work/ollie/qigao001/a_basic_analysis/c_codes/0_basics/0.1_scripts/0.1.0_large_memory.py
+python /work/ollie/qigao001/a_basic_analysis/c_codes/0_basics/0.1.3_large_memory.py
 
 # python /work/ollie/qigao001/a_basic_analysis/c_codes/2_tagging/2.3_source_var/2.3.0.0_source_var_scaled_daily.py
 

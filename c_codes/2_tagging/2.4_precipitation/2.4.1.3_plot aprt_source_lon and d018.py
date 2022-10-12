@@ -136,57 +136,6 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_pre_allt
 
 
 # -----------------------------------------------------------------------------
-# region plot am aprt over Antarctica
-
-#-------- basic settings
-
-pltctr1 = np.array([0.004, 0.008, 0.05, 0.1, 0.5, ])
-pltctr2 = np.array([1, 2, 4, 8, ])
-
-plt_data = wisoaprt_alltime[expid[i]]['am'][0].values * seconds_per_d
-
-output_png = 'figures/6_awi/6.1_echam6/6.1.4_precipitation/6.1.4.0_aprt/6.1.4.0.2_spatiotemporal_dist/6.1.4.0.2 ' + expid[i] + ' am aprt Antarctica.png'
-
-#-------- plot
-
-fig, ax = hemisphere_plot(
-    northextent=-60, figsize=np.array([5.8, 6.5]) / 2.54, lw=0.1,
-    fm_bottom=0.1, fm_top=0.99)
-
-cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
-
-plt2 = ax.contour(
-    lon, lat,
-    plt_data,
-    levels=pltctr1, colors = 'b', transform=ccrs.PlateCarree(),
-    linewidths=0.5, linestyles='dotted',
-)
-ax.clabel(plt2, inline=1, colors='b', fmt=remove_trailing_zero,
-          levels=pltctr1, inline_spacing=10, fontsize=7,)
-
-plt3 = ax.contour(
-    lon, lat,
-    plt_data,
-    levels=pltctr2, colors = 'b', transform=ccrs.PlateCarree(),
-    linewidths=0.5, linestyles='solid',
-)
-ax.clabel(plt3, inline=1, colors='b', fmt=remove_trailing_zero,
-          levels=pltctr2, inline_spacing=10, fontsize=7,)
-
-plt.text(
-    0.5, -0.08, 'Annual mean precipitation [$mm \; day^{-1}$]',
-    transform=ax.transAxes, ha='center', va='center', rotation='horizontal')
-
-fig.savefig(output_png)
-
-
-'''
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
 # region plot daily aprt PDF/histogram over Antarctica
 
 

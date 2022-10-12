@@ -1,3 +1,4 @@
+# git checkout feat/ssp_generalization
 general:
     setup_name: "echam"
     compute_time: "00:30:00"
@@ -11,7 +12,8 @@ general:
 
 echam:
     version: "6.3.05p2-wiso"
-    executable: echam6_0720_4.9
+    # executable: echam6_0720_4.9
+    executable: echam6_0713_wiso
     dataset: "r0008"
     bin_sources:
             echam_bin: "${bin_dir}/${executable}"
@@ -41,42 +43,44 @@ echam:
                     out_filetype: 2
                     # putdata: [ 450, 'seconds', 'first', 0 ]
                     putdata: [ 6, 'hours', 'last', 0 ]
-                    dt_stop: [ 2015, 1, 1, 2, 0, 0 ]
+                    dt_stop: [ 2015, 1, 2, 0, 0, 0 ]
                 radctl:
                     lrad_async: False
                 wisoctl:
                     lwiso: True
                     lwiso_rerun: ${lresume}
-                    nwiso: 28
+                    nwiso: 3
                     ntag: 0
-                    ntag1: 0
-                    ntag2: 0
-                    ntag3: 0
-                    ntag4: 0
-                    ntags1_lat: 3
-                    ntags2_lon: 0
-                    ntags3_sst: 3
-                    ntags4_rh2m: 3
-                    ntags5_wind10: 3
-                    ntag_geo7: 7
-                    ntags6_sinlon: 3
-                    ntags7_coslon: 3
-                    ntag5: 0
-                    ntag_sum: 25
-                    lupdate_tagmap: True
-                    tag_minsst: 268.15
-                    tag_maxsst: 318.15
-                    tag_minrh2m: 0
-                    tag_maxrh2m: 1.6
-                    tag_minwind10: 0
-                    tag_maxwind10: 28.0
-                    ltag_corr1: True
-                    ltag_corr3: True
-                    latm_water: True
-                    ltag_corr2: False
-                    ltag_corr3_m: False
-                    ltag_corr_xtec: False
-                    lcorrfac: False
+                    # nwiso: 28
+                    # ntag: 0
+                    # ntag1: 0
+                    # ntag2: 0
+                    # ntag3: 0
+                    # ntag4: 0
+                    # ntags1_lat: 3
+                    # ntags2_lon: 0
+                    # ntags3_sst: 3
+                    # ntags4_rh2m: 3
+                    # ntags5_wind10: 3
+                    # ntag_geo7: 7
+                    # ntags6_sinlon: 3
+                    # ntags7_coslon: 3
+                    # ntag5: 0
+                    # ntag_sum: 25
+                    # lupdate_tagmap: True
+                    # tag_minsst: 268.15
+                    # tag_maxsst: 318.15
+                    # tag_minrh2m: 0
+                    # tag_maxrh2m: 1.6
+                    # tag_minwind10: 0
+                    # tag_maxwind10: 28.0
+                    # ltag_corr1: True
+                    # ltag_corr3: True
+                    # latm_water: True
+                    # ltag_corr2: False
+                    # ltag_corr3_m: False
+                    # ltag_corr_xtec: False
+                    # lcorrfac: False
     file_movements:
         forcing:
             all_directions: "link"

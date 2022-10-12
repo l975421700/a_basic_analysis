@@ -129,7 +129,7 @@ transport_distance_epe[expid[i]] = {}
 begin_time = datetime.datetime.now()
 print(begin_time)
 
-for iqtl in ['95%']:
+for iqtl in ['90%', '95%']:
     transport_distance_epe[expid[i]][iqtl] = {}
     
     for ialltime in epe_weighted_lon[expid[i]][iqtl].keys():
@@ -210,7 +210,7 @@ transport_distance_epe = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance_epe.pkl', 'rb') as f:
     transport_distance_epe[expid[i]] = pickle.load(f)
 
-iqtl = '95%'
+iqtl = '90%'
 ilat = 48
 ilon = 98
 
