@@ -19,7 +19,7 @@ echam:
             echam_bin: "${bin_dir}/${executable}"
     bin_in_work:
             echam_bin: "${executable}"
-    namelist_dir: '/work/ollie/qigao001/a_basic_analysis/g_namelists/pi/'
+    # namelist_dir: '/work/ollie/qigao001/a_basic_analysis/g_namelists/pi/'
     scenario: "ssp585"
     res: T63
     lresume: False

@@ -125,6 +125,15 @@ major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
 major_ice_core_site = major_ice_core_site.loc[
     major_ice_core_site['age (kyr)'] > 120, ]
 
+
+'''
+acc_recon_ERAI
+plt_err1 = (acc_recon_ERAI.recon_acc_bc.sel(years=slice(100, 200)).std(dim='years', ddof=1)).compute()
+
+plt_err2 = (acc_recon_ERAI.recon_acc_err_bc.sel(years=slice(100, 200)) ** 2).mean(dim='years') ** 0.5
+
+np.max(plt_err1 - plt_err2)
+'''
 # endregion
 # -----------------------------------------------------------------------------
 

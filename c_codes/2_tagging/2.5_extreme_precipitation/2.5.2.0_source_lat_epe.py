@@ -163,12 +163,12 @@ print((res001 - res002) / res001)
 # -----------------------------------------------------------------------------
 # region plot (epe_source_lat - pre_weighted_lat) am Antarctica
 
-iqtl = '95%'
+iqtl = '90%'
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.0_source_lat/6.1.7.0.0 ' + expid[i] + ' epe_source_lat - pre_weighted_lat am Antarctica.png'
 
-pltlevel = np.arange(0, 10 + 1e-4, 1)
-pltticks = np.arange(0, 10 + 1e-4, 1)
+pltlevel = np.arange(0, 7 + 1e-4, 1)
+pltticks = np.arange(0, 7 + 1e-4, 1)
 pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=False)
 pltcmp = cm.get_cmap('PiYG', len(pltlevel)-1).reversed()
 # pltcmp = pplt.Colormap('DryWet', samples=len(pltlevel)-1)
@@ -215,12 +215,12 @@ fig.savefig(output_png, dpi=1200)
 # -----------------------------------------------------------------------------
 # region plot (epe_source_lat - pre_weighted_lat) am
 
-iqtl = '95%'
+iqtl = '90%'
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.0_source_lat/6.1.7.0.0 ' + expid[i] + ' epe_source_lat - pre_weighted_lat am.png'
 
-pltlevel = np.arange(-10, 10 + 1e-4, 1)
-pltticks = np.arange(-10, 10 + 1e-4, 1)
+pltlevel = np.arange(-7, 7 + 1e-4, 1)
+pltticks = np.arange(-7, 7 + 1e-4, 1)
 pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=False)
 pltcmp = cm.get_cmap('PiYG', len(pltlevel)-1).reversed()
 # pltcmp = pplt.Colormap('DryWet', samples=len(pltlevel)-1)

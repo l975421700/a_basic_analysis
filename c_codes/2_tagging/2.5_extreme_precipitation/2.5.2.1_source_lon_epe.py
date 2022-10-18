@@ -130,12 +130,12 @@ quantiles = {'90%': 0.9, '95%': 0.95, '99%': 0.99}
 # -----------------------------------------------------------------------------
 # region plot (epe_weighted_lon - pre_weighted_lon) am Antarctica
 
-iqtl = '95%'
+iqtl = '90%'
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.1_source_lon/6.1.7.0.1 ' + expid[i] + ' epe_weighted_lon - pre_weighted_lon am Antarctica.png'
 
-pltlevel = np.arange(-20, 20 + 1e-4, 5)
-pltticks = np.arange(-20, 20 + 1e-4, 5)
+pltlevel = np.arange(-15, 15 + 1e-4, 3)
+pltticks = np.arange(-15, 15 + 1e-4, 3)
 pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
 pltcmp = cm.get_cmap('PRGn', len(pltlevel)-1).reversed()
 
@@ -184,12 +184,12 @@ fig.savefig(output_png, dpi=1200)
 # -----------------------------------------------------------------------------
 # region plot (epe_weighted_lon - pre_weighted_lon) am
 
-iqtl = '95%'
+iqtl = '90%'
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.1_source_lon/6.1.7.0.1 ' + expid[i] + ' epe_weighted_lon - pre_weighted_lon am.png'
 
-pltlevel = np.arange(-20, 20 + 1e-4, 5)
-pltticks = np.arange(-20, 20 + 1e-4, 5)
+pltlevel = np.arange(-15, 15 + 1e-4, 3)
+pltticks = np.arange(-15, 15 + 1e-4, 3)
 pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
 pltcmp = cm.get_cmap('PRGn', len(pltlevel)-1).reversed()
 

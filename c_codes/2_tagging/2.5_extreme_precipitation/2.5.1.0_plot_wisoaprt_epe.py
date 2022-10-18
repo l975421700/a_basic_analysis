@@ -227,15 +227,15 @@ fig.savefig(output_png, dpi=1200)
 
 
 # -----------------------------------------------------------------------------
-# region percentile of 5% heaviest precipitation days of total precipitation
+# region percentile of 10% heaviest precipitation days of total precipitation
 
 
-iqtl = '95%'
+iqtl = '90%'
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.1_pre/6.1.7.1 ' + expid[i] + ' daily precipitation percentile_' + iqtl[:2] + '_frc Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=20, cm_max=40, cm_interval1=2, cm_interval2=2, cmap='PuOr',
+    cm_min=30, cm_max=60, cm_interval1=2.5, cm_interval2=5, cmap='PuOr',
     reversed=False)
 
 fig, ax = hemisphere_plot(
@@ -257,7 +257,7 @@ cbar = fig.colorbar(
 cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel(
-    'Contribution of 5$\%$ heaviest\nprecipitation to total precipitation [$\%$]', linespacing=1.5)
+    'Contribution of 10$\%$ heaviest\nprecipitation to total precipitation [$\%$]', linespacing=1.5)
 fig.savefig(output_png, dpi=600)
 
 

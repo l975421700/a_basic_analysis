@@ -130,13 +130,13 @@ quantiles = {'90%': 0.9, '95%': 0.95, '99%': 0.99}
 # -----------------------------------------------------------------------------
 # region plot (epe_weighted_wind10 - pre_weighted_wind10) am Antarctica
 
-iqtl = '95%'
+iqtl = '90%'
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.4_source_wind10/6.1.7.0.4 ' + expid[i] + ' epe_weighted_wind10 - pre_weighted_wind10 am Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-1.5, cm_max=0, cm_interval1=0.25, cm_interval2=0.25, cmap='Greens',)
-# pltcmp = pplt.Colormap('broc', samples=len(pltlevel)-1)
+    cm_min=-1, cm_max=0.2, cm_interval1=0.2, cm_interval2=0.2, cmap='Greens',)
+pltcmp = pplt.Colormap('broc', samples=len(pltlevel)-1)
 
 fig, ax = hemisphere_plot(
     northextent=-50, figsize=np.array([5.8, 7]) / 2.54)
@@ -180,7 +180,7 @@ fig.savefig(output_png, dpi=1200)
 # -----------------------------------------------------------------------------
 # region plot (epe_weighted_wind10 - pre_weighted_wind10) am
 
-iqtl = '95%'
+iqtl = '90%'
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.4_source_wind10/6.1.7.0.4 ' + expid[i] + ' epe_weighted_wind10 - pre_weighted_wind10 am.png'
 

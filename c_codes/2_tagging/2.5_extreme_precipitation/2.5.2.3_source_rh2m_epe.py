@@ -130,12 +130,12 @@ quantiles = {'90%': 0.9, '95%': 0.95, '99%': 0.99}
 # -----------------------------------------------------------------------------
 # region plot (epe_weighted_rh2m - pre_weighted_rh2m) am Antarctica
 
-iqtl = '95%'
+iqtl = '90%'
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.3_source_rh2m/6.1.7.0.3 ' + expid[i] + ' epe_weighted_rh2m - pre_weighted_rh2m am Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-5, cm_max=0, cm_interval1=0.5, cm_interval2=0.5, cmap='Purples')
+    cm_min=-3.5, cm_max=0.5, cm_interval1=0.5, cm_interval2=0.5, cmap='Purples')
 pltcmp = pplt.Colormap('DryWet', samples=len(pltlevel)-1)
 
 fig, ax = hemisphere_plot(
@@ -179,12 +179,12 @@ fig.savefig(output_png, dpi=1200)
 # -----------------------------------------------------------------------------
 # region plot (epe_weighted_rh2m - pre_weighted_rh2m) am
 
-iqtl = '95%'
+iqtl = '90%'
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.3_source_rh2m/6.1.7.0.3 ' + expid[i] + ' epe_weighted_rh2m - pre_weighted_rh2m am.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=0.5, cmap='Purples')
+    cm_min=-3.5, cm_max=3.5, cm_interval1=0.5, cm_interval2=0.5, cmap='Purples')
 pltcmp = pplt.Colormap('DryWet', samples=len(pltlevel)-1)
 
 fig, ax = globe_plot()

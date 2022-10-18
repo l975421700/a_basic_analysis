@@ -130,12 +130,12 @@ quantiles = {'90%': 0.9, '95%': 0.95, '99%': 0.99}
 # -----------------------------------------------------------------------------
 # region plot (transport_distance_epe - transport_distance) am Antarctica
 
-iqtl = '95%'
+iqtl = '90%'
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.5_travel_distance/6.1.7.0.5 ' + expid[i] + ' transport_distance_epe - transport_distance am Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.25, cm_max=1.25, cm_interval1=0.25, cm_interval2=0.25, cmap='PRGn',)
+    cm_min=-0.2, cm_max=1, cm_interval1=0.2, cm_interval2=0.2, cmap='PRGn',)
 pltcmp = pplt.Colormap('Curl', samples=len(pltlevel)-1)
 
 fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 7]) / 2.54)
@@ -179,7 +179,7 @@ fig.savefig(output_png, dpi=1200)
 # -----------------------------------------------------------------------------
 # region plot (transport_distance_epe - transport_distance) am
 
-iqtl = '95%'
+iqtl = '90%'
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.5_travel_distance/6.1.7.0.5 ' + expid[i] + ' transport_distance_epe - transport_distance am.png'
 

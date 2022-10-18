@@ -596,4 +596,33 @@ ds_mean_over_ais[itime].values
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region find ilat/ilon for site lat/lon
+
+def find_ilat_ilon(slat, slon, lat, lon):
+    '''
+    #-------- Input
+    slat: latitude in the range of [-90, 90], scalar
+    slon: longitude in the range of [0, 360], scalar
+    
+    lat:  latitude in the range of [-90, 90], 1d array
+    lon:  longitude in the range of [0, 360], 1d array
+    '''
+    
+    import numpy as np
+    
+    # scale longitude to be between [0, 360]
+    if (slon < 0):
+        slon += 360
+    
+    lon[lon < 0] += 360
+    
+    ilon = np.where(abs(slon - lon) == np.min(abs(slon - lon)))[0][0]
+    ilat = np.where(abs(slat - lat) == np.min(abs(slat - lat)))[0][0]
+    
+    return([ilat, ilon])
+
+
+# endregion
+# -----------------------------------------------------------------------------
 
