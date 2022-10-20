@@ -131,7 +131,7 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_allti
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.5_transport_distance/6.1.3.5 ' + expid[i] + ' transport distance am Antarctica + am aprt.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=1, cm_max=7, cm_interval1=0.5, cm_interval2=1, cmap='BrBG',)
+    cm_min=10, cm_max=70, cm_interval1=5, cm_interval2=10, cmap='BrBG',)
 
 fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 7]) / 2.54,)
 
@@ -140,7 +140,7 @@ cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
 plt1 = ax.pcolormesh(
     lon,
     lat,
-    transport_distance[expid[i]]['am'] / 1000,
+    transport_distance[expid[i]]['am'] / 100,
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 
 # plot am aprt
@@ -168,11 +168,12 @@ ax.clabel(plt3, inline=1, colors='blue', fmt=remove_trailing_zero,
 
 cbar = fig.colorbar(
     plt1, ax=ax, aspect=30,
-    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
     pad=0.02, fraction=0.15,
     )
+cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel('Travel distance [$10^{3} \; km$]', linespacing=2)
+cbar.ax.set_xlabel('Source-sink distance [$10^{2} \; km$]', linespacing=2)
 fig.savefig(output_png, dpi=1200)
 
 
@@ -189,7 +190,7 @@ transport_distance[expid[i]]['am'].to_netcdf('scratch/test/test.nc')
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.5_transport_distance/6.1.3.5 ' + expid[i] + ' transport distance DJF-JJA Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-2, cm_max=2, cm_interval1=0.5, cm_interval2=0.5, cmap='PRGn',)
+    cm_min=-12, cm_max=12, cm_interval1=2, cm_interval2=2, cmap='PRGn',)
 pltcmp = pplt.Colormap('Curl', samples=len(pltlevel)-1)
 
 fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 7]) / 2.54,)
@@ -200,7 +201,7 @@ plt1 = ax.pcolormesh(
     lon,
     lat,
     (transport_distance[expid[i]]['sm'].sel(season = 'DJF') - \
-        transport_distance[expid[i]]['sm'].sel(season = 'JJA')) / 1000,
+        transport_distance[expid[i]]['sm'].sel(season = 'JJA')) / 100,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 ttest_fdr_res = ttest_fdr_control(
     transport_distance[expid[i]]['sea'][3::4,],
@@ -218,7 +219,8 @@ cbar = fig.colorbar(
     )
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
-cbar.ax.set_xlabel('DJF - JJA travel distance [$10^{3} \; km$]', linespacing=2)
+cbar.ax.set_xlabel('DJF - JJA source-sink distance [$10^{2} \; km$]',
+                   linespacing=2, fontsize=9, )
 fig.savefig(output_png, dpi=1200)
 
 # endregion

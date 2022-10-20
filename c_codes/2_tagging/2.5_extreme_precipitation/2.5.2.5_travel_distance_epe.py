@@ -135,8 +135,8 @@ iqtl = '90%'
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.5_travel_distance/6.1.7.0.5 ' + expid[i] + ' transport_distance_epe - transport_distance am Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.2, cm_max=1, cm_interval1=0.2, cm_interval2=0.2, cmap='PRGn',)
-pltcmp = pplt.Colormap('Curl', samples=len(pltlevel)-1)
+    cm_min=0, cm_max=8, cm_interval1=0.5, cm_interval2=1, cmap='PRGn',)
+pltcmp = pplt.Colormap('Marine', samples=len(pltlevel)-1)
 
 fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 7]) / 2.54)
 
@@ -146,7 +146,7 @@ plt1 = ax.pcolormesh(
     lon,
     lat,
     (transport_distance_epe[expid[i]][iqtl]['am'] - \
-        transport_distance[expid[i]]['am']) / 1000,
+        transport_distance[expid[i]]['am']) / 100,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 ttest_fdr_res = ttest_fdr_control(
     transport_distance_epe[expid[i]][iqtl]['ann'],
@@ -165,7 +165,8 @@ cbar = fig.colorbar(
     )
 cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel('EPE travel distance anomalies [$10^{3} \; km$]', linespacing=2)
+cbar.ax.set_xlabel('EPE source-sink distance anomalies [$10^{2} \; km$]',
+                   linespacing=2, fontsize=8)
 fig.savefig(output_png, dpi=1200)
 
 

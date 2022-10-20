@@ -140,12 +140,26 @@ for icores, slat, slon in zip(major_ice_core_site.Site,
     
     loc_indices[icores]['ilat'], loc_indices[icores]['ilon'] = \
         find_ilat_ilon(slat, slon, lat.values, lon.values)
-    # print(icores + ':    ' + str(slat) + ':    ' + str(slon))
-    # print(lat[loc_indices[icores]['ilat']].values)
-    # print(lon[loc_indices[icores]['ilon']].values)
 
 
 '''
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.loc_indices.pkl',
+    'wb') as f:
+    pickle.dump(loc_indices, f)
+
+
+#-------- check
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.loc_indices.pkl',
+    'rb') as f:
+    loc_indices = pickle.load(f)
+
+for icores in major_ice_core_site.Site:
+    print(icores + ':    ' + str(loc_indices[icores]['lat']) + \
+        ':    ' + str(loc_indices[icores]['lon']))
+    print(lat[loc_indices[icores]['ilat']].values)
+    print(lon[loc_indices[icores]['ilon']].values)
 
 '''
 # endregion

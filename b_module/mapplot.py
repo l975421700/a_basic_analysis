@@ -1179,6 +1179,9 @@ from matplotlib.ticker import FuncFormatter
 def remove_trailing_zero_pos(x, pos):
     return ('%f' % x).rstrip('0').rstrip('.')
 
+@FuncFormatter
+def remove_trailing_zero_pos_abs(x, pos):
+    return ('%f' % abs(x)).rstrip('0').rstrip('.')
 
 '''
 ax.clabel(fmt=remove_trailing_zero)

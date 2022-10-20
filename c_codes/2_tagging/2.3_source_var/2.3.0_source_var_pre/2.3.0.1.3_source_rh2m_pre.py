@@ -132,7 +132,8 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_allti
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.3_rh2m/6.1.3.3 ' + expid[i] + ' pre_weighted_rh2m am Antarctica + am aprt.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=75, cm_max=83, cm_interval1=1, cm_interval2=1, cmap='PRGn',)
+    cm_min=75, cm_max=83, cm_interval1=1, cm_interval2=1, cmap='PRGn',
+    reversed=False)
 
 fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 7]) / 2.54,)
 
@@ -172,6 +173,7 @@ cbar = fig.colorbar(
     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
     pad=0.02, fraction=0.15,
     )
+cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel('Source rh2m [$\%$]', linespacing=2)
 fig.savefig(output_png, dpi=1200)
@@ -238,7 +240,8 @@ fig.savefig(output_png, dpi=1200)
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.3_rh2m/6.1.3.3 ' + expid[i] + ' pre_weighted_rh2m am_sm_5 Antarctica.png'
 cbar_label1 = 'Source rh2m [$\%$]'
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=73, cm_max=85, cm_interval1=1, cm_interval2=1, cmap='PRGn',)
+    cm_min=73, cm_max=85, cm_interval1=1, cm_interval2=1, cmap='PRGn',
+    reversed=False)
 ctr_level = np.array([1, 2, 3, ])
 
 nrow = 1
@@ -301,6 +304,7 @@ cbar1 = fig.colorbar(
     plt_mesh1, ax=axs,
     orientation="vertical",shrink=1,aspect=20,extend='both', ticks=pltticks,
     anchor=(1.5, 0.5))
+cbar1.ax.yaxis.set_minor_locator(AutoMinorLocator(1))
 cbar1.ax.set_ylabel(cbar_label1, linespacing=2)
 
 fig.subplots_adjust(left=0.01, right = 1-fm_right, bottom = 0, top = 0.94)

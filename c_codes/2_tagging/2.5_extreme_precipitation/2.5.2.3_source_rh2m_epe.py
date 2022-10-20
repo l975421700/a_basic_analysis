@@ -135,8 +135,8 @@ iqtl = '90%'
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.3_source_rh2m/6.1.7.0.3 ' + expid[i] + ' epe_weighted_rh2m - pre_weighted_rh2m am Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-3.5, cm_max=0.5, cm_interval1=0.5, cm_interval2=0.5, cmap='Purples')
-pltcmp = pplt.Colormap('DryWet', samples=len(pltlevel)-1)
+    cm_min=-3, cm_max=0, cm_interval1=0.25, cm_interval2=0.5, cmap='Purples')
+pltcmp = pplt.Colormap('Glacial', samples=len(pltlevel)-1).reversed()
 
 fig, ax = hemisphere_plot(
     northextent=-50, figsize=np.array([5.8, 7]) / 2.54)

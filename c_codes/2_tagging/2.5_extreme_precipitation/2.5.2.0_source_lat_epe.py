@@ -167,11 +167,10 @@ iqtl = '90%'
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.0_source_lat/6.1.7.0.0 ' + expid[i] + ' epe_source_lat - pre_weighted_lat am Antarctica.png'
 
-pltlevel = np.arange(0, 7 + 1e-4, 1)
-pltticks = np.arange(0, 7 + 1e-4, 1)
-pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=False)
-pltcmp = cm.get_cmap('PiYG', len(pltlevel)-1).reversed()
-# pltcmp = pplt.Colormap('DryWet', samples=len(pltlevel)-1)
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=0, cm_max=6, cm_interval1=0.5, cm_interval2=1, cmap='Stellar',
+    reversed=False)
+pltcmp = pplt.Colormap('Stellar', samples=len(pltlevel)-1)
 
 fig, ax = hemisphere_plot(
     northextent=-50, figsize=np.array([5.8, 7]) / 2.54)
@@ -194,7 +193,7 @@ ax.scatter(
     )
 
 cbar = fig.colorbar(
-    plt1, ax=ax, aspect=30,
+    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
     pad=0.02, fraction=0.15,
     )

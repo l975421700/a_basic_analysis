@@ -134,10 +134,10 @@ iqtl = '90%'
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.2_source_sst/6.1.7.0.2 ' + expid[i] + ' epe_weighted_sst - pre_weighted_sst am Antarctica.png'
 
-pltlevel = np.arange(0, 4 + 1e-4, 0.5)
-pltticks = np.arange(0, 4 + 1e-4, 0.5)
-pltnorm = BoundaryNorm(pltlevel, ncolors=(len(pltlevel) - 1), clip=True)
-pltcmp = cm.get_cmap('BrBG', len(pltlevel)-1).reversed()
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=0, cm_max=4, cm_interval1=0.5, cm_interval2=0.5, cmap='Fire',
+    reversed=False)
+pltcmp = pplt.Colormap('Fire', samples=len(pltlevel)-1)
 
 fig, ax = hemisphere_plot(
     northextent=-50, figsize=np.array([5.8, 7]) / 2.54)
