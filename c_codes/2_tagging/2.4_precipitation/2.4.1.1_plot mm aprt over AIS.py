@@ -175,7 +175,8 @@ fig.savefig(output_png)
 
 
 
-
+pre_mm_over_ais.loc[pre_mm_over_ais.Data == 'ECHAM6'].pre_mon.mean()
+pre_mm_over_ais.loc[pre_mm_over_ais.Data == 'ERA5'].pre_mon.mean()
 
 '''
 np.max(abs(

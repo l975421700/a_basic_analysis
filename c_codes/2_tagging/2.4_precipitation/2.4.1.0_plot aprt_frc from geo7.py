@@ -105,6 +105,9 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_geo7_allt
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc_AIS_alltime.pkl', 'rb') as f:
     aprt_frc_AIS_alltime = pickle.load(f)
 
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc.pkl', 'rb') as f:
+    aprt_frc = pickle.load(f)
+
 lon = aprt_geo7_alltime[expid[i]]['am'].lon
 lat = aprt_geo7_alltime[expid[i]]['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
@@ -120,9 +123,6 @@ major_ice_core_site = major_ice_core_site.loc[
 
 # -----------------------------------------------------------------------------
 # region plot am aprt fraction
-
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc.pkl', 'rb') as f:
-    aprt_frc = pickle.load(f)
 
 #-------- precipitation from Antarctica
 
@@ -345,7 +345,11 @@ ann_values.std()
 
 
 
-
+# mm
+imask = 'AIS'
+sea_ice_contribution = aprt_frc_AIS_alltime[imask]['mm']['SH sea ice'].frc_AIS - aprt_frc_AIS_alltime[imask]['mm']['Open ocean'].frc_AIS
+np.max(sea_ice_contribution)
+np.min(sea_ice_contribution)
 
 
 '''

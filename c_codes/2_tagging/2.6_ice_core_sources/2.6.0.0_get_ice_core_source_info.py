@@ -441,6 +441,11 @@ for icores in major_ice_core_site.Site:
                     loc_indices[icores]['ilat'],
                     loc_indices[icores]['ilon']]
 
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.pre_weighted_var_icores.pkl', 'wb') as f:
+    pickle.dump(pre_weighted_var_icores[expid[i]], f)
+
+
 for ivar in source_var:
     print('#-------------------------------- ' + ivar)
     for icores in major_ice_core_site.Site:
@@ -479,11 +484,19 @@ for ivar in source_var:
         print(str(pre_weighted_var_am_icores) + ' ± ' + \
             str(pre_weighted_var_annstd_icores))
 
-with open(
-    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.pre_weighted_var_icores.pkl', 'wb') as f:
-    pickle.dump(pre_weighted_var_icores[expid[i]], f)
 
-
+ivar = 'lon'
+print('#-------------------------------- ' + ivar)
+for icores in major_ice_core_site.Site:
+    print('#----------------' + icores)
+    pre_weighted_var_am_icores = \
+            np.round(
+                calc_lon_diff(
+                    pre_weighted_var_icores[expid[i]][icores][ivar]['am'],
+                    loc_indices[icores]['lon'],
+                ).values,
+                1)
+    print(pre_weighted_var_am_icores)
 
 '''
 #-------------------------------- check
@@ -491,6 +504,8 @@ pre_weighted_var_icores = {}
 with open(
     exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.pre_weighted_var_icores.pkl', 'rb') as f:
     pre_weighted_var_icores[expid[i]] = pickle.load(f)
+
+source_var = ['lat', 'lon', 'sst', 'rh2m', 'wind10', 'distance']
 
 for icores in pre_weighted_var_icores[expid[i]].keys():
     for ivar in source_var:

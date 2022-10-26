@@ -1,17 +1,17 @@
 
 
-# -----------------------------------------------------------------------------
-# region basic settings
-
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-
 expid = ['pi_m_416_4.9',]
+i=0
+
+output_dir = exp_odir + expid[i] + '/analysis/echam/'
+
+ifile_start = 120
+ifile_end   = 1080
 
 ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
-
 # ntags = [0, 0, 0, 0, 0,   3, 3, 3, 3, 3,   7]
 # ntags = [0, 0, 0, 0, 0,   0, 0, 0, 0, 0,   7, 3, 3, 0]
-
 
 # var_name  = 'sst'
 # itag      = 7
@@ -42,9 +42,6 @@ var_name  = 'coslon'
 itag      = 12
 min_sf    = -1
 max_sf    = 1
-
-# endregion
-# -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
@@ -83,17 +80,12 @@ pbar.register()
 # -----------------------------------------------------------------------------
 # region import data
 
-i=0
-print('#-------- ' + expid[i])
-
 fl_wiso_daily = sorted(glob.glob(
-    # exp_odir + expid[i] + '/outdata/echam/' + \
-    #     expid[i] + '_??????_daily.01_wiso.nc'
     exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'
         ))
 
 exp_out_wiso_daily = xr.open_mfdataset(
-    fl_wiso_daily[120:1080],
+    fl_wiso_daily[ifile_start:ifile_end],
     data_vars='minimal', coords='minimal', parallel=True)
 
 # endregion
@@ -136,9 +128,6 @@ ocean_pre.values[ocean_pre.values < 2e-8] = 0
 ocean_pre_alltime      = mon_sea_ann(ocean_pre)
 var_scaled_pre_alltime = mon_sea_ann(var_scaled_pre)
 
-# with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_pre_alltime.pkl', 'wb') as f:
-#     pickle.dump(ocean_pre_alltime, f)
-
 #-------------------------------- pre-weighted var
 
 pre_weighted_var = {}
@@ -153,7 +142,7 @@ for ialltime in ocean_pre_alltime.keys():
         var_name,
     )
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_' + var_name + '.pkl',
+with open(output_dir + expid[i] + '.pre_weighted_' + var_name + '.pkl',
           'wb') as f:
     pickle.dump(pre_weighted_var, f)
 
@@ -174,6 +163,11 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_l
     pre_weighted_lat[expid[i]] = pickle.load(f)
 
 #-------- check consistency
+
+# with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_pre_alltime.pkl', 'wb') as f:
+#     pickle.dump(ocean_pre_alltime, f)
+
+
 '''
 # endregion
 # -----------------------------------------------------------------------------

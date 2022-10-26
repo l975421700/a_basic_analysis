@@ -148,6 +148,14 @@ fig.subplots_adjust(left=0.08, right=0.99, bottom=0.15, top=0.98)
 fig.savefig(output_png)
 
 
+for icores in pre_weighted_var_icores[expid[i]].keys():
+    # icores = 'EDC'
+    print('#----------------' + icores)
+    max_var =pre_weighted_var_icores[expid[i]][icores]['lat']['mm'].values.max()
+    min_var =pre_weighted_var_icores[expid[i]][icores]['lat']['mm'].values.min()
+    print(np.round(max_var - min_var, 1))
+
+
 '''
 '''
 # endregion
@@ -177,6 +185,15 @@ ax.set_ylabel(None)
 ax.grid(True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 fig.subplots_adjust(left=0.08, right=0.99, bottom=0.15, top=0.98)
 fig.savefig(output_png)
+
+
+for icores in pre_weighted_var_icores[expid[i]].keys():
+    # icores = 'EDC'
+    print('#----------------' + icores)
+    max_sst =pre_weighted_var_icores[expid[i]][icores]['sst']['mm'].values.max()
+    min_sst =pre_weighted_var_icores[expid[i]][icores]['sst']['mm'].values.min()
+    print(np.round(max_sst - min_sst, 1))
+
 
 
 '''
@@ -246,6 +263,13 @@ fig.subplots_adjust(left=0.08, right=0.99, bottom=0.15, top=0.98)
 fig.savefig(output_png)
 
 
+for icores in pre_weighted_var_icores[expid[i]].keys():
+    # icores = 'EDC'
+    print('#----------------' + icores)
+    max_var=pre_weighted_var_icores[expid[i]][icores]['rh2m']['mm'].values.max()
+    min_var=pre_weighted_var_icores[expid[i]][icores]['rh2m']['mm'].values.min()
+    print(np.round(max_var - min_var, 1))
+
 '''
 '''
 # endregion
@@ -277,6 +301,13 @@ ax.grid(True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 fig.subplots_adjust(left=0.1, right=0.99, bottom=0.15, top=0.98)
 fig.savefig(output_png)
 
+
+for icores in pre_weighted_var_icores[expid[i]].keys():
+    # icores = 'EDC'
+    print('#----------------' + icores)
+    max_var=pre_weighted_var_icores[expid[i]][icores]['wind10']['mm'].values.max()
+    min_var=pre_weighted_var_icores[expid[i]][icores]['wind10']['mm'].values.min()
+    print(np.round(max_var - min_var, 1))
 
 '''
 '''

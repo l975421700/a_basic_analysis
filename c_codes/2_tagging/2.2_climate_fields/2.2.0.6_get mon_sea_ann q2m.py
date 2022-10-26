@@ -118,6 +118,8 @@ q2m_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q2m_alltime.pkl', 'rb') as f:
     q2m_alltime[expid[i]] = pickle.load(f)
 
+q2m_alltime[expid[i]]['am'].to_netcdf('scratch/test/test.nc')
+
 filenames_g3b_1m = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_g3b_1m.nc'))
 
 ifile = -1

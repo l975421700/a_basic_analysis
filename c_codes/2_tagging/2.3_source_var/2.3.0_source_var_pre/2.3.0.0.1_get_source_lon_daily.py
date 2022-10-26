@@ -2,7 +2,9 @@
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = ['pi_m_416_4.9',]
+i=0
 
+output_dir = exp_odir + expid[i] + '/analysis/echam/'
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -41,13 +43,10 @@ pbar.register()
 # -----------------------------------------------------------------------------
 # region import data
 
-i=0
-print('#-------- ' + expid[i])
-
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_sinlon.pkl', 'rb') as f:
+with open(output_dir + expid[i] + '.pre_weighted_sinlon.pkl', 'rb') as f:
     pre_weighted_sinlon = pickle.load(f)
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_coslon.pkl', 'rb') as f:
+with open(output_dir + expid[i] + '.pre_weighted_coslon.pkl', 'rb') as f:
     pre_weighted_coslon = pickle.load(f)
 
 pre_weighted_lon = {}
@@ -59,8 +58,7 @@ for ialltime in pre_weighted_sinlon.keys():
         pre_weighted_sinlon[ialltime], pre_weighted_coslon[ialltime]
     )
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lon.pkl',
-          'wb') as f:
+with open(output_dir + expid[i] + '.pre_weighted_lon.pkl', 'wb') as f:
     pickle.dump(pre_weighted_lon, f)
 
 # endregion
