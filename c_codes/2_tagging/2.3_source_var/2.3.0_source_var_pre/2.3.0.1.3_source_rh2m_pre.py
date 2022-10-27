@@ -102,7 +102,6 @@ from a_basic_analysis.b_module.component_plot import (
 # region import data
 
 pre_weighted_rh2m = {}
-
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_rh2m.pkl', 'rb') as f:
     pre_weighted_rh2m[expid[i]] = pickle.load(f)
 
@@ -114,9 +113,9 @@ major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
 major_ice_core_site = major_ice_core_site.loc[
     major_ice_core_site['age (kyr)'] > 120, ]
 
-wisoaprt_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
-    wisoaprt_alltime[expid[i]] = pickle.load(f)
+# wisoaprt_alltime = {}
+# with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
+#     wisoaprt_alltime[expid[i]] = pickle.load(f)
 
 
 '''
@@ -314,6 +313,103 @@ fig.savefig(output_png)
 
 
 '''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region cross check pre_weighted_rh2m am
+
+#-------- import data
+output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.3_rh2m/6.1.3.3 ' + expid[i] + ' pre_weighted_rh2m am cross_check.png'
+file_dir = 'output/echam-6.3.05p2-wiso/pi/'
+pre_weighted_var_files = [
+    'pi_m_404_4.7/analysis/echam/pi_m_404_4.7.pre_weighted_rh2m_am.nc',
+    'pi_m_408_4.8/analysis/echam/pi_m_408_4.8.pre_weighted_rh2m_am.nc',
+]
+
+pre_weighted_var = {}
+pre_weighted_var['am_lowres'] = xr.open_dataset(
+    file_dir + pre_weighted_var_files[0])
+pre_weighted_var['am_highres'] = xr.open_dataset(
+    file_dir + pre_weighted_var_files[1])
+
+pre_weighted_rh2m = {}
+with open(exp_odir + expid[i] + '/analysis/echam/source_var_short/' + expid[i] + '.pre_weighted_rh2m.pkl', 'rb') as f:
+    pre_weighted_rh2m[expid[i]] = pickle.load(f)
+
+#-------------------------------- plot
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=60, cm_max=90, cm_interval1=2, cm_interval2=6, cmap='PRGn',)
+pltlevel2, pltticks2, pltnorm2, pltcmp2 = plt_mesh_pars(
+    cm_min=-1, cm_max=1, cm_interval1=0.2, cm_interval2=0.4, cmap='bwr',)
+
+cbar_label1 = 'Source rh2m [$\%$]'
+cbar_label2 = 'Differences in source rh2m [$\%$]'
+
+nrow = 1
+ncol = 3
+fm_right = 1 - 4 / (8.8*ncol + 4)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([8.8*ncol + 4, 5*nrow]) / 2.54,
+    subplot_kw={'projection': ccrs.PlateCarree()},
+    gridspec_kw={'hspace': 0.01, 'wspace': 0.01},)
+
+for jcol in range(ncol):
+    axs[jcol] = globe_plot(ax_org = axs[jcol], add_grid_labels=False)
+
+# plot am values
+plt_mesh1 = axs[0].pcolormesh(
+    lon, lat, pre_weighted_rh2m[expid[i]]['am'],
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plot am norm - lowres
+plt_mesh2 = axs[1].pcolormesh(
+    lon, lat, pre_weighted_var['am_lowres'].pre_weighted_rh2m_am * 100 - \
+        pre_weighted_rh2m[expid[i]]['am'],
+    norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
+# plot am norm - highres
+plt_mesh2 = axs[2].pcolormesh(
+    lon, lat, pre_weighted_var['am_highres'].pre_weighted_rh2m_am * 100 - \
+        pre_weighted_rh2m[expid[i]]['am'],
+    norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
+
+plt.text(
+    0.5, 1.05, 'Scaling approach',
+    transform=axs[0].transAxes, ha='center', va='center', rotation='horizontal')
+plt.text(
+    0.5, 1.05, 'Binning (5$\%$ rh2m bins) vs scaling approach',
+    transform=axs[1].transAxes, ha='center', va='center', rotation='horizontal')
+plt.text(
+    0.5, 1.05, 'Binning (2$\%$ rh2m bins) vs scaling approach',
+    transform=axs[2].transAxes, ha='center', va='center', rotation='horizontal')
+
+cbar2 = fig.colorbar(
+    plt_mesh2, ax=axs,
+    orientation="vertical",shrink=1.2,aspect=40,extend='both',
+    anchor=(0.8, 0.5),
+    ticks=pltticks2)
+cbar2.ax.set_ylabel(cbar_label2, linespacing=1.5)
+cbar2.ax.yaxis.set_minor_locator(AutoMinorLocator(1))
+
+cbar1 = fig.colorbar(
+    plt_mesh1, ax=axs,
+    orientation="vertical",shrink=1.2,aspect=40,extend='both',
+    anchor=(3.2, 0.5),
+    ticks=pltticks)
+cbar1.ax.set_ylabel(cbar_label1, linespacing=1.5)
+cbar1.ax.yaxis.set_minor_locator(AutoMinorLocator(1))
+
+fig.subplots_adjust(left=0.005, right = fm_right, bottom = 0.005, top = 0.93)
+fig.savefig(output_png)
+
+
+
+
+
+'''
+
 '''
 # endregion
 # -----------------------------------------------------------------------------

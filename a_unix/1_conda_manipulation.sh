@@ -51,6 +51,9 @@ pip install pycircstat
 pip install rpy2
 mamba install -c conda-forge jupyterlab -y
 mamba install -c conda-forge proplot -y
+mamba install -c conda-forge cmip6_preprocessing -y
+mamba install -c conda-forge pint-xarray -y
+
 
 '''
 #-------------------------------- TEST REGION
@@ -90,7 +93,6 @@ source ${HOME}/miniconda3/bin/activate test
 # mamba install -c conda-forge gcc_impl_linux-64 -y
 # mamba install -c conda-forge pycwt -y
 # mamba install -c conda-forge proplot -y
-# mamba install -c conda-forge cmip6_preprocessing -y
 # mamba install -c conda-forge jupyter_contrib_nbextensions -y
 # mamba install -c conda-forge numpy=1.21 -y
 # mamba install -c conda-forge python-cdo -y
