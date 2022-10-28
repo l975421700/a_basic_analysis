@@ -112,9 +112,9 @@ major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
 major_ice_core_site = major_ice_core_site.loc[
     major_ice_core_site['age (kyr)'] > 120, ]
 
-# wisoaprt_alltime = {}
-# with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
-#     wisoaprt_alltime[expid[i]] = pickle.load(f)
+wisoaprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
+    wisoaprt_alltime[expid[i]] = pickle.load(f)
 
 
 '''
@@ -689,7 +689,7 @@ for iseason in range(len(seasons)):
 
 cbar1 = fig.colorbar(
     plt_mesh1, ax=axs,
-    orientation="vertical",shrink=1,aspect=20,extend='both', ticks=pltticks,
+    orientation="vertical",shrink=1.2,aspect=20,extend='both', ticks=pltticks,
     anchor=(1.5, 0.5))
 cbar1.ax.set_ylabel(cbar_label1, linespacing=2)
 cbar1.ax.set_yticklabels(

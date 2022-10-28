@@ -33,7 +33,7 @@ import pycircstat as circ
 from scipy.stats import circstd
 
 # plot
-import proplot as pplt
+# import proplot as pplt
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm
@@ -114,9 +114,9 @@ major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
 major_ice_core_site = major_ice_core_site.loc[
     major_ice_core_site['age (kyr)'] > 120, ]
 
-# wisoaprt_alltime = {}
-# with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
-#     wisoaprt_alltime[expid[i]] = pickle.load(f)
+wisoaprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
+    wisoaprt_alltime[expid[i]] = pickle.load(f)
 
 '''
 pre_weighted_sinlon = {}
@@ -581,7 +581,7 @@ fig.savefig(output_png, dpi=1200)
 
 
 # -----------------------------------------------------------------------------
-# region plot rel. pre_weighted_lon am_sm
+# region plot rel. pre_weighted_lon am_sm_5
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/6.1.3.1 ' + expid[i] + ' pre_weighted_lon am_sm_5 Antarctica.png'
 cbar_label1 = 'Relative source longitude [$°$]'
@@ -654,7 +654,7 @@ for iseason in range(len(seasons)):
 
 cbar1 = fig.colorbar(
     plt_mesh1, ax=axs,
-    orientation="vertical",shrink=1,aspect=20,extend='neither', ticks=pltticks,
+    orientation="vertical",shrink=1.2,aspect=20,extend='neither', ticks=pltticks,
     anchor=(1.45, 0.5))
 cbar1.ax.set_ylabel(cbar_label1, linespacing=2)
 
@@ -827,6 +827,9 @@ fig.subplots_adjust(left=0.005, right = fm_right, bottom = 0.005, top = 0.93)
 fig.savefig(output_png)
 
 
+
+np.min(calc_lon_diff(pre_weighted_var['am_highres'].pre_weighted_lon_am,
+              pre_weighted_lon[expid[i]]['am'],))
 
 # endregion
 # -----------------------------------------------------------------------------

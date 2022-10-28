@@ -235,7 +235,7 @@ iqtl = '90%'
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.1_pre/6.1.7.1 ' + expid[i] + ' daily precipitation percentile_' + iqtl[:2] + '_frc Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=30, cm_max=60, cm_interval1=2.5, cm_interval2=5, cmap='PuOr',
+    cm_min=30, cm_max=60, cm_interval1=2.5, cm_interval2=5, cmap='Oranges',
     reversed=False)
 
 fig, ax = hemisphere_plot(

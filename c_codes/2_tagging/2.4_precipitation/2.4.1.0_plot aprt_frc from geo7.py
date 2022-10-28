@@ -181,7 +181,7 @@ output_png = 'figures/6_awi/6.1_echam6/6.1.4_precipitation/6.1.4.0_aprt/6.1.4.0.
 pltlevel = np.arange(0, 10.01, 1)
 pltticks = np.arange(0, 10.01, 1)
 pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
-pltcmp = cm.get_cmap('PiYG', len(pltlevel)-1)
+pltcmp = cm.get_cmap('Blues', len(pltlevel)-1)
 
 fig, ax = hemisphere_plot(northextent=-50)
 cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
@@ -206,7 +206,7 @@ output_png = 'figures/6_awi/6.1_echam6/6.1.4_precipitation/6.1.4.0_aprt/6.1.4.0.
 pltlevel = np.arange(60, 100.01, 4)
 pltticks = np.arange(60, 100.01, 4)
 pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
-pltcmp = cm.get_cmap('PRGn', len(pltlevel)-1)
+pltcmp = cm.get_cmap('Greens', len(pltlevel)-1)
 
 fig, ax = hemisphere_plot(northextent=-50)
 cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)

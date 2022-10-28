@@ -231,10 +231,10 @@ fig.savefig(output_png, dpi=1200)
 # region plot transport_distance am_sm_5
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.5_transport_distance/6.1.3.5 ' + expid[i] + ' transport_distance am_sm_5 Antarctica.png'
-cbar_label1 = 'Transport distance [$10^{3} \; km$]'
+cbar_label1 = 'Source-sink distance [$10^{2} \; km$]'
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=1, cm_max=7, cm_interval1=0.5, cm_interval2=1, cmap='BrBG',)
-ctr_level = np.array([0.5, 1, 2, 3, ])
+    cm_min=10, cm_max=70, cm_interval1=5, cm_interval2=10, cmap='BrBG',)
+ctr_level = np.array([5, 10, 20, 30, ])
 
 nrow = 1
 ncol = 5
@@ -255,12 +255,12 @@ for jcol in range(ncol):
 #-------- Am
 plt_mesh1 = axs[0].pcolormesh(
     lon, lat,
-    transport_distance[expid[i]]['am'] / 1000,
+    transport_distance[expid[i]]['am'] / 100,
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 plt_ctr1 = axs[0].contour(
     lon, lat.sel(lat=slice(-50, -90)),
     transport_distance[expid[i]]['ann'].std(
-        dim='time', skipna=True, ddof=1).sel(lat=slice(-50, -90)) / 1000,
+        dim='time', skipna=True, ddof=1).sel(lat=slice(-50, -90)) / 100,
     levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
     linewidths=0.5, linestyles='solid',)
 axs[0].clabel(
@@ -274,7 +274,7 @@ plt.text(
 for iseason in range(len(seasons)):
     axs[1 + iseason].pcolormesh(
         lon, lat,
-        transport_distance[expid[i]]['sm'].sel(season=seasons[iseason]) / 1000,
+        transport_distance[expid[i]]['sm'].sel(season=seasons[iseason]) / 100,
         norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
     plt_ctr = axs[1 + iseason].contour(
         lon, lat.sel(lat=slice(-50, -90)),
@@ -282,7 +282,7 @@ for iseason in range(len(seasons)):
             time=(transport_distance[expid[i]]['sea'].time.dt.month == \
                 seasons_last_num[iseason])
             ).std(dim='time', skipna=True, ddof=1
-                  ).sel(lat=slice(-50, -90)) / 1000,
+                  ).sel(lat=slice(-50, -90)) / 100,
         levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
         linewidths=0.5, linestyles='solid',
     )
@@ -295,9 +295,10 @@ for iseason in range(len(seasons)):
 
 cbar1 = fig.colorbar(
     plt_mesh1, ax=axs,
-    orientation="vertical",shrink=1,aspect=20,extend='both', ticks=pltticks,
+    orientation="vertical",shrink=1.2,aspect=20,extend='both', ticks=pltticks,
     anchor=(1.5, 0.5))
 cbar1.ax.set_ylabel(cbar_label1, linespacing=2)
+cbar1.ax.yaxis.set_minor_locator(AutoMinorLocator(1))
 
 fig.subplots_adjust(left=0.01, right = 1-fm_right, bottom = 0, top = 0.94)
 fig.savefig(output_png)
