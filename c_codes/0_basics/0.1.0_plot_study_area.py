@@ -226,9 +226,9 @@ patch3 = mpatches.Patch(
     edgecolor='m', facecolor='none', label='AP', lw=0.5)
 line1 = Line2D([0], [0], label='Atlantic sector', lw=2, linestyle='-',
                color='gray')
-line2 = Line2D([0], [0], label='Indian sector', lw=2, linestyle='--',
+line2 = Line2D([0], [0], label='Indian sector', lw=2, linestyle=':',
                color='gray')
-line3 = Line2D([0], [0], label='Pacific sector', lw=2, linestyle=':',
+line3 = Line2D([0], [0], label='Pacific sector', lw=2, linestyle='--',
                color='gray')
 plt.legend(handles=[patch1, patch2, patch3, line1, line2, line3],
            ncol=2, frameon=False, columnspacing=1,

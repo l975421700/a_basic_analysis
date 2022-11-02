@@ -111,15 +111,10 @@ wisoaprt_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
     wisoaprt_alltime[expid[i]] = pickle.load(f)
 
-acc_recon_ERAI = xr.open_dataset('data_sources/products/Antarctic_Accumulation_Reconstructions/acc_recon_ERAI.nc')
+acc_recon = xr.open_dataset('data_sources/products/Antarctic_Accumulation_Reconstructions/acc_recon_MERRA2.nc')
 
 with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
     echam6_t63_ais_mask = pickle.load(f)
-echam6_t63_cellarea = xr.open_dataset('scratch/others/land_sea_masks/echam6_t63_cellarea.nc')
-
-with open('scratch/others/land_sea_masks/era5_ais_mask.pkl', 'rb') as f:
-    era5_ais_mask = pickle.load(f)
-era5_cellarea = xr.open_dataset('scratch/cmip6/constants/ERA5_gridarea.nc')
 
 major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
 major_ice_core_site = major_ice_core_site.loc[
@@ -127,12 +122,23 @@ major_ice_core_site = major_ice_core_site.loc[
 
 
 '''
-acc_recon_ERAI
-plt_err1 = (acc_recon_ERAI.recon_acc_bc.sel(years=slice(100, 200)).std(dim='years', ddof=1)).compute()
+acc_recon
+plt_err1 = (acc_recon.recon_acc_bc.sel(years=slice(100, 200)).std(dim='years', ddof=1)).compute()
 
-plt_err2 = (acc_recon_ERAI.recon_acc_err_bc.sel(years=slice(100, 200)) ** 2).mean(dim='years') ** 0.5
+plt_err2 = (acc_recon.recon_acc_err_bc.sel(years=slice(100, 200)) ** 2).mean(dim='years') ** 0.5
 
 np.max(plt_err1 - plt_err2)
+
+acc_recon_CFSR = xr.open_dataset('data_sources/products/Antarctic_Accumulation_Reconstructions/acc_recon_ERAI.nc')
+acc_recon_ERAI = xr.open_dataset('data_sources/products/Antarctic_Accumulation_Reconstructions/acc_recon_ERAI.nc')
+acc_recon_MERRA2 = xr.open_dataset('data_sources/products/Antarctic_Accumulation_Reconstructions/acc_recon_ERAI.nc')
+
+#---- other input
+with open('scratch/others/land_sea_masks/era5_ais_mask.pkl', 'rb') as f:
+    era5_ais_mask = pickle.load(f)
+era5_cellarea = xr.open_dataset('scratch/cmip6/constants/ERA5_gridarea.nc')
+echam6_t63_cellarea = xr.open_dataset('scratch/others/land_sea_masks/echam6_t63_cellarea.nc')
+
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -160,14 +166,14 @@ pltcmp2 = cm.get_cmap('PiYG', len(pltlevel2)-1)
 plt_data1 = (wisoaprt_alltime[expid[i]]['am'][0] + \
     wisoevap_alltime[expid[i]]['am'][0]).compute() * seconds_per_d
 plt_data1.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
-plt_data2 = acc_recon_ERAI.recon_acc_bc.sel(
+plt_data2 = acc_recon.recon_acc_bc.sel(
     years=slice(100, 200)).mean(dim='years') / 365
 plt_data3 = (regrid(plt_data1) / regrid(plt_data2) - 1).compute() * 100
 
 plt_std1 = ((wisoaprt_alltime[expid[i]]['ann'][:, 0] + \
     wisoevap_alltime[expid[i]]['ann'][:, 0]).std(
         dim = 'time', ddof=1) * seconds_per_d / plt_data1 * 100).compute()
-plt_std2 = (acc_recon_ERAI.recon_acc_bc.sel(
+plt_std2 = (acc_recon.recon_acc_bc.sel(
     years=slice(100, 200)).std(
         dim='years', ddof=1) / 365 / plt_data2 * 100).compute()
 # stats.describe(plt_std1, axis=None, nan_policy='omit')

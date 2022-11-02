@@ -351,6 +351,13 @@ sea_ice_contribution = aprt_frc_AIS_alltime[imask]['mm']['SH sea ice'].frc_AIS -
 np.max(sea_ice_contribution)
 np.min(sea_ice_contribution)
 
+Antarctic_contribution = aprt_frc_AIS_alltime[imask]['mm']['Antarctica'].frc_AIS - aprt_frc_AIS_alltime[imask]['mm']['Land excl. Antarctica'].frc_AIS
+
+sea_ice_contribution[6] + Antarctic_contribution[6]
+
+land_contribution = aprt_frc_AIS_alltime[imask]['mm']['Land excl. Antarctica'].frc_AIS - aprt_frc_AIS_alltime[imask]['mm']['SH sea ice'].frc_AIS
+land_contribution[6]
+
 
 '''
 
