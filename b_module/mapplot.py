@@ -695,12 +695,12 @@ def hemisphere_plot(
         borders = cfeature.NaturalEarthFeature(
             'cultural', 'admin_0_boundary_lines_land', '10m',
             edgecolor=atlas_color, facecolor='none', lw=lw)
-        ax.add_feature(coastline, zorder=2)
-        ax.add_feature(borders, zorder=2)
+        ax.add_feature(coastline, zorder=3)
+        ax.add_feature(borders, zorder=3)
     
     if add_grid:
         gl = ax.gridlines(
-            crs=transform, linewidth=lw*1.2, zorder=2,
+            crs=transform, linewidth=lw*1.2, zorder=3,
             draw_labels=add_grid_labels,
             color=grid_color, linestyle='--',
             xlocs=ticklabel[0], ylocs=ticklabel[2], rotate_labels=False,
@@ -720,21 +720,21 @@ def hemisphere_plot(
         atlantic_arc = patches.Arc(
             [0.5, 0.5], width=1, height=1, angle=0, transform=ax.transAxes,
             theta1=70, theta2=160,
-            lw=2, linestyle='-', color='gray', fill=False, zorder=2)
+            lw=2, linestyle='-', color='gray', fill=False, zorder=3)
         ax.add_patch(atlantic_arc)
 
         # Pacific: [140, -70] => [160, 310], 150
         pacific_arc = patches.Arc(
             [0.5, 0.5], width=1, height=1, angle=0, transform=ax.transAxes,
             theta1=160, theta2=310,
-            lw=2, linestyle='--', color='gray', fill=False, zorder=2)
+            lw=2, linestyle='--', color='gray', fill=False, zorder=3)
         ax.add_patch(pacific_arc)
 
         # Indian: [20, 140] => [310, 70], 150
         indian_arc = patches.Arc(
             [0.5, 0.5], width=1, height=1, angle=0, transform=ax.transAxes,
             theta1=310, theta2=70,
-            lw=2, linestyle=':', color='gray', fill=False, zorder=2)
+            lw=2, linestyle=':', color='gray', fill=False, zorder=3)
         ax.add_patch(indian_arc)
         plt.setp(ax.spines.values(), linewidth=lw*0)
     else:
@@ -757,7 +757,7 @@ def hemisphere_plot(
     if l45label:
         ticklabel1 = ticks_labels(-135, 135, -90, 0, 90, 30)
         gl1 = ax.gridlines(
-            crs=transform, linewidth=0, zorder=2, draw_labels=True,
+            crs=transform, linewidth=0, zorder=3, draw_labels=True,
             xlocs=ticklabel1[0], ylocs=ticklabel1[2], rotate_labels=False,
             xformatter=LongitudeFormatter(degree_symbol='° ') )
         gl1.ylabel_style = {'size': 0, 'color': None, 'alpha': 0}
@@ -765,7 +765,7 @@ def hemisphere_plot(
     
     if llatlabel:
         gl2 = ax.gridlines(
-            crs=transform, linewidth=0, zorder=2, draw_labels=True,
+            crs=transform, linewidth=0, zorder=3, draw_labels=True,
             xlocs=ticklabel[0], ylocs=ticklabel[2], rotate_labels=False,
             yformatter=LatitudeFormatter(degree_symbol='° '),
         )
@@ -1133,8 +1133,8 @@ def quick_var_plot(
 # region Function to generate mesh components for FESOM2 grid plot
 
 def mesh2plot(
-    meshdir='/work/ollie/qigao001/startdump/fesom2/mesh/core2/',
-    box=[-180, 180, -90, 90],
+    meshdir='startdump/fesom2/mesh/core2/',
+    box=[-180, 180, -90, 90], abg=[0, 0, 0], usepickle=True,
     ):
     '''
     # input ----
@@ -1145,7 +1145,7 @@ def mesh2plot(
     import pyfesom2 as pf
     import numpy as np
     
-    mesh = pf.load_mesh(meshdir)
+    mesh = pf.load_mesh(meshdir, abg=abg, usepickle=usepickle)
     
     box_mesh = [box[0] - 1, box[1] + 1, box[2] - 1, box[3] + 1]
     left, right, down, up = box_mesh
