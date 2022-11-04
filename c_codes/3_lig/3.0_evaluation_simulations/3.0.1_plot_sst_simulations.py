@@ -115,6 +115,41 @@ with open('scratch/cmip6/lig/pi_sst_alltime.pkl', 'rb') as f:
 
 models=sorted(lig_sst_alltime.keys())
 
+#-------- import EC reconstruction
+ec_sst_rec = {}
+# 47 cores
+ec_sst_rec['original'] = pd.read_excel(
+    'data_sources/LIG/mmc1.xlsx',
+    sheet_name='Capron et al. 2017', header=0, skiprows=12, nrows=47,
+    usecols=['Station', 'Latitude', 'Longitude', 'Area', 'Type',
+             '127 ka Median PIAn [°C]', '127 ka 2s PIAn [°C]'])
+
+# 2 cores
+ec_sst_rec['SO_ann'] = ec_sst_rec['original'].loc[
+    (ec_sst_rec['original']['Area']=='Southern Ocean') & \
+        (ec_sst_rec['original']['Type']=='Annual SST'),]
+# 15 cores
+ec_sst_rec['SO_djf'] = ec_sst_rec['original'].loc[
+    (ec_sst_rec['original']['Area']=='Southern Ocean') & \
+        (ec_sst_rec['original']['Type']=='Summer SST'),]
+
+
+#-------- import JH reconstruction
+jh_sst_rec = {}
+# 37 cores
+jh_sst_rec['original'] = pd.read_excel(
+    'data_sources/LIG/mmc1.xlsx',
+    sheet_name=' Hoffman et al. 2017', header=0, skiprows=14, nrows=37,)
+# 12 cores
+jh_sst_rec['SO_ann'] = jh_sst_rec['original'].loc[
+    (jh_sst_rec['original']['Region']=='Southern Ocean') & \
+        ['Annual SST' in string for string in jh_sst_rec['original']['Type']], ]
+# 7 cores
+jh_sst_rec['SO_djf'] = jh_sst_rec['original'].loc[
+    (jh_sst_rec['original']['Region']=='Southern Ocean') & \
+        ['Summer SST' in string for string in jh_sst_rec['original']['Type']], ]
+
+
 '''
 '''
 # endregion
@@ -316,7 +351,7 @@ output_png = 'figures/7_lig/7.0_boundary_conditions/7.0.0_sst/7.0.0.0 lig-pi sst
 cbar_label = 'LIG - PI annual mean SST [$°C$]'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-3, cm_max=3, cm_interval1=0.25, cm_interval2=0.5, cmap='BrBG',)
+    cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='BrBG',)
 
 nrow = 3
 ncol = 4
@@ -337,6 +372,20 @@ for irow in range(nrow):
             transform=axs[irow, jcol].transAxes,
             ha='center', va='center', rotation='horizontal')
         ipanel += 1
+        
+        axs[irow, jcol].scatter(
+            x = jh_sst_rec['SO_ann'].Longitude,
+            y = jh_sst_rec['SO_ann'].Latitude,
+            c = jh_sst_rec['SO_ann']['127 ka SST anomaly (°C)'],
+            s=8, lw=0.3, marker='s', edgecolors = 'white', zorder=2,
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+        axs[irow, jcol].scatter(
+            x = ec_sst_rec['SO_ann'].Longitude,
+            y = ec_sst_rec['SO_ann'].Latitude,
+            c = ec_sst_rec['SO_ann']['127 ka Median PIAn [°C]'],
+            s=8, lw=0.3, marker='o', edgecolors = 'white', zorder=2,
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
 
 for irow in range(nrow):
     for jcol in range(ncol):
@@ -427,7 +476,7 @@ output_png = 'figures/7_lig/7.0_boundary_conditions/7.0.0_sst/7.0.0.0 lig-pi sst
 cbar_label = 'LIG - PI summer SST [$°C$]'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-3, cm_max=3, cm_interval1=0.25, cm_interval2=0.5, cmap='BrBG',)
+    cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='BrBG',)
 
 nrow = 3
 ncol = 4
@@ -448,6 +497,20 @@ for irow in range(nrow):
             transform=axs[irow, jcol].transAxes,
             ha='center', va='center', rotation='horizontal')
         ipanel += 1
+        
+        axs[irow, jcol].scatter(
+            x = jh_sst_rec['SO_djf'].Longitude,
+            y = jh_sst_rec['SO_djf'].Latitude,
+            c = jh_sst_rec['SO_djf']['127 ka SST anomaly (°C)'],
+            s=8, lw=0.3, marker='s', edgecolors = 'white', zorder=2,
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+        axs[irow, jcol].scatter(
+            x = ec_sst_rec['SO_djf'].Longitude,
+            y = ec_sst_rec['SO_djf'].Latitude,
+            c = ec_sst_rec['SO_djf']['127 ka Median PIAn [°C]'],
+            s=8, lw=0.3, marker='o', edgecolors = 'white', zorder=2,
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
 
 for irow in range(nrow):
     for jcol in range(ncol):

@@ -53,7 +53,7 @@ mamba install -c conda-forge jupyterlab -y
 mamba install -c conda-forge proplot -y
 mamba install -c conda-forge cmip6_preprocessing -y
 mamba install -c conda-forge pint-xarray -y
-
+pip install openpyxl
 
 '''
 #-------------------------------- TEST REGION
