@@ -59,6 +59,8 @@ from a_basic_analysis.b_module.mapplot import (
 from a_basic_analysis.b_module.basic_calculations import (
     mon_sea_ann,
     find_ilat_ilon,
+    regrid,
+    time_weighted_mean,
 )
 
 from a_basic_analysis.b_module.namelist import (
@@ -175,7 +177,7 @@ def get_var_PI(var):
             print(err,'PI of '+model+'in CEDA not readable' )
     return var_dic
 
-def regrid(ds_in,variable):
+def regrid_rahul(ds_in,variable):
     var=ds_in[variable]
     ds_out = xe.util.grid_global(1,1)
     regridder = xe.Regridder(ds_in, ds_out, 'bilinear',periodic=True,unmapped_to_nan=True,ignore_degenerate=True,extrap_method='nearest_s2d')
@@ -334,4 +336,154 @@ data2 = lig_sst_alltime['NorESM2-LM']['mon'].values
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region regrid AWI sst
+
+! cdo -P 4 -remapcon,global_1 -mergetime /home/users/rahuls/LOUISE/PMIP_LIG/ESGF_download/CMIP6/model-output/ocean/tos/tos_Omon_AWI-ESM-1-1-LR_lig127k_r1i1p1f1_gn_*.nc scratch/cmip6/lig/tos_Omon_AWI-ESM-1-1-LR_lig127k_r1i1p1f1_gn_300101-310012.nc
+
+! cdo -P 4 -remapcon,global_1 -mergetime /home/users/rahuls/LOUISE/PMIP_LIG/piControl_CEDA_Links/tos/tos_Omon_AWI-ESM-1-1-LR_piControl_r1i1p1f1_gn_*.nc scratch/cmip6/lig/tos_Omon_AWI-ESM-1-1-LR_piControl_r1i1p1f1_gn_185501-195412.nc
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get regridded simulations
+
+with open('scratch/cmip6/lig/lig_sst.pkl', 'rb') as f:
+    lig_sst = pickle.load(f)
+with open('scratch/cmip6/lig/pi_sst.pkl', 'rb') as f:
+    pi_sst = pickle.load(f)
+
+lig_sst_regrid = {}
+pi_sst_regrid = {}
+
+models=sorted(lig_sst.keys())
+
+for model in models:
+    print(model)
+    if (model != 'AWI-ESM-1-1-LR'):
+        lig_sst_regrid[model] = regrid(lig_sst[model])
+        pi_sst_regrid[model] = regrid(pi_sst[model])
+    elif (model == 'AWI-ESM-1-1-LR'):
+        lig_sst_regrid[model] = xr.open_dataset('scratch/cmip6/lig/tos_Omon_AWI-ESM-1-1-LR_lig127k_r1i1p1f1_gn_300101-310012.nc')
+        pi_sst_regrid[model] = xr.open_dataset('scratch/cmip6/lig/tos_Omon_AWI-ESM-1-1-LR_piControl_r1i1p1f1_gn_185501-195412.nc')
+
+with open('scratch/cmip6/lig/lig_sst_regrid.pkl', 'wb') as f:
+    pickle.dump(lig_sst_regrid, f)
+with open('scratch/cmip6/lig/pi_sst_regrid.pkl', 'wb') as f:
+    pickle.dump(pi_sst_regrid, f)
+
+
+
+'''
+#---- check grids of two regridding methods
+with open('scratch/cmip6/lig/lig_sst_regrid.pkl', 'rb') as f:
+    lig_sst_regrid = pickle.load(f)
+with open('scratch/cmip6/lig/pi_sst_regrid.pkl', 'rb') as f:
+    pi_sst_regrid = pickle.load(f)
+
+awiesm_regrid_lig = xr.open_dataset('scratch/cmip6/lig/tos_Omon_AWI-ESM-1-1-LR_lig127k_r1i1p1f1_gn_300101-310012.nc')
+awiesm_regrid_pi = xr.open_dataset('scratch/cmip6/lig/tos_Omon_AWI-ESM-1-1-LR_piControl_r1i1p1f1_gn_185501-195412.nc')
+
+lig_sst_regrid['NorESM2-LM'].lon
+awiesm_regrid_lig.lon
+pi_sst_regrid['NorESM2-LM'].lon
+awiesm_regrid_pi.lon
+lig_sst_regrid['NorESM2-LM'].lat
+awiesm_regrid_lig.lat
+pi_sst_regrid['NorESM2-LM'].lat
+awiesm_regrid_pi.lat
+
+test = regrid(lig_sst[model])
+test1 = regrid_rahul(lig_sst[model], 'tos')
+(test.tos.values[np.isfinite(test.tos.values)] == lig_sst[model].tos.values[np.isfinite(lig_sst[model].tos.values)]).all()
+(test1.values[np.isfinite(test1.values)] == lig_sst[model].tos.values[np.isfinite(lig_sst[model].tos.values)]).all()
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get mon_sea_ann regridded sst
+
+with open('scratch/cmip6/lig/lig_sst_regrid.pkl', 'rb') as f:
+    lig_sst_regrid = pickle.load(f)
+with open('scratch/cmip6/lig/pi_sst_regrid.pkl', 'rb') as f:
+    pi_sst_regrid = pickle.load(f)
+
+models=sorted(lig_sst_regrid.keys())
+
+lig_sst_regrid_alltime = {}
+pi_sst_regrid_alltime = {}
+
+for model in models:
+    # model = 'NorESM2-LM'
+    print(model)
+    
+    lig_sst_regrid_alltime[model] = mon_sea_ann(
+        var_monthly = lig_sst_regrid[model].tos)
+    pi_sst_regrid_alltime[model] = mon_sea_ann(
+        var_monthly = pi_sst_regrid[model].tos)
+
+with open('scratch/cmip6/lig/lig_sst_regrid_alltime.pkl', 'wb') as f:
+    pickle.dump(lig_sst_regrid_alltime, f)
+with open('scratch/cmip6/lig/pi_sst_regrid_alltime.pkl', 'wb') as f:
+    pickle.dump(pi_sst_regrid_alltime, f)
+
+
+'''
+with open('scratch/cmip6/lig/lig_sst_regrid_alltime.pkl', 'rb') as f:
+    lig_sst_regrid_alltime = pickle.load(f)
+with open('scratch/cmip6/lig/pi_sst_regrid_alltime.pkl', 'rb') as f:
+    pi_sst_regrid_alltime = pickle.load(f)
+
+
+
+#---- while no awi-esm
+    if (model != 'AWI-ESM-1-1-LR'):
+    elif (model == 'AWI-ESM-1-1-LR'):
+        lig_sst_regrid_alltime[model] = {}
+        pi_sst_regrid_alltime[model] = {}
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get regridded AMIP SST
+
+pi_sst_file = 'startdump/model_input/pi/alex/T63_amipsst_pcmdi_187001-189912.nc'
+boundary_conditions = {}
+boundary_conditions['sst'] = {}
+boundary_conditions['sst']['pi'] = xr.open_dataset(pi_sst_file)
+
+# set land points as np.nan
+esacci_echam6_t63_trim = xr.open_dataset('startdump/tagging/tagmap/auxiliaries/sst_mon_ESACCI-2.1_198201_201612_am_rg_echam6_t63_slm_trim.nc')
+b_slm = np.broadcast_to(
+    np.isnan(esacci_echam6_t63_trim.analysed_sst.values),
+    boundary_conditions['sst']['pi'].sst.shape,)
+boundary_conditions['sst']['pi'].sst.values[b_slm] = np.nan
+boundary_conditions['sst']['pi'].sst.values -= zerok
+
+amip_pi_sst_regrid = {}
+amip_pi_sst_regrid['mm'] = regrid(boundary_conditions['sst']['pi'].sst)
+amip_pi_sst_regrid['am'] = time_weighted_mean(amip_pi_sst_regrid['mm'])
+amip_pi_sst_regrid['sm'] = amip_pi_sst_regrid['mm'].groupby(
+    'time.season').map(time_weighted_mean)
+
+with open('scratch/cmip6/lig/amip_pi_sst_regrid.pkl', 'wb') as f:
+    pickle.dump(amip_pi_sst_regrid, f)
+
+'''
+with open('scratch/cmip6/lig/amip_pi_sst_regrid.pkl', 'rb') as f:
+    amip_pi_sst_regrid = pickle.load(f)
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
 

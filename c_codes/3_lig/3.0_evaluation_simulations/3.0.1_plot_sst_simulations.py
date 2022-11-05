@@ -596,5 +596,207 @@ regrid(lig_sst_alltime[model]['am'], ds_out = pi_sst[model]).to_netcdf('test.nc'
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region plot pi anomalies compared to amip pi am sst
+
+with open('scratch/cmip6/lig/pi_sst_regrid_alltime.pkl', 'rb') as f:
+    pi_sst_regrid_alltime = pickle.load(f)
+with open('scratch/cmip6/lig/amip_pi_sst_regrid.pkl', 'rb') as f:
+    amip_pi_sst_regrid = pickle.load(f)
+
+output_png = 'figures/7_lig/7.0_boundary_conditions/7.0.0_sst/7.0.0.0 pi-amip_pi sst am multiple models.png'
+cbar_label = 'PI - AMIP_PI annual mean SST [$°C$]'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='BrBG',)
+
+nrow = 3
+ncol = 4
+fm_bottom = 2 / (5.8*nrow + 2)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.12, 'wspace': 0.02},)
+
+ipanel=0
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(
+            northextent=-30, ax_org = axs[irow, jcol])
+        plt.text(
+            0, 0.95, panel_labels[ipanel],
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        ipanel += 1
+
+
+for irow in range(nrow):
+    for jcol in range(ncol):
+        model = models[jcol + ncol * irow]
+        # model = 'GISS-E2-1-G'
+        print(model)
+        
+        plt_mesh = axs[irow, jcol].pcolormesh(
+            pi_sst_regrid_alltime[model]['am'].lon,
+            pi_sst_regrid_alltime[model]['am'].lat,
+            pi_sst_regrid_alltime[model]['am'].values - \
+                amip_pi_sst_regrid['am'].values,
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+        
+        diff = pi_sst_regrid_alltime[model]['am'].values - \
+            amip_pi_sst_regrid['am'].values
+        
+        diff_reg = {}
+        diff_reg['SO'] = diff[pi_sst_regrid_alltime[model]['am'].lat <= -40]
+        diff_reg['Atlantic'] = diff[
+            (pi_sst_regrid_alltime[model]['am'].lat <= -40) & \
+                (pi_sst_regrid_alltime[model]['am'].lon >= -70) & \
+                    (pi_sst_regrid_alltime[model]['am'].lon < 20)]
+        diff_reg['Indian'] = diff[
+            (pi_sst_regrid_alltime[model]['am'].lat <= -40) & \
+                (pi_sst_regrid_alltime[model]['am'].lon >= 20) & \
+                    (pi_sst_regrid_alltime[model]['am'].lon < 140)]
+        diff_reg['Pacific'] = diff[
+            (pi_sst_regrid_alltime[model]['am'].lat <= -40) & \
+                ((pi_sst_regrid_alltime[model]['am'].lon >= 140) | \
+                    (pi_sst_regrid_alltime[model]['am'].lon < -70))]
+        
+        rmse_reg = {}
+        rmse_reg['SO'] = np.sqrt(np.nanmean(np.square(diff_reg['SO'])))
+        rmse_reg['Atlantic'] = np.sqrt(np.nanmean(np.square(diff_reg['Atlantic'])))
+        rmse_reg['Indian'] = np.sqrt(np.nanmean(np.square(diff_reg['Indian'])))
+        rmse_reg['Pacific'] = np.sqrt(np.nanmean(np.square(diff_reg['Pacific'])))
+        
+        plt.text(
+            0.5, 1.05,
+            model + ': ' + \
+                r"$\bf{" + str(np.round(rmse_reg['SO'], 1)) + "}$, " + \
+                    str(np.round(rmse_reg['Atlantic'], 1)) + '/' + \
+                        str(np.round(rmse_reg['Indian'], 1)) + '/' + \
+                            str(np.round(rmse_reg['Pacific'], 1)),
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+
+cbar = fig.colorbar(
+    plt_mesh, ax=axs, aspect=40, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.75, ticks=pltticks, extend='both',
+    anchor=(0.5, -0.3),
+    )
+cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
+cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom, top = 0.97)
+fig.savefig(output_png)
+
+
+
+
+'''
+model = 'GISS-E2-1-G'
+
+
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot pi anomalies compared to amip pi DJF sst
+
+with open('scratch/cmip6/lig/pi_sst_regrid_alltime.pkl', 'rb') as f:
+    pi_sst_regrid_alltime = pickle.load(f)
+with open('scratch/cmip6/lig/amip_pi_sst_regrid.pkl', 'rb') as f:
+    amip_pi_sst_regrid = pickle.load(f)
+
+output_png = 'figures/7_lig/7.0_boundary_conditions/7.0.0_sst/7.0.0.0 pi-amip_pi sst DJF multiple models.png'
+cbar_label = 'PI - AMIP_PI summer SST [$°C$]'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='BrBG',)
+
+nrow = 3
+ncol = 4
+fm_bottom = 2 / (5.8*nrow + 2)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.12, 'wspace': 0.02},)
+
+ipanel=0
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(
+            northextent=-30, ax_org = axs[irow, jcol])
+        plt.text(
+            0, 0.95, panel_labels[ipanel],
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        ipanel += 1
+
+
+for irow in range(nrow):
+    for jcol in range(ncol):
+        model = models[jcol + ncol * irow]
+        # model = 'GISS-E2-1-G'
+        print(model)
+        
+        plt_mesh = axs[irow, jcol].pcolormesh(
+            pi_sst_regrid_alltime[model]['am'].lon,
+            pi_sst_regrid_alltime[model]['am'].lat,
+            pi_sst_regrid_alltime[model]['sm'].sel(season='DJF').values - \
+                amip_pi_sst_regrid['sm'].sel(season='DJF').values,
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+        
+        diff = pi_sst_regrid_alltime[model]['sm'].sel(season='DJF').values - \
+            amip_pi_sst_regrid['sm'].sel(season='DJF').values
+        
+        diff_reg = {}
+        diff_reg['SO'] = diff[pi_sst_regrid_alltime[model]['am'].lat <= -40]
+        diff_reg['Atlantic'] = diff[
+            (pi_sst_regrid_alltime[model]['am'].lat <= -40) & \
+                (pi_sst_regrid_alltime[model]['am'].lon >= -70) & \
+                    (pi_sst_regrid_alltime[model]['am'].lon < 20)]
+        diff_reg['Indian'] = diff[
+            (pi_sst_regrid_alltime[model]['am'].lat <= -40) & \
+                (pi_sst_regrid_alltime[model]['am'].lon >= 20) & \
+                    (pi_sst_regrid_alltime[model]['am'].lon < 140)]
+        diff_reg['Pacific'] = diff[
+            (pi_sst_regrid_alltime[model]['am'].lat <= -40) & \
+                ((pi_sst_regrid_alltime[model]['am'].lon >= 140) | \
+                    (pi_sst_regrid_alltime[model]['am'].lon < -70))]
+        
+        rmse_reg = {}
+        rmse_reg['SO'] = np.sqrt(np.nanmean(np.square(diff_reg['SO'])))
+        rmse_reg['Atlantic'] = np.sqrt(np.nanmean(np.square(diff_reg['Atlantic'])))
+        rmse_reg['Indian'] = np.sqrt(np.nanmean(np.square(diff_reg['Indian'])))
+        rmse_reg['Pacific'] = np.sqrt(np.nanmean(np.square(diff_reg['Pacific'])))
+        
+        plt.text(
+            0.5, 1.05,
+            model + ': ' + \
+                r"$\bf{" + str(np.round(rmse_reg['SO'], 1)) + "}$, " + \
+                    str(np.round(rmse_reg['Atlantic'], 1)) + '/' + \
+                        str(np.round(rmse_reg['Indian'], 1)) + '/' + \
+                            str(np.round(rmse_reg['Pacific'], 1)),
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+
+cbar = fig.colorbar(
+    plt_mesh, ax=axs, aspect=40, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.75, ticks=pltticks, extend='both',
+    anchor=(0.5, -0.3),
+    )
+cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
+cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom, top = 0.97)
+fig.savefig(output_png)
+
+
+# endregion
+# -----------------------------------------------------------------------------
 
 

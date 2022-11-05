@@ -1,6 +1,109 @@
 
 
 # -----------------------------------------------------------------------------
+# region plot regridded am sst Antarctica
+
+with open('scratch/cmip6/lig/amip_pi_sst_regrid.pkl', 'rb') as f:
+    amip_pi_sst_regrid = pickle.load(f)
+
+output_png = 'figures/0_test/trial.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-2, cm_max=26, cm_interval1=2, cm_interval2=4, cmap='RdBu',)
+
+fig, ax = hemisphere_plot(northextent=-20, figsize=np.array([5.8, 7.3]) / 2.54,)
+
+plt_mesh1 = ax.pcolormesh(
+    amip_pi_sst_regrid['am'].lon,
+    amip_pi_sst_regrid['am'].lat,
+    amip_pi_sst_regrid['am'].sst.values - zerok,
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    plt_mesh1, ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+    pad=0.02, fraction=0.15,
+    )
+cbar.ax.set_xlabel('Sea surface temperature (SST) [$°C$]', linespacing=1.5,)
+fig.savefig(output_png)
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot lig/pi regridded am sst
+
+with open('scratch/cmip6/lig/lig_sst_regrid_alltime.pkl', 'rb') as f:
+    lig_sst_regrid_alltime = pickle.load(f)
+with open('scratch/cmip6/lig/pi_sst_regrid_alltime.pkl', 'rb') as f:
+    pi_sst_regrid_alltime = pickle.load(f)
+
+output_png = 'figures/0_test/trial.png'
+cbar_label = 'Annual mean SST [$°C$]'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-2, cm_max=26, cm_interval1=2, cm_interval2=2, cmap='RdBu',)
+
+nrow = 3
+ncol = 4
+fm_bottom = 2 / (5.8*nrow + 2)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.12, 'wspace': 0.02},)
+
+ipanel=0
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(
+            northextent=-30, ax_org = axs[irow, jcol])
+        plt.text(
+            0, 0.95, panel_labels[ipanel],
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        ipanel += 1
+
+for irow in range(nrow):
+    for jcol in range(ncol):
+        model = models[jcol + ncol * irow]
+        print(model)
+        # model = 'GISS-E2-1-G'
+        
+        plt_mesh = axs[irow, jcol].pcolormesh(
+            lig_sst_regrid_alltime[model]['am'].lon,
+            lig_sst_regrid_alltime[model]['am'].lat,
+            lig_sst_regrid_alltime[model]['am'].values,
+            # pi_sst_regrid_alltime[model]['am'].lon,
+            # pi_sst_regrid_alltime[model]['am'].lat,
+            # pi_sst_regrid_alltime[model]['am'].values,
+            norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+        
+        plt.text(
+            0.5, 1.05, model,
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+
+cbar = fig.colorbar(
+    plt_mesh, ax=axs, aspect=40,
+    orientation="horizontal", shrink=0.75, ticks=pltticks, extend='both',
+    anchor=(0.5, -0.3),
+    )
+cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
+cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom, top = 0.97)
+fig.savefig(output_png)
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
 # region plot am aprt Antarctica
 
 #-------- basic settings

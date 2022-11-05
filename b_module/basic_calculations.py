@@ -278,10 +278,9 @@ pre_ann_average1 = mon_sea_ann_average(pre, 'time.year')
 # region functions to regrid a dataset to another grid
 
 def regrid(
-    ds_in,
-    ds_out=None, grid_spacing=1,
-    method='bilinear',
-    periodic=True, ignore_degenerate=False):
+    ds_in, ds_out=None, grid_spacing=1, method='bilinear',
+    periodic=True, ignore_degenerate=True, unmapped_to_nan=True,
+    extrap_method='nearest_s2d'):
     '''
     ds_in: original xarray.DataArray
     ds_out: xarray.DataArray with target grid, default None
@@ -299,7 +298,8 @@ def regrid(
     
     regridder = xe.Regridder(
         ds_in_copy, ds_out, method, periodic=periodic,
-        ignore_degenerate=ignore_degenerate,)
+        ignore_degenerate=ignore_degenerate, unmapped_to_nan=unmapped_to_nan,
+        extrap_method=extrap_method,)
     return regridder(ds_in_copy)
 
 '''
@@ -625,4 +625,84 @@ def find_ilat_ilon(slat, slon, lat, lon):
 
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region find ilat/ilon for site lat/lon: general approach
+
+def find_ilat_ilon_general(slat, slon, lat, lon):
+    '''
+    #-------- Input
+    slat: site latitude, scalar
+    slon: site longitude, scalar
+    
+    lat:  latitude, 1d or 2d array
+    lon:  longitude, 1d or 2d array
+    '''
+    
+    import numpy as np
+    from haversine import haversine_vector
+    
+    if (lon.ndim == 2):
+        lon1d = lon.reshape(-1, 1)
+        lat1d = lat.reshape(-1, 1)
+    elif (lon.ndim == 1):
+        lon1d = lon
+        lat1d = lat
+    
+    slocation_pair = [slat, slon]
+    location_pairs = [[x, y] for x, y in zip(lat1d, lon1d)]
+    
+    distances1d = haversine_vector(
+        slocation_pair, location_pairs, comb=True, normalize=True,
+        )
+    
+    if (lon.ndim == 2):
+        distances = distances1d.reshape(lon.shape)
+    elif (lon.ndim == 1):
+        distances = distances1d
+    
+    wheremin = np.where(distances == np.min(distances))
+    
+    iind0 = wheremin[0][0]
+    iind1 = wheremin[-1][0]
+    
+    return([iind0, iind1])
+
+
+'''
+#-------- check
+
+from haversine import haversine
+
+model = list(lig_sst.keys())[-1]
+# model = 'AWI-ESM-1-1-LR'
+
+slat = ec_sst_rec['original'].Latitude[2]
+slon = ec_sst_rec['original'].Longitude[2]
+lon = pi_sst[model].lon.values
+lat = pi_sst[model].lat.values
+
+iind0, iind1 = find_ilat_ilon_general(slat, slon, lat, lon)
+
+if (lon.ndim == 2):
+    print(lon[iind0, iind1])
+    print(lat[iind0, iind1])
+elif (lon.ndim == 1):
+    print(lon[iind0])
+    print(lat[iind0])
+
+print(slon)
+print(slat)
+
+if (lon.ndim == 2):
+    print(haversine([slat, slon], [lat[iind0, iind1], lon[iind0, iind1]]))
+elif (lon.ndim == 1):
+    print(haversine([slat, slon], [lat[iind0], lon[iind0]]))
+
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
 
