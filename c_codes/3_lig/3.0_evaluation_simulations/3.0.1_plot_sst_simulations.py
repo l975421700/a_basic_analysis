@@ -143,14 +143,21 @@ jh_sst_rec['original'] = pd.read_excel(
 # 12 cores
 jh_sst_rec['SO_ann'] = jh_sst_rec['original'].loc[
     (jh_sst_rec['original']['Region']=='Southern Ocean') & \
-        ['Annual SST' in string for string in jh_sst_rec['original']['Type']], ]
-# 7 cores
+        ['Annual SST' in string for string in jh_sst_rec['original']['Type']],
+        ]
+
 jh_sst_rec['SO_djf'] = jh_sst_rec['original'].loc[
     (jh_sst_rec['original']['Region']=='Southern Ocean') & \
-        ['Summer SST' in string for string in jh_sst_rec['original']['Type']], ]
+        ['Summer SST' in string for string in jh_sst_rec['original']['Type']],
+        ]
+
+with open('scratch/cmip6/lig/obs_sim_lig_pi_so_sst.pkl', 'rb') as f:
+    obs_sim_lig_pi_so_sst = pickle.load(f)
 
 
 '''
+# 7 cores
+
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -389,6 +396,8 @@ for irow in range(nrow):
 
 for irow in range(nrow):
     for jcol in range(ncol):
+        # irow = 0
+        # jcol = 0
         model = models[jcol + ncol * irow]
         # model = 'GISS-E2-1-G'
         # model = 'ACCESS-ESM1-5'
@@ -444,8 +453,21 @@ for irow in range(nrow):
                 transform=ccrs.PlateCarree(),
                 )
         
+        ec_rmse = np.sqrt(np.nanmean((obs_sim_lig_pi_so_sst[
+            (obs_sim_lig_pi_so_sst.datasets == 'EC') & \
+                (obs_sim_lig_pi_so_sst.types == 'Annual SST') & \
+                    (obs_sim_lig_pi_so_sst.models == model)
+                    ].sim_obs_lig_pi)**2))
+        jh_rmse = np.sqrt(np.nanmean((obs_sim_lig_pi_so_sst[
+            (obs_sim_lig_pi_so_sst.datasets == 'JH') & \
+                (obs_sim_lig_pi_so_sst.types == 'Annual SST') & \
+                    (obs_sim_lig_pi_so_sst.models == model)
+                    ].sim_obs_lig_pi)**2))
+        
         plt.text(
-            0.5, 1.05, model,
+            0.5, 1.05, model + ': ' + \
+                str(np.round(ec_rmse, 1)) + ', ' + \
+                    str(np.round(jh_rmse, 1)),
             transform=axs[irow, jcol].transAxes,
             ha='center', va='center', rotation='horizontal')
 
@@ -571,8 +593,21 @@ for irow in range(nrow):
                 transform=ccrs.PlateCarree(),
                 )
         
+        ec_rmse = np.sqrt(np.nanmean((obs_sim_lig_pi_so_sst[
+            (obs_sim_lig_pi_so_sst.datasets == 'EC') & \
+                (obs_sim_lig_pi_so_sst.types == 'Summer SST') & \
+                    (obs_sim_lig_pi_so_sst.models == model)
+                    ].sim_obs_lig_pi)**2))
+        jh_rmse = np.sqrt(np.nanmean((obs_sim_lig_pi_so_sst[
+            (obs_sim_lig_pi_so_sst.datasets == 'JH') & \
+                (obs_sim_lig_pi_so_sst.types == 'Summer SST') & \
+                    (obs_sim_lig_pi_so_sst.models == model)
+                    ].sim_obs_lig_pi)**2))
+        
         plt.text(
-            0.5, 1.05, model,
+            0.5, 1.05, model + ': ' + \
+                str(np.round(ec_rmse, 1)) + ', ' + \
+                    str(np.round(jh_rmse, 1)),
             transform=axs[irow, jcol].transAxes,
             ha='center', va='center', rotation='horizontal')
 
@@ -604,6 +639,8 @@ with open('scratch/cmip6/lig/pi_sst_regrid_alltime.pkl', 'rb') as f:
 with open('scratch/cmip6/lig/amip_pi_sst_regrid.pkl', 'rb') as f:
     amip_pi_sst_regrid = pickle.load(f)
 
+cdo_area1deg = xr.open_dataset('scratch/others/one_degree_grids_cdo_area.nc')
+
 output_png = 'figures/7_lig/7.0_boundary_conditions/7.0.0_sst/7.0.0.0 pi-amip_pi sst am multiple models.png'
 cbar_label = 'PI - AMIP_PI annual mean SST [$°C$]'
 
@@ -634,7 +671,7 @@ for irow in range(nrow):
 for irow in range(nrow):
     for jcol in range(ncol):
         model = models[jcol + ncol * irow]
-        # model = 'GISS-E2-1-G'
+        # model = 'AWI-ESM-1-1-LR'
         print(model)
         
         plt_mesh = axs[irow, jcol].pcolormesh(
@@ -647,26 +684,51 @@ for irow in range(nrow):
         diff = pi_sst_regrid_alltime[model]['am'].values - \
             amip_pi_sst_regrid['am'].values
         
+        mask = {}
+        mask['SO'] = pi_sst_regrid_alltime[model]['am'].lat <= -40
+        mask['Atlantic'] = ((pi_sst_regrid_alltime[model]['am'].lat <= -40) & \
+            (pi_sst_regrid_alltime[model]['am'].lon >= -70) & \
+                (pi_sst_regrid_alltime[model]['am'].lon < 20))
+        mask['Indian'] = ((pi_sst_regrid_alltime[model]['am'].lat <= -40) & \
+            (pi_sst_regrid_alltime[model]['am'].lon >= 20) & \
+                (pi_sst_regrid_alltime[model]['am'].lon < 140))
+        mask['Pacific'] = ((pi_sst_regrid_alltime[model]['am'].lat <= -40) & \
+            ((pi_sst_regrid_alltime[model]['am'].lon >= 140) | \
+                (pi_sst_regrid_alltime[model]['am'].lon < -70)))
+        
         diff_reg = {}
-        diff_reg['SO'] = diff[pi_sst_regrid_alltime[model]['am'].lat <= -40]
-        diff_reg['Atlantic'] = diff[
-            (pi_sst_regrid_alltime[model]['am'].lat <= -40) & \
-                (pi_sst_regrid_alltime[model]['am'].lon >= -70) & \
-                    (pi_sst_regrid_alltime[model]['am'].lon < 20)]
-        diff_reg['Indian'] = diff[
-            (pi_sst_regrid_alltime[model]['am'].lat <= -40) & \
-                (pi_sst_regrid_alltime[model]['am'].lon >= 20) & \
-                    (pi_sst_regrid_alltime[model]['am'].lon < 140)]
-        diff_reg['Pacific'] = diff[
-            (pi_sst_regrid_alltime[model]['am'].lat <= -40) & \
-                ((pi_sst_regrid_alltime[model]['am'].lon >= 140) | \
-                    (pi_sst_regrid_alltime[model]['am'].lon < -70))]
+        diff_reg['SO'] = diff[mask['SO']]
+        diff_reg['Atlantic'] = diff[mask['Atlantic']]
+        diff_reg['Indian'] = diff[mask['Indian']]
+        diff_reg['Pacific'] = diff[mask['Pacific']]
+        
+        area_reg = {}
+        area_reg['SO'] = cdo_area1deg.cell_area.values[mask['SO']]
+        area_reg['Atlantic'] = cdo_area1deg.cell_area.values[mask['Atlantic']]
+        area_reg['Indian'] = cdo_area1deg.cell_area.values[mask['Indian']]
+        area_reg['Pacific'] = cdo_area1deg.cell_area.values[mask['Pacific']]
         
         rmse_reg = {}
-        rmse_reg['SO'] = np.sqrt(np.nanmean(np.square(diff_reg['SO'])))
-        rmse_reg['Atlantic'] = np.sqrt(np.nanmean(np.square(diff_reg['Atlantic'])))
-        rmse_reg['Indian'] = np.sqrt(np.nanmean(np.square(diff_reg['Indian'])))
-        rmse_reg['Pacific'] = np.sqrt(np.nanmean(np.square(diff_reg['Pacific'])))
+        rmse_reg['SO'] = np.sqrt(np.ma.average(
+            np.ma.MaskedArray(
+                np.square(diff_reg['SO']),
+                mask=np.isnan(np.square(diff_reg['SO']))),
+            weights=area_reg['SO']))
+        rmse_reg['Atlantic'] = np.sqrt(np.ma.average(
+            np.ma.MaskedArray(
+                np.square(diff_reg['Atlantic']),
+                mask=np.isnan(np.square(diff_reg['Atlantic']))),
+            weights=area_reg['Atlantic']))
+        rmse_reg['Indian'] = np.sqrt(np.ma.average(
+            np.ma.MaskedArray(
+                np.square(diff_reg['Indian']),
+                mask=np.isnan(np.square(diff_reg['Indian']))),
+            weights=area_reg['Indian']))
+        rmse_reg['Pacific'] = np.sqrt(np.ma.average(
+            np.ma.MaskedArray(
+                np.square(diff_reg['Pacific']),
+                mask=np.isnan(np.square(diff_reg['Pacific']))),
+            weights=area_reg['Pacific']))
         
         plt.text(
             0.5, 1.05,
@@ -695,7 +757,11 @@ fig.savefig(output_png)
 '''
 model = 'GISS-E2-1-G'
 
+# check mask creation
+        (mask['SO'].values == (mask['Atlantic'].values | mask['Indian'].values | mask['Pacific'].values)).all()
+        (mask['SO'].values.sum() == (mask['Atlantic'].values.sum() + mask['Indian'].values.sum() + mask['Pacific'].values.sum()))
 
+AWI-ESM-1-1-LR: 1.45, 1.33/1.48/1.50
 
 '''
 # endregion
@@ -709,6 +775,8 @@ with open('scratch/cmip6/lig/pi_sst_regrid_alltime.pkl', 'rb') as f:
     pi_sst_regrid_alltime = pickle.load(f)
 with open('scratch/cmip6/lig/amip_pi_sst_regrid.pkl', 'rb') as f:
     amip_pi_sst_regrid = pickle.load(f)
+
+cdo_area1deg = xr.open_dataset('scratch/others/one_degree_grids_cdo_area.nc')
 
 output_png = 'figures/7_lig/7.0_boundary_conditions/7.0.0_sst/7.0.0.0 pi-amip_pi sst DJF multiple models.png'
 cbar_label = 'PI - AMIP_PI summer SST [$°C$]'
@@ -753,26 +821,51 @@ for irow in range(nrow):
         diff = pi_sst_regrid_alltime[model]['sm'].sel(season='DJF').values - \
             amip_pi_sst_regrid['sm'].sel(season='DJF').values
         
+        mask = {}
+        mask['SO'] = pi_sst_regrid_alltime[model]['am'].lat <= -40
+        mask['Atlantic'] = ((pi_sst_regrid_alltime[model]['am'].lat <= -40) & \
+            (pi_sst_regrid_alltime[model]['am'].lon >= -70) & \
+                (pi_sst_regrid_alltime[model]['am'].lon < 20))
+        mask['Indian'] = ((pi_sst_regrid_alltime[model]['am'].lat <= -40) & \
+            (pi_sst_regrid_alltime[model]['am'].lon >= 20) & \
+                (pi_sst_regrid_alltime[model]['am'].lon < 140))
+        mask['Pacific'] = ((pi_sst_regrid_alltime[model]['am'].lat <= -40) & \
+            ((pi_sst_regrid_alltime[model]['am'].lon >= 140) | \
+                (pi_sst_regrid_alltime[model]['am'].lon < -70)))
+        
         diff_reg = {}
-        diff_reg['SO'] = diff[pi_sst_regrid_alltime[model]['am'].lat <= -40]
-        diff_reg['Atlantic'] = diff[
-            (pi_sst_regrid_alltime[model]['am'].lat <= -40) & \
-                (pi_sst_regrid_alltime[model]['am'].lon >= -70) & \
-                    (pi_sst_regrid_alltime[model]['am'].lon < 20)]
-        diff_reg['Indian'] = diff[
-            (pi_sst_regrid_alltime[model]['am'].lat <= -40) & \
-                (pi_sst_regrid_alltime[model]['am'].lon >= 20) & \
-                    (pi_sst_regrid_alltime[model]['am'].lon < 140)]
-        diff_reg['Pacific'] = diff[
-            (pi_sst_regrid_alltime[model]['am'].lat <= -40) & \
-                ((pi_sst_regrid_alltime[model]['am'].lon >= 140) | \
-                    (pi_sst_regrid_alltime[model]['am'].lon < -70))]
+        diff_reg['SO'] = diff[mask['SO']]
+        diff_reg['Atlantic'] = diff[mask['Atlantic']]
+        diff_reg['Indian'] = diff[mask['Indian']]
+        diff_reg['Pacific'] = diff[mask['Pacific']]
+        
+        area_reg = {}
+        area_reg['SO'] = cdo_area1deg.cell_area.values[mask['SO']]
+        area_reg['Atlantic'] = cdo_area1deg.cell_area.values[mask['Atlantic']]
+        area_reg['Indian'] = cdo_area1deg.cell_area.values[mask['Indian']]
+        area_reg['Pacific'] = cdo_area1deg.cell_area.values[mask['Pacific']]
         
         rmse_reg = {}
-        rmse_reg['SO'] = np.sqrt(np.nanmean(np.square(diff_reg['SO'])))
-        rmse_reg['Atlantic'] = np.sqrt(np.nanmean(np.square(diff_reg['Atlantic'])))
-        rmse_reg['Indian'] = np.sqrt(np.nanmean(np.square(diff_reg['Indian'])))
-        rmse_reg['Pacific'] = np.sqrt(np.nanmean(np.square(diff_reg['Pacific'])))
+        rmse_reg['SO'] = np.sqrt(np.ma.average(
+            np.ma.MaskedArray(
+                np.square(diff_reg['SO']),
+                mask=np.isnan(np.square(diff_reg['SO']))),
+            weights=area_reg['SO']))
+        rmse_reg['Atlantic'] = np.sqrt(np.ma.average(
+            np.ma.MaskedArray(
+                np.square(diff_reg['Atlantic']),
+                mask=np.isnan(np.square(diff_reg['Atlantic']))),
+            weights=area_reg['Atlantic']))
+        rmse_reg['Indian'] = np.sqrt(np.ma.average(
+            np.ma.MaskedArray(
+                np.square(diff_reg['Indian']),
+                mask=np.isnan(np.square(diff_reg['Indian']))),
+            weights=area_reg['Indian']))
+        rmse_reg['Pacific'] = np.sqrt(np.ma.average(
+            np.ma.MaskedArray(
+                np.square(diff_reg['Pacific']),
+                mask=np.isnan(np.square(diff_reg['Pacific']))),
+            weights=area_reg['Pacific']))
         
         plt.text(
             0.5, 1.05,

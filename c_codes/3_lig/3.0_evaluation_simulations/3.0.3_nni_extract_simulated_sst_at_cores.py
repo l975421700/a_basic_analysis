@@ -144,14 +144,14 @@ jh_sst_rec['original'] = pd.read_excel(
 # 12 cores
 jh_sst_rec['SO_ann'] = jh_sst_rec['original'].loc[
     (jh_sst_rec['original']['Region']=='Southern Ocean') & \
-        ['Annual SST' in string for string in jh_sst_rec['original']['Type']], ]
-# 7 cores
+        ['Annual SST' in string for string in jh_sst_rec['original']['Type']],]
 jh_sst_rec['SO_djf'] = jh_sst_rec['original'].loc[
     (jh_sst_rec['original']['Region']=='Southern Ocean') & \
-        ['Summer SST' in string for string in jh_sst_rec['original']['Type']], ]
+        ['Summer SST' in string for string in jh_sst_rec['original']['Type']],]
 
 
 '''
+# 7 cores
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -205,18 +205,82 @@ with open('scratch/cmip6/lig/loc_indices_rec_ec.pkl', 'wb') as f:
 
 
 '''
+#---------------- check
+from haversine import haversine
+with open('scratch/cmip6/lig/loc_indices_rec_ec.pkl', 'rb') as f:
+    loc_indices_rec_ec = pickle.load(f)
+
+for model in models:
+    # model = 'HadGEM3-GC31-LL'
+    print('#-------------------------------- ' + model)
+    
+    lon = pi_sst[model].lon.values
+    lat = pi_sst[model].lat.values
+    
+    for istation in ec_sst_rec['original'].index:
+        # istation = 10
+        station = ec_sst_rec['original'].Station[istation]
+        print('#---------------- ' + str(istation) + ': ' + station)
+        
+        slon = ec_sst_rec['original'].Longitude[istation]
+        slat = ec_sst_rec['original'].Latitude[istation]
+        
+        if (lon.ndim == 2):
+            distance = haversine(
+                [slat, slon],
+                [lat[loc_indices_rec_ec['EC'][model][station][0],
+                     loc_indices_rec_ec['EC'][model][station][1]],
+                 lon[loc_indices_rec_ec['EC'][model][station][0],
+                     loc_indices_rec_ec['EC'][model][station][1]]],
+                normalize=True,)
+        elif (lon.ndim == 1):
+            distance = haversine(
+                [slat, slon],
+                [lat[loc_indices_rec_ec['EC'][model][station][0]],
+                 lon[loc_indices_rec_ec['EC'][model][station][0]]],
+                normalize=True,)
+        
+        if (distance > 100):
+            print(np.round(distance, 0))
+    
+    for istation in jh_sst_rec['original'].index:
+        # istation = 10
+        station = jh_sst_rec['original'].Station[istation]
+        print('#---------------- ' + str(istation) + ': ' + station)
+        
+        slon = jh_sst_rec['original'].Longitude[istation]
+        slat = jh_sst_rec['original'].Latitude[istation]
+        
+        if (lon.ndim == 2):
+            distance = haversine(
+                [slat, slon],
+                [lat[loc_indices_rec_ec['JH'][model][station][0],
+                     loc_indices_rec_ec['JH'][model][station][1]],
+                 lon[loc_indices_rec_ec['JH'][model][station][0],
+                     loc_indices_rec_ec['JH'][model][station][1]]],
+                normalize=True,)
+        elif (lon.ndim == 1):
+            distance = haversine(
+                [slat, slon],
+                [lat[loc_indices_rec_ec['JH'][model][station][0]],
+                 lon[loc_indices_rec_ec['JH'][model][station][0]]],
+                normalize=True,)
+        
+        if (distance > 100):
+            print(np.round(distance, 0))
+
 
 from haversine import haversine
 
-        # # check
-        # iind0, iind1 = find_ilat_ilon_general(slat, slon, lat, lon)
-        # if (lon.ndim == 2):
-        #     print(haversine(
-        #         [slat, slon], [lat[iind0, iind1], lon[iind0, iind1]],
-        #         normalize=True,))
-        # elif (lon.ndim == 1):
-        #     print(haversine([slat, slon], [lat[iind0], lon[iind0]],
-        #                     normalize=True,))
+        # check
+        iind0, iind1 = find_ilat_ilon_general(slat, slon, lat, lon)
+        if (lon.ndim == 2):
+            print(haversine(
+                [slat, slon], [lat[iind0, iind1], lon[iind0, iind1]],
+                normalize=True,))
+        elif (lon.ndim == 1):
+            print(haversine([slat, slon], [lat[iind0], lon[iind0]],
+                            normalize=True,))
 
 
 jh_sst_rec['original'].Longitude[0]
@@ -224,4 +288,462 @@ jh_sst_rec['original'].Longitude[0]
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region extract point simulated and reconstructed LIG-PI am and summer SST
+
+with open('scratch/cmip6/lig/loc_indices_rec_ec.pkl', 'rb') as f:
+    loc_indices_rec_ec = pickle.load(f)
+
+obs_sim_lig_pi_so_sst = pd.DataFrame(columns=(
+    'datasets', 'types', 'stations', 'models',
+    'slat', 'slon', 'glat', 'glon',
+    'obs_lig_pi', 'obs_lig_pi_2s', 'sim_lig_pi', 'sim_lig_pi_2s',
+    'sim_obs_lig_pi', 'sim_obs_lig_pi_2s', ))
+
+
+#-------------------------------- EC
+dataset = 'EC'
+
+#---------------- Annual SST
+type = 'Annual SST'
+
+for istation in ec_sst_rec['SO_ann'].index:
+    # istation = ec_sst_rec['SO_ann'].index[0]
+    station = ec_sst_rec['SO_ann'].Station[istation]
+    
+    print('#---- ' + str(istation) + ': ' + station)
+    
+    slat = ec_sst_rec['SO_ann'].Latitude[istation]
+    slon = ec_sst_rec['SO_ann'].Longitude[istation]
+    obs_lig_pi = ec_sst_rec['SO_ann']['127 ka Median PIAn [°C]'][istation]
+    obs_lig_pi_2s = ec_sst_rec['SO_ann']['127 ka 2s PIAn [°C]'][istation]
+    
+    for model in models:
+        # model = 'ACCESS-ESM1-5'
+        # model = 'AWI-ESM-1-1-LR'
+        # model = 'HadGEM3-GC31-LL'
+        print(model)
+        lon = pi_sst[model].lon.values
+        lat = pi_sst[model].lat.values
+        
+        if (lon.shape == lig_sst_alltime[model]['am'].shape):
+            iind0 = loc_indices_rec_ec[dataset][model][station][0]
+            iind1 = loc_indices_rec_ec[dataset][model][station][1]
+        else:
+            iind0 = loc_indices_rec_ec[dataset][model][station][1]
+            iind1 = loc_indices_rec_ec[dataset][model][station][0]
+        
+        if (lon.ndim == 2):
+            glat = lat[loc_indices_rec_ec[dataset][model][station][0],
+                       loc_indices_rec_ec[dataset][model][station][1]]
+            glon = lon[loc_indices_rec_ec[dataset][model][station][0],
+                       loc_indices_rec_ec[dataset][model][station][1]]
+            if (model != 'HadGEM3-GC31-LL'):
+                sim_lig_pi = \
+                    lig_sst_alltime[model]['am'][iind0, iind1].values - \
+                    pi_sst_alltime[model]['am'][iind0, iind1].values
+                sigma1 = lig_sst_alltime[model]['ann'][
+                    :, iind0, iind1].std(ddof=1).values
+            elif (model == 'HadGEM3-GC31-LL'):
+                sim_lig_pi = regrid(
+                    lig_sst_alltime[model]['am'], ds_out = pi_sst[model],
+                    )[iind0, iind1+1].values - \
+                        pi_sst_alltime[model]['am'][iind0, iind1].values
+                sigma1 = regrid(
+                    lig_sst_alltime[model]['ann'], ds_out = pi_sst[model])[
+                    :, iind0, iind1+1].std(ddof=1).values
+            sigma2 = pi_sst_alltime[model]['ann'][
+                :, iind0, iind1].std(ddof=1).values
+            sim_lig_pi_2s = (sigma1**2 + sigma2**2)**0.5 * 2
+        elif (lon.ndim == 1):
+            glat = lat[loc_indices_rec_ec[dataset][model][station][0]]
+            glon = lon[loc_indices_rec_ec[dataset][model][station][0]]
+            if (model != 'HadGEM3-GC31-LL'):
+                sim_lig_pi = \
+                    lig_sst_alltime[model]['am'][iind0].values - \
+                    pi_sst_alltime[model]['am'][iind0].values
+                sigma1 = lig_sst_alltime[model]['ann'][
+                    :, iind0].std(ddof=1).values
+            elif (model == 'HadGEM3-GC31-LL'):
+                sim_lig_pi = regrid(
+                    lig_sst_alltime[model]['am'], ds_out = pi_sst[model],
+                    )[iind0].values - \
+                        pi_sst_alltime[model]['am'][iind0].values
+                sigma1 = regrid(
+                    lig_sst_alltime[model]['ann'], ds_out = pi_sst[model])[
+                    :, iind0].std(ddof=1).values
+            sigma2 = pi_sst_alltime[model]['ann'][
+                :, iind0].std(ddof=1).values
+            sim_lig_pi_2s = (sigma1**2 + sigma2**2)**0.5 * 2
+        
+        sim_obs_lig_pi = sim_lig_pi - obs_lig_pi
+        sim_obs_lig_pi_2s=((obs_lig_pi_2s/2)**2 + (sim_lig_pi_2s/2)**2)**0.5 * 2
+        
+        obs_sim_lig_pi_so_sst = pd.concat([
+            obs_sim_lig_pi_so_sst,
+            pd.DataFrame(data={
+                'datasets': dataset,
+                'types': type,
+                'stations': station,
+                'models': model,
+                'slat': slat,
+                'slon': slon,
+                'glat': glat,
+                'glon': glon,
+                'obs_lig_pi': obs_lig_pi,
+                'obs_lig_pi_2s': obs_lig_pi_2s,
+                'sim_lig_pi': sim_lig_pi,
+                'sim_lig_pi_2s': sim_lig_pi_2s,
+                'sim_obs_lig_pi': sim_obs_lig_pi,
+                'sim_obs_lig_pi_2s': sim_obs_lig_pi_2s,
+                }, index=[0])], ignore_index=True,)
+
+#---------------- Summer SST
+type = 'Summer SST'
+
+for istation in ec_sst_rec['SO_djf'].index:
+    # istation = ec_sst_rec['SO_djf'].index[0]
+    station = ec_sst_rec['SO_djf'].Station[istation]
+    
+    print('#---- ' + str(istation) + ': ' + station)
+    
+    slat = ec_sst_rec['SO_djf'].Latitude[istation]
+    slon = ec_sst_rec['SO_djf'].Longitude[istation]
+    obs_lig_pi = ec_sst_rec['SO_djf']['127 ka Median PIAn [°C]'][istation]
+    obs_lig_pi_2s = ec_sst_rec['SO_djf']['127 ka 2s PIAn [°C]'][istation]
+    
+    for model in models:
+        # model = 'ACCESS-ESM1-5'
+        # model = 'AWI-ESM-1-1-LR'
+        # model = 'HadGEM3-GC31-LL'
+        # model = 'GISS-E2-1-G'
+        print(model)
+        lon = pi_sst[model].lon.values
+        lat = pi_sst[model].lat.values
+        
+        if (lon.shape == lig_sst_alltime[model]['am'].shape):
+            iind0 = loc_indices_rec_ec[dataset][model][station][0]
+            iind1 = loc_indices_rec_ec[dataset][model][station][1]
+        else:
+            iind0 = loc_indices_rec_ec[dataset][model][station][1]
+            iind1 = loc_indices_rec_ec[dataset][model][station][0]
+        
+        if (lon.ndim == 2):
+            glat = lat[loc_indices_rec_ec[dataset][model][station][0],
+                       loc_indices_rec_ec[dataset][model][station][1]]
+            glon = lon[loc_indices_rec_ec[dataset][model][station][0],
+                       loc_indices_rec_ec[dataset][model][station][1]]
+            if (model != 'HadGEM3-GC31-LL'):
+                sim_lig_pi = \
+                    lig_sst_alltime[model]['sm'].sel(
+                        season='DJF')[iind0, iind1].values - \
+                    pi_sst_alltime[model]['sm'].sel(
+                        season='DJF')[iind0, iind1].values
+                sigma1 = lig_sst_alltime[model]['sea'][
+                    3::4, iind0, iind1].std(ddof=1).values
+            elif (model == 'HadGEM3-GC31-LL'):
+                sim_lig_pi = regrid(
+                    lig_sst_alltime[model]['sm'].sel(season='DJF'),
+                    ds_out = pi_sst[model],
+                    )[iind0, iind1+1].values - \
+                        pi_sst_alltime[model]['sm'].sel(
+                            season='DJF')[iind0, iind1].values
+                sigma1 = regrid(
+                    lig_sst_alltime[model]['sea'],
+                    ds_out = pi_sst[model])[
+                        3::4, iind0, iind1+1].std(ddof=1).values
+            sigma2 = pi_sst_alltime[model]['sea'][
+                3::4, iind0, iind1].std(ddof=1).values
+            sim_lig_pi_2s = (sigma1**2 + sigma2**2)**0.5 * 2
+        elif (lon.ndim == 1):
+            glat = lat[loc_indices_rec_ec[dataset][model][station][0]]
+            glon = lon[loc_indices_rec_ec[dataset][model][station][0]]
+            if (model != 'HadGEM3-GC31-LL'):
+                sim_lig_pi = \
+                    lig_sst_alltime[model]['sm'].sel(
+                        season='DJF')[iind0].values - \
+                    pi_sst_alltime[model]['sm'].sel(
+                        season='DJF')[iind0].values
+                sigma1 = lig_sst_alltime[model]['sea'][
+                    3::4, iind0].std(ddof=1).values
+            elif (model == 'HadGEM3-GC31-LL'):
+                sim_lig_pi = regrid(
+                    lig_sst_alltime[model]['sm'].sel(season='DJF'),
+                    ds_out = pi_sst[model],
+                    )[iind0].values - \
+                        pi_sst_alltime[model]['sm'].sel(
+                            season='DJF')[iind0].values
+                sigma1 = regrid(
+                    lig_sst_alltime[model]['sea'],
+                    ds_out = pi_sst[model])[
+                        3::4, iind0].std(ddof=1).values
+            sigma2 = pi_sst_alltime[model]['sea'][
+                3::4, iind0].std(ddof=1).values
+            sim_lig_pi_2s = (sigma1**2 + sigma2**2)**0.5 * 2
+        
+        sim_obs_lig_pi = sim_lig_pi - obs_lig_pi
+        sim_obs_lig_pi_2s=((obs_lig_pi_2s/2)**2 + (sim_lig_pi_2s/2)**2)**0.5 * 2
+        
+        obs_sim_lig_pi_so_sst = pd.concat([
+            obs_sim_lig_pi_so_sst,
+            pd.DataFrame(data={
+                'datasets': dataset,
+                'types': type,
+                'stations': station,
+                'models': model,
+                'slat': slat,
+                'slon': slon,
+                'glat': glat,
+                'glon': glon,
+                'obs_lig_pi': obs_lig_pi,
+                'obs_lig_pi_2s': obs_lig_pi_2s,
+                'sim_lig_pi': sim_lig_pi,
+                'sim_lig_pi_2s': sim_lig_pi_2s,
+                'sim_obs_lig_pi': sim_obs_lig_pi,
+                'sim_obs_lig_pi_2s': sim_obs_lig_pi_2s,
+                }, index=[0])], ignore_index=True,)
+
+
+#-------------------------------- JH
+dataset = 'JH'
+
+#---------------- Annual SST
+type = 'Annual SST'
+
+for istation in jh_sst_rec['SO_ann'].index:
+    # istation = jh_sst_rec['SO_ann'].index[0]
+    station = jh_sst_rec['SO_ann'].Station[istation]
+    
+    print('#---- ' + str(istation) + ': ' + station)
+    
+    slat = jh_sst_rec['SO_ann'].Latitude[istation]
+    slon = jh_sst_rec['SO_ann'].Longitude[istation]
+    obs_lig_pi = jh_sst_rec['SO_ann']['127 ka SST anomaly (°C)'][istation]
+    obs_lig_pi_2s = jh_sst_rec['SO_ann']['127 ka 2σ (°C)'][istation]
+    
+    for model in models:
+        # model = 'ACCESS-ESM1-5'
+        # model = 'AWI-ESM-1-1-LR'
+        # model = 'HadGEM3-GC31-LL'
+        print(model)
+        lon = pi_sst[model].lon.values
+        lat = pi_sst[model].lat.values
+        
+        if (lon.shape == pi_sst_alltime[model]['am'].shape):
+            iind0 = loc_indices_rec_ec[dataset][model][station][0]
+            iind1 = loc_indices_rec_ec[dataset][model][station][1]
+        else:
+            iind0 = loc_indices_rec_ec[dataset][model][station][1]
+            iind1 = loc_indices_rec_ec[dataset][model][station][0]
+        
+        if (lon.ndim == 2):
+            glat = lat[loc_indices_rec_ec[dataset][model][station][0],
+                       loc_indices_rec_ec[dataset][model][station][1]]
+            glon = lon[loc_indices_rec_ec[dataset][model][station][0],
+                       loc_indices_rec_ec[dataset][model][station][1]]
+            if (model != 'HadGEM3-GC31-LL'):
+                sim_lig_pi = \
+                    lig_sst_alltime[model]['am'][iind0, iind1].values - \
+                    pi_sst_alltime[model]['am'][iind0, iind1].values
+                sigma1 = lig_sst_alltime[model]['ann'][
+                    :, iind0, iind1].std(ddof=1).values
+            elif (model == 'HadGEM3-GC31-LL'):
+                sim_lig_pi = regrid(
+                    lig_sst_alltime[model]['am'], ds_out = pi_sst[model],
+                    )[iind0, iind1+1].values - \
+                        pi_sst_alltime[model]['am'][iind0, iind1].values
+                sigma1 = regrid(
+                    lig_sst_alltime[model]['ann'], ds_out = pi_sst[model])[
+                    :, iind0, iind1+1].std(ddof=1).values
+            sigma2 = pi_sst_alltime[model]['ann'][
+                :, iind0, iind1].std(ddof=1).values
+            sim_lig_pi_2s = (sigma1**2 + sigma2**2)**0.5 * 2
+        elif (lon.ndim == 1):
+            glat = lat[loc_indices_rec_ec[dataset][model][station][0]]
+            glon = lon[loc_indices_rec_ec[dataset][model][station][0]]
+            if (model != 'HadGEM3-GC31-LL'):
+                sim_lig_pi = \
+                    lig_sst_alltime[model]['am'][iind0].values - \
+                    pi_sst_alltime[model]['am'][iind0].values
+                sigma1 = lig_sst_alltime[model]['ann'][
+                    :, iind0].std(ddof=1).values
+            elif (model == 'HadGEM3-GC31-LL'):
+                sim_lig_pi = regrid(
+                    lig_sst_alltime[model]['am'], ds_out = pi_sst[model],
+                    )[iind0].values - \
+                        pi_sst_alltime[model]['am'][iind0].values
+                sigma1 = regrid(
+                    lig_sst_alltime[model]['ann'], ds_out = pi_sst[model])[
+                    :, iind0].std(ddof=1).values
+            sigma2 = pi_sst_alltime[model]['ann'][
+                :, iind0].std(ddof=1).values
+            sim_lig_pi_2s = (sigma1**2 + sigma2**2)**0.5 * 2
+        
+        sim_obs_lig_pi = sim_lig_pi - obs_lig_pi
+        sim_obs_lig_pi_2s=((obs_lig_pi_2s/2)**2 + (sim_lig_pi_2s/2)**2)**0.5 * 2
+        
+        obs_sim_lig_pi_so_sst = pd.concat([
+            obs_sim_lig_pi_so_sst,
+            pd.DataFrame(data={
+                'datasets': dataset,
+                'types': type,
+                'stations': station,
+                'models': model,
+                'slat': slat,
+                'slon': slon,
+                'glat': glat,
+                'glon': glon,
+                'obs_lig_pi': obs_lig_pi,
+                'obs_lig_pi_2s': obs_lig_pi_2s,
+                'sim_lig_pi': sim_lig_pi,
+                'sim_lig_pi_2s': sim_lig_pi_2s,
+                'sim_obs_lig_pi': sim_obs_lig_pi,
+                'sim_obs_lig_pi_2s': sim_obs_lig_pi_2s,
+                }, index=[0])], ignore_index=True,)
+
+#---------------- Summer SST
+type = 'Summer SST'
+
+for istation in jh_sst_rec['SO_djf'].index:
+    # istation = jh_sst_rec['SO_djf'].index[0]
+    station = jh_sst_rec['SO_djf'].Station[istation]
+    
+    print('#---- ' + str(istation) + ': ' + station)
+    
+    slat = jh_sst_rec['SO_djf'].Latitude[istation]
+    slon = jh_sst_rec['SO_djf'].Longitude[istation]
+    obs_lig_pi = jh_sst_rec['SO_djf']['127 ka SST anomaly (°C)'][istation]
+    obs_lig_pi_2s = jh_sst_rec['SO_djf']['127 ka 2σ (°C)'][istation]
+    
+    for model in models:
+        # model = 'ACCESS-ESM1-5'
+        # model = 'AWI-ESM-1-1-LR'
+        # model = 'HadGEM3-GC31-LL'
+        print(model)
+        lon = pi_sst[model].lon.values
+        lat = pi_sst[model].lat.values
+        
+        if (lon.shape == lig_sst_alltime[model]['am'].shape):
+            iind0 = loc_indices_rec_ec[dataset][model][station][0]
+            iind1 = loc_indices_rec_ec[dataset][model][station][1]
+        else:
+            iind0 = loc_indices_rec_ec[dataset][model][station][1]
+            iind1 = loc_indices_rec_ec[dataset][model][station][0]
+        
+        if (lon.ndim == 2):
+            glat = lat[loc_indices_rec_ec[dataset][model][station][0],
+                       loc_indices_rec_ec[dataset][model][station][1]]
+            glon = lon[loc_indices_rec_ec[dataset][model][station][0],
+                       loc_indices_rec_ec[dataset][model][station][1]]
+            if (model != 'HadGEM3-GC31-LL'):
+                sim_lig_pi = \
+                    lig_sst_alltime[model]['sm'].sel(
+                        season='DJF')[iind0, iind1].values - \
+                    pi_sst_alltime[model]['sm'].sel(
+                        season='DJF')[iind0, iind1].values
+                sigma1 = lig_sst_alltime[model]['sea'][
+                    3::4, iind0, iind1].std(ddof=1).values
+            elif (model == 'HadGEM3-GC31-LL'):
+                sim_lig_pi = regrid(
+                    lig_sst_alltime[model]['sm'].sel(season='DJF'),
+                    ds_out = pi_sst[model],
+                    )[iind0, iind1+1].values - \
+                        pi_sst_alltime[model]['sm'].sel(
+                            season='DJF')[iind0, iind1].values
+                sigma1 = regrid(
+                    lig_sst_alltime[model]['sea'],
+                    ds_out = pi_sst[model])[
+                        3::4, iind0, iind1+1].std(ddof=1).values
+            sigma2 = pi_sst_alltime[model]['sea'][
+                3::4, iind0, iind1].std(ddof=1).values
+            sim_lig_pi_2s = (sigma1**2 + sigma2**2)**0.5 * 2
+        elif (lon.ndim == 1):
+            glat = lat[loc_indices_rec_ec[dataset][model][station][0]]
+            glon = lon[loc_indices_rec_ec[dataset][model][station][0]]
+            if (model != 'HadGEM3-GC31-LL'):
+                sim_lig_pi = \
+                    lig_sst_alltime[model]['sm'].sel(
+                        season='DJF')[iind0].values - \
+                    pi_sst_alltime[model]['sm'].sel(
+                        season='DJF')[iind0].values
+                sigma1 = lig_sst_alltime[model]['sea'][
+                    3::4, iind0].std(ddof=1).values
+            elif (model == 'HadGEM3-GC31-LL'):
+                sim_lig_pi = regrid(
+                    lig_sst_alltime[model]['sm'].sel(season='DJF'),
+                    ds_out = pi_sst[model],
+                    )[iind0].values - \
+                        pi_sst_alltime[model]['sm'].sel(
+                            season='DJF')[iind0].values
+                sigma1 = regrid(
+                    lig_sst_alltime[model]['sea'],
+                    ds_out = pi_sst[model])[
+                        3::4, iind0].std(ddof=1).values
+            sigma2 = pi_sst_alltime[model]['sea'][
+                3::4, iind0].std(ddof=1).values
+            sim_lig_pi_2s = (sigma1**2 + sigma2**2)**0.5 * 2
+        
+        sim_obs_lig_pi = sim_lig_pi - obs_lig_pi
+        sim_obs_lig_pi_2s=((obs_lig_pi_2s/2)**2 + (sim_lig_pi_2s/2)**2)**0.5 * 2
+        
+        obs_sim_lig_pi_so_sst = pd.concat([
+            obs_sim_lig_pi_so_sst,
+            pd.DataFrame(data={
+                'datasets': dataset,
+                'types': type,
+                'stations': station,
+                'models': model,
+                'slat': slat,
+                'slon': slon,
+                'glat': glat,
+                'glon': glon,
+                'obs_lig_pi': obs_lig_pi,
+                'obs_lig_pi_2s': obs_lig_pi_2s,
+                'sim_lig_pi': sim_lig_pi,
+                'sim_lig_pi_2s': sim_lig_pi_2s,
+                'sim_obs_lig_pi': sim_obs_lig_pi,
+                'sim_obs_lig_pi_2s': sim_obs_lig_pi_2s,
+                }, index=[0])], ignore_index=True,)
+
+
+with open('scratch/cmip6/lig/obs_sim_lig_pi_so_sst.pkl', 'wb') as f:
+    pickle.dump(obs_sim_lig_pi_so_sst, f)
+
+
+
+
+'''
+#-------------------------------- check
+
+with open('scratch/cmip6/lig/obs_sim_lig_pi_so_sst.pkl', 'rb') as f:
+    obs_sim_lig_pi_so_sst = pickle.load(f)
+
+site_pairs = [(x, y) for x, y in zip (
+    obs_sim_lig_pi_so_sst.slat, obs_sim_lig_pi_so_sst.slon)]
+grid_pairs = [(x, y) for x, y in zip (
+    obs_sim_lig_pi_so_sst.glat, obs_sim_lig_pi_so_sst.glon)]
+
+from haversine import haversine_vector
+distances = haversine_vector(
+    site_pairs, grid_pairs, normalize=True,
+    )
+np.max(distances)
+
+
+
+
+            # sim_lig_pi = lig_pi_am[iind0, iind1]
+            # sim_lig_pi_2s = lig_pi_ann[:, iind0, iind1].std(ddof=1) * 2
+            # sim_lig_pi = lig_pi_am[iind0]
+            # sim_lig_pi_2s = lig_pi_ann[:, iind0].std(ddof=1) * 2
+
+# Propogation of uncertainties
+https://en.wikipedia.org/wiki/Propagation_of_uncertainty
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
 
