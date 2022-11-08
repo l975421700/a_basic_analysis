@@ -893,3 +893,51 @@ fig.savefig(output_png)
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region calculate area weighted LIG SO am/DJF SST
+
+with open('scratch/cmip6/lig/lig_sst_regrid_alltime.pkl', 'rb') as f:
+    lig_sst_regrid_alltime = pickle.load(f)
+
+cdo_area1deg = xr.open_dataset('scratch/others/one_degree_grids_cdo_area.nc')
+
+lat = lig_sst_regrid_alltime['ACCESS-ESM1-5']['am'].lat.values
+
+print('#---------------- Am SST')
+for model in models:
+    # model = 'ACCESS-ESM1-5'
+    # model = 'HadGEM3-GC31-LL'
+    # model = 'AWI-ESM-1-1-LR'
+    print(model)
+    
+    mask_so = (lat < -40)
+    
+    lig_sst_so_mean = np.ma.average(
+        np.ma.MaskedArray(
+            lig_sst_regrid_alltime[model]['am'].values[mask_so],
+            mask=np.isnan(lig_sst_regrid_alltime[model]['am'].values[mask_so])),
+        weights=cdo_area1deg.cell_area.values[mask_so])
+    
+    print(np.round(lig_sst_so_mean, 1))
+
+
+print('#---------------- DJF SST')
+for model in models:
+    print(model)
+    
+    mask_so = (lat < -40)
+    
+    lig_sst_so_mean = np.ma.average(
+        np.ma.MaskedArray(
+            lig_sst_regrid_alltime[model][
+                'sm'].sel(season='DJF').values[mask_so],
+            mask=np.isnan(lig_sst_regrid_alltime[model][
+                'sm'].sel(season='DJF').values[mask_so])),
+        weights=cdo_area1deg.cell_area.values[mask_so])
+    
+    print(np.round(lig_sst_so_mean, 1))
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
