@@ -1,6 +1,183 @@
 
 
 # -----------------------------------------------------------------------------
+# region check negative evaporation with tagmap
+
+i = 0
+
+evaplac = exp_org_o[expid[i]]['echam'].evaplac.values
+evaplac[evaplac < 0] = 0
+evapiac = exp_org_o[expid[i]]['echam'].evapiac.values
+evapiac[evapiac < 0] = 0
+echam_evap = evaplac + evapiac
+
+iwisotype = 4
+wisoevaplac = exp_org_o[expid[i]]['wiso'].wisoevaplac.sel(wisotype=iwisotype)
+
+
+
+echam_evap = (exp_org_o[expid[i]]['echam'].evaplac + exp_org_o[expid[i]]['echam'].evapiac).values[1:]
+
+wiso_evap = exp_org_o[expid[i]]['wiso'].wisoevap.sel(wisotype=4).values[1:]
+np.max(abs(echam_evap[echam_evap < 0] - wiso_evap[echam_evap < 0]))
+stats.describe(abs(echam_evap - wiso_evap), axis=None)
+
+np.min(exp_org_o[expid[i]]['wiso'].wisoevapwac.sel(wisotype=4).values)
+
+
+expid[i]
+
+#---- over water
+post_wisoevap = exp_org_o[expid[i]]['echam'].evapwac.values[1:, None, :, :] * exp_org_o[expid[i]]['wiso'].tagmap[:-1, 3:, :, :]
+diff_wisoevap = post_wisoevap - exp_org_o[expid[i]]['wiso'].wisoevapwac[1:, 3:, :, :].values
+diff_wisoevap.values[np.where(exp_org_o[expid[i]]['wiso'].wisoevapwac[1:, 3:, :, :].values >= 0)] = 0
+# stats.describe(diff_wisoevap[:, :, :, :], axis=None)
+np.max(abs(diff_wisoevap))
+
+wheremax = np.where(abs(diff_wisoevap) == np.max(abs(diff_wisoevap)))
+diff_wisoevap.values[wheremax]
+post_wisoevap.values[wheremax]
+exp_org_o[expid[i]]['wiso'].wisoevapwac[1:, 3:, :, :].values[wheremax]
+
+#---- over land
+post_wisoevap = exp_org_o[expid[i]]['echam'].evaplac.values[1:, None, :, :] * exp_org_o[expid[i]]['wiso'].tagmap[:-1, 3:, :, :]
+diff_wisoevap = post_wisoevap - exp_org_o[expid[i]]['wiso'].wisoevaplac[1:, 3:, :, :].values
+diff_wisoevap.values[np.where(exp_org_o[expid[i]]['wiso'].wisoevaplac[1:, 3:, :, :].values >= 0)] = 0
+# stats.describe(diff_wisoevap[:, :, :, :], axis=None)
+np.max(abs(diff_wisoevap[:, :, :, :]))
+
+wheremax = np.where(abs(diff_wisoevap) == np.max(abs(diff_wisoevap)))
+diff_wisoevap.values[wheremax]
+post_wisoevap.values[wheremax]
+exp_org_o[expid[i]]['wiso'].wisoevaplac[1:, 3:, :, :].values[wheremax]
+
+
+#---- over ice
+post_wisoevap = exp_org_o[expid[i]]['echam'].evapiac.values[1:, None, :, :] * exp_org_o[expid[i]]['wiso'].tagmap[:-1, 3:, :, :]
+diff_wisoevap = post_wisoevap - exp_org_o[expid[i]]['wiso'].wisoevapiac[1:, 3:, :, :].values
+diff_wisoevap.values[np.where(exp_org_o[expid[i]]['wiso'].wisoevapiac[1:, 3:, :, :].values >= 0)] = 0
+# stats.describe(diff_wisoevap[:, :, :, :], axis=None)
+np.max(abs(diff_wisoevap[:, :, :, :]))
+
+wheremax = np.where(abs(diff_wisoevap) == np.max(abs(diff_wisoevap)))
+diff_wisoevap.values[wheremax]
+post_wisoevap.values[wheremax]
+exp_org_o[expid[i]]['wiso'].wisoevapiac[1:, 3:, :, :].values[wheremax]
+
+
+
+'''
+#---- overall
+post_wisoevap = exp_org_o[expid[i]]['echam'].evap.values[1:, None, :, :] * exp_org_o[expid[i]]['wiso'].tagmap[:-1, 3:, :, :]
+test = post_wisoevap - exp_org_o[expid[i]]['wiso'].wisoevap[1:, 3:, :, :].values
+test.values[np.where(exp_org_o[expid[i]]['wiso'].wisoevap[1:, 3:, :, :].values >= 0)] = 0
+
+stats.describe(test[:, :, :, :], axis=None)
+(test == 0).sum() # 97.88%
+(test < 1e-10).sum() # 99.80%
+# test.to_netcdf('scratch/test/test.nc')
+
+
+np.where(test[0, :, :, :] == np.max(test[0, :, :, :]))
+test[0, 1, 89, 174]
+
+# evap
+exp_org_o[expid[i]]['echam'].evap[1, 89, 174].values
+exp_org_o[expid[i]]['echam'].evapiac[1, 89, 174].values + \
+exp_org_o[expid[i]]['echam'].evaplac[1, 89, 174].values + \
+exp_org_o[expid[i]]['echam'].evapwac[1, 89, 174].values
+
+# wisoevap
+exp_org_o[expid[i]]['wiso'].wisoevap[1, 4, 89, 174].values
+exp_org_o[expid[i]]['wiso'].wisoevapiac[1, 4, 89, 174].values + \
+exp_org_o[expid[i]]['wiso'].wisoevaplac[1, 4, 89, 174].values + \
+exp_org_o[expid[i]]['wiso'].wisoevapwac[1, 4, 89, 174].values
+
+exp_org_o[expid[i]]['wiso'].wisoevap[1, 3, 89, 174].values
+exp_org_o[expid[i]]['wiso'].wisoevapiac[1, 3, 89, 174].values + \
+exp_org_o[expid[i]]['wiso'].wisoevaplac[1, 3, 89, 174].values + \
+exp_org_o[expid[i]]['wiso'].wisoevapwac[1, 3, 89, 174].values
+
+# ztagfac
+exp_org_o[expid[i]]['wiso'].ztag_fac_ice[1, 4, 89, 174].values
+exp_org_o[expid[i]]['wiso'].ztag_fac_water[1, 4, 89, 174].values
+exp_org_o[expid[i]]['wiso'].ztag_fac_land[1, 4, 89, 174].values
+
+exp_org_o[expid[i]]['wiso'].ztag_fac_ice[1, 3, 89, 174].values
+exp_org_o[expid[i]]['wiso'].ztag_fac_water[1, 3, 89, 174].values
+exp_org_o[expid[i]]['wiso'].ztag_fac_land[1, 3, 89, 174].values
+
+
+# post_wisoevap
+post_wisoevap[0, 1, 89, 174].values
+
+
+#---- over ice
+exp_org_o[expid[i]]['echam'].evapiac[1, 89, 174].values * exp_org_o[expid[i]]['wiso'].ztag_fac_ice[1, 4, 89, 174].values
+exp_org_o[expid[i]]['wiso'].wisoevapiac[1, 4, 89, 174].values
+
+# more check
+exp_org_o[expid[i]]['echam'].evapiac[1, 89, 174].values
+
+exp_org_o[expid[i]]['wiso'].tagmap[0, 3, 89, 174].values
+exp_org_o[expid[i]]['wiso'].tagmap[0, 4, 89, 174].values
+
+exp_org_o[expid[i]]['wiso'].ztag_fac_ice[1, 3, 89, 174].values
+exp_org_o[expid[i]]['wiso'].ztag_fac_ice[1, 4, 89, 174].values
+
+exp_org_o[expid[i]]['wiso'].wisoevapiac[1, 3, 89, 174].values
+exp_org_o[expid[i]]['wiso'].wisoevapiac[1, 4, 89, 174].values
+
+
+#---- over land
+exp_org_o[expid[i]]['echam'].evaplac[1, 89, 174].values * exp_org_o[expid[i]]['wiso'].ztag_fac_land[1, 4, 89, 174].values
+exp_org_o[expid[i]]['wiso'].wisoevaplac[1, 4, 89, 174].values
+
+exp_org_o[expid[i]]['echam'].evaplac[1, 89, 174].values * exp_org_o[expid[i]]['wiso'].ztag_fac_land[1, 3, 89, 174].values
+exp_org_o[expid[i]]['wiso'].wisoevaplac[1, 3, 89, 174].values
+
+exp_org_o[expid[i]]['echam'].slf[1, 89, 174]
+
+
+
+# more check
+exp_org_o[expid[i]]['echam'].evaplac[1, 89, 174].values # -1.86264515e-09
+
+exp_org_o[expid[i]]['wiso'].tagmap[0, 3, 89, 174].values # 0
+exp_org_o[expid[i]]['wiso'].tagmap[0, 4, 89, 174].values # 1
+
+exp_org_o[expid[i]]['wiso'].ztag_fac_land[1, 3, 89, 174].values # 0
+exp_org_o[expid[i]]['wiso'].ztag_fac_land[1, 4, 89, 174].values # 0
+
+exp_org_o[expid[i]]['wiso'].wisoevaplac[1, 0, 89, 174].values # -1.86264515e-09
+exp_org_o[expid[i]]['wiso'].wisoevaplac[1, 3, 89, 174].values # -1.86264515e-09
+exp_org_o[expid[i]]['wiso'].wisoevaplac[1, 4, 89, 174].values # 1.36788003e-09
+
+
+#---- over ocean
+exp_org_o[expid[i]]['echam'].evapwac[1, 89, 174].values * exp_org_o[expid[i]]['wiso'].ztag_fac_water[1, 4, 89, 174].values
+exp_org_o[expid[i]]['wiso'].wisoevapwac[1, 4, 89, 174].values
+
+# more check
+exp_org_o[expid[i]]['echam'].evapwac[1, 89, 174].values
+
+exp_org_o[expid[i]]['wiso'].tagmap[0, 3, 89, 174].values
+exp_org_o[expid[i]]['wiso'].tagmap[0, 4, 89, 174].values
+
+exp_org_o[expid[i]]['wiso'].ztag_fac_water[1, 3, 89, 174].values
+exp_org_o[expid[i]]['wiso'].ztag_fac_water[1, 4, 89, 174].values
+
+exp_org_o[expid[i]]['wiso'].wisoevapwac[1, 3, 89, 174].values
+exp_org_o[expid[i]]['wiso'].wisoevapwac[1, 4, 89, 174].values
+
+
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
 # region plot regridded am sst Antarctica
 
 with open('scratch/cmip6/lig/amip_pi_sst_regrid.pkl', 'rb') as f:

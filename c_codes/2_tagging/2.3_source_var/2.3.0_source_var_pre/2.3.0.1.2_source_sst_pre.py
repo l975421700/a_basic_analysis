@@ -412,6 +412,7 @@ fig.savefig(output_png)
 # region plot pre_weighted_sst am + am aprt
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.2_sst/6.1.3.2 ' + expid[i] + ' pre_weighted_sst am Antarctica + am aprt.png'
+# output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.2_sst/6.1.3.2 ' + expid[i] + ' pre_weighted_sst am Antarctica.png'
 
 pltlevel = np.arange(9, 17 + 1e-4, 1)
 pltticks = np.arange(9, 17 + 1e-4, 1)

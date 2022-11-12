@@ -1,6 +1,6 @@
 
 
-expid = ['pi_d_437_4.10',]
+expid = ['pi_d_501_5.0',]
 print('#---- ' + expid[0])
 
 exp_odir = '/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/'
@@ -17,13 +17,15 @@ import xarray as xr
 import dask
 dask.config.set({"array.slicing.split_large_chunks": False})
 import pickle
+import glob
 
 #-------- region import orignal model output
 
 exp_org_o = {}
 i = 0
 exp_org_o[expid[i]] = {}
-exp_org_o[expid[i]]['wiso'] = xr.open_dataset( exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_wiso.nc' )
+filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '*.01_wiso.nc'))
+exp_org_o[expid[i]]['wiso'] = xr.open_mfdataset(filenames_wiso, data_vars='minimal', coords='minimal', parallel=True)
 
 
 #-------- region

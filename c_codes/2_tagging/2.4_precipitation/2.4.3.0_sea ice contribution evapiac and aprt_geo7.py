@@ -4,8 +4,6 @@ exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = ['pi_m_416_4.9',]
 i = 0
 
-ifile_start = 120
-ifile_end   = 1080 # 1080
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -31,11 +29,14 @@ from scipy import stats
 import xesmf as xe
 import pandas as pd
 from metpy.interpolate import cross_section
+from statsmodels.stats import multitest
+import pycircstat as circ
+from scipy.stats import circstd
 
 # plot
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib.colors import BoundaryNorm
+from matplotlib.colors import BoundaryNorm, ListedColormap
 from matplotlib import cm
 import cartopy.crs as ccrs
 plt.rcParams['pcolor.shading'] = 'auto'
@@ -45,6 +46,7 @@ mpl.rcParams['axes.linewidth'] = 0.2
 plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
+from matplotlib.ticker import AutoMinorLocator
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -55,23 +57,27 @@ from a_basic_analysis.b_module.mapplot import (
     framework_plot1,
     remove_trailing_zero,
     remove_trailing_zero_pos,
+    remove_trailing_zero_pos_abs
 )
 
 from a_basic_analysis.b_module.basic_calculations import (
     mon_sea_ann,
-    time_weighted_mean,
+    find_ilat_ilon,
 )
 
 from a_basic_analysis.b_module.namelist import (
     month,
     month_num,
-    month_dec_num,
     month_dec,
+    month_dec_num,
     seasons,
+    seasons_last_num,
     hours,
     months,
     month_days,
     zerok,
+    panel_labels,
+    seconds_per_d,
 )
 
 from a_basic_analysis.b_module.source_properties import (
@@ -79,58 +85,57 @@ from a_basic_analysis.b_module.source_properties import (
     calc_lon_diff,
 )
 
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region import output
-
-exp_org_o = {}
-exp_org_o[expid[i]] = {}
-
-filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_echam.nc'))
-
-exp_org_o[expid[i]]['echam'] = xr.open_mfdataset(
-    filenames_echam[ifile_start:ifile_end],
-    # preprocess=lambda ds: ds['aprs'],
-    data_vars='minimal', coords='minimal', parallel=True)
-
-
-'''
-https://stackoverflow.com/questions/56590075/xarray-open-mfdataset-for-a-small-subset-of-variables
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region get mon_sea_ann q2m
-
-aprs_alltime = {}
-aprs_alltime[expid[i]] = mon_sea_ann(
-    var_monthly=exp_org_o[expid[i]]['echam'].aprs
+from a_basic_analysis.b_module.statistics import (
+    fdr_control_bh,
+    check_normality_3d,
+    check_equal_variance_3d,
+    ttest_fdr_control,
 )
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprs_alltime.pkl', 'wb') as f:
-    pickle.dump(aprs_alltime[expid[i]], f)
+from a_basic_analysis.b_module.component_plot import (
+    cplot_ice_cores,
+    plt_mesh_pars,
+)
+
+# endregion
+# -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region import data
 
-'''
-#-------------------------------- check
-aprs_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprs_alltime.pkl', 'rb') as f:
-    aprs_alltime[expid[i]] = pickle.load(f)
+aprt_geo7_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_geo7_alltime.pkl', 'rb') as f:
+    aprt_geo7_alltime[expid[i]] = pickle.load(f)
 
-filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_echam.nc'))
+evapiac_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.evapiac_alltime.pkl', 'rb') as f:
+    evapiac_alltime[expid[i]] = pickle.load(f)
 
-itime = -10
-ncfile = xr.open_dataset(filenames_echam[ifile_start:ifile_end][itime])
+echam_t63_area = xr.open_dataset('scratch/others/land_sea_masks/echam6_t63_cellarea.nc')
 
-(ncfile.aprs.values == aprs_alltime[expid[i]]['mon'][itime].values).all()
+# endregion
+# -----------------------------------------------------------------------------
 
-'''
+
+# -----------------------------------------------------------------------------
+# region evaporation from sea ice and leads
+
+# mm/year * global area
+aprt_SHseaice = np.average(
+    aprt_geo7_alltime[expid[i]]['am'].sel(wisotype=22),
+    weights=echam_t63_area.cell_area,) * \
+        seconds_per_d * 365 * \
+        echam_t63_area.cell_area.sum()
+
+evapiac_SHseaice = np.average(
+    evapiac_alltime[expid[i]]['am'].sel(lat=slice(-40, -90)),
+    weights=echam_t63_area.cell_area.sel(lat=slice(-40, -90)),) * \
+        seconds_per_d * 365 * \
+            echam_t63_area.cell_area.sel(lat=slice(-40, -90)).sum()
+
+evapiac_SHseaice / aprt_SHseaice
+# only 10% of aprt from SHseaice is evaporated from sea ice
 # endregion
 # -----------------------------------------------------------------------------
 

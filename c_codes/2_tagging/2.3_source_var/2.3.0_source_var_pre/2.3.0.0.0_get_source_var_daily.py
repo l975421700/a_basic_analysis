@@ -1,13 +1,13 @@
 
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_416_4.9',]
+expid = ['pi_m_502_5.0',]
 i=0
 
 output_dir = exp_odir + expid[i] + '/analysis/echam/'
 
-ifile_start = 120
-ifile_end   = 1080
+ifile_start = 12
+ifile_end   = 24
 
 ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
 # ntags = [0, 0, 0, 0, 0,   3, 3, 3, 3, 3,   7]
@@ -18,10 +18,10 @@ ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
 # min_sf    = 268.15
 # max_sf    = 318.15
 
-# var_name  = 'lat'
-# itag      = 5
-# min_sf    = -90
-# max_sf    = 90
+var_name  = 'lat'
+itag      = 5
+min_sf    = -90
+max_sf    = 90
 
 # var_name  = 'rh2m'
 # itag      = 8
@@ -38,10 +38,10 @@ ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
 # min_sf    = -1
 # max_sf    = 1
 
-var_name  = 'coslon'
-itag      = 12
-min_sf    = -1
-max_sf    = 1
+# var_name  = 'coslon'
+# itag      = 12
+# min_sf    = -1
+# max_sf    = 1
 
 
 # -----------------------------------------------------------------------------

@@ -2,7 +2,7 @@ general:
     setup_name: "echam"
     compute_time: "00:30:00"
     initial_date: "2000-01-01"
-    final_date: "2020-01-01"
+    final_date: "2000-02-01"
     model_dir: "/work/ollie/qigao001/model_codes/echam-6.3.05p2-wiso/"
     base_dir: "/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/"
     nmonth: 1
@@ -11,13 +11,11 @@ general:
 
 echam:
     version: "6.3.05p2-wiso"
-    executable: echam6_1111_5.0
+    executable: echam6_0713_wiso
     bin_sources:
             echam_bin: "${bin_dir}/${executable}"
     bin_in_work:
             echam_bin: "${executable}"
-    # namelist_dir: '/work/ollie/qigao001/esm_tools/namelists/echam/6.3.05p2-wiso/PI-CTRL/'
-    namelist_dir: '/work/ollie/qigao001/a_basic_analysis/g_namelists/pi/'
     scenario: "PI-CTRL"
     res: T63
     lresume: False
@@ -37,47 +35,46 @@ echam:
                     nprocar: 0
                     nprocbr: 0
                 runctl:
-                    # default_output: True
+                    default_output: True
                     out_filetype: 2
-                    # putdata: [ 450, 'seconds', 'first', 0 ]
+                    putdata: [ 450, 'seconds', 'first', 0 ]
                     # putdata: [ 6, 'hours', 'last', 0 ]
-                    # putdata: [ 1, 'days', 'last', 0 ]
-                    # dt_stop: [ 2000, 1, 1, 3 ]
+                    dt_stop: [ 2000, 1, 1, 3, 0, 0 ]
                 radctl:
                     lrad_async: False
                 wisoctl:
                     lwiso: True
                     lwiso_rerun: ${lresume}
-                    nwiso: 28
+                    nwiso: 3
                     ntag: 0
-                    ntag1: 0
-                    ntag2: 0
-                    ntag3: 0
-                    ntag4: 0
-                    ntags1_lat: 3
-                    ntags2_lon: 0
-                    ntags3_sst: 3
-                    ntags4_rh2m: 3
-                    ntags5_wind10: 3
-                    ntag_geo7: 7
-                    ntags6_sinlon: 3
-                    ntags7_coslon: 3
-                    ntag5: 0
-                    ntag_sum: 25
-                    lupdate_tagmap: True
-                    tag_minsst: 268.15
-                    tag_maxsst: 318.15
-                    tag_minrh2m: 0
-                    tag_maxrh2m: 1.6
-                    tag_minwind10: 0
-                    tag_maxwind10: 28.0
-                    ltag_corr1: True
-                    ltag_corr3: True
-                    latm_water: False
-                    ltag_corr2: False
-                    ltag_corr3_m: False
-                    ltag_corr_xtec: False
-                    lcorrfac: False
+                    # ntag1: 0
+                    # ntag2: 0
+                    # ntag3: 0
+                    # ntag4: 0
+                    # ntags1_lat: 3
+                    # ntags2_lon: 0
+                    # ntags3_sst: 3
+                    # ntags4_rh2m: 3
+                    # ntags5_wind10: 3
+                    # ntag_geo7: 7
+                    # ntags6_sinlon: 3
+                    # ntags7_coslon: 3
+                    # ntag5: 0
+                    # ntag_sum: 25
+                    # lupdate_tagmap: True
+                    # tag_minsst: 268.15
+                    # tag_maxsst: 318.15
+                    # tag_minrh2m: 0
+                    # tag_maxrh2m: 1.6
+                    # tag_minwind10: 0
+                    # tag_maxwind10: 28.0
+                    # ltag_corr1: True
+                    # ltag_corr3: True
+                    # latm_water: True
+                    # ltag_corr2: False
+                    # ltag_corr3_m: False
+                    # ltag_corr_xtec: False
+                    # lcorrfac: False
     # file_movements:
         # forcing:
         #     all_directions: "link"
@@ -85,7 +82,7 @@ echam:
         #     all_directions: "link"
     forcing_sources:
         wiso_sw_observed: "/home/ollie/mwerner/model_input/ECHAM6-wiso/PI_ctrl/T63/T63_wisosw_d.nc"
-        wiso_tagmap_1: "/work/ollie/qigao001/startdump/tagging/tagmap/pi_6tagmap.nc"
+        wiso_tagmap_1: "/work/ollie/qigao001/startdump/tagging/archived/tagmap/pi_6tagmap_2.nc"
         sic_1: "/work/ollie/qigao001/startdump/model_input/pi/alex/T63_amipsic_pcmdi_187001-189912.nc"
         sst_1: "/work/ollie/qigao001/startdump/model_input/pi/alex/T63_amipsst_pcmdi_187001-189912.nc"
     add_forcing_files:
@@ -109,13 +106,13 @@ jsbach:
         namelist.jsbach:
             jsbach_ctl:
                 with_hd: False
-    # add_streams:
-    #     - jsbach
-    #     - js_wiso
-    #     - land
-    #     - la_wiso
-    #     - surf
-    #     - sf_wiso
+    add_streams:
+        - jsbach
+        - js_wiso
+        - land
+        - la_wiso
+        - surf
+        - sf_wiso
 
 
 

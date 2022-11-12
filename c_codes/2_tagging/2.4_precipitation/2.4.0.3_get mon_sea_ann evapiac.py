@@ -93,45 +93,74 @@ filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] 
 
 exp_org_o[expid[i]]['echam'] = xr.open_mfdataset(
     filenames_echam[ifile_start:ifile_end],
-    # preprocess=lambda ds: ds['aprs'],
     data_vars='minimal', coords='minimal', parallel=True)
 
 
 '''
-https://stackoverflow.com/questions/56590075/xarray-open-mfdataset-for-a-small-subset-of-variables
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region get mon_sea_ann q2m
+# region get mon_sea_ann evapiac
 
-aprs_alltime = {}
-aprs_alltime[expid[i]] = mon_sea_ann(
-    var_monthly=exp_org_o[expid[i]]['echam'].aprs
+evapiac_alltime = {}
+evapiac_alltime[expid[i]] = mon_sea_ann(
+    var_monthly=exp_org_o[expid[i]]['echam'].evapiac
 )
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprs_alltime.pkl', 'wb') as f:
-    pickle.dump(aprs_alltime[expid[i]], f)
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.evapiac_alltime.pkl', 'wb') as f:
+    pickle.dump(evapiac_alltime[expid[i]], f)
 
 
 
 '''
 #-------------------------------- check
-aprs_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprs_alltime.pkl', 'rb') as f:
-    aprs_alltime[expid[i]] = pickle.load(f)
+evapiac_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.evapiac_alltime.pkl', 'rb') as f:
+    evapiac_alltime[expid[i]] = pickle.load(f)
 
 filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_echam.nc'))
 
 itime = -10
 ncfile = xr.open_dataset(filenames_echam[ifile_start:ifile_end][itime])
 
-(ncfile.aprs.values == aprs_alltime[expid[i]]['mon'][itime].values).all()
+(ncfile.evapiac == evapiac_alltime[expid[i]]['mon'][itime]).all().values
 
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region get mon_sea_ann evapwac
+
+evapwac_alltime = {}
+evapwac_alltime[expid[i]] = mon_sea_ann(
+    var_monthly=exp_org_o[expid[i]]['echam'].evapwac
+)
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.evapwac_alltime.pkl', 'wb') as f:
+    pickle.dump(evapwac_alltime[expid[i]], f)
+
+
+
+'''
+#-------------------------------- check
+evapwac_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.evapwac_alltime.pkl', 'rb') as f:
+    evapwac_alltime[expid[i]] = pickle.load(f)
+
+filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_echam.nc'))
+
+itime = -10
+ncfile = xr.open_dataset(filenames_echam[ifile_start:ifile_end][itime])
+
+(ncfile.evapwac == evapwac_alltime[expid[i]]['mon'][itime]).all().values
+
+evapwac_alltime[expid[i]]['am'].to_netcdf('scratch/test/test.nc')
+
+'''
+# endregion
+# -----------------------------------------------------------------------------

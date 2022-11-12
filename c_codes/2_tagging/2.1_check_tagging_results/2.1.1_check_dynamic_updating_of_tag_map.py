@@ -1,5 +1,10 @@
 
 
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+expid = ['pi_d_501_5.0',]
+ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
+kwiso2 = 3
+
 # -----------------------------------------------------------------------------
 # region import packages
 
@@ -26,6 +31,7 @@ import cartopy.crs as ccrs
 plt.rcParams['pcolor.shading'] = 'auto'
 mpl.rc('font', family='Times New Roman', size=10)
 plt.rcParams.update({"mathtext.fontset": "stix"})
+from matplotlib.path import Path
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -52,161 +58,126 @@ from a_basic_analysis.b_module.namelist import (
 # -----------------------------------------------------------------------------
 
 
-expid = [
-    'pi_d_437_4.10',
-    ]
-
-# -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 # region import data
-
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 
 exp_org_o = {}
 
 for i in range(len(expid)):
     # i=0
-    
+    print('#-------- ' + expid[i])
     exp_org_o[expid[i]] = {}
     
-    exp_org_o[expid[i]]['echam'] = xr.open_dataset(
-        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_echam.nc')
-    
-    exp_org_o[expid[i]]['wiso'] = xr.open_dataset(
-        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_wiso.nc')
+    filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '*.01_echam.nc'))
+    filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '*.01_wiso.nc'))
+    exp_org_o[expid[i]]['echam'] = xr.open_mfdataset(filenames_echam, data_vars='minimal', coords='minimal', parallel=True)
+    exp_org_o[expid[i]]['wiso'] = xr.open_mfdataset(filenames_wiso, data_vars='minimal', coords='minimal', parallel=True)
 
-esacci_echam6_t63_trim = xr.open_dataset('startdump/tagging/tagmap/auxiliaries/sst_mon_ESACCI-2.1_198201_201612_am_rg_echam6_t63_slm_trim.nc')
+# T63 slm and slf
+T63GR15_jan_surf = xr.open_dataset(
+    '/work/ollie/pool/ECHAM6/input/r0007/T63/T63GR15_jan_surf.nc')
+
+# trimmed slm
+esacci_echam6_t63_trim = xr.open_dataset(
+    'startdump/tagging/tagmap/auxiliaries/sst_mon_ESACCI-2.1_198201_201612_am_rg_echam6_t63_slm_trim.nc')
 lon = esacci_echam6_t63_trim.lon.values
 lat = esacci_echam6_t63_trim.lat.values
-analysed_sst = esacci_echam6_t63_trim.analysed_sst
+analysed_sst = esacci_echam6_t63_trim.analysed_sst.values
 
-island = np.broadcast_to(np.isnan(analysed_sst), exp_org_o[expid[i]]['wiso'].tagmap[:, 0].shape)
-isocean = np.broadcast_to(np.isfinite(analysed_sst), exp_org_o[expid[i]]['wiso'].tagmap[:, 0].shape)
+# 1 means land
+t63_slf = T63GR15_jan_surf.SLF.values
+# 1 means land
+t63_slm = T63GR15_jan_surf.SLM.values
+# True means land
+t63_slm_trimmed = np.isnan(analysed_sst)
 
+#-------------------------------- get ocean basin divisions
+
+lon2, lat2 = np.meshgrid(lon, lat)
+coors = np.hstack((lon2.reshape(-1, 1), lat2.reshape(-1, 1)))
+
+atlantic_path1 = Path([
+    (0, 90), (100, 90), (100, 30), (20, 30), (20, -90), (0, -90), (0, 90)])
+atlantic_path2 = Path([
+    (360, 90), (360, -90), (290, -90), (290, 8), (279, 8), (270, 15),
+    (260, 20), (260, 90), (360, 90)])
+pacific_path = Path([
+    (100, 90), (260, 90), (260, 20), (270, 15), (279, 8), (290, 8), (290, -90),
+    (140, -90), (140, -30), (130, -30), (130, -10), (100, 0), (100, 30),
+    (100, 90)])
+indiano_path = Path([
+    (100, 30), (100, 0), (130, -10), (130, -30), (140, -30), (140, -90),
+    (20, -90), (20, 30), (100, 30)])
+
+atlantic_mask1 = atlantic_path1.contains_points(coors, radius = -0.5).reshape(lon2.shape)
+atlantic_mask2 = atlantic_path2.contains_points(coors).reshape(lon2.shape)
+atlantic_mask = atlantic_mask1 | atlantic_mask2
+pacific_mask = pacific_path.contains_points(coors).reshape(lon2.shape)
+indiano_mask = indiano_path.contains_points(coors).reshape(lon2.shape)
+
+
+#-------------------------------- get model output from the 1st time step
+t63_1st_output = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/pi_d_500_wiso/unknown/pi_d_500_wiso_200001.01_echam.nc')
+
+# broadcast lat/lon
+lat3 = np.broadcast_to(lat[None, :, None],
+                       exp_org_o[expid[i]]['echam'].seaice.shape)
+lon3 = np.broadcast_to(lon[None, None, :],
+                       exp_org_o[expid[i]]['echam'].seaice.shape)
+slm3 = exp_org_o[expid[i]]['echam'].slm.values
+seaice3 = exp_org_o[expid[i]]['echam'].seaice.values
+
+'''
+pi_6tagmap = xr.open_dataset('startdump/tagging/tagmap/pi_6tagmap.nc')
+'''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# -----------------------------------------------------------------------------
 # region check scale of tagmap based on lat
+
+itag      = 5
+kstart = kwiso2 + sum(ntags[:itag])
 
 minlat = -90
 maxlat = 90
 
-tagmap = xr.open_dataset('startdump/tagging/tagmap/pi_lat_tagmap_a.nc')
-
 ptagmap = xr.Dataset(
     {"tagmap": (
         ("time", "level", "lat", "lon"),
-        np.zeros(exp_org_o[expid[i]]['wiso'].tagmap.shape, dtype=np.double)),
+        np.zeros((len(exp_org_o[expid[i]]['wiso'].tagmap.time),
+                  3, len(lat), len(lon)),
+                 dtype=np.double)),
      },
     coords={
         "time": exp_org_o[expid[i]]['wiso'].tagmap.time.values,
-        "level": exp_org_o[expid[i]]['wiso'].tagmap.wisotype.values,
-        "lat": exp_org_o[expid[i]]['wiso'].tagmap.lat.values,
-        "lon": exp_org_o[expid[i]]['wiso'].tagmap.lon.values,
+        "level": np.arange(1, 3+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
     }
 )
 
+# land and sea ice
+ptagmap.tagmap.sel(level=1).values[(slm3 == 1) | (seaice3 > 0) ] = 1
 
-# land
-ptagmap.tagmap.sel(level=4).values[island] = 1
-
-# scaled lat
-b_lat = np.broadcast_to(exp_org_o[expid[i]]['echam'].lat.values[None, :, None], exp_org_o[expid[i]]['wiso'].tagmap[:, 0].shape)
-
-ptagmap.tagmap.sel(level=5).values[isocean] = np.clip( (b_lat - minlat) / (maxlat - minlat), 0, 1)[isocean]
+# water, scaled lat
+ptagmap.tagmap.sel(level=2).values[(slm3 == 0) & (seaice3 < 1)] = np.clip(
+    (lat3 - minlat) / (maxlat - minlat), 0, 1)[(slm3 == 0) & (seaice3 < 1)]
 
 # complementary set
-ptagmap.tagmap.sel(level=6).values[isocean] = 1 - ptagmap.tagmap.sel(level=5).values[isocean]
-
-where_sea_ice = (exp_org_o[expid[i]]['echam'].seaice[:, :, :].values > 0)
-ptagmap.tagmap.sel(level=4).values[where_sea_ice] = 1
-ptagmap.tagmap.sel(level=5).values[where_sea_ice] = 0
-ptagmap.tagmap.sel(level=6).values[where_sea_ice] = 0
+ptagmap.tagmap.sel(level=3).values[(slm3 == 0) & (seaice3 < 1)] = 1 - \
+    ptagmap.tagmap.sel(level=2).values[(slm3 == 0) & (seaice3 < 1)]
 
 
-#-------- check tagmap complementarity
-np.max(abs(ptagmap.tagmap.sel(level=slice(4, 6)).sum(axis=1) - 1)) == 0
+#---- check
+(ptagmap.tagmap.values == exp_org_o[expid[i]]['wiso'].tagmap.sel(
+    wisotype=slice(kstart+1, kstart+3)).values).all()
 
-#-------- check differences
-stats.describe(ptagmap.tagmap.sel(level=slice(4, 6)) - exp_org_o[expid[i]]['wiso'].tagmap.sel(wisotype=slice(4, 6)).values, axis=None)
-
-test = ptagmap.tagmap.sel(level=slice(4, 6)) - exp_org_o[expid[i]]['wiso'].tagmap.sel(wisotype=slice(4, 6)).values
-wheremax = np.where(abs(test) == np.max(abs(test)))
-np.max(abs(test))
-test.values[wheremax]
-ptagmap.tagmap.sel(level=slice(4, 6)).values[wheremax]
-exp_org_o[expid[i]]['wiso'].tagmap.sel(wisotype=slice(4, 6)).values[wheremax]
-
-#-------- check differences
-stats.describe(tagmap.tagmap[3:6, :, :] - exp_org_o[expid[i]]['wiso'].tagmap.values[0, 3:6, :, :], axis=None)
-
+np.max(abs(ptagmap.tagmap.values - exp_org_o[expid[i]]['wiso'].tagmap.sel(
+    wisotype=slice(kstart+1, kstart+3)).values))
 
 '''
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region check scale of tagmap based on lon
-
-minlon = 0
-maxlon = 360
-
-tagmap = xr.open_dataset('startdump/tagging/tagmap/pi_lon_tagmap_a.nc')
-
-ptagmap = xr.Dataset(
-    {"tagmap": (
-        ("time", "level", "lat", "lon"),
-        np.zeros(exp_org_o[expid[i]]['wiso'].tagmap.shape, dtype=np.double)),
-     },
-    coords={
-        "time": exp_org_o[expid[i]]['wiso'].tagmap.time.values,
-        "level": exp_org_o[expid[i]]['wiso'].tagmap.wisotype.values,
-        "lat": exp_org_o[expid[i]]['wiso'].tagmap.lat.values,
-        "lon": exp_org_o[expid[i]]['wiso'].tagmap.lon.values,
-    }
-)
-
-
-# land
-ptagmap.tagmap.sel(level=4).values[island] = 1
-
-# scaled lon
-b_lon = np.broadcast_to(exp_org_o[expid[i]]['echam'].lon.values[None, None, :], exp_org_o[expid[i]]['wiso'].tagmap[:, 0].shape)
-ptagmap.tagmap.sel(level=5).values[isocean] = np.clip( (b_lon - minlon) / (maxlon - minlon), 0, 1)[isocean]
-
-# complementary set
-ptagmap.tagmap.sel(level=6).values[isocean] = 1 - ptagmap.tagmap.sel(level=5).values[isocean]
-
-where_sea_ice = (exp_org_o[expid[i]]['echam'].seaice[:, :, :].values > 0)
-ptagmap.tagmap.sel(level=4).values[where_sea_ice] = 1
-ptagmap.tagmap.sel(level=5).values[where_sea_ice] = 0
-ptagmap.tagmap.sel(level=6).values[where_sea_ice] = 0
-
-
-#-------- check tagmap complementarity
-np.max(abs(ptagmap.tagmap.sel(level=slice(4, 6)).sum(axis=1) - 1)) == 0
-
-#-------- check differences
-stats.describe(ptagmap.tagmap.sel(level=slice(4, 6)) - exp_org_o[expid[i]]['wiso'].tagmap.sel(wisotype=slice(4, 6)).values, axis=None)
-
-test = ptagmap.tagmap.sel(level=slice(4, 6)) - exp_org_o[expid[i]]['wiso'].tagmap.sel(wisotype=slice(4, 6)).values
-wheremax = np.where(abs(test) == np.max(abs(test)))
-np.max(abs(test))
-test.values[wheremax]
-ptagmap.tagmap.sel(level=slice(4, 6)).values[wheremax]
-exp_org_o[expid[i]]['wiso'].tagmap.sel(wisotype=slice(4, 6)).values[wheremax]
-
-#-------- check differences
-stats.describe(tagmap.tagmap[3:6, :, :] - exp_org_o[expid[i]]['wiso'].tagmap.values[0, 3:6, :, :], axis=None)
-
-
-'''
-
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -215,56 +186,46 @@ stats.describe(tagmap.tagmap[3:6, :, :] - exp_org_o[expid[i]]['wiso'].tagmap.val
 # -----------------------------------------------------------------------------
 # region check scale of tagmap based on tsw
 
+itag      = 7
+kstart = kwiso2 + sum(ntags[:itag])
+
 minsst = zerok - 5
 maxsst = zerok + 45
-
-tagmap = xr.open_dataset('startdump/tagging/tagmap/pi_tsw_tagmap_a.nc')
 
 ptagmap = xr.Dataset(
     {"tagmap": (
         ("time", "level", "lat", "lon"),
-        np.zeros(exp_org_o[expid[i]]['wiso'].tagmap.shape, dtype=np.double)),
+        np.zeros((len(exp_org_o[expid[i]]['wiso'].tagmap.time),
+                  3, len(lat), len(lon)),
+                 dtype=np.double)),
      },
     coords={
         "time": exp_org_o[expid[i]]['wiso'].tagmap.time.values,
-        "level": exp_org_o[expid[i]]['wiso'].tagmap.wisotype.values,
-        "lat": exp_org_o[expid[i]]['wiso'].tagmap.lat.values,
-        "lon": exp_org_o[expid[i]]['wiso'].tagmap.lon.values,
+        "level": np.arange(1, 3+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
     }
 )
 
 
-# land
-ptagmap.tagmap.sel(level=4).values[island] = 1
+# land and sea ice
+ptagmap.tagmap.sel(level=1).values[(slm3 == 1) | (seaice3 > 0) ] = 1
 
-# scaled sst
-ptagmap.tagmap.sel(level=5).values[isocean] = np.clip( (exp_org_o[expid[i]]['echam'].tsw.values[isocean] - minsst) / (maxsst - minsst), 0, 1)
+# water, scaled tsw
+ptagmap.tagmap.sel(level=2).values[(slm3 == 0) & (seaice3 < 1)] = np.clip(
+    (exp_org_o[expid[i]]['echam'].tsw.values-minsst)/(maxsst - minsst),0,1)[
+        (slm3 == 0) & (seaice3 < 1)]
 
 # complementary set
-ptagmap.tagmap.sel(level=6).values[isocean] = 1 - ptagmap.tagmap.sel(level=5).values[isocean]
+ptagmap.tagmap.sel(level=3).values[(slm3 == 0) & (seaice3 < 1)] = 1 - \
+    ptagmap.tagmap.sel(level=2).values[(slm3 == 0) & (seaice3 < 1)]
 
-where_sea_ice = (exp_org_o[expid[i]]['echam'].seaice[:, :, :].values > 0)
-# np.min(exp_org_o[expid[i]]['echam'].seaice.values[where_sea_ice])
-ptagmap.tagmap.sel(level=4).values[where_sea_ice] = 1
-ptagmap.tagmap.sel(level=5).values[where_sea_ice] = 0
-ptagmap.tagmap.sel(level=6).values[where_sea_ice] = 0
+#---- check
+(ptagmap.tagmap.values == exp_org_o[expid[i]]['wiso'].tagmap.sel(
+    wisotype=slice(kstart+1, kstart+3)).values).all()
 
-
-#-------- check tagmap complementarity
-np.max(abs(ptagmap.tagmap.sel(level=slice(4, 6)).sum(axis=1) - 1)) == 0
-
-#-------- check differences
-stats.describe(ptagmap.tagmap.sel(level=slice(4, 6)) - exp_org_o[expid[i]]['wiso'].tagmap.sel(wisotype=slice(4, 6)).values, axis=None)
-
-test = ptagmap.tagmap.sel(level=slice(4, 6)) - exp_org_o[expid[i]]['wiso'].tagmap.sel(wisotype=slice(4, 6)).values
-wheremax = np.where(abs(test) == np.max(abs(test)))
-np.max(abs(test))
-test.values[wheremax]
-ptagmap.tagmap.sel(level=slice(4, 6)).values[wheremax]
-exp_org_o[expid[i]]['wiso'].tagmap.sel(wisotype=slice(4, 6)).values[wheremax]
-
-#-------- check differences
-stats.describe(tagmap.tagmap[3:6, :, :] - exp_org_o[expid[i]]['wiso'].tagmap.values[0, 3:6, :, :], axis=None)
+np.max(abs(ptagmap.tagmap.values - exp_org_o[expid[i]]['wiso'].tagmap.sel(
+    wisotype=slice(kstart+1, kstart+3)).values))
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -273,55 +234,46 @@ stats.describe(tagmap.tagmap[3:6, :, :] - exp_org_o[expid[i]]['wiso'].tagmap.val
 # -----------------------------------------------------------------------------
 # region check scale of tagmap based on rh2m
 
+itag      = 8
+kstart = kwiso2 + sum(ntags[:itag])
+
 minrh2m = 0
 maxrh2m = 1.6
-
-tagmap = xr.open_dataset('startdump/tagging/tagmap/pi_rh2m_tagmap_a.nc')
 
 ptagmap = xr.Dataset(
     {"tagmap": (
         ("time", "level", "lat", "lon"),
-        np.zeros(exp_org_o[expid[i]]['wiso'].tagmap.shape, dtype=np.double)),
+        np.zeros((len(exp_org_o[expid[i]]['wiso'].tagmap.time),
+                  3, len(lat), len(lon)),
+                 dtype=np.double)),
      },
     coords={
         "time": exp_org_o[expid[i]]['wiso'].tagmap.time.values,
-        "level": exp_org_o[expid[i]]['wiso'].tagmap.wisotype.values,
-        "lat": exp_org_o[expid[i]]['wiso'].tagmap.lat.values,
-        "lon": exp_org_o[expid[i]]['wiso'].tagmap.lon.values,
+        "level": np.arange(1, 3+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
     }
 )
 
 
-# land
-ptagmap.tagmap.sel(level=4).values[island] = 1
+# land and sea ice
+ptagmap.tagmap.sel(level=1).values[(slm3 == 1) | (seaice3 > 0) ] = 1
 
-# scaled rh2m
-ptagmap.tagmap.sel(level=5).values[isocean] = np.clip( (exp_org_o[expid[i]]['echam'].rh2m.values[isocean] - minrh2m) / (maxrh2m - minrh2m), 0, 1)
+# water, scaled tsw
+ptagmap.tagmap.sel(level=2).values[(slm3 == 0) & (seaice3 < 1)] = np.clip(
+    (exp_org_o[expid[i]]['echam'].rh2m.values-minrh2m)/(maxrh2m-minrh2m),0,1)[
+        (slm3 == 0) & (seaice3 < 1)]
 
 # complementary set
-ptagmap.tagmap.sel(level=6).values[isocean] = 1 - ptagmap.tagmap.sel(level=5).values[isocean]
+ptagmap.tagmap.sel(level=3).values[(slm3 == 0) & (seaice3 < 1)] = 1 - \
+    ptagmap.tagmap.sel(level=2).values[(slm3 == 0) & (seaice3 < 1)]
 
-where_sea_ice = (exp_org_o[expid[i]]['echam'].seaice[:, :, :].values > 0)
-ptagmap.tagmap.sel(level=4).values[where_sea_ice] = 1
-ptagmap.tagmap.sel(level=5).values[where_sea_ice] = 0
-ptagmap.tagmap.sel(level=6).values[where_sea_ice] = 0
+#---- check
+(ptagmap.tagmap.values == exp_org_o[expid[i]]['wiso'].tagmap.sel(
+    wisotype=slice(kstart+1, kstart+3)).values).all()
 
-
-#-------- check tagmap complementarity
-np.max(abs(ptagmap.tagmap.sel(level=slice(4, 6)).sum(axis=1) - 1)) == 0
-
-#-------- check differences
-stats.describe(ptagmap.tagmap.sel(level=slice(4, 6)) - exp_org_o[expid[i]]['wiso'].tagmap.sel(wisotype=slice(4, 6)).values, axis=None)
-
-test = ptagmap.tagmap.sel(level=slice(4, 6)) - exp_org_o[expid[i]]['wiso'].tagmap.sel(wisotype=slice(4, 6)).values
-wheremax = np.where(abs(test) == np.max(abs(test)))
-np.max(abs(test))
-test.values[wheremax]
-ptagmap.tagmap.sel(level=slice(4, 6)).values[wheremax]
-exp_org_o[expid[i]]['wiso'].tagmap.sel(wisotype=slice(4, 6)).values[wheremax]
-
-#-------- check differences
-stats.describe(tagmap.tagmap[3:6, :, :] - exp_org_o[expid[i]]['wiso'].tagmap.values[0, 3:6, :, :], axis=None)
+np.max(abs(ptagmap.tagmap.values - exp_org_o[expid[i]]['wiso'].tagmap.sel(
+    wisotype=slice(kstart+1, kstart+3)).values))
 
 
 '''
@@ -333,65 +285,50 @@ stats.describe(tagmap.tagmap[3:6, :, :] - exp_org_o[expid[i]]['wiso'].tagmap.val
 # -----------------------------------------------------------------------------
 # region check scale of tagmap based on wind10
 
+itag      = 9
+kstart = kwiso2 + sum(ntags[:itag])
+
 minwind10 = 0
 maxwind10 = 28
-
-tagmap = xr.open_dataset('startdump/tagging/tagmap/pi_wind10_tagmap_0_a.nc')
 
 ptagmap = xr.Dataset(
     {"tagmap": (
         ("time", "level", "lat", "lon"),
-        np.zeros(exp_org_o[expid[i]]['wiso'].tagmap.shape, dtype=np.double)),
+        np.zeros((len(exp_org_o[expid[i]]['wiso'].tagmap.time),
+                  3, len(lat), len(lon)),
+                 dtype=np.double)),
      },
     coords={
         "time": exp_org_o[expid[i]]['wiso'].tagmap.time.values,
-        "level": exp_org_o[expid[i]]['wiso'].tagmap.wisotype.values,
-        "lat": exp_org_o[expid[i]]['wiso'].tagmap.lat.values,
-        "lon": exp_org_o[expid[i]]['wiso'].tagmap.lon.values,
+        "level": np.arange(1, 3+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
     }
 )
 
+# land and sea ice
+ptagmap.tagmap.sel(level=1).values[(slm3 == 1) | (seaice3 > 0) ] = 1
 
-# land
-ptagmap.tagmap.sel(level=4).values[island] = 1
-
-# scaled wind10
-ptagmap.tagmap.sel(level=5).values[isocean] = np.clip( (exp_org_o[expid[i]]['echam'].wind10.values[isocean] - minwind10) / (maxwind10 - minwind10), 0, 1)
+# water, scaled tsw
+ptagmap.tagmap.sel(level=2).values[(slm3 == 0) & (seaice3 < 1)] = np.clip(
+    (exp_org_o[expid[i]]['echam'].wind10.values-minwind10) / \
+        (maxwind10 - minwind10),0,1)[(slm3 == 0) & (seaice3 < 1)]
 
 # complementary set
-ptagmap.tagmap.sel(level=6).values[isocean] = 1 - ptagmap.tagmap.sel(level=5).values[isocean]
+ptagmap.tagmap.sel(level=3).values[(slm3 == 0) & (seaice3 < 1)] = 1 - \
+    ptagmap.tagmap.sel(level=2).values[(slm3 == 0) & (seaice3 < 1)]
 
-where_sea_ice = (exp_org_o[expid[i]]['echam'].seaice[:, :, :].values > 0)
-ptagmap.tagmap.sel(level=4).values[where_sea_ice] = 1
-ptagmap.tagmap.sel(level=5).values[where_sea_ice] = 0
-ptagmap.tagmap.sel(level=6).values[where_sea_ice] = 0
+#---- check
+(ptagmap.tagmap.values == exp_org_o[expid[i]]['wiso'].tagmap.sel(
+    wisotype=slice(kstart+1, kstart+3)).values).all()
 
+np.max(abs(ptagmap.tagmap.values - exp_org_o[expid[i]]['wiso'].tagmap.sel(
+    wisotype=slice(kstart+1, kstart+3)).values))
 
-#-------- check tagmap complementarity
+# satisfied from the second time step
+np.max(abs(ptagmap.tagmap.values[1:] - exp_org_o[expid[i]]['wiso'].tagmap.sel(
+    wisotype=slice(kstart+1, kstart+3)).values[1:]))
 
-np.max(abs(ptagmap.tagmap.sel(level=slice(4, 6)).sum(axis=1) - 1)) == 0
-
-
-#-------- check differences
-
-stats.describe(ptagmap.tagmap.sel(level=slice(4, 6)) - exp_org_o[expid[i]]['wiso'].tagmap.sel(wisotype=slice(4, 6)).values, axis=None)
-stats.describe(ptagmap.tagmap.sel(level=slice(4, 6))[1:] - exp_org_o[expid[i]]['wiso'].tagmap.sel(wisotype=slice(4, 6)).values[1:], axis=None)
-# stats.describe(abs(ptagmap.tagmap.sel(level=slice(4, 6)) - exp_org_o[expid[i]]['wiso'].tagmap.sel(wisotype=slice(4, 6)).values), axis=None)
-
-test = ptagmap.tagmap.sel(level=slice(4, 6))[1:] - exp_org_o[expid[i]]['wiso'].tagmap.sel(wisotype=slice(4, 6))[1:].values
-# test.to_netcdf('scratch/test/test.nc')
-wheremax = np.where(abs(test) == np.max(abs(test)))
-np.max(abs(test))
-test.values[wheremax]
-ptagmap.tagmap.sel(level=slice(4, 6))[1:].values[wheremax]
-exp_org_o[expid[i]]['wiso'].tagmap.sel(wisotype=slice(4, 6))[1:].values[wheremax]
-
-
-# exp_org_o[expid[i]]['echam'].wind10.values.shape
-
-
-#-------- check differences
-stats.describe(tagmap.tagmap[3:6, :, :] - exp_org_o[expid[i]]['wiso'].tagmap.values[0, 3:6, :, :], axis=None)
 
 '''
 '''
@@ -400,71 +337,100 @@ stats.describe(tagmap.tagmap[3:6, :, :] - exp_org_o[expid[i]]['wiso'].tagmap.val
 
 
 # -----------------------------------------------------------------------------
-# region check scale of tagmap based on sincoslon
+# region check scale of tagmap based on sinlon
+
+itag      = 11
+kstart = kwiso2 + sum(ntags[:itag])
 
 min_sincoslon = -1
 max_sincoslon = 1
-b_lon = np.broadcast_to(exp_org_o[expid[i]]['echam'].lon.values[None, None, :], exp_org_o[expid[i]]['wiso'].tagmap[:, 0].shape)
-
-tagmap = xr.open_dataset('startdump/tagging/tagmap/pi_sincoslon_tagmap_a.nc')
 
 ptagmap = xr.Dataset(
     {"tagmap": (
         ("time", "level", "lat", "lon"),
-        np.zeros(exp_org_o[expid[i]]['wiso'].tagmap.shape, dtype=np.double)),
+        np.zeros((len(exp_org_o[expid[i]]['wiso'].tagmap.time),
+                  3, len(lat), len(lon)),
+                 dtype=np.double)),
      },
     coords={
         "time": exp_org_o[expid[i]]['wiso'].tagmap.time.values,
-        "level": exp_org_o[expid[i]]['wiso'].tagmap.wisotype.values,
-        "lat": exp_org_o[expid[i]]['wiso'].tagmap.lat.values,
-        "lon": exp_org_o[expid[i]]['wiso'].tagmap.lon.values,
+        "level": np.arange(1, 3+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
     }
 )
 
+# land and sea ice
+ptagmap.tagmap.sel(level=1).values[(slm3 == 1) | (seaice3 > 0) ] = 1
 
-# land
-ptagmap.tagmap.sel(level=11).values[island] = 1
-ptagmap.tagmap.sel(level=14).values[island] = 1
-
-# scaled sin lon
-ptagmap.tagmap.sel(level=12).values[isocean] = ((np.sin(b_lon * np.pi / 180.) - min_sincoslon)/(max_sincoslon - min_sincoslon))[isocean]
-
-# scaled cos lon
-ptagmap.tagmap.sel(level=15).values[isocean] = ((np.cos(b_lon * np.pi / 180.) - min_sincoslon)/(max_sincoslon - min_sincoslon))[isocean]
+# water, scaled lat
+ptagmap.tagmap.sel(level=2).values[(slm3 == 0) & (seaice3 < 1)] = np.clip(
+    (np.sin(lon3 * np.pi / 180.) - min_sincoslon) / \
+        (max_sincoslon - min_sincoslon), 0, 1)[(slm3 == 0) & (seaice3 < 1)]
 
 # complementary set
-ptagmap.tagmap.sel(level=13).values[isocean] = 1 - ptagmap.tagmap.sel(level=12).values[isocean]
-ptagmap.tagmap.sel(level=16).values[isocean] = 1 - ptagmap.tagmap.sel(level=15).values[isocean]
-
-where_sea_ice = (exp_org_o[expid[i]]['echam'].seaice[:, :, :].values > 0)
-ptagmap.tagmap.sel(level=11).values[where_sea_ice] = 1
-ptagmap.tagmap.sel(level=12).values[where_sea_ice] = 0
-ptagmap.tagmap.sel(level=13).values[where_sea_ice] = 0
-ptagmap.tagmap.sel(level=14).values[where_sea_ice] = 1
-ptagmap.tagmap.sel(level=15).values[where_sea_ice] = 0
-ptagmap.tagmap.sel(level=16).values[where_sea_ice] = 0
+ptagmap.tagmap.sel(level=3).values[(slm3 == 0) & (seaice3 < 1)] = 1 - \
+    ptagmap.tagmap.sel(level=2).values[(slm3 == 0) & (seaice3 < 1)]
 
 
+#---- check
+(ptagmap.tagmap.values == exp_org_o[expid[i]]['wiso'].tagmap.sel(
+    wisotype=slice(kstart+1, kstart+3)).values).all()
 
-#-------- check tagmap complementarity
-np.max(abs(ptagmap.tagmap.sel(level=slice(11, 16)).sum(axis=1) - 2)) == 0
-
-#-------- check differences
-stats.describe(ptagmap.tagmap.sel(level=slice(11, 16)) - exp_org_o[expid[i]]['wiso'].tagmap.sel(wisotype=slice(11, 16)).values, axis=None)
-
-test = ptagmap.tagmap.sel(level=slice(11, 16)) - exp_org_o[expid[i]]['wiso'].tagmap.sel(wisotype=slice(11, 16)).values
-wheremax = np.where(abs(test) == np.max(abs(test)))
-np.max(abs(test))
-test.values[wheremax]
-ptagmap.tagmap.sel(level=slice(11, 16)).values[wheremax]
-exp_org_o[expid[i]]['wiso'].tagmap.sel(wisotype=slice(11, 16)).values[wheremax]
-
-#-------- check differences
-stats.describe(tagmap.tagmap[10:16, :, :] - exp_org_o[expid[i]]['wiso'].tagmap.values[0, 10:16, :, :], axis=None)
-
+np.max(abs(ptagmap.tagmap.values - exp_org_o[expid[i]]['wiso'].tagmap.sel(
+    wisotype=slice(kstart+1, kstart+3)).values))
 
 '''
+'''
+# endregion
+# -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region check scale of tagmap based on coslon
+
+itag      = 12
+kstart = kwiso2 + sum(ntags[:itag])
+
+min_sincoslon = -1
+max_sincoslon = 1
+
+ptagmap = xr.Dataset(
+    {"tagmap": (
+        ("time", "level", "lat", "lon"),
+        np.zeros((len(exp_org_o[expid[i]]['wiso'].tagmap.time),
+                  3, len(lat), len(lon)),
+                 dtype=np.double)),
+     },
+    coords={
+        "time": exp_org_o[expid[i]]['wiso'].tagmap.time.values,
+        "level": np.arange(1, 3+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
+    }
+)
+
+# land and sea ice
+ptagmap.tagmap.sel(level=1).values[(slm3 == 1) | (seaice3 > 0) ] = 1
+
+# water, scaled lat
+ptagmap.tagmap.sel(level=2).values[(slm3 == 0) & (seaice3 < 1)] = np.clip(
+    (np.cos(lon3 * np.pi / 180.) - min_sincoslon) / \
+        (max_sincoslon - min_sincoslon), 0, 1)[(slm3 == 0) & (seaice3 < 1)]
+
+# complementary set
+ptagmap.tagmap.sel(level=3).values[(slm3 == 0) & (seaice3 < 1)] = 1 - \
+    ptagmap.tagmap.sel(level=2).values[(slm3 == 0) & (seaice3 < 1)]
+
+
+#---- check
+(ptagmap.tagmap.values == exp_org_o[expid[i]]['wiso'].tagmap.sel(
+    wisotype=slice(kstart+1, kstart+3)).values).all()
+
+np.max(abs(ptagmap.tagmap.values - exp_org_o[expid[i]]['wiso'].tagmap.sel(
+    wisotype=slice(kstart+1, kstart+3)).values))
+
+'''
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -473,63 +439,63 @@ stats.describe(tagmap.tagmap[10:16, :, :] - exp_org_o[expid[i]]['wiso'].tagmap.v
 # -----------------------------------------------------------------------------
 # region check pi_geo_tagmap
 
-b_lat = np.broadcast_to(exp_org_o[expid[i]]['echam'].lat.values[None, :, None], exp_org_o[expid[i]]['wiso'].tagmap[:, 0].shape)
-
-tagmap = xr.open_dataset('startdump/tagging/tagmap/pi_geo_tagmap.nc')
+kstart = 15
 
 ptagmap = xr.Dataset(
     {"tagmap": (
         ("time", "level", "lat", "lon"),
-        np.zeros(exp_org_o[expid[i]]['wiso'].tagmap.shape, dtype=np.double)),
+        np.zeros((len(exp_org_o[expid[i]]['wiso'].tagmap.time),
+                  7, len(lat), len(lon)),
+                 dtype=np.double)),
      },
     coords={
         "time": exp_org_o[expid[i]]['wiso'].tagmap.time.values,
-        "level": exp_org_o[expid[i]]['wiso'].tagmap.wisotype.values,
-        "lat": exp_org_o[expid[i]]['wiso'].tagmap.lat.values,
-        "lon": exp_org_o[expid[i]]['wiso'].tagmap.lon.values,
+        "level": np.arange(1, 7+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
     }
 )
 
+# AIS
+ptagmap.tagmap.sel(level=1).values[(slm3 == 1) & (lat3 < -60)] = 1
 
-# NH land
-ptagmap.tagmap.sel(level=4).values[island & (b_lat > 0)] = 1
+# Land exclusive AIS
+ptagmap.tagmap.sel(level=2).values[(slm3 == 1) & (lat3 >= -60)] = 1
 
-# SH land, excl. Antarctica
-ptagmap.tagmap.sel(level=5).values[island & (b_lat < 0) & (b_lat > -60)] = 1
+# Atlantic ocean and sea ice, > 50° S
+ptagmap.tagmap.sel(level=3).values[
+    (slm3 == 0) & (lat3 >= -50) & atlantic_mask[None, :, :]] = 1
 
-# Antarctica
-ptagmap.tagmap.sel(level=6).values[island & (b_lat < -60)] = 1
+# Indian ocean and sea ice, > 50° S
+ptagmap.tagmap.sel(level=4).values[
+    (slm3 == 0) & (lat3 >= -50) & indiano_mask[None, :, :]] = 1
 
-# NH ocean, excl. sea ice
-ptagmap.tagmap.sel(level=7).values[isocean & (b_lat > 0) & (exp_org_o[expid[i]]['echam'].seaice[:].values == 0)] = 1
+# Pacific ocean and sea ice, > 50° S
+ptagmap.tagmap.sel(level=5).values[
+    (slm3 == 0) & (lat3 >= -50) & pacific_mask[None, :, :]] = 1
 
-# NH sea ice
-ptagmap.tagmap.sel(level=8).values[isocean & (b_lat > 0) & (exp_org_o[expid[i]]['echam'].seaice[:].values > 0)] = 1
+# SH sea ice, <= 50° S
+ptagmap.tagmap.sel(level=6).values[
+    (slm3 == 0) & (lat3 < -50) & (seaice3 > 0)] = 1
 
-# SH ocean, excl. sea ice
-ptagmap.tagmap.sel(level=9).values[isocean & (b_lat < 0) & (exp_org_o[expid[i]]['echam'].seaice[:].values == 0)] = 1
-
-# SH sea ice
-ptagmap.tagmap.sel(level=10).values[isocean & (b_lat < 0) & (exp_org_o[expid[i]]['echam'].seaice[:].values > 0)] = 1
-
-
-#-------- check tagmap complementarity
-
-np.max(abs(ptagmap.tagmap.sel(level=slice(4, 10)).sum(axis=1) - 1)) == 0
-
-
-#-------- check differences
-
-stats.describe(ptagmap.tagmap.sel(level=slice(4, 10)) - exp_org_o[expid[i]]['wiso'].tagmap.sel(wisotype=slice(4, 10)).values, axis=None)
+# SO open ocean, <= 50° S
+ptagmap.tagmap.sel(level=7).values[
+    (slm3 == 0) & (lat3 < -50) & (seaice3 < 1)] = 1
 
 
-#-------- check differences
-stats.describe(tagmap.tagmap[3:10, :, :] - exp_org_o[expid[i]]['wiso'].tagmap.values[0, 3:10, :, :], axis=None)
+#---- check
+(ptagmap.tagmap.values == exp_org_o[expid[i]]['wiso'].tagmap.sel(
+    wisotype=slice(16, 22))).all().values
 
 '''
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+
+
+
 
 
 # -----------------------------------------------------------------------------
