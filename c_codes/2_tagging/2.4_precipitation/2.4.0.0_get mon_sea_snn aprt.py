@@ -1,11 +1,14 @@
 
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_416_4.9',]
+expid = [
+    # 'pi_m_416_4.9',
+    'pi_m_502_5.0',
+    ]
 i = 0
 
-ifile_start = 120
-ifile_end   = 1080 # 1080
+ifile_start = 48
+ifile_end   = 168 # 1080
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -304,7 +307,7 @@ aprt_geo7 = {}
 aprt_geo7[expid[i]] = (
     exp_org_o[expid[i]]['wiso'].wisoaprl.sel(wisotype=slice(16, 22)) + \
         exp_org_o[expid[i]]['wiso'].wisoaprc.sel(wisotype=slice(16, 22))
-    )
+    ).compute()
 
 aprt_geo7[expid[i]] = aprt_geo7[expid[i]].rename('aprt_geo7')
 
@@ -530,6 +533,302 @@ for imask in ['EAIS', 'WAIS', 'AP', 'AIS']:
 
 # -----------------------------------------------------------------------------
 # region get mon_sea_ann aprt_geo7 frac over AIS
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_geo7_spave.pkl', 'rb') as f:
+    aprt_geo7_spave = pickle.load(f)
+
+geo_regions = [
+    'AIS', 'Land excl. AIS', 'Atlantic Ocean',
+    'Indian Ocean', 'Pacific Ocean', 'SH seaice', 'Southern Ocean']
+wisotypes = {'AIS': 16, 'Land excl. AIS': 17,
+             'Atlantic Ocean': 18, 'Indian Ocean': 19, 'Pacific Ocean': 20,
+             'SH seaice': 21, 'Southern Ocean': 22}
+
+aprt_frc_AIS_alltime = {}
+
+for imask in aprt_geo7_spave.keys():
+    # imask = 'AIS'
+    print(imask)
+    
+    aprt_frc_AIS_alltime[imask] = {}
+    
+    for ialltime in aprt_geo7_spave[imask].keys():
+        # ialltime = 'mm'
+        print(ialltime)
+        
+        aprt_AIS_ialltime = aprt_geo7_spave[imask][ialltime].sum(dim='wisotype').values
+        
+        aprt_frc_AIS_alltime[imask][ialltime] = {}
+        
+        if ialltime in ['mon', 'sea', 'ann']:
+            time = aprt_geo7_spave[imask][ialltime].time
+        elif ialltime in ['mm']:
+            time = aprt_geo7_spave[imask]['mm'].month
+        elif ialltime in ['sm']:
+            time = aprt_geo7_spave[imask]['sm'].season
+        elif ialltime in ['am']:
+            time = ['am']
+        
+        for iwisotype in wisotypes.keys():
+            # iwisotype = 'AIS'
+            print(iwisotype)
+            aprt_frc_AIS_alltime[imask][ialltime][iwisotype] = \
+                pd.DataFrame(data={
+                    'time': time,
+                    'frc_AIS': (aprt_geo7_spave[imask][ialltime].sel(
+                        wisotype=slice(16, wisotypes[iwisotype])).sum(dim='wisotype').values / \
+                                aprt_AIS_ialltime) * 100
+                    })
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc_AIS_alltime.pkl', 'wb') as f:
+    pickle.dump(aprt_frc_AIS_alltime, f)
+
+
+'''
+#-------------------------------- check initial mm calculation passed
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc_AIS_alltime.pkl', 'rb') as f:
+    aprt_frc_AIS_alltime = pickle.load(f)
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_geo7_spave.pkl', 'rb') as f:
+    aprt_geo7_spave = pickle.load(f)
+
+geo_regions = [
+    'NHland', 'SHland', 'Antarctica',
+    'NHocean', 'NHseaice', 'SHocean', 'SHseaice']
+wisotypes = {'NHland': 16, 'SHland': 17, 'Antarctica': 18,
+             'NHocean': 19, 'NHseaice': 20, 'SHocean': 21, 'SHseaice': 22}
+
+aprt_frc_AIS = {}
+
+
+for imask in aprt_geo7_spave.keys():
+    # imask = 'EAIS'
+    print(imask)
+    
+    aprt_mm_AIS = aprt_geo7_spave[imask]['mm'].sum(dim='wisotype').values
+    
+    aprt_frc_AIS[imask] = {}
+    
+    aprt_frc_AIS[imask]['Open ocean'] = pd.DataFrame(data={
+        'Month': month,
+        'frc_AIS': (aprt_geo7_spave[imask]['mm'].sel(
+            wisotype=[
+                wisotypes['NHocean'], wisotypes['NHseaice'],
+                wisotypes['SHocean'],
+                ]).sum(dim='wisotype').values / aprt_mm_AIS) * 100
+        })
+    
+    aprt_frc_AIS[imask]['SH sea ice'] = pd.DataFrame(data={
+        'Month': month,
+        'frc_AIS': (aprt_geo7_spave[imask]['mm'].sel(
+            wisotype=[
+                wisotypes['NHocean'], wisotypes['NHseaice'],
+                wisotypes['SHocean'], wisotypes['SHseaice'],
+                ]).sum(dim='wisotype').values / aprt_mm_AIS) * 100
+        })
+    
+    aprt_frc_AIS[imask]['Land excl. Antarctica'] = pd.DataFrame(data={
+        'Month': month,
+        'frc_AIS': (aprt_geo7_spave[imask]['mm'].sel(
+            wisotype=[
+                wisotypes['NHocean'], wisotypes['NHseaice'],
+                wisotypes['SHocean'], wisotypes['SHseaice'],
+                wisotypes['NHland'], wisotypes['SHland'],
+                ]).sum(dim='wisotype').values / aprt_mm_AIS) * 100
+        })
+    
+    aprt_frc_AIS[imask]['Antarctica'] = pd.DataFrame(data={
+        'Month': month,
+        'frc_AIS': (aprt_geo7_spave[imask]['mm'].sel(
+            wisotype=[
+                wisotypes['NHocean'], wisotypes['NHseaice'],
+                wisotypes['SHocean'], wisotypes['SHseaice'],
+                wisotypes['NHland'], wisotypes['SHland'],
+                wisotypes['Antarctica'],
+                ]).sum(dim='wisotype').values / aprt_mm_AIS) * 100
+        })
+
+for imask in aprt_frc_AIS_alltime.keys():
+    # imask = 'AIS'
+    print(imask)
+    for isource in aprt_frc_AIS_alltime[imask]['mm'].keys():
+        # isource = 'Open ocean'
+        print(isource)
+        print((aprt_frc_AIS_alltime[imask]['mm'][isource].frc_AIS.values == aprt_frc_AIS[imask][isource].frc_AIS.values).all())
+
+#-------------------------------- check 'mm'
+
+#-------- import data
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_geo7_spave.pkl', 'rb') as f:
+    aprt_geo7_spave = pickle.load(f)
+
+geo_regions = [
+    'NHland', 'SHland', 'Antarctica',
+    'NHocean', 'NHseaice', 'SHocean', 'SHseaice']
+wisotypes = {'NHland': 16, 'SHland': 17, 'Antarctica': 18,
+             'NHocean': 19, 'NHseaice': 20, 'SHocean': 21, 'SHseaice': 22}
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc_AIS_alltime.pkl', 'rb') as f:
+    aprt_frc_AIS_alltime = pickle.load(f)
+
+imask = 'AIS'
+iregion = 'Open ocean'
+res1 = aprt_frc_AIS_alltime[imask]['mm'][iregion].frc_AIS.values
+
+res2 = (aprt_geo7_spave[imask]['mm'].sel(
+    wisotype=slice(19, 21)).sum(dim='wisotype').values / \
+        aprt_geo7_spave[imask]['mm'].sum(dim='wisotype').values) * 100
+(res1 == res2).all()
+
+
+iregion = 'SH sea ice'
+res1 = aprt_frc_AIS_alltime[imask]['mm'][iregion].frc_AIS.values
+
+res2 = (aprt_geo7_spave[imask]['mm'].sel(
+    wisotype=slice(19, 22)).sum(dim='wisotype').values / \
+        aprt_geo7_spave[imask]['mm'].sum(dim='wisotype').values) * 100
+(res1 == res2).all()
+
+iregion = 'Land excl. Antarctica'
+res1 = aprt_frc_AIS_alltime[imask]['mm'][iregion].frc_AIS.values
+
+res2 = (aprt_geo7_spave[imask]['mm'].sel(
+    wisotype=[16, 17, 19, 20, 21, 22]).sum(dim='wisotype').values / \
+        aprt_geo7_spave[imask]['mm'].sum(dim='wisotype').values) * 100
+(res1 == res2).all()
+np.max(abs(res1 - res2))
+
+iregion = 'Antarctica'
+aprt_frc_AIS_alltime[imask]['mm'][iregion].frc_AIS.values
+
+
+
+aprt_frc_AIS_alltime[imask]['mm']['SH sea ice'].frc_AIS - aprt_frc_AIS_alltime[imask]['mm']['Open ocean'].frc_AIS
+aprt_frc_AIS_alltime[imask]['mm']['Land excl. Antarctica'].frc_AIS - aprt_frc_AIS_alltime[imask]['mm']['SH sea ice'].frc_AIS
+(aprt_frc_AIS_alltime[imask]['mm']['Antarctica'].frc_AIS - aprt_frc_AIS_alltime[imask]['mm']['Land excl. Antarctica'].frc_AIS).values
+aprt_geo7_spave['AIS']['mm'].sel(wisotype=18).values / aprt_geo7_spave['AIS']['mm'].sum(dim='wisotype').values * 100
+
+aprt_geo7_spave['AIS']['mm'].sel(wisotype=20).values / aprt_geo7_spave['AIS']['mm'].sum(dim='wisotype').values
+
+#-------------------------------- check 'ann'
+
+#-------- import data
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_geo7_spave.pkl', 'rb') as f:
+    aprt_geo7_spave = pickle.load(f)
+
+geo_regions = [
+    'NHland', 'SHland', 'Antarctica',
+    'NHocean', 'NHseaice', 'SHocean', 'SHseaice']
+wisotypes = {'NHland': 16, 'SHland': 17, 'Antarctica': 18,
+             'NHocean': 19, 'NHseaice': 20, 'SHocean': 21, 'SHseaice': 22}
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc_AIS_alltime.pkl', 'rb') as f:
+    aprt_frc_AIS_alltime = pickle.load(f)
+
+imask = 'AIS'
+iregion = 'Open ocean'
+res1 = aprt_frc_AIS_alltime[imask]['ann'][iregion].frc_AIS.values
+
+res2 = (aprt_geo7_spave[imask]['ann'].sel(
+    wisotype=slice(19, 21)).sum(dim='wisotype').values / \
+        aprt_geo7_spave[imask]['ann'].sum(dim='wisotype').values) * 100
+(res1 == res2).all()
+
+
+iregion = 'SH sea ice'
+res1 = aprt_frc_AIS_alltime[imask]['ann'][iregion].frc_AIS.values
+
+res2 = (aprt_geo7_spave[imask]['ann'].sel(
+    wisotype=slice(19, 22)).sum(dim='wisotype').values / \
+        aprt_geo7_spave[imask]['ann'].sum(dim='wisotype').values) * 100
+(res1 == res2).all()
+
+iregion = 'Land excl. Antarctica'
+res1 = aprt_frc_AIS_alltime[imask]['ann'][iregion].frc_AIS.values
+
+res2 = (aprt_geo7_spave[imask]['ann'].sel(
+    wisotype=[16, 17, 19, 20, 21, 22]).sum(dim='wisotype').values / \
+        aprt_geo7_spave[imask]['ann'].sum(dim='wisotype').values) * 100
+(res1 == res2).all()
+np.max(abs(res1 - res2))
+
+iregion = 'Antarctica'
+aprt_frc_AIS_alltime[imask]['ann'][iregion].frc_AIS.values
+
+
+# SH sea ice
+(aprt_frc_AIS_alltime[imask]['ann']['SH sea ice'].frc_AIS - \
+    aprt_frc_AIS_alltime[imask]['ann']['Open ocean'].frc_AIS).values
+
+# other land
+(aprt_frc_AIS_alltime[imask]['ann']['Land excl. Antarctica'].frc_AIS - \
+    aprt_frc_AIS_alltime[imask]['ann']['SH sea ice'].frc_AIS).values
+
+# Antarctica
+(aprt_frc_AIS_alltime[imask]['ann']['Antarctica'].frc_AIS - \
+    aprt_frc_AIS_alltime[imask]['ann']['Land excl. Antarctica'].frc_AIS).values
+
+aprt_geo7_spave['AIS']['ann'].sel(wisotype=18).values / \
+    aprt_geo7_spave['AIS']['ann'].sum(dim='wisotype').values * 100
+
+# # NH sea ice
+# aprt_geo7_spave['AIS']['ann'].sel(wisotype=20).values / \
+#     aprt_geo7_spave['AIS']['ann'].sum(dim='wisotype').values
+
+        
+        # aprt_frc_AIS_alltime[imask][ialltime]['Open ocean'] = \
+        #     pd.DataFrame(data={
+        #         'time': time,
+        #         'frc_AIS': (aprt_geo7_spave[imask][ialltime].sel(
+        #             wisotype=[
+        #                 wisotypes['NHocean'], wisotypes['NHseaice'],
+        #                 wisotypes['SHocean'],
+        #                 ]).sum(dim='wisotype').values / aprt_AIS_ialltime) * 100
+        #         })
+        
+        # aprt_frc_AIS_alltime[imask][ialltime]['SH sea ice'] = \
+        #     pd.DataFrame(data={
+        #         'time': time,
+        #         'frc_AIS': (aprt_geo7_spave[imask][ialltime].sel(
+        #             wisotype=[
+        #                 wisotypes['NHocean'], wisotypes['NHseaice'],
+        #                 wisotypes['SHocean'], wisotypes['SHseaice'],
+        #                 ]).sum(dim='wisotype').values / aprt_AIS_ialltime) * 100
+        #         })
+        
+        # aprt_frc_AIS_alltime[imask][ialltime]['Land excl. Antarctica'] = \
+        #     pd.DataFrame(data={
+        #         'time': time,
+        #         'frc_AIS': (aprt_geo7_spave[imask][ialltime].sel(
+        #             wisotype=[
+        #                 wisotypes['NHocean'], wisotypes['NHseaice'],
+        #                 wisotypes['SHocean'], wisotypes['SHseaice'],
+        #                 wisotypes['NHland'], wisotypes['SHland'],
+        #                 ]).sum(dim='wisotype').values / aprt_AIS_ialltime) * 100
+        #         })
+        
+        # aprt_frc_AIS_alltime[imask][ialltime]['Antarctica'] = \
+        #     pd.DataFrame(data={
+        #         'time': time,
+        #         'frc_AIS': (aprt_geo7_spave[imask][ialltime].sel(
+        #             wisotype=[
+        #                 wisotypes['NHocean'], wisotypes['NHseaice'],
+        #                 wisotypes['SHocean'], wisotypes['SHseaice'],
+        #                 wisotypes['NHland'], wisotypes['SHland'],
+        #                 wisotypes['Antarctica'],
+        #                 ]).sum(dim='wisotype').values / aprt_AIS_ialltime) * 100
+        #         })
+
+aprt_frc_AIS_alltime['AIS']['am']
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get mon_sea_ann aprt_geo7 frac over AIS original
 
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_geo7_spave.pkl', 'rb') as f:
     aprt_geo7_spave = pickle.load(f)

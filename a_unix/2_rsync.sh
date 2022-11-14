@@ -40,19 +40,9 @@ rsync -avzLP --exclude '**/run_/*' /work/ollie/qigao001/output levante:/work/ab0
 
 
 # -----------------------------------------------------------------------------
-# region partial backup ollie to jasmin
+# region backup ollie to jasmin
 
-rsync -avzLP --exclude '**/run_/*' /work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/pi_m_416_4.9/analysis/echam/source_var_short xfer1:/home/users/qino/output/echam-6.3.05p2-wiso/pi/pi_m_416_4.9/analysis/echam/
-
-
-
-rsync -avzLP --exclude '**/run_/*' /work/ollie/qigao001/data_sources xfer1:/home/users/qino/
-
-
-
-
-
-
+rsync -avzLP --exclude '**/run_/*' /work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/pi_m_416_4.9 xfer1:/home/users/qino/output/echam-6.3.05p2-wiso/pi/
 
 # endregion
 # -----------------------------------------------------------------------------

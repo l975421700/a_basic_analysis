@@ -1,7 +1,10 @@
 
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_416_4.9',]
+expid = [
+    # 'pi_m_416_4.9',
+    'pi_m_502_5.0',
+    ]
 i = 0
 
 
@@ -122,13 +125,13 @@ lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
 quantiles = {'90%': 0.9, '95%': 0.95, '99%': 0.99}
 
-epe_weighted_lat = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_weighted_lat.pkl', 'rb') as f:
-    epe_weighted_lat[expid[i]] = pickle.load(f)
+# epe_weighted_lat = {}
+# with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_weighted_lat.pkl', 'rb') as f:
+#     epe_weighted_lat[expid[i]] = pickle.load(f)
 
-pre_weighted_lat = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lat.pkl', 'rb') as f:
-    pre_weighted_lat[expid[i]] = pickle.load(f)
+# pre_weighted_lat = {}
+# with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lat.pkl', 'rb') as f:
+#     pre_weighted_lat[expid[i]] = pickle.load(f)
 
 '''
 '''

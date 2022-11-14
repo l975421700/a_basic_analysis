@@ -1,7 +1,10 @@
 
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_416_4.9',]
+expid = [
+    # 'pi_m_416_4.9',
+    'pi_m_502_5.0',
+    ]
 i = 0
 
 
@@ -123,8 +126,8 @@ with open(
 # -----------------------------------------------------------------------------
 # region plot mm source lat
 
-# output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.0_source_lat/6.1.8.0 ' + expid[i] + ' pre_weighted_lat mm icores.png'
-output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.0_source_lat/6.1.8.0 ' + expid[i] + ' pre_weighted_lat mm icores.pdf'
+output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.0_source_lat/6.1.8.0 ' + expid[i] + ' pre_weighted_lat mm icores.png'
+# output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.0_source_lat/6.1.8.0 ' + expid[i] + ' pre_weighted_lat mm icores.pdf'
 
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
@@ -135,9 +138,9 @@ for icores in pre_weighted_var_icores[expid[i]].keys():
         '.-', lw=0.5, markersize=4,
         label=icores,)
 
-ax.legend(
-    loc='lower right', handlelength=2, framealpha = 1, ncol=2,
-    columnspacing=0.5, handletextpad=0.5)
+# ax.legend(
+#     loc='lower right', handlelength=2, framealpha = 1, ncol=2,
+#     columnspacing=0.5, handletextpad=0.5)
 
 ax.set_xlabel('Monthly source latitude [$°\;S$]')
 ax.set_ylabel(None)

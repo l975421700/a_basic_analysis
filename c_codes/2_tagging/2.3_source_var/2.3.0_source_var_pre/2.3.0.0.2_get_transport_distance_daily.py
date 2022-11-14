@@ -1,7 +1,10 @@
 
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_416_4.9',]
+expid = [
+    # 'pi_m_416_4.9',
+    'pi_m_502_5.0',
+    ]
 i = 0
 
 # -----------------------------------------------------------------------------
@@ -151,7 +154,7 @@ for ialltime in pre_weighted_lat[expid[i]].keys():
     transport_distance[expid[i]][ialltime] = pre_weighted_lat[expid[i]][ialltime].copy().rename('transport_distance')
     transport_distance[expid[i]][ialltime][:] = 0
     
-    if (ialltime in ['daily', 'mon', 'sea', 'ann']):
+    if (ialltime in ['mon', 'sea', 'ann']):
         print(ialltime)
         
         years = np.unique(transport_distance[expid[i]][ialltime].time.dt.year)
@@ -188,7 +191,7 @@ for ialltime in pre_weighted_lat[expid[i]].keys():
             
             print(datetime.datetime.now() - begin_time)
             
-    else:
+    elif (ialltime in ['mm', 'sm', 'am']):
         print(ialltime)
         b_lon_2d = np.broadcast_to(
             lon_2d, pre_weighted_lat[expid[i]][ialltime].shape, )

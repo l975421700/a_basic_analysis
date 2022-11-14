@@ -2,11 +2,13 @@
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'pi_d_501_5.0',
+    'pi_m_502_5.0',
+    # 'pi_d_501_5.0',
     ]
 
-itag = 12 # 0-13
 ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
+ifile_start = -13
+ifile_end = -1
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -74,8 +76,16 @@ for i in range(len(expid)):
     
     filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '*.01_echam.nc'))
     filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '*.01_wiso.nc'))
-    exp_org_o[expid[i]]['echam'] = xr.open_mfdataset(filenames_echam, data_vars='minimal', coords='minimal', parallel=True)
-    exp_org_o[expid[i]]['wiso'] = xr.open_mfdataset(filenames_wiso, data_vars='minimal', coords='minimal', parallel=True)
+    filenames_sf_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '*.01_sf_wiso.nc'))
+    exp_org_o[expid[i]]['echam'] = xr.open_mfdataset(
+        filenames_echam[ifile_start:ifile_end],
+        data_vars='minimal', coords='minimal', parallel=True)
+    exp_org_o[expid[i]]['wiso'] = xr.open_mfdataset(
+        filenames_wiso[ifile_start:ifile_end],
+        data_vars='minimal', coords='minimal', parallel=True)
+    exp_org_o[expid[i]]['sf_wiso'] = xr.open_mfdataset(
+        filenames_sf_wiso[ifile_start:ifile_end],
+        data_vars='minimal', coords='minimal', parallel=True)
 
 '''
     file_exists = os.path.exists(
@@ -92,6 +102,7 @@ for i in range(len(expid)):
 # -----------------------------------------------------------------------------
 
 
+itag = 12 # 0-13
 # -----------------------------------------------------------------------------
 # region set indices for specific set of tracers
 
@@ -118,10 +129,18 @@ i = 0
 
 #---------------- check evap conservation
 echam_evap = exp_org_o[expid[i]]['echam'].evap[:, :, :]
-wiso_evap = exp_org_o[expid[i]]['wiso'].wisoevap[:, kstart:kend, :, :].sum(axis=1)
+# wiso_evap = exp_org_o[expid[i]]['wiso'].wisoevap[:, kstart:kend, :, :].sum(axis=1)
+wiso_evap = exp_org_o[expid[i]]['sf_wiso'].wisoevap[:, kstart:kend, :, :].sum(axis=1)
 diff_evap = echam_evap - wiso_evap
 np.max(abs(diff_evap.values))
+np.max(abs(diff_evap.values / echam_evap.values))
 
+(echam_evap - wiso_evap).to_netcdf('scratch/test/test.nc')
+
+wheremax = np.where(abs(diff_evap.values) == np.max(abs(diff_evap.values)))
+diff_evap.values[wheremax]
+echam_evap.values[wheremax]
+wiso_evap.values[wheremax]
 
 
 

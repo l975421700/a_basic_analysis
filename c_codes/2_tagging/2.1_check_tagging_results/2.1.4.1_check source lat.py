@@ -1,5 +1,16 @@
 
 
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+expid = [
+    'pi_m_503_5.0',
+    ]
+ifile_start = 12
+ifile_end = 24
+
+itag = 4
+ntags = [0, 0, 0, 0, 19,   0, 0, 0, 0, 0,   0]
+# ntags = [0, 0, 0, 0, 37,   0, 0, 0, 0, 0,   0]
+
 # -----------------------------------------------------------------------------
 # region import packages
 
@@ -44,6 +55,7 @@ from a_basic_analysis.b_module.mapplot import (
 
 from a_basic_analysis.b_module.basic_calculations import (
     mon_sea_ann_average,
+    time_weighted_mean,
 )
 
 from a_basic_analysis.b_module.namelist import (
@@ -64,15 +76,6 @@ from a_basic_analysis.b_module.source_properties import (
 
 
 # -----------------------------------------------------------------------------
-# -----------------------------------------------------------------------------
-
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = [
-    'pi_m_402_4.7',
-    # 'pi_m_406_4.7',
-    # 'pi_m_410_4.8',
-    ]
-
 # region import output
 
 exp_org_o = {}
@@ -82,35 +85,32 @@ for i in range(len(expid)):
     print('#-------- ' + expid[i])
     exp_org_o[expid[i]] = {}
     
-    
+    filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '*.01_wiso.nc'))
+    exp_org_o[expid[i]]['wiso'] = xr.open_mfdataset(
+        filenames_wiso[ifile_start:ifile_end],
+        data_vars='minimal', coords='minimal', parallel=True)
+
+'''
+    # 'pi_m_402_4.7',
+    # 'pi_m_406_4.7',
+    # 'pi_m_410_4.8',
+
     file_exists = os.path.exists(
         exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_echam.nc')
-    
-    if (file_exists):
-        # exp_org_o[expid[i]]['echam'] = xr.open_dataset(
-        #     exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_echam.nc')
-        exp_org_o[expid[i]]['wiso'] = xr.open_dataset(
-            exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_wiso.nc')
-    else:
+
         # filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*monthly.01_echam.nc'))
-        filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*monthly.01_wiso.nc'))
+
         # filenames_wiso_daily = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*daily.01_wiso.nc'))
         # exp_org_o[expid[i]]['echam'] = xr.open_mfdataset(filenames_echam, data_vars='minimal', coords='minimal', parallel=True)
-        exp_org_o[expid[i]]['wiso'] = xr.open_mfdataset(filenames_wiso, data_vars='minimal', coords='minimal', parallel=True)
+
         # exp_org_o[expid[i]]['wiso_daily'] = xr.open_mfdataset(filenames_wiso_daily, data_vars='minimal', coords='minimal', parallel=True)
 
+'''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-
-itag = 5
-ntags = [0, 0, 0, 0, 0,   3, 3, 3, 3, 3,   7]
-# itag = 4
-# ntags = [0, 0, 0, 0, 19,   0, 0, 0, 0, 0,   7]
-# ntags = [0, 0, 0, 0, 37,   0, 0, 0, 0, 0,   7]
-
 # region set indices for specific set of tracers
 
 kwiso2 = 3
@@ -228,29 +228,49 @@ pre_weighted_lat_am[expid[i]].to_netcdf(
 i = 0
 expid[i]
 
-# latbins = np.arange(-90, 90.1, 10)
-# latbins_mid = np.arange(-85, 85.1, 10)
-latbins = np.arange(-90, 90.1, 5)
-latbins_mid = np.arange(-87.5, 87.51, 5)
+latbins = np.arange(-90, 90.1, 10)
+latbins_mid = np.arange(-85, 85.1, 10)
+# latbins = np.arange(-90, 90.1, 5)
+# latbins_mid = np.arange(-87.5, 87.51, 5)
 
 ocean_pre = {}
 lat_binned_pre = {}
-pre_weighted_lat = {}
-ocean_pre_ann = {}
-lat_binned_pre_ann = {}
-pre_weighted_lat_ann = {}
-ocean_pre_sea = {}
-lat_binned_pre_sea = {}
-pre_weighted_lat_sea = {}
+
 ocean_pre_am = {}
 lat_binned_pre_am = {}
 pre_weighted_lat_am = {}
 
-lat_binned_pre[expid[i]] = (exp_org_o[expid[i]]['wiso'].wisoaprl.sel(wisotype=slice(kstart+2, kend)) + exp_org_o[expid[i]]['wiso'].wisoaprc.sel(wisotype=slice(kstart+2, kend)))
-ocean_pre[expid[i]] = lat_binned_pre[expid[i]].sum(dim='wisotype')
+lat_binned_pre[expid[i]] = (
+    exp_org_o[expid[i]]['wiso'].wisoaprl.sel(wisotype=slice(kstart+2,kend)) + \
+        exp_org_o[expid[i]]['wiso'].wisoaprc.sel(wisotype=slice(kstart+2,kend))
+        ).compute()
+lat_binned_pre[expid[i]].values[lat_binned_pre[expid[i]].values < 2e-8] = 0
+ocean_pre[expid[i]] = lat_binned_pre[expid[i]].sum(dim='wisotype').compute()
 
+#---------------- annual mean values
+
+ocean_pre_am[expid[i]] = time_weighted_mean(ocean_pre[expid[i]])
+lat_binned_pre_am[expid[i]] = time_weighted_mean(lat_binned_pre[expid[i]])
+
+pre_weighted_lat_am[expid[i]] = ((lat_binned_pre_am[expid[i]] * latbins_mid[:, None, None]).sum(dim='wisotype') / ocean_pre_am[expid[i]]).compute()
+pre_weighted_lat_am[expid[i]].values[
+    ocean_pre_am[expid[i]].values < 2e-8] = np.nan
+pre_weighted_lat_am[expid[i]] = pre_weighted_lat_am[expid[i]].rename('pre_weighted_lat_am')
+pre_weighted_lat_am[expid[i]].to_netcdf(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lat_am.nc'
+)
+
+
+'''
+# ocean_pre_ann = {}
+# lat_binned_pre_ann = {}
+# pre_weighted_lat_ann = {}
+# ocean_pre_sea = {}
+# lat_binned_pre_sea = {}
+# pre_weighted_lat_sea = {}
 
 #---------------- monthly values
+pre_weighted_lat = {}
 
 pre_weighted_lat[expid[i]] = (lat_binned_pre[expid[i]] * latbins_mid[None, :, None, None]).sum(dim='wisotype') / ocean_pre[expid[i]]
 pre_weighted_lat[expid[i]].values[ocean_pre[expid[i]].values < 1e-9] = np.nan
@@ -258,7 +278,6 @@ pre_weighted_lat[expid[i]] = pre_weighted_lat[expid[i]].rename('pre_weighted_lat
 pre_weighted_lat[expid[i]].to_netcdf(
     exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lat.nc'
 )
-
 
 #---------------- annual values
 
@@ -272,7 +291,6 @@ pre_weighted_lat_ann[expid[i]].to_netcdf(
     exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lat_ann.nc'
 )
 
-
 #---------------- seasonal values
 
 ocean_pre_sea[expid[i]] = ocean_pre[expid[i]][12:].groupby('time.season').sum(dim="time", skipna=True)
@@ -285,21 +303,6 @@ pre_weighted_lat_sea[expid[i]].to_netcdf(
     exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lat_sea.nc'
 )
 
-
-#---------------- annual mean values
-
-ocean_pre_am[expid[i]] = ocean_pre[expid[i]][12:].mean(dim="time", skipna=True)
-lat_binned_pre_am[expid[i]] = lat_binned_pre[expid[i]][12:].mean(dim="time", skipna=True)
-
-pre_weighted_lat_am[expid[i]] = (lat_binned_pre_am[expid[i]] * latbins_mid[:, None, None]).sum(dim='wisotype') / ocean_pre_am[expid[i]]
-pre_weighted_lat_am[expid[i]].values[ocean_pre_am[expid[i]].values < 1e-9] = np.nan
-pre_weighted_lat_am[expid[i]] = pre_weighted_lat_am[expid[i]].rename('pre_weighted_lat_am')
-pre_weighted_lat_am[expid[i]].to_netcdf(
-    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lat_am.nc'
-)
-
-
-'''
 '''
 # endregion
 # -----------------------------------------------------------------------------

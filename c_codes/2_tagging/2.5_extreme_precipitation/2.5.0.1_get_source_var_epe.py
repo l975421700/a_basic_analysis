@@ -1,23 +1,20 @@
 
 
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_416_4.9',]
+exp_odir = '/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/'
+expid = [
+    # 'pi_m_416_4.9',
+    'pi_m_502_5.0',
+    ]
 i = 0
-ifile_start = 120
-ifile_end   = 1080 # 1080
-
-# -----------------------------------------------------------------------------
-# region basic settings
+ifile_start = 48
+ifile_end   = 168 # 1080
 
 ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
 
-# ntags = [0, 0, 0, 0, 0,   3, 3, 3, 3, 3,   7]
-# ntags = [0, 0, 0, 0, 0,   0, 0, 0, 0, 0,   7, 3, 3, 0]
-
-# var_name  = 'sst'
-# itag      = 7
-# min_sf    = 268.15
-# max_sf    = 318.15
+var_name  = 'sst'
+itag      = 7
+min_sf    = 268.15
+max_sf    = 318.15
 
 # var_name  = 'lat'
 # itag      = 5
@@ -43,9 +40,6 @@ ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
 # itag      = 12
 # min_sf    = -1
 # max_sf    = 1
-
-# endregion
-# -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
@@ -98,7 +92,13 @@ with open(
     'rb') as f:
     wisoaprt_epe[expid[i]] = pickle.load(f)
 
-quantiles = {'90%': 0.9, '95%': 0.95, '99%': 0.99}
+quantile_interval  = np.arange(50, 99 + 1e-4, 1, dtype=np.int64)
+quantiles = dict(zip(
+    [str(x) + '%' for x in quantile_interval],
+    [x/100 for x in quantile_interval],
+    ))
+
+# quantiles = {'90%': 0.9, '95%': 0.95, '99%': 0.99}
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -212,7 +212,7 @@ for ivar in range(6):
     epe_var_scaled_pre_alltime = {}
     epe_ocean_pre_alltime = {}
     
-    for iqtl in quantiles.keys():
+    for iqtl in ['90%']: # quantiles.keys():
         # iqtl = '90%'
         print(iqtl)
         

@@ -1,7 +1,10 @@
 
 
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_416_4.9',]
+exp_odir = '/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/'
+expid = [
+    # 'pi_m_416_4.9',
+    'pi_m_502_5.0',
+    ]
 i = 0
 
 # -----------------------------------------------------------------------------
@@ -129,7 +132,7 @@ transport_distance_epe[expid[i]] = {}
 begin_time = datetime.datetime.now()
 print(begin_time)
 
-for iqtl in ['90%', '95%']:
+for iqtl in epe_weighted_lon[expid[i]].keys(): # ['90%', '95%']:
     transport_distance_epe[expid[i]][iqtl] = {}
     
     for ialltime in epe_weighted_lon[expid[i]][iqtl].keys():
@@ -139,7 +142,7 @@ for iqtl in ['90%', '95%']:
                 'transport_distance_epe')
         transport_distance_epe[expid[i]][iqtl][ialltime][:] = 0
         
-        if (ialltime in ['daily', 'mon', 'sea', 'ann']):
+        if (ialltime in ['mon', 'sea', 'ann']):
             print(ialltime)
             
             years = np.unique(
@@ -179,7 +182,7 @@ for iqtl in ['90%', '95%']:
                     local_pairs, source_pairs, normalize=True).reshape(
                         transport_distance_epe[expid[i]][iqtl][ialltime][time_indices].shape)
                 print(datetime.datetime.now() - begin_time)
-        else:
+        elif (ialltime in ['mm', 'sm', 'am']):
             print(ialltime)
             b_lon_2d = np.broadcast_to(
                 lon_2d, epe_weighted_lon[expid[i]][iqtl][ialltime].shape, )
@@ -210,7 +213,7 @@ transport_distance_epe = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance_epe.pkl', 'rb') as f:
     transport_distance_epe[expid[i]] = pickle.load(f)
 
-iqtl = '95%'
+iqtl = '90%'
 ilat = 48
 ilon = 98
 

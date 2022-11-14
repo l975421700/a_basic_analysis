@@ -1,7 +1,10 @@
 
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_416_4.9',]
+expid = [
+    # 'pi_m_416_4.9',
+    'pi_m_502_5.0',
+    ]
 i = 0
 
 # -----------------------------------------------------------------------------
@@ -117,17 +120,15 @@ major_ice_core_site = major_ice_core_site.loc[
 # region get aprt_frc
 
 geo_regions = [
-    'NHland', 'SHland', 'Antarctica',
-    'NHocean', 'NHseaice', 'SHocean', 'SHseaice']
-wisotypes = {'NHland': 16, 'SHland': 17, 'Antarctica': 18,
-             'NHocean': 19, 'NHseaice': 20, 'SHocean': 21, 'SHseaice': 22}
+    'AIS', 'Land excl. AIS', 'Atlantic Ocean',
+    'Indian Ocean', 'Pacific Ocean', 'SH seaice', 'Southern Ocean']
+wisotypes = {'AIS': 16, 'Land excl. AIS': 17,
+             'Atlantic Ocean': 18, 'Indian Ocean': 19, 'Pacific Ocean': 20,
+             'SH seaice': 21, 'Southern Ocean': 22}
 
 aprt_frc = {}
 for iregion in geo_regions:
     aprt_frc[iregion] = {}
-
-aprt_frc['Otherland']  = {}
-aprt_frc['Otherocean']  = {}
 
 for ialltime in aprt_geo7_alltime[expid[i]].keys():
     if (ialltime != 'sum'):
@@ -143,6 +144,17 @@ for ialltime in aprt_geo7_alltime[expid[i]].keys():
                     wisotype=wisotypes[iregion]) / \
                         aprt_geo7_alltime[expid[i]]['sum'][ialltime])
 
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc.pkl', 'wb') as f:
+    pickle.dump(aprt_frc, f)
+
+
+'''
+geo_regions = [
+    'NHland', 'SHland', 'Antarctica',
+    'NHocean', 'NHseaice', 'SHocean', 'SHseaice']
+wisotypes = {'NHland': 16, 'SHland': 17, 'Antarctica': 18,
+             'NHocean': 19, 'NHseaice': 20, 'SHocean': 21, 'SHseaice': 22}
+
 for ialltime in aprt_frc['Antarctica'].keys():
     aprt_frc['Otherland'][ialltime] = \
         aprt_frc['NHland'][ialltime] + aprt_frc['SHland'][ialltime]
@@ -150,11 +162,10 @@ for ialltime in aprt_frc['Antarctica'].keys():
         aprt_frc['NHocean'][ialltime] + aprt_frc['NHseaice'][ialltime] + \
             aprt_frc['SHocean'][ialltime]
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc.pkl', 'wb') as f:
-    pickle.dump(aprt_frc, f)
+aprt_frc['Otherland']  = {}
+aprt_frc['Otherocean']  = {}
 
 
-'''
 #-------- check calculation
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc.pkl', 'rb') as f:
     aprt_frc = pickle.load(f)

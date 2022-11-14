@@ -1,7 +1,10 @@
 
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_416_4.9',]
+expid = [
+    # 'pi_m_416_4.9',
+    'pi_m_502_5.0',
+    ]
 i = 0
 
 # -----------------------------------------------------------------------------
@@ -149,8 +152,8 @@ pltctr2 = np.array([1, 2, 4, ])
 plt_data = wisoaprt_alltime[expid[i]]['am'][0] * seconds_per_d
 
 plt2 = ax.contour(
-    lon, lat,
-    plt_data,
+    lon, lat.sel(lat=slice(-50, -90)),
+    plt_data.sel(lat=slice(-50, -90)),
     levels=pltctr1, colors = 'blue', transform=ccrs.PlateCarree(),
     linewidths=0.5, linestyles='dotted',
 )
@@ -158,8 +161,8 @@ ax.clabel(plt2, inline=1, colors='blue', fmt=remove_trailing_zero,
           levels=pltctr1, inline_spacing=10, fontsize=6,)
 
 plt3 = ax.contour(
-    lon, lat,
-    plt_data,
+    lon, lat.sel(lat=slice(-50, -90)),
+    plt_data.sel(lat=slice(-50, -90)),
     levels=pltctr2, colors = 'blue', transform=ccrs.PlateCarree(),
     linewidths=0.5, linestyles='solid',
 )
@@ -173,6 +176,7 @@ cbar = fig.colorbar(
     )
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel('Source wind10 [$m \; s^{-1}$]', linespacing=2)
+cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 fig.savefig(output_png, dpi=1200)
 
 

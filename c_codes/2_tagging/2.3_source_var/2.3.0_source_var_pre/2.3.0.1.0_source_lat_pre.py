@@ -1,7 +1,7 @@
 
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_416_4.9',]
+expid = ['pi_m_502_5.0',]
 i = 0
 
 # -----------------------------------------------------------------------------
@@ -118,7 +118,12 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_allti
 
 
 '''
-# pre_weighted_lat[expid[i]]['am'].to_netcdf('scratch/test/test.nc')
+pre_weighted_lat = {}
+with open(exp_odir + expid[i] + '/analysis/echam/check/' + expid[i] + '.pre_weighted_lat.pkl', 'rb') as f:
+    pre_weighted_lat[expid[i]] = pickle.load(f)
+
+pre_weighted_lat[expid[i]]['am'].to_netcdf('output/echam-6.3.05p2-wiso/pi/pi_m_502_5.0/analysis/echam/check/pi_m_502_5.0.pre_weighted_lat_am.nc')
+
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -483,8 +488,8 @@ pltctr2 = np.array([1, 2, 4, ])
 plt_data = wisoaprt_alltime[expid[i]]['am'][0] * seconds_per_d
 
 plt2 = ax.contour(
-    lon, lat,
-    plt_data,
+    lon, lat.sel(lat=slice(-50, -90)),
+    plt_data.sel(lat=slice(-50, -90)),
     levels=pltctr1, colors = 'blue', transform=ccrs.PlateCarree(),
     linewidths=0.5, linestyles='dotted',
 )
@@ -492,8 +497,8 @@ ax.clabel(plt2, inline=1, colors='blue', fmt=remove_trailing_zero,
           levels=pltctr1, inline_spacing=10, fontsize=6,)
 
 plt3 = ax.contour(
-    lon, lat,
-    plt_data,
+    lon, lat.sel(lat=slice(-50, -90)),
+    plt_data.sel(lat=slice(-50, -90)),
     levels=pltctr2, colors = 'blue', transform=ccrs.PlateCarree(),
     linewidths=0.5, linestyles='solid',
 )
@@ -740,20 +745,23 @@ axs[0].clabel(plt3, inline=1, colors='blue', fmt=remove_trailing_zero,
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.0_lat/6.1.3.0 ' + expid[i] + ' pre_weighted_lat am cross_check.png'
 file_dir = 'output/echam-6.3.05p2-wiso/pi/'
 pre_weighted_var_files = [
-    'pi_m_406_4.7/analysis/echam/pi_m_406_4.7.pre_weighted_lat_am.nc',
-    'pi_m_410_4.8/analysis/echam/pi_m_410_4.8.pre_weighted_lat_am.nc',
+    # 'pi_m_406_4.7/analysis/echam/pi_m_406_4.7.pre_weighted_lat_am.nc',
+    # 'pi_m_410_4.8/analysis/echam/pi_m_410_4.8.pre_weighted_lat_am.nc',
+    'pi_m_503_5.0/analysis/echam/pi_m_503_5.0.pre_weighted_lat_am.nc',
 ]
 
 pre_weighted_var = {}
 pre_weighted_var['am_lowres'] = xr.open_dataset(
     file_dir + pre_weighted_var_files[0])
-pre_weighted_var['am_highres'] = xr.open_dataset(
-    file_dir + pre_weighted_var_files[1])
+# pre_weighted_var['am_highres'] = xr.open_dataset(
+#     file_dir + pre_weighted_var_files[1])
 
 pre_weighted_lat = {}
-with open(exp_odir + expid[i] + '/analysis/echam/source_var_short/' + expid[i] + '.pre_weighted_lat.pkl', 'rb') as f:
+with open(exp_odir + expid[i] + '/analysis/echam/check/' + expid[i] + '.pre_weighted_lat.pkl', 'rb') as f:
     pre_weighted_lat[expid[i]] = pickle.load(f)
 
+lon = pre_weighted_lat[expid[i]]['am'].lon
+lat = pre_weighted_lat[expid[i]]['am'].lat
 
 #-------------------------------- plot
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
@@ -786,10 +794,10 @@ plt_mesh2 = axs[1].pcolormesh(
         pre_weighted_lat[expid[i]]['am'],
     norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
 # plot am norm - highres
-plt_mesh2 = axs[2].pcolormesh(
-    lon, lat, pre_weighted_var['am_highres'].pre_weighted_lat_am - \
-        pre_weighted_lat[expid[i]]['am'],
-    norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
+# plt_mesh2 = axs[2].pcolormesh(
+#     lon, lat, pre_weighted_var['am_highres'].pre_weighted_lat_am - \
+#         pre_weighted_lat[expid[i]]['am'],
+#     norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
 
 plt.text(
     0.5, 1.05, 'Scaling approach',

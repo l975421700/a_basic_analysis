@@ -1,10 +1,13 @@
 
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_416_4.9',]
+expid = [
+    # 'pi_m_416_4.9',
+    'pi_m_502_5.0',
+    ]
 i = 0
-ifile_start = 120
-ifile_end   = 1080
+ifile_start = 48
+ifile_end   = 168
 
 # -----------------------------------------------------------------------------
 # region import packages

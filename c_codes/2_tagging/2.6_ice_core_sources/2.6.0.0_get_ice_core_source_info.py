@@ -1,7 +1,10 @@
 
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_416_4.9',]
+expid = [
+    # 'pi_m_416_4.9',
+    'pi_m_502_5.0',
+    ]
 i = 0
 
 
@@ -317,7 +320,7 @@ aprt_frc = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc.pkl', 'rb') as f:
     aprt_frc[expid[i]] = pickle.load(f)
 
-# aprt_frc[expid[i]]['Otherocean'].keys()
+# aprt_frc[expid[i]].keys()
 
 aprt_frc_alltime_icores = {}
 aprt_frc_alltime_icores[expid[i]] = {}
@@ -327,21 +330,27 @@ for icores in major_ice_core_site.Site:
     print('#--------' + icores)
     aprt_frc_alltime_icores[expid[i]][icores] = {}
     
-    for ialltime in aprt_frc[expid[i]]['Otherocean'].keys():
+    for ialltime in aprt_frc[expid[i]]['Atlantic Ocean'].keys():
         # print('#----' + ialltime)
         if ialltime in ['daily', 'mon', 'sea', 'ann', 'mm', 'sm']:
             # ialltime = 'daily'
             aprt_frc_alltime_icores[expid[i]][icores][ialltime] = \
-                aprt_frc[expid[i]]['Otherocean'][ialltime][
-                    :,
-                    loc_indices[icores]['ilat'],
-                    loc_indices[icores]['ilon']]
+                (aprt_frc[expid[i]]['Atlantic Ocean'][ialltime] + \
+                    aprt_frc[expid[i]]['Indian Ocean'][ialltime] + \
+                        aprt_frc[expid[i]]['Pacific Ocean'][ialltime] + \
+                            aprt_frc[expid[i]]['Southern Ocean'][ialltime])[
+                                :,
+                                loc_indices[icores]['ilat'],
+                                loc_indices[icores]['ilon']]
         elif (ialltime == 'am'):
             # ialltime = 'am'
             aprt_frc_alltime_icores[expid[i]][icores][ialltime] = \
-                aprt_frc[expid[i]]['Otherocean'][ialltime][
-                    loc_indices[icores]['ilat'],
-                    loc_indices[icores]['ilon']]
+                (aprt_frc[expid[i]]['Atlantic Ocean'][ialltime] + \
+                    aprt_frc[expid[i]]['Indian Ocean'][ialltime] + \
+                        aprt_frc[expid[i]]['Pacific Ocean'][ialltime] + \
+                            aprt_frc[expid[i]]['Southern Ocean'][ialltime])[
+                                loc_indices[icores]['ilat'],
+                                loc_indices[icores]['ilon']]
 
 
 for icores in aprt_frc_alltime_icores[expid[i]].keys():
