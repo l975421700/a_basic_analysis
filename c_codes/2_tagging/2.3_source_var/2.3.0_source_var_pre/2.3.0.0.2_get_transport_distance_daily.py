@@ -154,7 +154,7 @@ for ialltime in pre_weighted_lat[expid[i]].keys():
     transport_distance[expid[i]][ialltime] = pre_weighted_lat[expid[i]][ialltime].copy().rename('transport_distance')
     transport_distance[expid[i]][ialltime][:] = 0
     
-    if (ialltime in ['mon', 'sea', 'ann']):
+    if (ialltime in ['daily', 'mon', 'sea', 'ann']):
         print(ialltime)
         
         years = np.unique(transport_distance[expid[i]][ialltime].time.dt.year)

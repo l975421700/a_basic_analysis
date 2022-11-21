@@ -115,7 +115,7 @@ lon = wisoaprt_alltime[expid[i]]['am'].lon
 lat = wisoaprt_alltime[expid[i]]['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
-quantile_interval  = np.arange(50, 99 + 1e-4, 1, dtype=np.int64)
+quantile_interval  = np.arange(1, 99 + 1e-4, 1, dtype=np.int64)
 quantiles = dict(zip(
     [str(x) + '%' for x in quantile_interval],
     [x/100 for x in quantile_interval],

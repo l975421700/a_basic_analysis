@@ -6,8 +6,8 @@ expid = [
     'pi_m_502_5.0',
     ]
 i = 0
-ifile_start = 48
-ifile_end   = 168 # 1080
+ifile_start = 120
+ifile_end   = 720 # 1080
 
 ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
 
@@ -92,7 +92,7 @@ with open(
     'rb') as f:
     wisoaprt_epe[expid[i]] = pickle.load(f)
 
-quantile_interval  = np.arange(50, 99 + 1e-4, 1, dtype=np.int64)
+quantile_interval  = np.arange(1, 99 + 1e-4, 1, dtype=np.int64)
 quantiles = dict(zip(
     [str(x) + '%' for x in quantile_interval],
     [x/100 for x in quantile_interval],

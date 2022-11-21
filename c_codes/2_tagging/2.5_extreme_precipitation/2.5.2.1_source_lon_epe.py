@@ -1,7 +1,10 @@
 
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_416_4.9',]
+expid = [
+    # 'pi_m_416_4.9',
+    'pi_m_502_5.0',
+    ]
 i = 0
 
 
@@ -118,7 +121,7 @@ lon = pre_weighted_lon[expid[i]]['am'].lon
 lat = pre_weighted_lon[expid[i]]['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
-quantiles = {'90%': 0.9, '95%': 0.95, '99%': 0.99}
+# quantiles = {'90%': 0.9, '95%': 0.95, '99%': 0.99}
 
 
 '''

@@ -1,24 +1,24 @@
 #!/bin/bash
-#SBATCH --time=12:00:00
+#SBATCH --time=02:00:00
 #SBATCH --partition=fat
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=14
 #SBATCH -o %A_job.out
 #SBATCH -e %A_job.err
 
-# data_sources, output, scratch, startdump
-# rsync -avzLP --exclude '**/run_/*' /work/ollie/qigao001/startdump levante:/work/ab0246/a270200/
-
-
 source /home/ollie/qigao001/miniconda3/bin/activate deepice
 
-python /work/ollie/qigao001/a_basic_analysis/c_codes/0_basics/0.1.3_large_memory.py
+cd $WORK
 
-# python /work/ollie/qigao001/a_basic_analysis/c_codes/2_tagging/2.3_source_var/2.3.0.0_source_var_scaled_daily.py
+python "/work/ollie/qigao001/a_basic_analysis/c_codes/2_tagging/2.5_extreme_precipitation/2.5.0.0_get wisoaprt_epe.py"
+
 
 
 #Xsrun  I know what I am doing
 
+
+# data_sources, output, scratch, startdump
+# rsync -avzLP --exclude '**/run_/*' /work/ollie/qigao001/startdump levante:/work/ab0246/a270200/
 
 # output_dir='/home/ollie/qigao001/output/awiesm-2.1-wiso/pi_final'
 # expid='pi_final_qg_1y_1_qgtest2.1'

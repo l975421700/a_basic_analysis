@@ -1,7 +1,10 @@
 
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_416_4.9',]
+expid = [
+    # 'pi_m_416_4.9',
+    'pi_m_502_5.0',
+    ]
 i = 0
 
 
@@ -118,7 +121,7 @@ lon = pre_weighted_wind10[expid[i]]['am'].lon
 lat = pre_weighted_wind10[expid[i]]['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
-quantiles = {'90%': 0.9, '95%': 0.95, '99%': 0.99}
+# quantiles = {'90%': 0.9, '95%': 0.95, '99%': 0.99}
 
 
 '''
@@ -135,8 +138,9 @@ iqtl = '90%'
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.4_source_wind10/6.1.7.0.4 ' + expid[i] + ' epe_weighted_wind10 - pre_weighted_wind10 am Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-1, cm_max=0, cm_interval1=0.1, cm_interval2=0.2, cmap='Greens',)
-pltcmp = pplt.Colormap('Dusk', samples=len(pltlevel)-1).reversed()
+    cm_min=-1, cm_max=0, cm_interval1=0.1, cm_interval2=0.2, cmap='pink',
+    reversed=False)
+# pltcmp = pplt.Colormap('Dusk', samples=len(pltlevel)-1).reversed()
 pltticks[-1] = 0
 
 fig, ax = hemisphere_plot(

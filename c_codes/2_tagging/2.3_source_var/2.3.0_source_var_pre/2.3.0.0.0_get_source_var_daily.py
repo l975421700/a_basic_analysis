@@ -6,8 +6,8 @@ i=0
 
 output_dir = exp_odir + expid[i] + '/analysis/echam/'
 
-ifile_start = 48
-ifile_end   = 168
+ifile_start = 120
+ifile_end   = 720
 
 ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
 

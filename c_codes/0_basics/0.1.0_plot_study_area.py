@@ -245,3 +245,58 @@ fig.savefig(output_png)
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region plot location of core sites and stations
+
+major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
+Antarctic_stations = pd.read_csv('data_sources/others/Antarctic_stations.csv')
+
+
+output_png = 'figures/1_study_area/1.0_Antarctic core sites and stations.png'
+
+fig, ax = hemisphere_plot(northextent=-50, lw=0.1)
+
+cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax, s=5,
+                zorder=4,)
+for irow in range(major_ice_core_site.shape[0]):
+    ax.text(
+        major_ice_core_site.lon[irow]+2, major_ice_core_site.lat[irow]+1,
+        major_ice_core_site.Site[irow], transform=ccrs.PlateCarree(),
+        fontsize = 3, color='black')
+
+cplot_ice_cores(Antarctic_stations.lon, Antarctic_stations.lat, ax, s=5,
+                marker='s', zorder=4)
+for irow in range(Antarctic_stations.shape[0]):
+    ax.text(
+        Antarctic_stations.lon[irow]+2, Antarctic_stations.lat[irow]+1,
+        Antarctic_stations.Site[irow], transform=ccrs.PlateCarree(),
+        fontsize = 3, color='black')
+
+# plot AIS divisions
+plt_wais = ais_imbie2.loc[ais_imbie2.Regions == 'West'].plot(
+    ax=ax, transform=ccrs.epsg(3031),
+    edgecolor='red', facecolor='none', linewidths=0.1, zorder=2)
+plt_eais = ais_imbie2.loc[ais_imbie2.Regions == 'East'].plot(
+    ax=ax, transform=ccrs.epsg(3031),
+    edgecolor='blue', facecolor='none', linewidths=0.1, zorder=2)
+plt_ap = ais_imbie2.loc[ais_imbie2.Regions == 'Peninsula'].plot(
+    ax=ax, transform=ccrs.epsg(3031),
+    edgecolor='m', facecolor='none', linewidths=0.1, zorder=2)
+
+fig.savefig(output_png)
+
+
+
+'''
+major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
+Antarctic_stations = pd.read_csv('data_sources/others/Antarctic_stations.csv')
+
+stations_sites = pd.concat(
+    [major_ice_core_site[['Site', 'lon', 'lat']],
+     Antarctic_stations[['Site', 'lon', 'lat']],],
+    ignore_index=True,
+    )
+'''
+# endregion
+# -----------------------------------------------------------------------------
+

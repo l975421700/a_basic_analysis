@@ -121,7 +121,7 @@ lon = pre_weighted_lat[expid[i]]['am'].lon
 lat = pre_weighted_lat[expid[i]]['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
-quantiles = {'90%': 0.9, '95%': 0.95, '99%': 0.99}
+# quantiles = {'90%': 0.9, '95%': 0.95, '99%': 0.99}
 
 
 '''
@@ -171,8 +171,8 @@ iqtl = '90%'
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.0_source_lat/6.1.7.0.0 ' + expid[i] + ' epe_source_lat - pre_weighted_lat am Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=0, cm_max=6, cm_interval1=0.5, cm_interval2=1, cmap='Purples',
-    reversed=False)
+    cm_min=0, cm_max=6, cm_interval1=0.5, cm_interval2=1, cmap='pink',
+    reversed=True)
 # pltcmp = pplt.Colormap('Stellar', samples=len(pltlevel)-1)
 
 fig, ax = hemisphere_plot(
