@@ -121,7 +121,7 @@ def get_var_LIG(var):
     for model in models:
         print(model)
         try:
-            files=glob.glob('/home/users/rahuls/LOUISE/PMIP_LIG/ESGF_download/CMIP6/model-output/seaIce/'+var+'/'+var+'_SImon_'+model+'_lig127k_*.nc')
+            files=glob.glob('/gws/nopw/j04/bas_palaeoclim/rahul/data/PMIP_LIG/ESGF_download/CMIP6/model-output/seaIce/'+var+'/'+var+'_SImon_'+model+'_lig127k_*.nc')
             if not files:
                 print(model+' LIG data not avaialbe')
                 continue
@@ -146,7 +146,7 @@ def get_var_PI(var):
     var_dic={}
     for model in models:
         print(model)
-        files_LIG=glob.glob('/home/users/rahuls/LOUISE/PMIP_LIG/ESGF_download/CMIP6/model-output/seaIce/'+var+'/'+var+'_SImon_'+model+'_lig127k_*.nc')
+        files_LIG=glob.glob('/gws/nopw/j04/bas_palaeoclim/rahul/data/PMIP_LIG/ESGF_download/CMIP6/model-output/seaIce/'+var+'/'+var+'_SImon_'+model+'_lig127k_*.nc')
         try:
             index=files_LIG[0].index('_lig127k_')+9
             ens=files_LIG[0][index:index+8]
@@ -190,7 +190,7 @@ pi_sic.pop('INM-CM4-8')
 
 # GISS-E2-1-G, LIG
 model = 'GISS-E2-1-G'
-files = glob.glob('/home/users/rahuls/LOUISE/PMIP_LIG/ESGF_download/CMIP6/model-output/seaIce/siconca/siconca_SImon_GISS-E2-1-G_lig127k_r1i1p1f1_gn_*.nc')
+files = glob.glob('/gws/nopw/j04/bas_palaeoclim/rahul/data/PMIP_LIG/ESGF_download/CMIP6/model-output/seaIce/siconca/siconca_SImon_GISS-E2-1-G_lig127k_r1i1p1f1_gn_*.nc')
 ds = xr.open_mfdataset(
     paths=files,use_cftime=True,parallel=True).rename(dict(siconca='siconc'))
 lig_sic[model] = combined_preprocessing(ds.isel(time=slice(-2400,None)))
@@ -286,7 +286,7 @@ with open('scratch/cmip6/lig/lig_sic_alltime.pkl', 'rb') as f:
     lig_sic_alltime = pickle.load(f)
 
 model = 'NorESM2-LM'
-files = glob.glob('/home/users/rahuls/LOUISE/PMIP_LIG/ESGF_download/CMIP6/model-output/seaIce/siconc/siconc_SImon_'+model+'_lig127k_*.nc')
+files = glob.glob('/gws/nopw/j04/bas_palaeoclim/rahul/data/PMIP_LIG/ESGF_download/CMIP6/model-output/seaIce/siconc/siconc_SImon_'+model+'_lig127k_*.nc')
 ds=xr.open_mfdataset(paths=files,use_cftime=True,parallel=True)
 ds_pp=combined_preprocessing(ds.isel(time=slice(-2400,None)))
 
@@ -300,11 +300,30 @@ data2 = lig_sic_alltime['NorESM2-LM']['mon'].values
 
 
 # -----------------------------------------------------------------------------
-# region regrid AWI sic
+# region regrid AWI/Nor/CESM sic
 
-! cdo -P 4 -remapcon,global_1 -mergetime /home/users/rahuls/LOUISE/PMIP_LIG/ESGF_download/CMIP6/model-output/seaIce/siconc/siconc_SImon_AWI-ESM-1-1-LR_lig127k_r1i1p1f1_gn_*.nc scratch/cmip6/lig/siconc_SImon_AWI-ESM-1-1-LR_lig127k_r1i1p1f1_gn_300101-310012.nc
+#---- regrid AWI-ESM-1-1-LR
+
+! cdo -P 4 -remapcon,global_1 -mergetime /gws/nopw/j04/bas_palaeoclim/rahul/data/PMIP_LIG/ESGF_download/CMIP6/model-output/seaIce/siconc/siconc_SImon_AWI-ESM-1-1-LR_lig127k_r1i1p1f1_gn_*.nc scratch/cmip6/lig/siconc_SImon_AWI-ESM-1-1-LR_lig127k_r1i1p1f1_gn_300101-310012.nc
 
 ! cdo -P 4 -remapcon,global_1 -mergetime /home/users/rahuls/LOUISE/PMIP_LIG/piControl_CEDA_Links/siconc/siconc_SImon_AWI-ESM-1-1-LR_piControl_r1i1p1f1_gn_*.nc scratch/cmip6/lig/siconc_SImon_AWI-ESM-1-1-LR_piControl_r1i1p1f1_gn_185501-195412.nc
+
+
+#---- regrid NorESM2-LM
+# okay
+! cdo -P 4 -remapbil,global_1 -mergetime /gws/nopw/j04/bas_palaeoclim/rahul/data/PMIP_LIG/ESGF_download/CMIP6/model-output/seaIce/siconc/siconc_SImon_NorESM2-LM_lig127k_r1i1p1f1_gn_*.nc scratch/cmip6/lig/siconc_SImon_NorESM2-LM_lig127k_r1i1p1f1_gn_210101-220012.nc
+
+# okay
+! cdo -P 4 -remapbil,global_1 -mergetime /home/users/rahuls/LOUISE/PMIP_LIG/piControl_CEDA_Links/siconc/siconc_SImon_NorESM2-LM_piControl_r1i1p1f1_gn_*.nc scratch/cmip6/lig/siconc_SImon_NorESM2-LM_piControl_r1i1p1f1_gn_160001-210012.nc
+
+
+#---- regrid CESM2
+# okay
+! cdo -P 4 -remapbil,global_1 -mergetime /gws/nopw/j04/bas_palaeoclim/rahul/data/PMIP_LIG/ESGF_download/CMIP6/model-output/seaIce/siconc/siconc_SImon_CESM2_lig127k_r1i1p1f1_gn_*.nc scratch/cmip6/lig/siconc_SImon_CESM2_lig127k_r1i1p1f1_gn_050101-070012.nc
+
+# okay
+! cdo -P 4 -remapbil,global_1 -mergetime /home/users/rahuls/LOUISE/PMIP_LIG/piControl_CEDA_Links/siconc/siconc_SImon_CESM2_piControl_r1i1p1f1_gn_*.nc scratch/cmip6/lig/siconc_SImon_CESM2_piControl_r1i1p1f1_gn_000101-120012.nc
+
 
 
 # endregion
@@ -325,13 +344,26 @@ pi_sic_regrid = {}
 models=sorted(lig_sic.keys())
 
 for model in models:
+    # model = 'ACCESS-ESM1-5'
     print(model)
-    if (model != 'AWI-ESM-1-1-LR'):
+    if not (model in ['AWI-ESM-1-1-LR', 'NorESM2-LM', 'CESM2']):
         lig_sic_regrid[model] = regrid(lig_sic[model])
         pi_sic_regrid[model] = regrid(pi_sic[model])
     elif (model == 'AWI-ESM-1-1-LR'):
-        lig_sic_regrid[model] = xr.open_dataset('scratch/cmip6/lig/siconc_SImon_AWI-ESM-1-1-LR_lig127k_r1i1p1f1_gn_300101-310012.nc')
-        pi_sic_regrid[model] = xr.open_dataset('scratch/cmip6/lig/siconc_SImon_AWI-ESM-1-1-LR_piControl_r1i1p1f1_gn_185501-195412.nc')
+        lig_sim = xr.open_dataset('scratch/cmip6/lig/siconc_SImon_AWI-ESM-1-1-LR_lig127k_r1i1p1f1_gn_300101-310012.nc')
+        pi_sim = xr.open_dataset('scratch/cmip6/lig/siconc_SImon_AWI-ESM-1-1-LR_piControl_r1i1p1f1_gn_185501-195412.nc')
+    elif (model == 'NorESM2-LM'):
+        lig_sim = xr.open_dataset('scratch/cmip6/lig/siconc_SImon_NorESM2-LM_lig127k_r1i1p1f1_gn_210101-220012.nc')
+        pi_sim = xr.open_dataset('scratch/cmip6/lig/siconc_SImon_NorESM2-LM_piControl_r1i1p1f1_gn_160001-210012.nc')
+    elif (model == 'CESM2'):
+        lig_sim = xr.open_dataset('scratch/cmip6/lig/siconc_SImon_CESM2_lig127k_r1i1p1f1_gn_050101-070012.nc')
+        pi_sim = xr.open_dataset('scratch/cmip6/lig/siconc_SImon_CESM2_piControl_r1i1p1f1_gn_000101-120012.nc')
+    
+    if (model in ['AWI-ESM-1-1-LR', 'NorESM2-LM', 'CESM2']):
+        lig_sic_regrid[model] = combined_preprocessing(
+            lig_sim.isel(time=slice(-2400,None))).compute()
+        pi_sic_regrid[model] = combined_preprocessing(
+            pi_sim.isel(time=slice(-2400,None))).compute()
 
 with open('scratch/cmip6/lig/lig_sic_regrid.pkl', 'wb') as f:
     pickle.dump(lig_sic_regrid, f)
@@ -339,7 +371,26 @@ with open('scratch/cmip6/lig/pi_sic_regrid.pkl', 'wb') as f:
     pickle.dump(pi_sic_regrid, f)
 
 
+
+
+
 '''
+
+with open('scratch/cmip6/lig/pi_sic.pkl', 'rb') as f:
+    pi_sic = pickle.load(f)
+
+pi_sic['NorESM2-LM'].siconc[0].to_netcdf('scratch/test/test3.nc')
+test = regrid(pi_sic['NorESM2-LM'].isel(time=slice(0, 1)), method="conservative")
+test.to_netcdf('scratch/test/test2.nc')
+
+with open('scratch/cmip6/lig/lig_sic_regrid.pkl', 'rb') as f:
+    lig_sic_regrid = pickle.load(f)
+
+with open('scratch/cmip6/lig/pi_sic_regrid.pkl', 'rb') as f:
+    pi_sic_regrid = pickle.load(f)
+
+pi_sic_regrid['NorESM2-LM'].siconc[0].to_netcdf('scratch/test/test3.nc')
+
 '''
 # endregion
 # -----------------------------------------------------------------------------

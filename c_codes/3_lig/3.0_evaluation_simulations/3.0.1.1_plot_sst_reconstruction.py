@@ -136,6 +136,8 @@ jh_sst_rec['SO_djf'] = jh_sst_rec['original'].loc[
     (jh_sst_rec['original']['Region']=='Southern Ocean') & \
         ['Summer SST' in string for string in jh_sst_rec['original']['Type']], ]
 
+with open('scratch/cmip6/lig/chadwick_interp.pkl', 'rb') as f:
+    chadwick_interp = pickle.load(f)
 
 '''
 # 14 cores for am
@@ -147,7 +149,7 @@ jh_sst_rec['SO_djf'] = jh_sst_rec['original'].loc[
 
 
 # -----------------------------------------------------------------------------
-# region plot EC reconstruction am sst
+# region plot reconstructions of am sst
 
 output_png = 'figures/7_lig/7.0_boundary_conditions/7.0.0_sst/7.0.0.0 lig-pi sst am reconstruction_ec.png'
 cbar_label = 'LIG - PI annual mean SST [$°C$]'
@@ -161,13 +163,13 @@ ax.scatter(
     x = jh_sst_rec['SO_ann'].Longitude,
     y = jh_sst_rec['SO_ann'].Latitude,
     c = jh_sst_rec['SO_ann']['127 ka SST anomaly (°C)'],
-    s=8, lw=0.3, marker='s', edgecolors = 'white', zorder=2,
+    s=10, lw=0.3, marker='s', edgecolors = 'black', zorder=2,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 ax.scatter(
     x = ec_sst_rec['SO_ann'].Longitude,
     y = ec_sst_rec['SO_ann'].Latitude,
     c = ec_sst_rec['SO_ann']['127 ka Median PIAn [°C]'],
-    s=8, lw=0.3, marker='o', edgecolors = 'white', zorder=2,
+    s=10, lw=0.3, marker='o', edgecolors = 'black', zorder=2,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
 cbar = fig.colorbar(
@@ -190,7 +192,7 @@ fig.savefig(output_png)
 
 
 # -----------------------------------------------------------------------------
-# region plot EC reconstruction djf sst
+# region plot reconstructions of djf sst
 
 output_png = 'figures/7_lig/7.0_boundary_conditions/7.0.0_sst/7.0.0.0 lig-pi sst djf reconstruction_ec.png'
 cbar_label = 'LIG - PI summer SST [$°C$]'
@@ -204,14 +206,21 @@ ax.scatter(
     x = jh_sst_rec['SO_djf'].Longitude,
     y = jh_sst_rec['SO_djf'].Latitude,
     c = jh_sst_rec['SO_djf']['127 ka SST anomaly (°C)'],
-    s=8, lw=0.3, marker='s', edgecolors = 'white', zorder=2,
+    s=10, lw=0.3, marker='s', edgecolors = 'black', zorder=2,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
 ax.scatter(
     x = ec_sst_rec['SO_djf'].Longitude,
     y = ec_sst_rec['SO_djf'].Latitude,
     c = ec_sst_rec['SO_djf']['127 ka Median PIAn [°C]'],
-    s=8, lw=0.3, marker='o', edgecolors = 'white', zorder=2,
+    s=10, lw=0.3, marker='o', edgecolors = 'black', zorder=2,
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+ax.scatter(
+    x = chadwick_interp.lon,
+    y = chadwick_interp.lat,
+    c = chadwick_interp.sst_sum,
+    s=10, lw=0.3, marker='^', edgecolors = 'black', zorder=2,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
 cbar = fig.colorbar(

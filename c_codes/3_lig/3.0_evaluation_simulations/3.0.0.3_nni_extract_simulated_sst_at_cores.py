@@ -101,7 +101,8 @@ from a_basic_analysis.b_module.component_plot import (
 
 
 # -----------------------------------------------------------------------------
-# region import data
+# -----------------------------------------------------------------------------
+# region import EC&JH reconstructions
 
 
 with open('scratch/cmip6/lig/lig_sst.pkl', 'rb') as f:
@@ -291,7 +292,7 @@ jh_sst_rec['original'].Longitude[0]
 
 
 # -----------------------------------------------------------------------------
-# region extract point simulated and reconstructed LIG-PI am and summer SST
+# region extract simulated and reconstructed LIG-PI am and summer SST : MC&JH
 
 with open('scratch/cmip6/lig/loc_indices_rec_ec.pkl', 'rb') as f:
     loc_indices_rec_ec = pickle.load(f)
@@ -741,6 +742,502 @@ np.max(distances)
 
 # Propogation of uncertainties
 https://en.wikipedia.org/wiki/Propagation_of_uncertainty
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# region import MC reconstructions: SST
+
+
+with open('scratch/cmip6/lig/lig_sst.pkl', 'rb') as f:
+    lig_sst = pickle.load(f)
+with open('scratch/cmip6/lig/pi_sst.pkl', 'rb') as f:
+    pi_sst = pickle.load(f)
+
+with open('scratch/cmip6/lig/lig_sst_alltime.pkl', 'rb') as f:
+    lig_sst_alltime = pickle.load(f)
+with open('scratch/cmip6/lig/pi_sst_alltime.pkl', 'rb') as f:
+    pi_sst_alltime = pickle.load(f)
+
+models=sorted(pi_sst.keys())
+
+#-------- import MC reconstruction
+with open('scratch/cmip6/lig/chadwick_interp.pkl', 'rb') as f:
+    chadwick_interp = pickle.load(f)
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region extract indices
+
+loc_indices_rec_mc = {}
+
+for model in models:
+    # model = 'HadGEM3-GC31-LL'
+    print('#-------- ' + model)
+    
+    loc_indices_rec_mc[model] = {}
+    
+    lon = pi_sst[model].lon.values
+    lat = pi_sst[model].lat.values
+    
+    for istation in chadwick_interp.index:
+        # istation = 2
+        station = chadwick_interp.sites[istation]
+        print('#---- ' + str(istation) + ': ' + station)
+        
+        slon = chadwick_interp.lon[istation]
+        slat = chadwick_interp.lat[istation]
+        
+        loc_indices_rec_mc[model][station] = \
+            find_ilat_ilon_general(slat, slon, lat, lon)
+
+with open('scratch/cmip6/lig/loc_indices_rec_mc.pkl', 'wb') as f:
+    pickle.dump(loc_indices_rec_mc, f)
+
+
+
+'''
+#---------------- check
+with open('scratch/cmip6/lig/pi_sst.pkl', 'rb') as f:
+    pi_sst = pickle.load(f)
+models=sorted(pi_sst.keys())
+with open('scratch/cmip6/lig/chadwick_interp.pkl', 'rb') as f:
+    chadwick_interp = pickle.load(f)
+
+from haversine import haversine
+with open('scratch/cmip6/lig/loc_indices_rec_mc.pkl', 'rb') as f:
+    loc_indices_rec_mc = pickle.load(f)
+
+for model in models:
+    # model = 'HadGEM3-GC31-LL'
+    print('#-------------------------------- ' + model)
+    
+    lon = pi_sst[model].lon.values
+    lat = pi_sst[model].lat.values
+    
+    for istation in chadwick_interp.index:
+        # istation = 10
+        station = chadwick_interp.sites[istation]
+        print('#---------------- ' + str(istation) + ': ' + station)
+        
+        slon = chadwick_interp.lon[istation]
+        slat = chadwick_interp.lat[istation]
+        
+        if (lon.ndim == 2):
+            distance = haversine(
+                [slat, slon],
+                [lat[loc_indices_rec_mc[model][station][0],
+                     loc_indices_rec_mc[model][station][1]],
+                 lon[loc_indices_rec_mc[model][station][0],
+                     loc_indices_rec_mc[model][station][1]]],
+                normalize=True,)
+        elif (lon.ndim == 1):
+            distance = haversine(
+                [slat, slon],
+                [lat[loc_indices_rec_mc[model][station][0]],
+                 lon[loc_indices_rec_mc[model][station][0]]],
+                normalize=True,)
+        
+        if (distance > 100):
+            print(np.round(distance, 0))
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region extract simulated and reconstructed LIG-PI summer SST : MC
+
+with open('scratch/cmip6/lig/loc_indices_rec_mc.pkl', 'rb') as f:
+    loc_indices_rec_mc = pickle.load(f)
+
+obs_sim_lig_pi_so_sst_mc = pd.DataFrame(columns=(
+    'stations', 'models',
+    'slat', 'slon', 'glat', 'glon',
+    'obs_lig_pi', 'sim_lig_pi', 'sim_lig_pi_2s',
+    'sim_obs_lig_pi', ))
+
+
+#---------------- Summer SST
+
+for istation in chadwick_interp.index:
+    # istation = chadwick_interp.index[0]
+    station = chadwick_interp.sites[istation]
+    
+    print('#---- ' + str(istation) + ': ' + station)
+    
+    slat = chadwick_interp.lat[istation]
+    slon = chadwick_interp.lon[istation]
+    obs_lig_pi = chadwick_interp.sst_sum[istation]
+    
+    for model in models:
+        # model = 'ACCESS-ESM1-5'
+        # model = 'AWI-ESM-1-1-LR'
+        # model = 'HadGEM3-GC31-LL'
+        # model = 'GISS-E2-1-G'
+        print(model)
+        lon = pi_sst[model].lon.values
+        lat = pi_sst[model].lat.values
+        
+        if (lon.shape == lig_sst_alltime[model]['am'].shape):
+            iind0 = loc_indices_rec_mc[model][station][0]
+            iind1 = loc_indices_rec_mc[model][station][1]
+        else:
+            iind0 = loc_indices_rec_mc[model][station][1]
+            iind1 = loc_indices_rec_mc[model][station][0]
+        
+        if (lon.ndim == 2):
+            glat = lat[loc_indices_rec_mc[model][station][0],
+                       loc_indices_rec_mc[model][station][1]]
+            glon = lon[loc_indices_rec_mc[model][station][0],
+                       loc_indices_rec_mc[model][station][1]]
+            if (model != 'HadGEM3-GC31-LL'):
+                sim_lig_pi = \
+                    lig_sst_alltime[model]['sm'].sel(
+                        season='DJF')[iind0, iind1].values - \
+                    pi_sst_alltime[model]['sm'].sel(
+                        season='DJF')[iind0, iind1].values
+                sigma1 = lig_sst_alltime[model]['sea'][
+                    3::4, iind0, iind1].std(ddof=1).values
+            elif (model == 'HadGEM3-GC31-LL'):
+                sim_lig_pi = regrid(
+                    lig_sst_alltime[model]['sm'].sel(season='DJF'),
+                    ds_out = pi_sst[model],
+                    )[iind0, iind1+1].values - \
+                        pi_sst_alltime[model]['sm'].sel(
+                            season='DJF')[iind0, iind1].values
+                sigma1 = regrid(
+                    lig_sst_alltime[model]['sea'],
+                    ds_out = pi_sst[model])[
+                        3::4, iind0, iind1+1].std(ddof=1).values
+            sigma2 = pi_sst_alltime[model]['sea'][
+                3::4, iind0, iind1].std(ddof=1).values
+            sim_lig_pi_2s = (sigma1**2 + sigma2**2)**0.5 * 2
+        elif (lon.ndim == 1):
+            glat = lat[loc_indices_rec_mc[model][station][0]]
+            glon = lon[loc_indices_rec_mc[model][station][0]]
+            if (model != 'HadGEM3-GC31-LL'):
+                sim_lig_pi = \
+                    lig_sst_alltime[model]['sm'].sel(
+                        season='DJF')[iind0].values - \
+                    pi_sst_alltime[model]['sm'].sel(
+                        season='DJF')[iind0].values
+                sigma1 = lig_sst_alltime[model]['sea'][
+                    3::4, iind0].std(ddof=1).values
+            elif (model == 'HadGEM3-GC31-LL'):
+                sim_lig_pi = regrid(
+                    lig_sst_alltime[model]['sm'].sel(season='DJF'),
+                    ds_out = pi_sst[model],
+                    )[iind0].values - \
+                        pi_sst_alltime[model]['sm'].sel(
+                            season='DJF')[iind0].values
+                sigma1 = regrid(
+                    lig_sst_alltime[model]['sea'],
+                    ds_out = pi_sst[model])[
+                        3::4, iind0].std(ddof=1).values
+            sigma2 = pi_sst_alltime[model]['sea'][
+                3::4, iind0].std(ddof=1).values
+            sim_lig_pi_2s = (sigma1**2 + sigma2**2)**0.5 * 2
+        
+        sim_obs_lig_pi = sim_lig_pi - obs_lig_pi
+        
+        obs_sim_lig_pi_so_sst_mc = pd.concat([
+            obs_sim_lig_pi_so_sst_mc,
+            pd.DataFrame(data={
+                'stations': station,
+                'models': model,
+                'slat': slat,
+                'slon': slon,
+                'glat': glat,
+                'glon': glon,
+                'obs_lig_pi': obs_lig_pi,
+                'sim_lig_pi': sim_lig_pi,
+                'sim_lig_pi_2s': sim_lig_pi_2s,
+                'sim_obs_lig_pi': sim_obs_lig_pi,
+                }, index=[0])], ignore_index=True,)
+
+
+with open('scratch/cmip6/lig/obs_sim_lig_pi_so_sst_mc.pkl', 'wb') as f:
+    pickle.dump(obs_sim_lig_pi_so_sst_mc, f)
+
+
+
+
+'''
+#-------------------------------- check
+
+with open('scratch/cmip6/lig/obs_sim_lig_pi_so_sst_mc.pkl', 'rb') as f:
+    obs_sim_lig_pi_so_sst_mc = pickle.load(f)
+
+site_pairs = [(x, y) for x, y in zip (
+    obs_sim_lig_pi_so_sst_mc.slat, obs_sim_lig_pi_so_sst_mc.slon)]
+grid_pairs = [(x, y) for x, y in zip (
+    obs_sim_lig_pi_so_sst_mc.glat, obs_sim_lig_pi_so_sst_mc.glon)]
+
+from haversine import haversine_vector
+distances = haversine_vector(
+    site_pairs, grid_pairs, normalize=True,
+    )
+np.max(distances)
+
+
+
+
+            # sim_lig_pi = lig_pi_am[iind0, iind1]
+            # sim_lig_pi_2s = lig_pi_ann[:, iind0, iind1].std(ddof=1) * 2
+            # sim_lig_pi = lig_pi_am[iind0]
+            # sim_lig_pi_2s = lig_pi_ann[:, iind0].std(ddof=1) * 2
+
+# Propogation of uncertainties
+https://en.wikipedia.org/wiki/Propagation_of_uncertainty
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# region import MC reconstructions: SIC
+
+with open('scratch/cmip6/lig/lig_sic.pkl', 'rb') as f:
+    lig_sic = pickle.load(f)
+
+with open('scratch/cmip6/lig/lig_sic_alltime.pkl', 'rb') as f:
+    lig_sic_alltime = pickle.load(f)
+
+models=sorted(lig_sic.keys())
+
+#-------- import MC reconstruction
+with open('scratch/cmip6/lig/chadwick_interp.pkl', 'rb') as f:
+    chadwick_interp = pickle.load(f)
+
+'''
+with open('scratch/cmip6/lig/pi_sic.pkl', 'rb') as f:
+    pi_sic = pickle.load(f)
+with open('scratch/cmip6/lig/pi_sic_alltime.pkl', 'rb') as f:
+    pi_sic_alltime = pickle.load(f)
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region extract indices
+
+loc_indices_rec_mc_sic = {}
+
+for model in models:
+    # model = 'HadGEM3-GC31-LL'
+    # model = 'NorESM2-LM'
+    print('#-------- ' + model)
+    
+    loc_indices_rec_mc_sic[model] = {}
+    
+    lon = lig_sic[model].lon.values
+    lat = lig_sic[model].lat.values
+    
+    for istation in chadwick_interp.index:
+        # istation = 0
+        station = chadwick_interp.sites[istation]
+        print('#---- ' + str(istation) + ': ' + station)
+        
+        slon = chadwick_interp.lon[istation]
+        slat = chadwick_interp.lat[istation]
+        
+        loc_indices_rec_mc_sic[model][station] = \
+            find_ilat_ilon_general(slat, slon, lat, lon)
+
+with open('scratch/cmip6/lig/loc_indices_rec_mc_sic.pkl', 'wb') as f:
+    pickle.dump(loc_indices_rec_mc_sic, f)
+
+
+'''
+#---------------- check
+with open('scratch/cmip6/lig/lig_sic.pkl', 'rb') as f:
+    lig_sic = pickle.load(f)
+models=sorted(lig_sic.keys())
+with open('scratch/cmip6/lig/chadwick_interp.pkl', 'rb') as f:
+    chadwick_interp = pickle.load(f)
+
+from haversine import haversine
+with open('scratch/cmip6/lig/loc_indices_rec_mc_sic.pkl', 'rb') as f:
+    loc_indices_rec_mc_sic = pickle.load(f)
+
+for model in models:
+    # model = 'HadGEM3-GC31-LL'
+    print('#-------------------------------- ' + model)
+    
+    lon = lig_sic[model].lon.values
+    lat = lig_sic[model].lat.values
+    
+    for istation in chadwick_interp.index:
+        # istation = 10
+        station = chadwick_interp.sites[istation]
+        print('#---------------- ' + str(istation) + ': ' + station)
+        
+        slon = chadwick_interp.lon[istation]
+        slat = chadwick_interp.lat[istation]
+        
+        if (lon.ndim == 2):
+            distance = haversine(
+                [slat, slon],
+                [lat[loc_indices_rec_mc_sic[model][station][0],
+                     loc_indices_rec_mc_sic[model][station][1]],
+                 lon[loc_indices_rec_mc_sic[model][station][0],
+                     loc_indices_rec_mc_sic[model][station][1]]],
+                normalize=True,)
+        elif (lon.ndim == 1):
+            distance = haversine(
+                [slat, slon],
+                [lat[loc_indices_rec_mc_sic[model][station][0]],
+                 lon[loc_indices_rec_mc_sic[model][station][0]]],
+                normalize=True,)
+        
+        if (distance > 100):
+            print(np.round(distance, 0))
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region extract simulated and reconstructed LIG-PI Sep SIC : MC
+
+
+with open('scratch/cmip6/lig/loc_indices_rec_mc_sic.pkl', 'rb') as f:
+    loc_indices_rec_mc_sic = pickle.load(f)
+
+
+obs_sim_lig_so_sic_mc = pd.DataFrame(columns=(
+    'stations', 'models',
+    'slat', 'slon', 'glat', 'glon',
+    'obs_lig', 'sim_lig', 'sim_lig_2s',
+    'sim_obs_lig', ))
+
+#---------------- Sep SIC
+
+for istation in chadwick_interp.index:
+    # istation = chadwick_interp.index[0]
+    station = chadwick_interp.sites[istation]
+    
+    print('#---- ' + str(istation) + ': ' + station)
+    
+    slat = chadwick_interp.lat[istation]
+    slon = chadwick_interp.lon[istation]
+    obs_lig = chadwick_interp.sic_sep[istation]
+    
+    for model in models:
+        # model = 'ACCESS-ESM1-5'
+        # model = 'AWI-ESM-1-1-LR'
+        # model = 'HadGEM3-GC31-LL'
+        # model = 'GISS-E2-1-G'
+        print(model)
+        lon = lig_sic[model].lon.values
+        lat = lig_sic[model].lat.values
+        
+        if (lon.shape == lig_sic_alltime[model]['am'].shape):
+            iind0 = loc_indices_rec_mc_sic[model][station][0]
+            iind1 = loc_indices_rec_mc_sic[model][station][1]
+        else:
+            iind0 = loc_indices_rec_mc_sic[model][station][1]
+            iind1 = loc_indices_rec_mc_sic[model][station][0]
+        
+        if (lon.ndim == 2):
+            glat = lat[loc_indices_rec_mc_sic[model][station][0],
+                       loc_indices_rec_mc_sic[model][station][1]]
+            glon = lon[loc_indices_rec_mc_sic[model][station][0],
+                       loc_indices_rec_mc_sic[model][station][1]]
+            sim_lig = \
+                lig_sic_alltime[model]['mm'].sel(
+                    month=9)[iind0, iind1].values
+            sim_lig_2s = lig_sic_alltime[model]['mon'][
+                8::12, iind0, iind1].std(ddof=1).values * 2
+        elif (lon.ndim == 1):
+            glat = lat[loc_indices_rec_mc_sic[model][station][0]]
+            glon = lon[loc_indices_rec_mc_sic[model][station][0]]
+            sim_lig = \
+                lig_sic_alltime[model]['mm'].sel(
+                    month=9)[iind0].values
+            sim_lig_2s = lig_sic_alltime[model]['mon'][
+                8::12, iind0].std(ddof=1).values * 2
+        
+        sim_obs_lig = sim_lig - obs_lig
+        
+        obs_sim_lig_so_sic_mc = pd.concat([
+            obs_sim_lig_so_sic_mc,
+            pd.DataFrame(data={
+                'stations': station,
+                'models': model,
+                'slat': slat,
+                'slon': slon,
+                'glat': glat,
+                'glon': glon,
+                'obs_lig': obs_lig,
+                'sim_lig': sim_lig,
+                'sim_lig_2s': sim_lig_2s,
+                'sim_obs_lig': sim_obs_lig,
+                }, index=[0])], ignore_index=True,)
+
+with open('scratch/cmip6/lig/obs_sim_lig_so_sic_mc.pkl', 'wb') as f:
+    pickle.dump(obs_sim_lig_so_sic_mc, f)
+
+
+
+
+'''
+#-------------------------------- check
+
+with open('scratch/cmip6/lig/obs_sim_lig_so_sic_mc.pkl', 'rb') as f:
+    obs_sim_lig_so_sic_mc = pickle.load(f)
+
+site_pairs = [(x, y) for x, y in zip (
+    obs_sim_lig_so_sic_mc.slat, obs_sim_lig_so_sic_mc.slon)]
+grid_pairs = [(x, y) for x, y in zip (
+    obs_sim_lig_so_sic_mc.glat, obs_sim_lig_so_sic_mc.glon)]
+
+from haversine import haversine_vector
+distances = haversine_vector(
+    site_pairs, grid_pairs, normalize=True,
+    )
+np.max(distances)
+
+            # if (model != 'HadGEM3-GC31-LL'):
+            # elif (model == 'HadGEM3-GC31-LL'):
+            #     sim_lig = regrid(
+            #         lig_sic_alltime[model]['mm'].sel(month=9),
+            #         ds_out = pi_sic[model],
+            #         )[iind0, iind1+1].values
+            #     sim_lig_2s = regrid(
+            #         lig_sic_alltime[model]['mon'],
+            #         ds_out = pi_sic[model].siconc,
+            #         )[8::12, iind0, iind1+1].std(ddof=1).values * 2
+
+            # if (model != 'HadGEM3-GC31-LL'):
+            # elif (model == 'HadGEM3-GC31-LL'):
+            #     sim_lig = regrid(
+            #         lig_sic_alltime[model]['mm'].sel(month=9),
+            #         ds_out = pi_sic[model],
+            #         )[iind0].values
+            #     sim_lig_2s = regrid(
+            #         lig_sic_alltime[model]['mon'],
+            #         ds_out = pi_sic[model])[
+            #             8::12, iind0].std(ddof=1).values * 2
+
+
 
 '''
 # endregion

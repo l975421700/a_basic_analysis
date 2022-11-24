@@ -102,18 +102,9 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-with open('scratch/cmip6/lig/lig_sic_regrid_alltime.pkl', 'rb') as f:
-    lig_sic_regrid_alltime = pickle.load(f)
 with open('scratch/cmip6/lig/pi_sic_regrid_alltime.pkl', 'rb') as f:
     pi_sic_regrid_alltime = pickle.load(f)
 
-with open('scratch/cmip6/lig/lig_sic_alltime.pkl', 'rb') as f:
-    lig_sic_alltime = pickle.load(f)
-with open('scratch/cmip6/lig/pi_sic_alltime.pkl', 'rb') as f:
-    pi_sic_alltime = pickle.load(f)
-
-with open('scratch/cmip6/lig/lig_sic.pkl', 'rb') as f:
-    lig_sic = pickle.load(f)
 with open('scratch/cmip6/lig/pi_sic.pkl', 'rb') as f:
     pi_sic = pickle.load(f)
 
@@ -124,6 +115,28 @@ with open('scratch/cmip6/lig/amip_pi_sic_regrid.pkl', 'rb') as f:
 
 cdo_area1deg = xr.open_dataset('scratch/others/one_degree_grids_cdo_area.nc')
 
+'''
+
+
+pi_sic_regrid_alltime['NorESM2-LM']['am'].to_netcdf('scratch/test/test0.nc')
+pi_sic_regrid_alltime['CESM2']['am'].to_netcdf('scratch/test/test0.nc')
+pi_sic_alltime['NorESM2-LM']['am'].to_netcdf('scratch/test/test2.nc')
+pi_sic_alltime['CESM2']['am'].to_netcdf('scratch/test/test2.nc')
+amip_pi_sic_regrid['am'].to_netcdf('scratch/test/test1.nc')
+
+with open('scratch/cmip6/lig/pi_sic_alltime.pkl', 'rb') as f:
+    pi_sic_alltime = pickle.load(f)
+
+
+with open('scratch/cmip6/lig/lig_sic_regrid_alltime.pkl', 'rb') as f:
+    lig_sic_regrid_alltime = pickle.load(f)
+
+with open('scratch/cmip6/lig/lig_sic_alltime.pkl', 'rb') as f:
+    lig_sic_alltime = pickle.load(f)
+
+with open('scratch/cmip6/lig/lig_sic.pkl', 'rb') as f:
+    lig_sic = pickle.load(f)
+
 with open('scratch/cmip6/lig/lig_sst.pkl', 'rb') as f:
     lig_sst = pickle.load(f)
 
@@ -132,7 +145,6 @@ chadwick2021 = pd.read_csv(
 indices = [10, 31, 45, 62, 75, 90, 106, 127, 140]
 
 
-'''
 chadwick2021.Event.iloc[
     np.where(np.floor(
         chadwick2021['Age [ka BP] (Age model, EDC3 (EPICA Ice Do...)']
@@ -154,7 +166,7 @@ output_png = 'figures/7_lig/7.0_boundary_conditions/7.0.1_sic/7.0.1.0 pi-amip_pi
 cbar_label = 'PI - AMIP_PI annual mean SIC [$\%$]'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-20, cm_max=20, cm_interval1=2, cm_interval2=4, cmap='PiYG',
+    cm_min=-30, cm_max=30, cm_interval1=3, cm_interval2=6, cmap='PiYG',
     reversed=False)
 
 nrow = 3
@@ -265,6 +277,71 @@ fig.savefig(output_png)
 
 
 '''
+nrow = 3
+ncol = 4
+for irow in range(nrow):
+    for jcol in range(ncol):
+        model = models[jcol + ncol * irow]
+        
+        diff = pi_sic_regrid_alltime[model]['am'].values - \
+            amip_pi_sic_regrid['am'].values
+        
+        mask = {}
+        mask['SO'] = pi_sic_regrid_alltime[model]['am'].lat <= -50
+        mask['Atlantic'] = ((pi_sic_regrid_alltime[model]['am'].lat <= -50) & \
+            (pi_sic_regrid_alltime[model]['am'].lon >= -70) & \
+                (pi_sic_regrid_alltime[model]['am'].lon < 20))
+        mask['Indian'] = ((pi_sic_regrid_alltime[model]['am'].lat <= -50) & \
+            (pi_sic_regrid_alltime[model]['am'].lon >= 20) & \
+                (pi_sic_regrid_alltime[model]['am'].lon < 140))
+        mask['Pacific'] = ((pi_sic_regrid_alltime[model]['am'].lat <= -50) & \
+            ((pi_sic_regrid_alltime[model]['am'].lon >= 140) | \
+                (pi_sic_regrid_alltime[model]['am'].lon < -70)))
+        
+        diff_reg = {}
+        diff_reg['SO'] = diff[mask['SO']]
+        diff_reg['Atlantic'] = diff[mask['Atlantic']]
+        diff_reg['Indian'] = diff[mask['Indian']]
+        diff_reg['Pacific'] = diff[mask['Pacific']]
+        
+        area_reg = {}
+        area_reg['SO'] = cdo_area1deg.cell_area.values[mask['SO']]
+        area_reg['Atlantic'] = cdo_area1deg.cell_area.values[mask['Atlantic']]
+        area_reg['Indian'] = cdo_area1deg.cell_area.values[mask['Indian']]
+        area_reg['Pacific'] = cdo_area1deg.cell_area.values[mask['Pacific']]
+        
+        rmse_reg = {}
+        rmse_reg['SO'] = np.sqrt(np.ma.average(
+            np.ma.MaskedArray(
+                np.square(diff_reg['SO']),
+                mask=np.isnan(np.square(diff_reg['SO']))),
+            weights=area_reg['SO']))
+        rmse_reg['Atlantic'] = np.sqrt(np.ma.average(
+            np.ma.MaskedArray(
+                np.square(diff_reg['Atlantic']),
+                mask=np.isnan(np.square(diff_reg['Atlantic']))),
+            weights=area_reg['Atlantic']))
+        rmse_reg['Indian'] = np.sqrt(np.ma.average(
+            np.ma.MaskedArray(
+                np.square(diff_reg['Indian']),
+                mask=np.isnan(np.square(diff_reg['Indian']))),
+            weights=area_reg['Indian']))
+        rmse_reg['Pacific'] = np.sqrt(np.ma.average(
+            np.ma.MaskedArray(
+                np.square(diff_reg['Pacific']),
+                mask=np.isnan(np.square(diff_reg['Pacific']))),
+            weights=area_reg['Pacific']))
+        
+        print(
+            model + ': ' + \
+                str(np.round(rmse_reg['SO'], 1)) + ", " + \
+                    str(np.round(rmse_reg['Atlantic'], 1)) + '/' + \
+                        str(np.round(rmse_reg['Indian'], 1)) + '/' + \
+                            str(np.round(rmse_reg['Pacific'], 1)))
+
+
+
+
 model = 'GISS-E2-1-G'
 
 # check mask creation
@@ -272,101 +349,6 @@ model = 'GISS-E2-1-G'
         (mask['SO'].values.sum() == (mask['Atlantic'].values.sum() + mask['Indian'].values.sum() + mask['Pacific'].values.sum()))
 
 AWI-ESM-1-1-LR: 1.45, 1.33/1.48/1.50
-
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot lig Sep sic
-
-output_png = 'figures/7_lig/7.0_boundary_conditions/7.0.1_sic/7.0.1.0 lig sic sep multiple models.png'
-cbar_label = 'LIG September SIC [$\%$]'
-
-pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=0, cm_max=100, cm_interval1=10, cm_interval2=20, cmap='Blues',
-    reversed=False)
-
-nrow = 3
-ncol = 4
-fm_bottom = 2 / (5.8*nrow + 2)
-
-fig, axs = plt.subplots(
-    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
-    subplot_kw={'projection': ccrs.SouthPolarStereo()},
-    gridspec_kw={'hspace': 0.12, 'wspace': 0.02},)
-
-ipanel=0
-for irow in range(nrow):
-    for jcol in range(ncol):
-        axs[irow, jcol] = hemisphere_plot(
-            northextent=-50, ax_org = axs[irow, jcol])
-        plt.text(
-            0, 0.95, panel_labels[ipanel],
-            transform=axs[irow, jcol].transAxes,
-            ha='center', va='center', rotation='horizontal')
-        ipanel += 1
-        
-        axs[irow, jcol].scatter(
-            x = chadwick2021.iloc[indices].Longitude,
-            y = chadwick2021.iloc[indices].Latitude,
-            c = chadwick2021.iloc[indices][
-                'Sea ice con (9) [%] (Modern analog technique (MAT))'],
-            s=8, lw=0.3, marker='o', edgecolors = 'black', zorder=2,
-            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
-
-for irow in range(nrow):
-    for jcol in range(ncol):
-        model = models[jcol + ncol * irow]
-        # model = 'GISS-E2-1-G'
-        # model = 'NorESM2-LM'
-        # model = 'HadGEM3-GC31-LL'
-        print(model)
-        
-        if (model != 'NorESM2-LM'):
-            lon = lig_sic[model].lon.values
-            lat = lig_sic[model].lat.values
-            plt_data = lig_sic_alltime[model]['mm'].sel(month=9).values
-            if (model == 'HadGEM3-GC31-LL'):
-                plt_data *= 100
-        else:
-            lon = lig_sic_regrid_alltime[model]['am'].lon.values
-            lat = lig_sic_regrid_alltime[model]['am'].lat.values
-            plt_data = lig_sic_regrid_alltime[model]['mm'].sel(month=9).values
-        
-        if not (lon.shape == plt_data.shape):
-            lon = lon.transpose()
-            lat = lat.transpose()
-        
-        plt_mesh = axs[irow, jcol].pcolormesh(
-            lon, lat, plt_data,
-            norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-        
-        plt.text(
-            0.5, 1.05, model,
-            transform=axs[irow, jcol].transAxes,
-            ha='center', va='center', rotation='horizontal')
-
-cbar = fig.colorbar(
-    plt_mesh, ax=axs, aspect=40,
-    orientation="horizontal", shrink=0.75, ticks=pltticks, extend='neither',
-    anchor=(0.5, -0.3),
-    )
-cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
-cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
-fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom, top = 0.97)
-fig.savefig(output_png)
-
-
-
-
-'''
-        if (np.isnan(lon).sum() == 0):
-        else:
-            axs[irow, jcol].contourf(
-                lon, lat, plt_data,
-                norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 
 '''
 # endregion

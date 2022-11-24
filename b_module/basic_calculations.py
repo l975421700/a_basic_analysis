@@ -662,7 +662,7 @@ def find_ilat_ilon_general(slat, slon, lat, lon):
     elif (lon.ndim == 1):
         distances = distances1d
     
-    wheremin = np.where(distances == np.min(distances))
+    wheremin = np.where(distances == np.nanmin(distances))
     
     iind0 = wheremin[0][0]
     iind1 = wheremin[-1][0]

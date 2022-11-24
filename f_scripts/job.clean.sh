@@ -1,6 +1,6 @@
 
 output_dir='output/echam-6.3.05p2-wiso/pi'
-expid='pi_m_502_5.0'
+expid='pi_m_416_4.9'
 
 echo $'\n#-------- clean model output: ' ${expid}
 
