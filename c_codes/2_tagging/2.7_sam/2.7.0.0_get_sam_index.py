@@ -1,7 +1,9 @@
 
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_416_4.9',]
+expid = [
+    'pi_m_502_5.0',
+    ]
 i = 0
 
 
@@ -35,7 +37,7 @@ import pycircstat as circ
 # plot
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib.colors import BoundaryNorm
+from matplotlib.colors import BoundaryNorm, ListedColormap
 from matplotlib import cm
 import cartopy.crs as ccrs
 plt.rcParams['pcolor.shading'] = 'auto'
@@ -60,6 +62,8 @@ from a_basic_analysis.b_module.mapplot import (
 
 from a_basic_analysis.b_module.basic_calculations import (
     mon_sea_ann,
+    find_nearest_1d,
+    get_mon_sam,
 )
 
 from a_basic_analysis.b_module.namelist import (
@@ -101,36 +105,48 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-wisoaprt_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
-    wisoaprt_alltime[expid[i]] = pickle.load(f)
+pre_weighted_lat = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lat.pkl', 'rb') as f:
+    pre_weighted_lat[expid[i]] = pickle.load(f)
 
-aprs_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprs_alltime.pkl', 'rb') as f:
-    aprs_alltime[expid[i]] = pickle.load(f)
-
-lon = wisoaprt_alltime[expid[i]]['am'].lon
-lat = wisoaprt_alltime[expid[i]]['am'].lat
-lon_2d, lat_2d = np.meshgrid(lon, lat,)
-
-major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
-major_ice_core_site = major_ice_core_site.loc[
-    major_ice_core_site['age (kyr)'] > 120, ]
+psl_zh = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.psl_zh.pkl', 'rb') as f:
+    psl_zh[expid[i]] = pickle.load(f)
 
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region plot aprs_frc
+# region get mon sam
 
-aprs_frc = (aprs_alltime[expid[i]]['am'] / \
-    wisoaprt_alltime[expid[i]]['am'].sel(wisotype=1)) * 100
+lat = psl_zh[expid[i]]['psl']['mon'].lat
+mslp = psl_zh[expid[i]]['psl']['mon']
+
+sam_index = get_mon_sam(lat, mslp)
+
+sam_mon = xr.Dataset(
+    {'sam': (('time'), sam_index),},
+    coords={'time': pre_weighted_lat[expid[i]]['mon'].time,},
+    )
+
+sam_mon.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.sam_mon.nc')
+
 
 
 '''
-aprs_frc.to_netcdf('scratch/test/test.nc')
+# Write output file
+d = {}
+d['time'] = psl_zh[expid[i]]['psl']['mon'].time
+d['sam'] = (['time'], sam_index)
+sam_mon = xr.Dataset(d)
+sam_mon.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.sam_mon.nc')
+
+
+sam_mon = xr.open_dataset(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.sam_mon.nc')
+sam_mon.sam
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
 

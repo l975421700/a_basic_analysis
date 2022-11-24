@@ -1,7 +1,9 @@
 
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_416_4.9',]
+expid = [
+    'pi_m_502_5.0',
+    ]
 i = 0
 
 
@@ -31,11 +33,12 @@ import pandas as pd
 from metpy.interpolate import cross_section
 from statsmodels.stats import multitest
 import pycircstat as circ
+import xskillscore as xs
 
 # plot
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib.colors import BoundaryNorm
+from matplotlib.colors import BoundaryNorm, ListedColormap
 from matplotlib import cm
 import cartopy.crs as ccrs
 plt.rcParams['pcolor.shading'] = 'auto'
@@ -60,6 +63,8 @@ from a_basic_analysis.b_module.mapplot import (
 
 from a_basic_analysis.b_module.basic_calculations import (
     mon_sea_ann,
+    find_nearest_1d,
+    get_mon_sam,
 )
 
 from a_basic_analysis.b_module.namelist import (
@@ -101,36 +106,88 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-wisoaprt_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
-    wisoaprt_alltime[expid[i]] = pickle.load(f)
+#---- import sam
+sam_mon = xr.open_dataset(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.sam_mon.nc')
 
-aprs_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprs_alltime.pkl', 'rb') as f:
-    aprs_alltime[expid[i]] = pickle.load(f)
+#---- import source properties
+pre_weighted_var = {}
+pre_weighted_var[expid[i]] = {}
 
-lon = wisoaprt_alltime[expid[i]]['am'].lon
-lat = wisoaprt_alltime[expid[i]]['am'].lat
+source_var = ['lat', 'lon', 'sst', 'rh2m', 'wind10', 'distance']
+
+prefix = exp_odir + expid[i] + '/analysis/echam/' + expid[i]
+source_var_files = [
+    prefix + '.pre_weighted_lat.pkl',
+    prefix + '.pre_weighted_lon.pkl',
+    prefix + '.pre_weighted_sst.pkl',
+    prefix + '.pre_weighted_rh2m.pkl',
+    prefix + '.pre_weighted_wind10.pkl',
+    prefix + '.transport_distance.pkl',
+]
+
+for ivar, ifile in zip(source_var, source_var_files):
+    print(ivar + ':    ' + ifile)
+    with open(ifile, 'rb') as f:
+        pre_weighted_var[expid[i]][ivar] = pickle.load(f)
+
+lon = pre_weighted_var[expid[i]]['lat']['am'].lon
+lat = pre_weighted_var[expid[i]]['lat']['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
+#---- import ice core sites
 major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
 major_ice_core_site = major_ice_core_site.loc[
     major_ice_core_site['age (kyr)'] > 120, ]
 
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot aprs_frc
-
-aprs_frc = (aprs_alltime[expid[i]]['am'] / \
-    wisoaprt_alltime[expid[i]]['am'].sel(wisotype=1)) * 100
-
+#---- broadcast sam_mon
+b_sam_mon, _ = xr.broadcast(
+    sam_mon.sam,
+    pre_weighted_var[expid[i]]['lat']['mon'])
 
 '''
-aprs_frc.to_netcdf('scratch/test/test.nc')
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region EOF analysis of source lat
+
+ivar = 'lat'
+
+clim = pre_weighted_var[expid[i]][ivar]['mon'].groupby(
+    'time.month').mean().compute()
+anom = (pre_weighted_var[expid[i]][ivar]['mon'].groupby(
+    'time.month') - clim).compute()
+
+from eofs.xarray import Eof
+solver = Eof(anom.sel(lat=slice(-60, -90)))
+solver.neofs
+solver.pcs()
+
+from eofs.standard import Eof
+solver = Eof(anom.sel(lat=slice(-60, -90)).data)
+solver.neofs
+solver.pcs()
+solver.eofs()
+variance_fractions = solver.varianceFraction()
+variance_fractions[:5].sum()
+
+# np.isnan(pre_weighted_var[expid[i]][ivar]['mon'].sel(lat=slice(-60, -90))).sum()
+
+
+solver = Eof(pre_weighted_var[expid[i]][ivar]['mon'].sel(lat=slice(-60, -90)).data)
+variance_fractions = solver.varianceFraction()
+variance_fractions[:5].sum()
+
+
+solver = Eof(pre_weighted_var[expid[i]][ivar]['ann'].sel(lat=slice(-60, -90)).data)
+variance_fractions = solver.varianceFraction()
+variance_fractions[:5].sum()
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
 

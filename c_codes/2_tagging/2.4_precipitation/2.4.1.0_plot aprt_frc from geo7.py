@@ -133,9 +133,9 @@ major_ice_core_site = major_ice_core_site.loc[
 regions = list(aprt_frc.keys())
 
 cm_mins = [0, 0, 0, 0, 0, 0, 0]
-cm_maxs = [5, 10, 50, 60, 60, 20, 60]
+cm_maxs = [5, 10, 35, 55, 45, 20, 60]
 cm_interval1s = [0.5, 1, 5, 5, 5, 2, 5]
-cm_interval2s = [1, 2, 10, 10, 10, 4, 10]
+cm_interval2s = [1, 2, 5, 10, 5, 4, 10]
 
 for count, iregion in enumerate(regions):
     print(str(count) + ': ' + iregion)
@@ -150,7 +150,7 @@ for count, iregion in enumerate(regions):
     
     output_png = 'figures/6_awi/6.1_echam6/6.1.4_precipitation/6.1.4.0_aprt/6.1.4.0.0_aprt_frc/6.1.4.0.0 ' + expid[i] + ' aprt_frc am ' + iregion + '.png'
     
-    fig, ax = hemisphere_plot(northextent=-50)
+    fig, ax = hemisphere_plot(northextent=-60)
     cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
     plt_cmp = ax.pcolormesh(
         lon, lat,
@@ -175,7 +175,7 @@ pltticks = np.arange(75, 100.01, 5)
 pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
 pltcmp = cm.get_cmap('Blues', len(pltlevel)-1)
 
-fig, ax = hemisphere_plot(northextent=-50)
+fig, ax = hemisphere_plot(northextent=-60)
 cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
 plt_cmp = ax.pcolormesh(
     lon, lat,
@@ -342,13 +342,13 @@ change_snsbar_width(ax, .7)
 plt.legend(
     handles=lgd_handles,
     labels=[
-        'Southern Ocean: $28.7±2.28$',
-        'SH seaice:           $6.2±0.47$',
-        'Pacific Ocean:    $26.9±2.04$',
-        'Indian Ocean:     $22.6±2.11$',
-        'Atlantic Ocean: $10.2±0.55$',
-        'Land excl. AIS: $4.6±0.24$',
-        'AIS:                   $0.6±0.07$',
+        'Southern Ocean: $27.9±1.97$',
+        'SH seaice:           $6.1±0.38$',
+        'Pacific Ocean:    $28.0±1.63$',
+        'Indian Ocean:     $23.2±1.85$',
+        'Atlantic Ocean: $9.8±0.79$',
+        'Land excl. AIS: $4.4±0.3$',
+        'AIS:                   $0.6±0.06$',
         ],
     loc=(-0.1, -0.48), handlelength=0.5, handleheight = 0.5,
     frameon = False, ncol=2, handletextpad = 0.5,
@@ -373,7 +373,7 @@ iwisotype = 'AIS'
 ann_values = aprt_frc_AIS_alltime[imask]['ann'][iwisotype].frc_AIS.values
 am_values  = aprt_frc_AIS_alltime[imask]['am'][iwisotype].frc_AIS.values
 print(iwisotype + ': ' + \
-    str(np.round(am_values[0], 1)) + ' \; ± \; ' + \
+    str(np.round(am_values[0], 1)) + '±' + \
         str(np.round(ann_values.std(ddof=1), 2)))
 
 for itype in range(6):
@@ -390,7 +390,7 @@ for itype in range(6):
         aprt_frc_AIS_alltime[imask]['am'][iwisotype1].frc_AIS).values
     
     print(iwisotype + ': ' + \
-        str(np.round(am_values[0], 1)) + ' \; ± \; ' + \
+        str(np.round(am_values[0], 1)) + '±' + \
             str(np.round(ann_values.std(ddof=1), 2)))
 
 

@@ -214,10 +214,10 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_dist
     transport_distance_epe[expid[i]] = pickle.load(f)
 
 iqtl = '90%'
-ilat = 48
-ilon = 98
+ilat = 40
+ilon = 90
 
-for ialltime in ['daily', 'mon', 'ann', 'mm', 'sm']:
+for ialltime in ['mon', 'ann', 'mm', 'sm']:
     # ialltime = 'mm'
     itime = -4
     

@@ -35,7 +35,6 @@ from statsmodels.stats import multitest
 import pycircstat as circ
 
 # plot
-import proplot as pplt
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm
@@ -134,9 +133,9 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_allti
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.4_wind10/6.1.3.4 ' + expid[i] + ' pre_weighted_wind10 am Antarctica + am aprt.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=10, cm_max=12, cm_interval1=0.25, cm_interval2=0.25, cmap='PiYG',)
+    cm_min=10, cm_max=11.5, cm_interval1=0.25, cm_interval2=0.25, cmap='PiYG',)
 
-fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 7]) / 2.54,)
+fig, ax = hemisphere_plot(northextent=-60, figsize=np.array([5.8, 7]) / 2.54,)
 
 cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
 
@@ -188,54 +187,6 @@ fig.savefig(output_png, dpi=1200)
 
 
 # -----------------------------------------------------------------------------
-# region plot pre_weighted_wind10 DJF-JJA
-
-
-output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.4_wind10/6.1.3.4 ' + expid[i] + ' pre_weighted_wind10 DJF-JJA Antarctica.png'
-
-pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-3, cm_max=-1, cm_interval1=0.25, cm_interval2=0.25, cmap='Greens',)
-pltcmp = pplt.Colormap('broc', samples=len(pltlevel)-1)
-
-fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 7]) / 2.54,)
-
-cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
-
-plt1 = ax.pcolormesh(
-    lon,
-    lat,
-    pre_weighted_wind10[expid[i]]['sm'].sel(season='DJF') - \
-        pre_weighted_wind10[expid[i]]['sm'].sel(season='JJA'),
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-
-ttest_fdr_res = ttest_fdr_control(
-    pre_weighted_wind10[expid[i]]['sea'][3::4,],
-    pre_weighted_wind10[expid[i]]['sea'][1::4,],)
-ax.scatter(
-    x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
-    s=0.5, c='k', marker='.', edgecolors='none',
-    transform=ccrs.PlateCarree(),
-    )
-
-cbar = fig.colorbar(
-    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
-    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
-    pad=0.02, fraction=0.15,
-    )
-cbar.ax.tick_params(labelsize=8)
-cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
-cbar.ax.set_xlabel('DJF - JJA source wind10 [$m \; s^{-1}$]', linespacing=2)
-fig.savefig(output_png, dpi=1200)
-
-
-
-'''
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
 # region plot pre_weighted_wind10 am_sm_5
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.4_wind10/6.1.3.4 ' + expid[i] + ' pre_weighted_wind10 am_sm_5 Antarctica.png'
@@ -256,7 +207,7 @@ fig, axs = plt.subplots(
 
 for jcol in range(ncol):
     axs[jcol] = hemisphere_plot(
-        northextent=-50, ax_org = axs[jcol],
+        northextent=-60, ax_org = axs[jcol],
         l45label = False, loceanarcs = False)
     cplot_ice_cores(
         major_ice_core_site.lon, major_ice_core_site.lat, axs[jcol])
@@ -267,9 +218,9 @@ plt_mesh1 = axs[0].pcolormesh(
     pre_weighted_wind10[expid[i]]['am'],
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 plt_ctr1 = axs[0].contour(
-    lon, lat.sel(lat=slice(-50, -90)),
+    lon, lat.sel(lat=slice(-60, -90)),
     pre_weighted_wind10[expid[i]]['ann'].std(
-        dim='time', skipna=True, ddof=1).sel(lat=slice(-50, -90)),
+        dim='time', skipna=True, ddof=1).sel(lat=slice(-60, -90)),
     levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
     linewidths=0.5, linestyles='solid',)
 axs[0].clabel(
@@ -286,11 +237,11 @@ for iseason in range(len(seasons)):
         pre_weighted_wind10[expid[i]]['sm'].sel(season=seasons[iseason]),
         norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
     plt_ctr = axs[1 + iseason].contour(
-        lon, lat.sel(lat=slice(-50, -90)),
+        lon, lat.sel(lat=slice(-60, -90)),
         pre_weighted_wind10[expid[i]]['sea'].sel(
             time=(pre_weighted_wind10[expid[i]]['sea'].time.dt.month == \
                 seasons_last_num[iseason])
-            ).std(dim='time', skipna=True, ddof=1).sel(lat=slice(-50, -90)),
+            ).std(dim='time', skipna=True, ddof=1).sel(lat=slice(-60, -90)),
         levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
         linewidths=0.5, linestyles='solid',
     )
@@ -410,4 +361,54 @@ fig.savefig(output_png)
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot pre_weighted_wind10 DJF-JJA
+
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.4_wind10/6.1.3.4 ' + expid[i] + ' pre_weighted_wind10 DJF-JJA Antarctica.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-3, cm_max=-1, cm_interval1=0.25, cm_interval2=0.25, cmap='Greens',)
+pltcmp = pplt.Colormap('broc', samples=len(pltlevel)-1)
+
+fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 7]) / 2.54,)
+
+cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+
+plt1 = ax.pcolormesh(
+    lon,
+    lat,
+    pre_weighted_wind10[expid[i]]['sm'].sel(season='DJF') - \
+        pre_weighted_wind10[expid[i]]['sm'].sel(season='JJA'),
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+ttest_fdr_res = ttest_fdr_control(
+    pre_weighted_wind10[expid[i]]['sea'][3::4,],
+    pre_weighted_wind10[expid[i]]['sea'][1::4,],)
+ax.scatter(
+    x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
+    s=0.5, c='k', marker='.', edgecolors='none',
+    transform=ccrs.PlateCarree(),
+    )
+
+cbar = fig.colorbar(
+    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+    pad=0.02, fraction=0.15,
+    )
+cbar.ax.tick_params(labelsize=8)
+cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
+cbar.ax.set_xlabel('DJF - JJA source wind10 [$m \; s^{-1}$]', linespacing=2)
+fig.savefig(output_png, dpi=1200)
+
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
 

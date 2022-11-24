@@ -1,7 +1,10 @@
 
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_416_4.9',]
+expid = [
+    # 'pi_m_416_4.9',
+    'pi_m_502_5.0',
+    ]
 i = 0
 
 
@@ -33,7 +36,6 @@ from statsmodels.stats import multitest
 import pycircstat as circ
 
 # plot
-import proplot as pplt
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm

@@ -36,7 +36,6 @@ from statsmodels.stats import multitest
 import pycircstat as circ
 
 # plot
-import proplot as pplt
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm, ListedColormap
@@ -171,12 +170,12 @@ iqtl = '90%'
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.0_source_lat/6.1.7.0.0 ' + expid[i] + ' epe_source_lat - pre_weighted_lat am Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=0, cm_max=6, cm_interval1=0.5, cm_interval2=1, cmap='pink',
-    reversed=True)
+    cm_min=0, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='viridis',
+    reversed=False)
 # pltcmp = pplt.Colormap('Stellar', samples=len(pltlevel)-1)
 
 fig, ax = hemisphere_plot(
-    northextent=-50, figsize=np.array([5.8, 7]) / 2.54)
+    northextent=-60, figsize=np.array([5.8, 7]) / 2.54)
 
 cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
 

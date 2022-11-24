@@ -37,7 +37,6 @@ import pycircstat as circ
 from scipy.stats import circstd
 
 # plot
-import proplot as pplt
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm, ListedColormap

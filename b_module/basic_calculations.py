@@ -706,3 +706,151 @@ elif (lon.ndim == 1):
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region find the nearest value in an array to a scalar
+
+def find_nearest_1d(array, value):
+    '''
+    array: 1d numpy array,
+    value: scalar
+    
+    # example
+    array = np.array([2, 3, 4, 5, 6, 7])
+    value = 3.5
+    '''
+    
+    import numpy as np
+    
+    idx = (np.abs(np.array(array) - value)).argmin()
+    return array[idx]
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region calculate SAM index
+
+def get_mon_sam(
+    lat, mslp,
+    lon_name = 'lon', lat_name = 'lat'):
+    '''
+    
+    '''
+    
+    import xarray as xr
+    
+    north_lat = find_nearest_1d(lat.values, -40)
+    south_lat = find_nearest_1d(lat.values, -65)
+    
+    if (lat_name == 'latitude'):
+        darray = mslp.sel(latitude=[south_lat, north_lat]).mean(
+            dim=lon_name).compute()
+    elif (lat_name == 'lat'):
+        darray = mslp.sel(lat=[south_lat, north_lat]).mean(
+            dim=lon_name).compute()
+    
+    clim = darray.groupby('time.month').mean(dim='time').compute()
+    anom = (darray.groupby('time.month') - clim).compute()
+    stdev = darray.groupby('time.month').std(dim='time').compute()
+    norm = (anom.groupby('time.month') / stdev).compute()
+    
+    if (lat_name == 'latitude'):
+        sam_timeseries = norm.sel(latitude=north_lat).values - \
+            norm.sel(latitude=south_lat).values
+    elif (lat_name == 'lat'):
+        sam_timeseries = norm.sel(lat=north_lat).values - \
+            norm.sel(lat=south_lat).values
+    
+    return(sam_timeseries)
+
+
+'''
+#------------------------ check with ECHAM6 PI output
+psl_zh = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.psl_zh.pkl', 'rb') as f:
+    psl_zh[expid[i]] = pickle.load(f)
+
+psl_zh[expid[i]]['psl']['mon'].to_netcdf('scratch/test/test.nc')
+
+lon = psl_zh[expid[i]]['psl']['mon'].lon
+lat = psl_zh[expid[i]]['psl']['mon'].lat
+mslp = psl_zh[expid[i]]['psl']['mon']
+
+sam_index = get_mon_sam(lat, mslp)
+
+ifile = 'scratch/test/test.nc'
+var_id = 'psl'
+
+dset_in = xr.open_dataset(ifile)
+
+# (dset_in.psl.values == mslp).all().values
+# dset_in = psl_zh[expid[i]]['psl']['mon']
+
+north_lat = find_nearest_1d(dset_in['lat'].values, -40)
+south_lat = find_nearest_1d(dset_in['lat'].values, -65)
+darray = dset_in.psl.sel(lat=[south_lat, north_lat]).mean(dim='lon').compute()
+
+clim = darray.groupby('time.month').mean(dim='time')
+anom = darray.groupby('time.month') - clim
+stdev = darray.groupby('time.month').std(dim='time')
+norm = anom.groupby('time.month') / stdev
+sam_timeseries = norm.sel(lat=north_lat).values - norm.sel(lat=south_lat).values
+
+(sam_index == sam_timeseries).all()
+
+
+#------------------------ check with original code from Damien
+dset_in = xr.open_dataset('scratch/cmip6/hist/psl/psl_ERA5_mon_sl_197901_201412.nc')
+
+lon = dset_in.longitude
+lat = dset_in.latitude
+mslp = dset_in.msl
+lon_name = 'longitude'
+lat_name = 'latitude'
+
+sam_index = get_mon_sam(lat, mslp, lon_name='longitude', lat_name='latitude')
+
+ifile = 'scratch/cmip6/hist/psl/psl_ERA5_mon_sl_197901_201412.nc'
+var_id = 'msl'
+
+dset_in = xr.open_dataset(ifile)
+# gio.check_xarrayDataset(dset_in, var_id)
+
+north_lat = find_nearest_1d(dset_in['latitude'].values, -40)
+south_lat = find_nearest_1d(dset_in['latitude'].values, -65)
+darray = dset_in[var_id].sel(latitude=[south_lat, north_lat]).mean(dim='longitude')
+
+clim = darray.groupby('time.month').mean(dim='time')
+anom = darray.groupby('time.month') - clim
+stdev = darray.groupby('time.month').std(dim='time')
+norm = anom.groupby('time.month') / stdev
+sam_timeseries = norm.sel(latitude=north_lat).values - norm.sel(latitude=south_lat).values
+# Write output file
+d = {}
+d['time'] = darray['time']
+d['sam'] = (['time'], sam_timeseries)
+dset_out = xr.Dataset(d)
+
+(sam_index == dset_out.sam).all()
+
+
+#------------------------ check with git repository
+import general_io as gio
+
+sys.path.append('/work/ollie/qigao001/finse_school/climate-analysis/modules')
+import convenient_universal as uconv
+os.chdir('/work/ollie/qigao001/finse_school/climate-analysis/')
+from data_processing.calc_climate_index import calc_sam
+calc_sam('/work/ollie/qigao001/scratch/cmip6/hist/psl/psl_ERA5_mon_sl_197901_201412.nc', 'msl', '/work/ollie/qigao001/scratch/test/test1.nc')
+
+ds_check = xr.open_dataset('/work/ollie/qigao001/scratch/test/test1.nc')
+
+(dset_out.sam.values == ds_check.sam.values).all()
+
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+

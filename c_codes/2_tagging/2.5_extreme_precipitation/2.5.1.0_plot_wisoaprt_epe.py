@@ -36,7 +36,6 @@ from statsmodels.stats import multitest
 import pycircstat as circ
 
 # plot
-import proplot as pplt
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm
@@ -242,7 +241,7 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     reversed=False)
 
 fig, ax = hemisphere_plot(
-    northextent=-50, figsize=np.array([5.8, 7.8]) / 2.54)
+    northextent=-60, figsize=np.array([5.8, 7.8]) / 2.54)
 
 cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
 

@@ -38,7 +38,6 @@ import pycircstat as circ
 from scipy.stats import circstd
 
 # plot
-import proplot as pplt
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm, ListedColormap
@@ -255,7 +254,7 @@ for ivar, ifile in zip(source_var, source_var_files):
         
         epe_sources_sites[expid[i]][ivar][isite] = {}
         
-        for ialltime in ['daily', 'mon', 'sea', 'ann', 'mm', 'sm']:
+        for ialltime in ['mon', 'sea', 'ann', 'mm', 'sm']:
             # ialltime = 'daily'
             print('#---- ' + ialltime)
             epe_sources_sites[expid[i]][ivar][isite][ialltime] = {}

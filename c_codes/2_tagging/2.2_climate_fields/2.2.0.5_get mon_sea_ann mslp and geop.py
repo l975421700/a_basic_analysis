@@ -6,8 +6,8 @@ expid = [
     'pi_m_502_5.0',
     ]
 i = 0
-ifile_start = 120
-ifile_end   = 720
+ifile_start = 0
+ifile_end   = 600
 
 # -----------------------------------------------------------------------------
 # region import packages

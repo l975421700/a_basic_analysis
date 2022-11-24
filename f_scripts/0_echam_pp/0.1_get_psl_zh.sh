@@ -12,7 +12,7 @@ echo 'settings: ' ${YEAR} ${output_dir} ${expid}
 
 echo '#-------- activate conda env'
 
-source /home/ollie/qigao001/miniconda3/bin/activate training
+source ${HOME}/miniconda3/bin/activate deepice
 which cdo
 which python
 

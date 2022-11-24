@@ -11,15 +11,15 @@ ifile_end   = 720 # 1080
 
 ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
 
-var_name  = 'sst'
-itag      = 7
-min_sf    = 268.15
-max_sf    = 318.15
+# var_name  = 'sst'
+# itag      = 7
+# min_sf    = 268.15
+# max_sf    = 318.15
 
-# var_name  = 'lat'
-# itag      = 5
-# min_sf    = -90
-# max_sf    = 90
+var_name  = 'lat'
+itag      = 5
+min_sf    = -90
+max_sf    = 90
 
 # var_name  = 'rh2m'
 # itag      = 8
@@ -41,7 +41,7 @@ max_sf    = 318.15
 # min_sf    = -1
 # max_sf    = 1
 
-
+print(var_name)
 # -----------------------------------------------------------------------------
 # region import packages
 
@@ -134,6 +134,7 @@ epe_var_scaled_pre = {}
 epe_ocean_pre = {}
 epe_var_scaled_pre_alltime = {}
 epe_ocean_pre_alltime = {}
+epe_weighted_var = {}
 
 for iqtl in quantiles.keys():
     print(iqtl)
@@ -150,17 +151,13 @@ for iqtl in quantiles.keys():
     #-------- mon_sea_ann values
     epe_var_scaled_pre_alltime[iqtl] = mon_sea_ann(epe_var_scaled_pre[iqtl])
     epe_ocean_pre_alltime[iqtl]      = mon_sea_ann(epe_ocean_pre[iqtl])
-
-
-#-------------------------------- pre-weighted var
-
-epe_weighted_var = {}
-
-for iqtl in quantiles.keys():
-    print(iqtl)
+    
+    
+    #-------------------------------- pre-weighted var
+    
     epe_weighted_var[iqtl] = {}
     
-    for ialltime in epe_ocean_pre_alltime[iqtl].keys():
+    for ialltime in ['mon', 'sea', 'ann', 'mm', 'sm', 'am']:
         print(ialltime)
         epe_weighted_var[iqtl][ialltime] = source_properties(
             epe_var_scaled_pre_alltime[iqtl][ialltime],
@@ -168,12 +165,12 @@ for iqtl in quantiles.keys():
             min_sf, max_sf,
             var_name, prefix = 'epe_weighted_',
         )
+    
+    del epe_var_scaled_pre[iqtl], epe_ocean_pre[iqtl], epe_var_scaled_pre_alltime[iqtl], epe_ocean_pre_alltime[iqtl]
 
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_weighted_' + var_name + '.pkl',
           'wb') as f:
     pickle.dump(epe_weighted_var, f)
-
-
 
 
 '''

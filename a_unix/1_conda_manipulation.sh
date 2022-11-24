@@ -54,6 +54,11 @@ mamba install -c conda-forge proplot -y
 mamba install -c conda-forge cmip6_preprocessing -y
 mamba install -c conda-forge pint-xarray -y
 pip install openpyxl
+mamba install -c conda-forge iris -y
+mamba install -c conda-forge xskillscore -y
+mamba install -c conda-forge eofs -y
+
+
 
 '''
 #-------------------------------- TEST REGION

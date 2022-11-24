@@ -1,7 +1,10 @@
 
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_416_4.9',]
+expid = [
+    # 'pi_m_416_4.9',
+    'pi_m_502_5.0',
+    ]
 i = 0
 
 
@@ -35,12 +38,12 @@ import pycircstat as circ
 # plot
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib.colors import BoundaryNorm
+from matplotlib.colors import BoundaryNorm, ListedColormap
 from matplotlib import cm
 import cartopy.crs as ccrs
 plt.rcParams['pcolor.shading'] = 'auto'
 mpl.rcParams['figure.dpi'] = 600
-mpl.rc('font', family='Times New Roman', size=10)
+mpl.rc('font', family='Times New Roman', size=8)
 mpl.rcParams['axes.linewidth'] = 0.2
 plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
@@ -56,6 +59,7 @@ from a_basic_analysis.b_module.mapplot import (
     framework_plot1,
     remove_trailing_zero,
     remove_trailing_zero_pos,
+    remove_trailing_zero_pos_abs,
 )
 
 from a_basic_analysis.b_module.basic_calculations import (
@@ -64,6 +68,7 @@ from a_basic_analysis.b_module.basic_calculations import (
 
 from a_basic_analysis.b_module.namelist import (
     month,
+    monthini,
     month_num,
     month_dec,
     month_dec_num,
@@ -80,6 +85,7 @@ from a_basic_analysis.b_module.namelist import (
 from a_basic_analysis.b_module.source_properties import (
     source_properties,
     calc_lon_diff,
+    calc_lon_diff_np,
 )
 
 from a_basic_analysis.b_module.statistics import (
@@ -101,36 +107,92 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-wisoaprt_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
-    wisoaprt_alltime[expid[i]] = pickle.load(f)
+wisoaprt_epe = {}
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe.pkl',
+    'rb') as f:
+    wisoaprt_epe[expid[i]] = pickle.load(f)
 
-aprs_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprs_alltime.pkl', 'rb') as f:
-    aprs_alltime[expid[i]] = pickle.load(f)
-
-lon = wisoaprt_alltime[expid[i]]['am'].lon
-lat = wisoaprt_alltime[expid[i]]['am'].lat
-lon_2d, lat_2d = np.meshgrid(lon, lat,)
-
+# import sites information
 major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
-major_ice_core_site = major_ice_core_site.loc[
-    major_ice_core_site['age (kyr)'] > 120, ]
+Antarctic_stations = pd.read_csv('data_sources/others/Antarctic_stations.csv')
+stations_sites = pd.concat(
+    [major_ice_core_site[['Site', 'lon', 'lat']],
+     Antarctic_stations[['Site', 'lon', 'lat']],],
+    ignore_index=True,
+    )
 
+# import sites indices
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.t63_sites_indices.pkl',
+    'rb') as f:
+    t63_sites_indices = pickle.load(f)
+
+
+'''
+'''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region plot aprs_frc
+# region calculate and plot Monthly EPE days at each site
 
-aprs_frc = (aprs_alltime[expid[i]]['am'] / \
-    wisoaprt_alltime[expid[i]]['am'].sel(wisotype=1)) * 100
+epe_days_mon = wisoaprt_epe[expid[i]]['mask']['90%'].resample(
+    {'time': '1M'}).sum().compute()
+epe_days_alltime = mon_sea_ann(var_monthly=epe_days_mon)
+
+
+for isite in stations_sites.Site:
+    # isite = 'EDC'
+    print(isite)
+    
+    # plot
+    
+    output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.1_pre/6.1.7.1.0_seasonality/6.1.7.1.0 ' + expid[i] + ' monthly epe_days at ' + isite + '.png'
+    fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
+    ax.bar(
+        x = np.arange(0, 12, 1),
+        height = epe_days_alltime['mm'][
+            :,
+            t63_sites_indices[isite]['ilat'],
+            t63_sites_indices[isite]['ilon']],
+        color = 'lightgray',
+        )
+    
+    plt.text(0.05, 0.9, isite, transform=ax.transAxes, color='k',)
+    
+    ax.set_xlabel('Monthly EPE days [$\#$]')
+    ax.set_xticks(np.arange(0, 12, 1))
+    ax.set_xticklabels(monthini)
+    ax.set_xlim(-0.5, 11.5)
+    
+    ax.set_ylabel(None)
+    ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
+    
+    ax.grid(True, linewidth=0.4, color='gray', alpha=0.5, linestyle='--')
+    fig.subplots_adjust(left=0.15, right=0.99, bottom=0.25, top=0.98)
+    fig.savefig(output_png)
+
+
+
+
+
+
+
 
 
 '''
-aprs_frc.to_netcdf('scratch/test/test.nc')
+epe_days_alltime['am'][
+    t63_sites_indices[isite]['ilat'],
+    t63_sites_indices[isite]['ilon']] * 12
+
+ilat = 48
+ilon = 90
+epe_days_alltime['mm'][:, ilat, ilon]
+epe_days_mon[:, ilat, ilon].groupby('time.month').mean().compute()
 '''
+
 # endregion
 # -----------------------------------------------------------------------------
 

@@ -1,200 +1,201 @@
 
 
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+exp_odir = '/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_m_416_4.9',
     'pi_m_502_5.0',
     ]
 i = 0
-
 ifile_start = 120
 ifile_end   = 720 # 1080
 
+ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
+
+# var_name  = 'sst'
+# itag      = 7
+# min_sf    = 268.15
+# max_sf    = 318.15
+
+var_name  = 'lat'
+itag      = 5
+min_sf    = -90
+max_sf    = 90
+
+# var_name  = 'rh2m'
+# itag      = 8
+# min_sf    = 0
+# max_sf    = 1.6
+
+# var_name  = 'wind10'
+# itag      = 9
+# min_sf    = 0
+# max_sf    = 28
+
+# var_name  = 'sinlon'
+# itag      = 11
+# min_sf    = -1
+# max_sf    = 1
+
+# var_name  = 'coslon'
+# itag      = 12
+# min_sf    = -1
+# max_sf    = 1
+
+# print(var_name)
 # -----------------------------------------------------------------------------
 # region import packages
 
 # management
 import glob
-import pickle
 import warnings
 warnings.filterwarnings('ignore')
-import os
 import sys  # print(sys.path)
 sys.path.append('/work/ollie/qigao001')
-import psutil
 
 # data analysis
 import numpy as np
 import xarray as xr
 import dask
 dask.config.set({"array.slicing.split_large_chunks": True})
-from dask.diagnostics import ProgressBar
-pbar = ProgressBar()
-pbar.register()
-from scipy import stats
-import xesmf as xe
-import pandas as pd
+import pickle
 
-
-# plot
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from matplotlib.colors import BoundaryNorm
-from matplotlib import cm
-import cartopy.crs as ccrs
-plt.rcParams['pcolor.shading'] = 'auto'
-mpl.rcParams['figure.dpi'] = 600
-mpl.rc('font', family='Times New Roman', size=10)
-mpl.rcParams['axes.linewidth'] = 0.2
-plt.rcParams.update({"mathtext.fontset": "stix"})
-import matplotlib.animation as animation
-import seaborn as sns
-
-# self defined
-from a_basic_analysis.b_module.mapplot import (
-    globe_plot,
-    hemisphere_plot,
-    quick_var_plot,
-    mesh2plot,
-    framework_plot1,
-    remove_trailing_zero,
-    remove_trailing_zero_pos,
+from a_basic_analysis.b_module.source_properties import (
+    source_properties,
 )
 
 from a_basic_analysis.b_module.basic_calculations import (
     mon_sea_ann,
-    regrid,
-    mean_over_ais,
-    time_weighted_mean,
 )
 
-from a_basic_analysis.b_module.namelist import (
-    month,
-    seasons,
-    hours,
-    months,
-    month_days,
-    zerok,
-)
-
-from a_basic_analysis.b_module.source_properties import (
-    source_properties,
-    calc_lon_diff,
-)
+from dask.diagnostics import ProgressBar
+pbar = ProgressBar()
+pbar.register()
 
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region import output
+# region import data
 
-exp_org_o = {}
-exp_org_o[expid[i]] = {}
+fl_wiso_daily = sorted(glob.glob(
+    exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'
+        ))
 
-filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'))
-exp_org_o[expid[i]]['wiso'] = xr.open_mfdataset(
-    filenames_wiso[ifile_start:ifile_end],
+exp_out_wiso_daily = xr.open_mfdataset(
+    fl_wiso_daily[ifile_start:ifile_end],
     data_vars='minimal', coords='minimal', parallel=True)
 
+wisoaprt_epe = {}
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe.pkl',
+    'rb') as f:
+    wisoaprt_epe[expid[i]] = pickle.load(f)
 
-'''
-#-------- check pre
-filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'))
-filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_echam.nc'))
+quantile_interval  = np.arange(1, 99 + 1e-4, 1, dtype=np.int64)
+quantiles = dict(zip(
+    [str(x) + '%' for x in quantile_interval],
+    [x/100 for x in quantile_interval],
+    ))
 
-ifile = 1000
-nc1 = xr.open_dataset(filenames_wiso[ifile])
-nc2 = xr.open_dataset(filenames_echam[ifile])
+# quantiles = {'90%': 0.9, '95%': 0.95, '99%': 0.99}
 
-np.max(abs(nc1.wisoaprl[:, 0].mean(dim='time').values - nc2.aprl[0].values))
-
-
-#-------- input previous files
-
-for i in range(len(expid)):
-    # i=0
-    print('#-------- ' + expid[i])
-    exp_org_o[expid[i]] = {}
-    
-    
-    file_exists = os.path.exists(
-        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_echam.nc')
-    
-    if (file_exists):
-        exp_org_o[expid[i]]['echam'] = xr.open_dataset(
-            exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_echam.nc')
-        exp_org_o[expid[i]]['wiso'] = xr.open_dataset(
-            exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_wiso.nc')
-    else:
-        # filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*monthly.01_echam.nc'))
-        # exp_org_o[expid[i]]['echam'] = xr.open_mfdataset(filenames_echam, data_vars='minimal', coords='minimal', parallel=True)
-        
-        # filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*monthly.01_wiso.nc'))
-        # exp_org_o[expid[i]]['wiso'] = xr.open_mfdataset(filenames_wiso, data_vars='minimal', coords='minimal', parallel=True)
-        
-        # filenames_wiso_daily = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*daily.01_wiso.nc'))
-        # exp_org_o[expid[i]]['wiso_daily'] = xr.open_mfdataset(filenames_wiso_daily, data_vars='minimal', coords='minimal', parallel=True)
-        
-        filenames_echam_daily = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*daily.01_echam.nc'))
-        exp_org_o[expid[i]]['echam_daily'] = xr.open_mfdataset(filenames_echam_daily[120:], data_vars='minimal', coords='minimal', parallel=True)
-
-'''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region get mon/sea/ann wisoaprt
+# region set indices
 
-wisoaprt = {}
-wisoaprt[expid[i]] = (
-    exp_org_o[expid[i]]['wiso'].wisoaprl[:, :3] + \
-        exp_org_o[expid[i]]['wiso'].wisoaprc[:, :3].values).compute()
+kwiso2 = 3
 
-wisoaprt[expid[i]] = wisoaprt[expid[i]].rename('wisoaprt')
+kstart = kwiso2 + sum(ntags[:itag])
+kend   = kwiso2 + sum(ntags[:(itag+1)])
 
-wisoaprt_alltime = {}
-wisoaprt_alltime[expid[i]] = mon_sea_ann(wisoaprt[expid[i]])
+print(kstart); print(kend)
 
-
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'wb') as f:
-    pickle.dump(wisoaprt_alltime[expid[i]], f)
-
-
-'''
-#-------- check calculation
-wisoaprt_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
-    wisoaprt_alltime[expid[i]] = pickle.load(f)
-
-filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'))
-ifile = -1
-ncfile = xr.open_dataset(filenames_wiso[120:1080][ifile])
-
-(wisoaprt_alltime[expid[i]]['daily'][-31:,] == \
-    (ncfile.wisoaprl[:, :3] + ncfile.wisoaprc[:, :3].values)).all()
-
-(wisoaprt_alltime[expid[i]]['mon'][ifile,] == \
-    (ncfile.wisoaprl[:, :3] + ncfile.wisoaprc[:, :3].values).mean(dim='time')).all()
-
-
-#-------- check simulation of aprt and wisoaprt
-exp_org_o = {}
-exp_org_o[expid[i]] = {}
-
-filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_echam.nc'))
-exp_org_o[expid[i]]['echam'] = xr.open_mfdataset(filenames_echam[120:180], data_vars='minimal', coords='minimal', parallel=True)
-
-wisoaprt_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
-    wisoaprt_alltime[expid[i]] = pickle.load(f)
-
-np.max(abs(exp_org_o[expid[i]]['echam'].aprl.values + \
-    exp_org_o[expid[i]]['echam'].aprc.values - \
-        wisoaprt_alltime[expid[i]]['mon'][:60, 0].values))
-
-'''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+#-------------------------------- check
+
+var_names = ['sst', 'lat', 'rh2m', 'wind10', 'sinlon', 'coslon']
+itags     = [7, 5, 8, 9, 11, 12]
+min_sfs   = [268.15, -90, 0, 0, -1, -1]
+max_sfs   = [318.15, 90, 1.6, 28, 1, 1]
+
+
+for ivar in range(6):
+    # ivar = 0
+    print(var_names[ivar] + ': ' + str(itags[ivar]) + ': ' + \
+        str(min_sfs[ivar]) + ': ' + str(max_sfs[ivar]))
+    
+    kwiso2 = 3
+    
+    kstart = kwiso2 + sum(ntags[:itags[ivar]])
+    kend   = kwiso2 + sum(ntags[:(itags[ivar]+1)])
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_weighted_' + var_names[ivar] + '.pkl',
+          'rb') as f:
+        epe_weighted_var = pickle.load(f)
+    
+    ocean_pre = (
+        exp_out_wiso_daily.wisoaprl.sel(wisotype=slice(kstart+2, kstart+3)) + \
+            exp_out_wiso_daily.wisoaprc.sel(wisotype=slice(kstart+2, kstart+3))
+            ).sum(dim='wisotype').compute()
+    var_scaled_pre = (
+        exp_out_wiso_daily.wisoaprl.sel(wisotype=kstart+2) + \
+            exp_out_wiso_daily.wisoaprc.sel(wisotype=kstart+2)).compute()
+    
+    epe_var_scaled_pre = {}
+    epe_ocean_pre = {}
+    epe_var_scaled_pre_alltime = {}
+    epe_ocean_pre_alltime = {}
+    
+    for iqtl in ['90%']: # quantiles.keys():
+        # iqtl = '90%'
+        print(iqtl)
+        
+        epe_var_scaled_pre[iqtl] = var_scaled_pre.copy().where(
+            wisoaprt_epe[expid[i]]['mask'][iqtl],
+            other=0,
+        )
+        epe_ocean_pre[iqtl] = ocean_pre.copy().where(
+            wisoaprt_epe[expid[i]]['mask'][iqtl],
+            other=0,
+        )
+        
+        #---- check
+        print((epe_var_scaled_pre[iqtl].values[wisoaprt_epe[expid[i]]['mask'][iqtl]] == var_scaled_pre.values[wisoaprt_epe[expid[i]]['mask'][iqtl]]).all())
+        print((epe_var_scaled_pre[iqtl].values[wisoaprt_epe[expid[i]]['mask'][iqtl] == False] == 0).all())
+        print((epe_ocean_pre[iqtl].values[wisoaprt_epe[expid[i]]['mask'][iqtl]] == ocean_pre.values[wisoaprt_epe[expid[i]]['mask'][iqtl]]).all())
+        print((epe_ocean_pre[iqtl].values[wisoaprt_epe[expid[i]]['mask'][iqtl] == False] == 0).all())
+        
+        #-------- mon_sea_ann values
+        epe_var_scaled_pre_alltime[iqtl] = mon_sea_ann(epe_var_scaled_pre[iqtl])
+        epe_ocean_pre_alltime[iqtl]      = mon_sea_ann(epe_ocean_pre[iqtl])
+        
+        #---- check
+        print((epe_var_scaled_pre_alltime[iqtl]['daily'] == epe_var_scaled_pre[iqtl]).all().values)
+        print((epe_ocean_pre_alltime[iqtl]['daily'] == epe_ocean_pre[iqtl]).all().values)
+        
+        for ialltime in ['mon', 'sea', 'ann', 'mm', 'sm', 'am']:
+            # ialltime = 'am'
+            print(ialltime)
+            res01 = source_properties(
+                epe_var_scaled_pre_alltime[iqtl][ialltime],
+                epe_ocean_pre_alltime[iqtl][ialltime],
+                min_sfs[ivar], max_sfs[ivar],
+                var_names[ivar], prefix = 'epe_weighted_',
+            ).values
+            
+            res02 = epe_weighted_var[iqtl][ialltime].values
+            
+            print((res01[np.isfinite(res01)] == res02[np.isfinite(res02)]).all())
+            # print(np.nanmax(abs((res01 - res02) / res01)))
+            
+    del epe_weighted_var
+
+
 

@@ -236,8 +236,8 @@ def plt_mesh_pars(
     from matplotlib.colors import BoundaryNorm
     from matplotlib import cm
     
-    pltlevel = np.arange(cm_min, cm_max + 1e-4, cm_interval1)
-    pltticks = np.arange(cm_min, cm_max + 1e-4, cm_interval2)
+    pltlevel = np.arange(cm_min, cm_max + 1e-4, cm_interval1, dtype=np.float64)
+    pltticks = np.arange(cm_min, cm_max + 1e-4, cm_interval2, dtype=np.float64)
     pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=clip)
     pltcmp = cm.get_cmap(cmap, len(pltlevel)-1)
     

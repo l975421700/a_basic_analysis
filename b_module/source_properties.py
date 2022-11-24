@@ -101,6 +101,24 @@ def calc_lon_diff(lon1, lon2):
     
     return(lon_diff)
 
+def calc_lon_diff_np(lon1, lon2):
+    '''
+    #---- Input
+    lon1: numpy.array
+    lon2: numpy.array
+    
+    #---- Output
+    lon_diff: differences in longitude
+    '''
+    
+    lon_diff = lon1 - lon2
+    
+    lon_diff[lon_diff < -180] += 360
+    lon_diff[lon_diff > 180]  -= 360
+    
+    return(lon_diff)
+
+
 '''
 #---- check
 diff_pre_weighted_lon = (pre_weighted_lon[expid[i]]['sm'].sel(season='DJF') - pre_weighted_lon[expid[i]]['sm'].sel(season='JJA')).compute()

@@ -107,10 +107,6 @@ wisoaprt_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
     wisoaprt_alltime[expid[i]] = pickle.load(f)
 
-major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
-major_ice_core_site = major_ice_core_site.loc[
-    major_ice_core_site['age (kyr)'] > 120, ]
-
 lon = wisoaprt_alltime[expid[i]]['am'].lon
 lat = wisoaprt_alltime[expid[i]]['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)

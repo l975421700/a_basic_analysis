@@ -76,7 +76,7 @@ t63_slf = T63GR15_jan_surf.SLF.values
 # 1 means land
 t63_slm = T63GR15_jan_surf.SLM.values
 # True means land
-t63_slm_trimmed = np.isnan(analysed_sst)
+# t63_slm_trimmed = np.isnan(analysed_sst)
 
 
 #-------------------------------- get ocean basin divisions
@@ -184,6 +184,13 @@ pi_geo_tagmap.to_netcdf('startdump/tagging/tagmap/pi_geo_tagmap.nc',)
 
 
 pi_geo_tagmap = xr.open_dataset('startdump/tagging/tagmap/pi_geo_tagmap.nc')
+test = xr.open_dataset('startdump/tagging/archived/pi_geo_tagmap.nc')
+pi_geo_tagmap.sel(level=slice(4, 5)).tagmap.sum(axis=0).sum()
+test.sel(level=slice(4, 6)).tagmap.sum(axis=0).sum()
+
+diff = pi_geo_tagmap.sel(level=slice(4, 5)).tagmap.sum(axis=0) - \
+    test.sel(level=slice(4, 6)).tagmap.sum(axis=0)
+diff.to_netcdf('scratch/test/test.nc')
 
 '''
 # endregion

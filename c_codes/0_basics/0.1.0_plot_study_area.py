@@ -174,13 +174,13 @@ for jcol in range(ncol):
     # plot AIS divisions
     plt_wais = ais_imbie2.loc[ais_imbie2.Regions == 'West'].plot(
         ax=axs[jcol], transform=ccrs.epsg(3031),
-        edgecolor='red', facecolor='none', linewidths=0.5, zorder=2)
+        edgecolor='red', facecolor='none', linewidths=1, zorder=2)
     plt_eais = ais_imbie2.loc[ais_imbie2.Regions == 'East'].plot(
         ax=axs[jcol], transform=ccrs.epsg(3031),
-        edgecolor='blue', facecolor='none', linewidths=0.5, zorder=2)
+        edgecolor='blue', facecolor='none', linewidths=1, zorder=2)
     plt_ap = ais_imbie2.loc[ais_imbie2.Regions == 'Peninsula'].plot(
         ax=axs[jcol], transform=ccrs.epsg(3031),
-        edgecolor='m', facecolor='none', linewidths=0.5, zorder=2)
+        edgecolor='m', facecolor='none', linewidths=1, zorder=2)
     
     ipanel += 1
 
@@ -219,11 +219,11 @@ cbar.ax.set_xlabel('Antarctic surface height [$m$]', linespacing=2)
 
 # axs[0]
 patch1 = mpatches.Patch(
-    edgecolor='blue', facecolor='none', label='EAIS', lw=0.5)
+    edgecolor='blue', facecolor='none', label='EAIS', lw=1)
 patch2 = mpatches.Patch(
-    edgecolor='red', facecolor='none', label='WAIS', lw=0.5)
+    edgecolor='red', facecolor='none', label='WAIS', lw=1)
 patch3 = mpatches.Patch(
-    edgecolor='m', facecolor='none', label='AP', lw=0.5)
+    edgecolor='m', facecolor='none', label='AP', lw=1)
 line1 = Line2D([0], [0], label='Atlantic sector', lw=2, linestyle='-',
                color='gray')
 line2 = Line2D([0], [0], label='Indian sector', lw=2, linestyle=':',

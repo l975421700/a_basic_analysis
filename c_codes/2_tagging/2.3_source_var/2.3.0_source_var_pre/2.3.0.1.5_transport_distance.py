@@ -39,7 +39,6 @@ from geopy.distance import geodesic, great_circle
 from haversine import haversine, haversine_vector
 
 # plot
-# import proplot as pplt
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm
@@ -134,9 +133,9 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_allti
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.5_transport_distance/6.1.3.5 ' + expid[i] + ' transport distance am Antarctica + am aprt.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=10, cm_max=70, cm_interval1=5, cm_interval2=10, cmap='BrBG',)
+    cm_min=20, cm_max=70, cm_interval1=5, cm_interval2=10, cmap='BrBG',)
 
-fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 7]) / 2.54,)
+fig, ax = hemisphere_plot(northextent=-60, figsize=np.array([5.8, 7]) / 2.54,)
 
 cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
 
@@ -188,6 +187,91 @@ transport_distance[expid[i]]['am'].to_netcdf('scratch/test/test.nc')
 
 
 # -----------------------------------------------------------------------------
+# region plot transport_distance am_sm_5
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.5_transport_distance/6.1.3.5 ' + expid[i] + ' transport_distance am_sm_5 Antarctica.png'
+cbar_label1 = 'Source-sink distance [$10^{2} \; km$]'
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=10, cm_max=70, cm_interval1=5, cm_interval2=10, cmap='BrBG',)
+ctr_level = np.array([5, 10, 20, 30, ])
+
+nrow = 1
+ncol = 5
+fm_right = 2 / (5.8*ncol + 2)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol + 2, 5.8*nrow+0.5]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.01, 'wspace': 0.01},)
+
+for jcol in range(ncol):
+    axs[jcol] = hemisphere_plot(
+        northextent=-60, ax_org = axs[jcol],
+        l45label = False, loceanarcs = False)
+    cplot_ice_cores(
+        major_ice_core_site.lon, major_ice_core_site.lat, axs[jcol])
+
+#-------- Am
+plt_mesh1 = axs[0].pcolormesh(
+    lon, lat,
+    transport_distance[expid[i]]['am'] / 100,
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_ctr1 = axs[0].contour(
+    lon, lat.sel(lat=slice(-60, -90)),
+    transport_distance[expid[i]]['ann'].std(
+        dim='time', skipna=True, ddof=1).sel(lat=slice(-60, -90)) / 100,
+    levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+    linewidths=0.5, linestyles='solid',)
+axs[0].clabel(
+    plt_ctr1, inline=1, colors='b', fmt=remove_trailing_zero,
+    levels=ctr_level, inline_spacing=10, fontsize=6,)
+plt.text(
+    0.5, 1.04, 'Annual mean', transform=axs[0].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+#-------- sm
+for iseason in range(len(seasons)):
+    axs[1 + iseason].pcolormesh(
+        lon, lat,
+        transport_distance[expid[i]]['sm'].sel(season=seasons[iseason]) / 100,
+        norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+    plt_ctr = axs[1 + iseason].contour(
+        lon, lat.sel(lat=slice(-60, -90)),
+        transport_distance[expid[i]]['sea'].sel(
+            time=(transport_distance[expid[i]]['sea'].time.dt.month == \
+                seasons_last_num[iseason])
+            ).std(dim='time', skipna=True, ddof=1
+                  ).sel(lat=slice(-60, -90)) / 100,
+        levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+        linewidths=0.5, linestyles='solid',
+    )
+    axs[1 + iseason].clabel(
+        plt_ctr, inline=1, colors='b', fmt=remove_trailing_zero,
+        levels=ctr_level, inline_spacing=10, fontsize=6,)
+    plt.text(
+        0.5, 1.04, seasons[iseason], transform=axs[1 + iseason].transAxes,
+        ha='center', va='center', rotation='horizontal')
+
+cbar1 = fig.colorbar(
+    plt_mesh1, ax=axs,
+    orientation="vertical",shrink=1.2,aspect=20,extend='both', ticks=pltticks,
+    anchor=(1.5, 0.5))
+cbar1.ax.set_ylabel(cbar_label1, linespacing=2)
+cbar1.ax.yaxis.set_minor_locator(AutoMinorLocator(1))
+
+fig.subplots_adjust(left=0.01, right = 1-fm_right, bottom = 0, top = 0.94)
+fig.savefig(output_png)
+
+
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
 # region plot transport distance DJF-JJA
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.5_transport_distance/6.1.3.5 ' + expid[i] + ' transport distance DJF-JJA Antarctica.png'
@@ -230,86 +314,3 @@ fig.savefig(output_png, dpi=1200)
 # -----------------------------------------------------------------------------
 
 
-# -----------------------------------------------------------------------------
-# region plot transport_distance am_sm_5
-
-output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.5_transport_distance/6.1.3.5 ' + expid[i] + ' transport_distance am_sm_5 Antarctica.png'
-cbar_label1 = 'Source-sink distance [$10^{2} \; km$]'
-pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=10, cm_max=70, cm_interval1=5, cm_interval2=10, cmap='BrBG',)
-ctr_level = np.array([5, 10, 20, 30, ])
-
-nrow = 1
-ncol = 5
-fm_right = 2 / (5.8*ncol + 2)
-
-fig, axs = plt.subplots(
-    nrow, ncol, figsize=np.array([5.8*ncol + 2, 5.8*nrow+0.5]) / 2.54,
-    subplot_kw={'projection': ccrs.SouthPolarStereo()},
-    gridspec_kw={'hspace': 0.01, 'wspace': 0.01},)
-
-for jcol in range(ncol):
-    axs[jcol] = hemisphere_plot(
-        northextent=-50, ax_org = axs[jcol],
-        l45label = False, loceanarcs = False)
-    cplot_ice_cores(
-        major_ice_core_site.lon, major_ice_core_site.lat, axs[jcol])
-
-#-------- Am
-plt_mesh1 = axs[0].pcolormesh(
-    lon, lat,
-    transport_distance[expid[i]]['am'] / 100,
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-plt_ctr1 = axs[0].contour(
-    lon, lat.sel(lat=slice(-50, -90)),
-    transport_distance[expid[i]]['ann'].std(
-        dim='time', skipna=True, ddof=1).sel(lat=slice(-50, -90)) / 100,
-    levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
-    linewidths=0.5, linestyles='solid',)
-axs[0].clabel(
-    plt_ctr1, inline=1, colors='b', fmt=remove_trailing_zero,
-    levels=ctr_level, inline_spacing=10, fontsize=6,)
-plt.text(
-    0.5, 1.04, 'Annual mean', transform=axs[0].transAxes,
-    ha='center', va='center', rotation='horizontal')
-
-#-------- sm
-for iseason in range(len(seasons)):
-    axs[1 + iseason].pcolormesh(
-        lon, lat,
-        transport_distance[expid[i]]['sm'].sel(season=seasons[iseason]) / 100,
-        norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-    plt_ctr = axs[1 + iseason].contour(
-        lon, lat.sel(lat=slice(-50, -90)),
-        transport_distance[expid[i]]['sea'].sel(
-            time=(transport_distance[expid[i]]['sea'].time.dt.month == \
-                seasons_last_num[iseason])
-            ).std(dim='time', skipna=True, ddof=1
-                  ).sel(lat=slice(-50, -90)) / 100,
-        levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
-        linewidths=0.5, linestyles='solid',
-    )
-    axs[1 + iseason].clabel(
-        plt_ctr, inline=1, colors='b', fmt=remove_trailing_zero,
-        levels=ctr_level, inline_spacing=10, fontsize=6,)
-    plt.text(
-        0.5, 1.04, seasons[iseason], transform=axs[1 + iseason].transAxes,
-        ha='center', va='center', rotation='horizontal')
-
-cbar1 = fig.colorbar(
-    plt_mesh1, ax=axs,
-    orientation="vertical",shrink=1.2,aspect=20,extend='both', ticks=pltticks,
-    anchor=(1.5, 0.5))
-cbar1.ax.set_ylabel(cbar_label1, linespacing=2)
-cbar1.ax.yaxis.set_minor_locator(AutoMinorLocator(1))
-
-fig.subplots_adjust(left=0.01, right = 1-fm_right, bottom = 0, top = 0.94)
-fig.savefig(output_png)
-
-
-
-
-'''
-'''
-# endregion
-# -----------------------------------------------------------------------------

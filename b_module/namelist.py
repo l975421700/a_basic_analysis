@@ -8,6 +8,8 @@ import cartopy as ctp
 month = np.array(
     ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
+monthini = np.array(
+    ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'])
 month_num = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
 month_dec = np.array(
     ['Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May',
