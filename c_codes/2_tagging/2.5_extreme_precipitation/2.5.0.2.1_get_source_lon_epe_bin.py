@@ -1,6 +1,6 @@
 
 
-exp_odir = '/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_m_416_4.9',
     'pi_m_502_5.0',
@@ -44,10 +44,10 @@ pbar.register()
 # -----------------------------------------------------------------------------
 # region import data
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_weighted_sinlon.pkl', 'rb') as f:
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_weighted_sinlon_binned.pkl', 'rb') as f:
     epe_weighted_sinlon = pickle.load(f)
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_weighted_coslon.pkl', 'rb') as f:
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_weighted_coslon_binned.pkl', 'rb') as f:
     epe_weighted_coslon = pickle.load(f)
 
 epe_weighted_lon = {}
@@ -63,29 +63,29 @@ for iqtl in epe_weighted_sinlon.keys():
             epe_weighted_coslon[iqtl][ialltime],
         )
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_weighted_lon.pkl',
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_weighted_lon_binned.pkl',
           'wb') as f:
     pickle.dump(epe_weighted_lon, f)
 
 
 '''
 #-------------------------------- check
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_weighted_sinlon.pkl', 'rb') as f:
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_weighted_sinlon_binned.pkl', 'rb') as f:
     epe_weighted_sinlon = pickle.load(f)
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_weighted_coslon.pkl', 'rb') as f:
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_weighted_coslon_binned.pkl', 'rb') as f:
     epe_weighted_coslon = pickle.load(f)
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_weighted_lon.pkl', 'rb') as f:
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_weighted_lon_binned.pkl', 'rb') as f:
     epe_weighted_lon = pickle.load(f)
 
 itime = -1
 ilat = 48
 ilon = 90
 for iqtl in epe_weighted_sinlon.keys():
-    # iqtl = '90%'
+    # iqtl = '90.5%'
     for ialltime in epe_weighted_sinlon[iqtl].keys():
-        # ialltime = 'am'
+        # ialltime = 'mon'
         print(iqtl + ' - ' + ialltime)
         
         if (ialltime != 'am'):
@@ -104,11 +104,6 @@ for iqtl in epe_weighted_sinlon.keys():
             if (lon2 < 0): lon2 += 360
             print(((lon1 - lon2) / lon1).values)
 
-
-
-
-pre_weighted_lon = (np.arctan2(sinlon, coslon) * 180 / np.pi).compute()
-pre_weighted_lon.values[pre_weighted_lon.values < 0] += 360
 '''
 # endregion
 # -----------------------------------------------------------------------------

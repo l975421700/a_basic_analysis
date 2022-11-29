@@ -121,6 +121,13 @@ stations_sites = pd.concat(
     ignore_index=True,
     )
 
+
+wisoaprt_masked_icores = {}
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_masked_icores.pkl', 'rb') as f:
+    wisoaprt_masked_icores[expid[i]] = pickle.load(f)
+
+
 '''
 # normal sources
 pre_weighted_var_icores = {}
@@ -508,6 +515,49 @@ for isite in stations_sites.Site:
     max_values = np.max(epe_sources_sites[expid[i]][ivar][isite]['am'].am) / 100
     min_values = np.min(epe_sources_sites[expid[i]][ivar][isite]['am'].am) / 100
     print(np.round(max_values - min_values, 1))
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region precipitation fraction
+
+for isite in stations_sites.Site:
+    # isite = 'EDC'
+    print(isite)
+    
+    ymax = 100
+    ymin = 0
+    ytickmax = 100
+    ytickmin = 0
+    
+    output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.2_pre_source_sites/6.1.7.2.1_frc/6.1.7.2.1 heavy precipitation frc at ' + isite + '.png'
+    fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
+    
+    ax.plot(
+        wisoaprt_masked_icores[expid[i]][isite]['frc']['am'].quantiles * 100,
+        wisoaprt_masked_icores[expid[i]][isite]['frc']['am'].am * 100,
+        '.-', lw=0.5, markersize=1.5,
+        )
+    plt_text = plt.text(0.05, 0.9, isite, transform=ax.transAxes, color='gray',)
+    
+    ax.set_ylabel('Precipitation fraction [$\%$]', labelpad=0.5)
+    # ax.yaxis.set_major_formatter(remove_trailing_zero_pos_abs)
+    ax.set_ylim(ymin, ymax)
+    ax.set_yticks(np.arange(ytickmin, ytickmax + 1e-4, 20))
+    ax.invert_yaxis()
+    
+    ax.set_xlabel('Percentiles [$\%$]')
+    ax.set_xlim(0, 100)
+    ax.set_xticks(np.arange(0, 100 + 1e-4, 20))
+    ax.grid(True, linewidth=0.4, color='lightgray', alpha=0.5, linestyle=':')
+    fig.subplots_adjust(left=0.24, right=0.95, bottom=0.25, top=0.97)
+    fig.savefig(output_png)
+
+
+
+'''
 '''
 # endregion
 # -----------------------------------------------------------------------------

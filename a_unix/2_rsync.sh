@@ -42,7 +42,7 @@ rsync -avzLP --exclude '**/run_/*' /work/ollie/qigao001/output levante:/work/ab0
 # -----------------------------------------------------------------------------
 # region backup ollie to jasmin
 
-rsync -avzLP --exclude '**/run_/*' /work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/pi_m_502_5.0 xfer1:/home/users/qino/output/echam-6.3.05p2-wiso/pi/
+rsync -avzLP /work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/pi_m_502_5.0/unknown xfer1:/home/users/qino/output/echam-6.3.05p2-wiso/pi/pi_m_502_5.0/
 
 # endregion
 # -----------------------------------------------------------------------------

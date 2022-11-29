@@ -1,6 +1,93 @@
 
 
 # -----------------------------------------------------------------------------
+# region get wisoaprt_epe at ice core sites
+
+wisoaprt_epe = {}
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe.pkl',
+    'rb') as f:
+    wisoaprt_epe[expid[i]] = pickle.load(f)
+
+quantiles = {'90%': 0.9}
+
+# wisoaprt_epe[expid[i]]['frc_aprt']['am']['90%']
+
+wisoaprt_epe_alltime_icores = {}
+wisoaprt_epe_alltime_icores[expid[i]] = {}
+
+for icores in stations_sites.Site:
+    # icores = 'EDC'
+    print('#--------' + icores)
+    wisoaprt_epe_alltime_icores[expid[i]][icores] = {}
+    
+    for ialltime in wisoaprt_epe[expid[i]]['frc_aprt'].keys():
+        print('#----' + ialltime)
+        wisoaprt_epe_alltime_icores[expid[i]][icores][ialltime] = {}
+        
+        for iqtl in quantiles.keys():
+            print('#--' + iqtl)
+            
+            if ialltime in ['mon', 'sea', 'ann', 'mm', 'sm']:
+                # ialltime = 'mon'
+                wisoaprt_epe_alltime_icores[expid[i]][icores][ialltime][iqtl] = \
+                    wisoaprt_epe[expid[i]]['frc_aprt'][ialltime][iqtl][
+                        :,
+                        t63_sites_indices[icores]['ilat'],
+                        t63_sites_indices[icores]['ilon']]
+            elif (ialltime == 'am'):
+                wisoaprt_epe_alltime_icores[expid[i]][icores][ialltime][iqtl] = \
+                    wisoaprt_epe[expid[i]]['frc_aprt'][ialltime][iqtl][
+                        t63_sites_indices[icores]['ilat'],
+                        t63_sites_indices[icores]['ilon']]
+
+
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_epe_alltime_icores.pkl',
+    'wb') as f:
+    pickle.dump(wisoaprt_epe_alltime_icores[expid[i]], f)
+
+
+
+
+'''
+iqtl = '90%'
+for icores in stations_sites.Site:
+    # icores = 'EDC'
+    print('#----------------' + icores)
+    wisoaprt_epe_am_icores = \
+        np.round(
+            wisoaprt_epe_alltime_icores[expid[i]][icores][
+                'am'][iqtl].values * 100, 1)
+    wisoaprt_epe_annstd_icores = \
+        np.round(
+            (wisoaprt_epe_alltime_icores[expid[i]][icores][
+                'ann'][iqtl] * 100).std(ddof=1).values,
+            1)
+    print(str(wisoaprt_epe_am_icores) + ' ± ' + str(wisoaprt_epe_annstd_icores))
+
+#-------------------------------- check
+wisoaprt_epe_alltime_icores = {}
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_epe_alltime_icores.pkl', 'rb') as f:
+    wisoaprt_epe_alltime_icores[expid[i]] = pickle.load(f)
+
+for icores in wisoaprt_epe_alltime_icores[expid[i]].keys():
+    # icores = 'EDC'
+    print('#----------------' + icores)
+    print('local lat:  ' + str(t63_sites_indices[icores]['lat']))
+    print('grid lat:   ' + \
+        str(np.round(wisoaprt_epe_alltime_icores[expid[i]][icores]['am'].lat.values, 2)))
+    print('local lon:  ' + str(t63_sites_indices[icores]['lon']))
+    print('grid lon:   ' + \
+        str(wisoaprt_epe_alltime_icores[expid[i]][icores]['am'].lon.values))
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
 # region check negative evaporation with tagmap
 
 i = 0

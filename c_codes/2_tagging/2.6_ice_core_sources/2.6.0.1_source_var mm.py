@@ -70,6 +70,7 @@ from a_basic_analysis.b_module.basic_calculations import (
 
 from a_basic_analysis.b_module.namelist import (
     month,
+    monthini,
     month_num,
     month_dec,
     month_dec_num,
@@ -112,12 +113,18 @@ with open(
     exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.pre_weighted_var_icores.pkl', 'rb') as f:
     pre_weighted_var_icores[expid[i]] = pickle.load(f)
 
+
+eight_sites = ['EDC', 'DOME F', 'Vostok', 'EDML',
+               'Rothera', 'Halley', 'Neumayer', "Dumont d'Urville"]
+
+wisoaprt_alltime_icores = {}
 with open(
-    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.loc_indices.pkl',
-    'rb') as f:
-    loc_indices = pickle.load(f)
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_alltime_icores.pkl', 'rb') as f:
+    wisoaprt_alltime_icores[expid[i]] = pickle.load(f)
+
 
 '''
+pre_weighted_var_icores[expid[i]].keys()
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -127,31 +134,32 @@ with open(
 # region plot mm source lat
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.0_source_lat/6.1.8.0 ' + expid[i] + ' pre_weighted_lat mm icores.png'
-# output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.0_source_lat/6.1.8.0 ' + expid[i] + ' pre_weighted_lat mm icores.pdf'
+output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.0_source_lat/6.1.8.0 ' + expid[i] + ' pre_weighted_lat mm icores.pdf'
 
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
 
-for icores in pre_weighted_var_icores[expid[i]].keys():
+for icores in eight_sites:
     ax.plot(
         month, pre_weighted_var_icores[expid[i]][icores]['lat']['mm'],
-        '.-', lw=0.5, markersize=4,
+        '.-', lw=1, markersize=4,
         label=icores,)
 
-# ax.legend(
-#     loc='lower right', handlelength=2, framealpha = 1, ncol=2,
-#     columnspacing=0.5, handletextpad=0.5)
+ax.legend(
+    loc='lower right', handlelength=2, framealpha = 1, ncol=1,
+    columnspacing=0.5, handletextpad=0.5)
 
 ax.set_xlabel('Monthly source latitude [$°\;S$]')
 ax.set_ylabel(None)
 ax.yaxis.set_major_formatter(remove_trailing_zero_pos_abs)
 
 ax.grid(True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
-fig.subplots_adjust(left=0.08, right=0.99, bottom=0.15, top=0.98)
+fig.subplots_adjust(left=0.1, right=0.99, bottom=0.15, top=0.98)
 fig.savefig(output_png)
 
 
-for icores in pre_weighted_var_icores[expid[i]].keys():
+'''
+for icores in eight_sites:
     # icores = 'EDC'
     print('#----------------' + icores)
     max_var =pre_weighted_var_icores[expid[i]][icores]['lat']['mm'].values.max()
@@ -159,7 +167,6 @@ for icores in pre_weighted_var_icores[expid[i]].keys():
     print(np.round(max_var - min_var, 1))
 
 
-'''
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -172,10 +179,10 @@ output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.2_source_sst/6.1.8.
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
 
-for icores in pre_weighted_var_icores[expid[i]].keys():
+for icores in eight_sites:
     ax.plot(
         month, pre_weighted_var_icores[expid[i]][icores]['sst']['mm'],
-        '.-', lw=0.5, markersize=4,
+        '.-', lw=1, markersize=4,
         label=icores,)
 
 # ax.legend(
@@ -190,7 +197,8 @@ fig.subplots_adjust(left=0.08, right=0.99, bottom=0.15, top=0.98)
 fig.savefig(output_png)
 
 
-for icores in pre_weighted_var_icores[expid[i]].keys():
+'''
+for icores in eight_sites:
     # icores = 'EDC'
     print('#----------------' + icores)
     max_sst =pre_weighted_var_icores[expid[i]][icores]['sst']['mm'].values.max()
@@ -200,7 +208,6 @@ for icores in pre_weighted_var_icores[expid[i]].keys():
 
 
 '''
-'''
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -208,18 +215,23 @@ for icores in pre_weighted_var_icores[expid[i]].keys():
 # -----------------------------------------------------------------------------
 # region plot mm relative source lon
 
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.t63_sites_indices.pkl',
+    'rb') as f:
+    t63_sites_indices = pickle.load(f)
+
 output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.1_source_lon/6.1.8.1 ' + expid[i] + ' pre_weighted_lon mm icores.png'
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
 
-for icores in pre_weighted_var_icores[expid[i]].keys():
+for icores in eight_sites:
     ax.plot(
         month,
         calc_lon_diff(
             pre_weighted_var_icores[expid[i]][icores]['lon']['mm'],
-            loc_indices[icores]['lon'],
+            t63_sites_indices[icores]['lon'],
             ),
-        '.-', lw=0.5, markersize=4,
+        '.-', lw=1, markersize=4,
         label=icores,)
 
 # ax.legend(
@@ -248,10 +260,10 @@ output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.3_source_rh2m/6.1.8
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
 
-for icores in pre_weighted_var_icores[expid[i]].keys():
+for icores in eight_sites:
     ax.plot(
         month, pre_weighted_var_icores[expid[i]][icores]['rh2m']['mm'],
-        '.-', lw=0.5, markersize=4,
+        '.-', lw=1, markersize=4,
         label=icores,)
 
 # ax.legend(
@@ -266,14 +278,14 @@ fig.subplots_adjust(left=0.08, right=0.99, bottom=0.15, top=0.98)
 fig.savefig(output_png)
 
 
-for icores in pre_weighted_var_icores[expid[i]].keys():
+'''
+for icores in eight_sites:
     # icores = 'EDC'
     print('#----------------' + icores)
     max_var=pre_weighted_var_icores[expid[i]][icores]['rh2m']['mm'].values.max()
     min_var=pre_weighted_var_icores[expid[i]][icores]['rh2m']['mm'].values.min()
     print(np.round(max_var - min_var, 1))
 
-'''
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -286,10 +298,10 @@ output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.4_source_wind10/6.1
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
 
-for icores in pre_weighted_var_icores[expid[i]].keys():
+for icores in eight_sites:
     ax.plot(
         month, pre_weighted_var_icores[expid[i]][icores]['wind10']['mm'],
-        '.-', lw=0.5, markersize=4,
+        '.-', lw=1, markersize=4,
         label=icores,)
 
 # ax.legend(
@@ -305,14 +317,14 @@ fig.subplots_adjust(left=0.1, right=0.99, bottom=0.15, top=0.98)
 fig.savefig(output_png)
 
 
-for icores in pre_weighted_var_icores[expid[i]].keys():
+'''
+for icores in eight_sites:
     # icores = 'EDC'
     print('#----------------' + icores)
     max_var=pre_weighted_var_icores[expid[i]][icores]['wind10']['mm'].values.max()
     min_var=pre_weighted_var_icores[expid[i]][icores]['wind10']['mm'].values.min()
     print(np.round(max_var - min_var, 1))
 
-'''
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -325,11 +337,11 @@ output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.5_transport_distanc
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
 
-for icores in pre_weighted_var_icores[expid[i]].keys():
+for icores in eight_sites:
     ax.plot(
         month,
         pre_weighted_var_icores[expid[i]][icores]['distance']['mm'] / 100,
-        '.-', lw=0.5, markersize=4,
+        '.-', lw=1, markersize=4,
         label=icores,)
 
 # ax.legend(
@@ -346,6 +358,38 @@ fig.savefig(output_png)
 
 
 '''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot mm precipitation
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.6_pre/6.1.8.6 ' + expid[i] + ' aprt mm icores.png'
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
+
+for icores in eight_sites:
+    ax.plot(
+        month,
+        wisoaprt_alltime_icores[expid[i]][icores]['mm'].sel(wisotype=1) * seconds_per_d * month_days,
+        '.-', lw=1, markersize=4,
+        label=icores,)
+
+ax.set_xlabel('Monthly precipitation [$mm \; mon^{-1}$]')
+ax.set_ylabel(None)
+ax.yaxis.set_major_formatter(remove_trailing_zero_pos_abs)
+ax.set_yscale('log')
+
+ax.grid(True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+fig.subplots_adjust(left=0.1, right=0.99, bottom=0.15, top=0.98)
+fig.savefig(output_png)
+
+
+
+'''
+(wisoaprt_alltime_icores[expid[i]]['Rothera']['mm'].sel(wisotype=1) * seconds_per_d * month_days).sum()
 '''
 # endregion
 # -----------------------------------------------------------------------------

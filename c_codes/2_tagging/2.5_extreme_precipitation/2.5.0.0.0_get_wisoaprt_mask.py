@@ -107,17 +107,18 @@ wisoaprt_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
     wisoaprt_alltime[expid[i]] = pickle.load(f)
 
-lon = wisoaprt_alltime[expid[i]]['am'].lon
-lat = wisoaprt_alltime[expid[i]]['am'].lat
-lon_2d, lat_2d = np.meshgrid(lon, lat,)
-
 quantile_interval  = np.arange(1, 99 + 1e-4, 1, dtype=np.int64)
 quantiles = dict(zip(
     [str(x) + '%' for x in quantile_interval],
     [x/100 for x in quantile_interval],
     ))
 
+
 '''
+lon = wisoaprt_alltime[expid[i]]['am'].lon
+lat = wisoaprt_alltime[expid[i]]['am'].lat
+lon_2d, lat_2d = np.meshgrid(lon, lat,)
+
 # quantiles = {'90%': 0.9, '95%': 0.95, '99%': 0.99}
 
 ocean_aprt_alltime = {}
@@ -137,10 +138,96 @@ wisoaprt_epe[expid[i]] = {}
 wisoaprt_epe[expid[i]]['quantiles'] = {}
 wisoaprt_epe[expid[i]]['mask'] = {}
 wisoaprt_epe[expid[i]]['masked_data'] = {}
+
+# set a threshold of 0.02 mm/d
+wisoaprt_epe[expid[i]]['masked_data']['original'] = \
+    wisoaprt_alltime[expid[i]]['daily'].sel(wisotype=1).copy().where(
+        wisoaprt_alltime[expid[i]]['daily'].sel(wisotype=1) >= (0.02 / seconds_per_d),
+        other=np.nan,
+    ).compute()
+
+for iqtl in quantiles.keys():
+    # iqtl = '90%'
+    print(iqtl + ': ' + str(quantiles[iqtl]))
+    
+    #-------- calculate quantiles
+    wisoaprt_epe[expid[i]]['quantiles'][iqtl] = \
+        wisoaprt_epe[expid[i]]['masked_data']['original'].quantile(
+            quantiles[iqtl], dim='time', skipna=True).compute()
+    
+    #-------- get mask
+    wisoaprt_epe[expid[i]]['mask'][iqtl] = \
+        (wisoaprt_alltime[expid[i]]['daily'].sel(wisotype=1).copy() >= \
+            wisoaprt_epe[expid[i]]['quantiles'][iqtl]).compute()
+
+import os, psutil
+process = psutil.Process(os.getpid())
+print(process.memory_info().rss / 2**30)
+
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe.pkl',
+    'wb') as f:
+    pickle.dump(wisoaprt_epe[expid[i]], f)
+
+
+'''
+#-------------------------------- check
+wisoaprt_epe = {}
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe.pkl',
+    'rb') as f:
+    wisoaprt_epe[expid[i]] = pickle.load(f)
+
+ilat=48
+ilon=90
+
+#-------- check ['masked_data']['original']
+res001 = wisoaprt_epe[expid[i]]['masked_data']['original'][:, ilat, ilon]
+res002 = wisoaprt_alltime[expid[i]]['daily'][:, 0, ilat, ilon].copy().where(
+    wisoaprt_alltime[expid[i]]['daily'][:, 0, ilat, ilon] >= (0.02 / seconds_per_d),
+    other=np.nan,)
+print((res001[np.isfinite(res001)] == res002[np.isfinite(res002)]).all().values)
+
+for iqtl in quantiles.keys():
+    print('#-------- ' + iqtl)
+    # iqtl = '90%'
+    #-------- check ['quantiles'][iqtl]
+    res01 = wisoaprt_epe[expid[i]]['quantiles'][iqtl][ilat, ilon].values
+    res02 = np.nanquantile(res002, quantiles[iqtl],)
+    print(res01 == res02)
+    #-------- check ['mask'][iqtl]
+    res11 = wisoaprt_epe[expid[i]]['mask'][iqtl][:, ilat, ilon]
+    res12 = wisoaprt_alltime[expid[i]]['daily'][:, 0, ilat, ilon] >= res02
+    print((res11 == res12).all().values)
+
+
+
+
+#-------------------------------- check size information
+wisoaprt_epe = {}
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe.pkl',
+    'rb') as f:
+    wisoaprt_epe[expid[i]] = pickle.load(f)
+
+from pympler import asizeof
+asizeof.asizeof(wisoaprt_epe) / 2**30
+asizeof.asizeof(wisoaprt_epe[expid[i]]['quantiles']) / 2**30
+asizeof.asizeof(wisoaprt_epe[expid[i]]['mask']) / 2**30
+asizeof.asizeof(wisoaprt_epe[expid[i]]['frc_aprt']) / 2**30
+asizeof.asizeof(wisoaprt_alltime) / 2**30
+
+#-------------------------------- previous code
+
+wisoaprt_epe = {}
+wisoaprt_epe[expid[i]] = {}
+wisoaprt_epe[expid[i]]['quantiles'] = {}
+wisoaprt_epe[expid[i]]['mask'] = {}
+wisoaprt_epe[expid[i]]['masked_data'] = {}
 # wisoaprt_epe[expid[i]]['masked_data_ocean'] = {}
-wisoaprt_epe[expid[i]]['sum_aprt'] = {}
+# wisoaprt_epe[expid[i]]['sum_aprt'] = {}
 # wisoaprt_epe[expid[i]]['sum_aprt_ocean'] = {}
-wisoaprt_epe[expid[i]]['frc_aprt'] = {}
+# wisoaprt_epe[expid[i]]['frc_aprt'] = {}
 
 # set a threshold of 0.02 mm/d
 wisoaprt_epe[expid[i]]['masked_data']['original'] = \
@@ -169,13 +256,13 @@ for iqtl in quantiles.keys():
         (wisoaprt_alltime[expid[i]]['daily'].sel(wisotype=1).copy() >= \
             wisoaprt_epe[expid[i]]['quantiles'][iqtl]).compute()
     
-    #-------- filtered below-threshold aprt
-    if (iqtl == '90%'):
-        wisoaprt_epe[expid[i]]['masked_data'][iqtl] = \
-            wisoaprt_alltime[expid[i]]['daily'].sel(wisotype=1).copy().where(
-                wisoaprt_epe[expid[i]]['mask'][iqtl],
-                other=0,
-            ).compute()
+    # #-------- filtered below-threshold aprt
+    # if (iqtl == '90%'):
+    #     wisoaprt_epe[expid[i]]['masked_data'][iqtl] = \
+    #         wisoaprt_alltime[expid[i]]['daily'].sel(wisotype=1).copy().where(
+    #             wisoaprt_epe[expid[i]]['mask'][iqtl],
+    #             other=0,
+    #         ).compute()
     # #-------- filtered below-threshold ocean aprt
     # wisoaprt_epe[expid[i]]['masked_data_ocean'][iqtl] = \
     #     ocean_aprt_alltime[expid[i]]['daily'].sel(var_names='lat').copy().where(
@@ -185,36 +272,36 @@ for iqtl in quantiles.keys():
 
 #-------- calculate sum of pre
 
-for ialltime in ['am', 'sm', 'mm', 'ann', 'sea', 'mon']:
-    wisoaprt_epe[expid[i]]['sum_aprt'][ialltime] = {}
-    # wisoaprt_epe[expid[i]]['sum_aprt_ocean'][ialltime] = {}
+# for ialltime in ['am', 'sm', 'mm', 'ann', 'sea', 'mon']:
+#     wisoaprt_epe[expid[i]]['sum_aprt'][ialltime] = {}
+#     # wisoaprt_epe[expid[i]]['sum_aprt_ocean'][ialltime] = {}
 
-for iqtl in ['90%', 'original']: # wisoaprt_epe[expid[i]]['masked_data'].keys():
-    #-------- sum of wisoaprt_epe[expid[i]]['masked_data']
-    # am
-    wisoaprt_epe[expid[i]]['sum_aprt']['am'][iqtl] = \
-        wisoaprt_epe[expid[i]]['masked_data'][iqtl].mean(
-            dim='time', skipna=True).compute()
-    # sm
-    wisoaprt_epe[expid[i]]['sum_aprt']['sm'][iqtl] = \
-        wisoaprt_epe[expid[i]]['masked_data'][iqtl].groupby(
-            'time.season').mean(skipna=True).compute()
-    # mm
-    wisoaprt_epe[expid[i]]['sum_aprt']['mm'][iqtl] = \
-        wisoaprt_epe[expid[i]]['masked_data'][iqtl].groupby(
-            'time.month').mean(skipna=True).compute()
-    # ann
-    wisoaprt_epe[expid[i]]['sum_aprt']['ann'][iqtl] = \
-        wisoaprt_epe[expid[i]]['masked_data'][iqtl].resample(
-            {'time': '1Y'}).mean(skipna=True).compute()
-    # sea
-    wisoaprt_epe[expid[i]]['sum_aprt']['sea'][iqtl] = \
-        wisoaprt_epe[expid[i]]['masked_data'][iqtl].resample(
-            {'time': 'Q-FEB'}).mean(skipna=True)[1:-1].compute()
-    # mon
-    wisoaprt_epe[expid[i]]['sum_aprt']['mon'][iqtl] = \
-        wisoaprt_epe[expid[i]]['masked_data'][iqtl].resample(
-            {'time': '1M'}).mean(skipna=True).compute()
+# for iqtl in ['90%', 'original']: # wisoaprt_epe[expid[i]]['masked_data'].keys():
+#     #-------- sum of wisoaprt_epe[expid[i]]['masked_data']
+#     # am
+#     wisoaprt_epe[expid[i]]['sum_aprt']['am'][iqtl] = \
+#         wisoaprt_epe[expid[i]]['masked_data'][iqtl].mean(
+#             dim='time', skipna=True).compute()
+#     # sm
+#     wisoaprt_epe[expid[i]]['sum_aprt']['sm'][iqtl] = \
+#         wisoaprt_epe[expid[i]]['masked_data'][iqtl].groupby(
+#             'time.season').mean(skipna=True).compute()
+#     # mm
+#     wisoaprt_epe[expid[i]]['sum_aprt']['mm'][iqtl] = \
+#         wisoaprt_epe[expid[i]]['masked_data'][iqtl].groupby(
+#             'time.month').mean(skipna=True).compute()
+#     # ann
+#     wisoaprt_epe[expid[i]]['sum_aprt']['ann'][iqtl] = \
+#         wisoaprt_epe[expid[i]]['masked_data'][iqtl].resample(
+#             {'time': '1Y'}).mean(skipna=True).compute()
+#     # sea
+#     wisoaprt_epe[expid[i]]['sum_aprt']['sea'][iqtl] = \
+#         wisoaprt_epe[expid[i]]['masked_data'][iqtl].resample(
+#             {'time': 'Q-FEB'}).mean(skipna=True)[1:-1].compute()
+#     # mon
+#     wisoaprt_epe[expid[i]]['sum_aprt']['mon'][iqtl] = \
+#         wisoaprt_epe[expid[i]]['masked_data'][iqtl].resample(
+#             {'time': '1M'}).mean(skipna=True).compute()
 
 # for iqtl in wisoaprt_epe[expid[i]]['masked_data_ocean'].keys():
 #     #-------- sum of wisoaprt_epe[expid[i]]['masked_data_ocean']
@@ -245,15 +332,15 @@ for iqtl in ['90%', 'original']: # wisoaprt_epe[expid[i]]['masked_data'].keys():
 
 #-------- calculate fraction of pre
 
-for ialltime in ['am', 'sm', 'mm', 'ann', 'sea', 'mon']:
-    wisoaprt_epe[expid[i]]['frc_aprt'][ialltime] = {}
+# for ialltime in ['am', 'sm', 'mm', 'ann', 'sea', 'mon']:
+#     wisoaprt_epe[expid[i]]['frc_aprt'][ialltime] = {}
     
-    for iqtl in ['90%']: # quantiles.keys():
-        # ialltime = 'am'; iqtl = '90%'
-        wisoaprt_epe[expid[i]]['frc_aprt'][ialltime][iqtl] = \
-            wisoaprt_epe[expid[i]]['sum_aprt'][ialltime][iqtl] / \
-                wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1)
-                # wisoaprt_epe[expid[i]]['sum_aprt'][ialltime]['original']
+#     for iqtl in ['90%']: # quantiles.keys():
+#         # ialltime = 'am'; iqtl = '90%'
+#         wisoaprt_epe[expid[i]]['frc_aprt'][ialltime][iqtl] = \
+#             wisoaprt_epe[expid[i]]['sum_aprt'][ialltime][iqtl] / \
+#                 wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1)
+#                 # wisoaprt_epe[expid[i]]['sum_aprt'][ialltime]['original']
 
 with open(
     exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe.pkl',
@@ -261,8 +348,7 @@ with open(
     pickle.dump(wisoaprt_epe[expid[i]], f)
 
 
-'''
-#-------------------------------- check
+#-------------------------------- previous check
 
 wisoaprt_epe = {}
 with open(
@@ -383,12 +469,6 @@ for iqtl in quantiles.keys():
                 # wisoaprt_epe[expid[i]]['sum_aprt'][ialltime]['original'][
                 # :, ilat, ilon]
             print((res411 == res412).all().values)
-
-
-
-
-
-
 
 
 

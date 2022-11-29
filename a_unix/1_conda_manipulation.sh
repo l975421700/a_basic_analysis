@@ -57,7 +57,7 @@ pip install openpyxl
 mamba install -c conda-forge iris -y
 mamba install -c conda-forge xskillscore -y
 mamba install -c conda-forge eofs -y
-
+pip install Pympler
 
 
 '''
