@@ -164,7 +164,7 @@ for iqtl in quantiles_bin.keys():
             epe_var_scaled_pre_alltime[iqtl][ialltime],
             epe_ocean_pre_alltime[iqtl][ialltime],
             min_sf, max_sf,
-            var_name, prefix = 'epe_weighted_',
+            var_name, prefix = 'epe_weighted_', threshold = 0,
         )
     
     del epe_var_scaled_pre[iqtl], epe_ocean_pre[iqtl], epe_var_scaled_pre_alltime[iqtl], epe_ocean_pre_alltime[iqtl]

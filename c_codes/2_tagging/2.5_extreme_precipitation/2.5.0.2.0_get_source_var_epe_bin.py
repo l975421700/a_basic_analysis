@@ -11,10 +11,10 @@ ifile_end   = 720 # 1080
 
 ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
 
-var_name  = 'sst'
-itag      = 7
-min_sf    = 268.15
-max_sf    = 318.15
+# var_name  = 'sst'
+# itag      = 7
+# min_sf    = 268.15
+# max_sf    = 318.15
 
 # var_name  = 'lat'
 # itag      = 5
@@ -36,10 +36,10 @@ max_sf    = 318.15
 # min_sf    = -1
 # max_sf    = 1
 
-# var_name  = 'coslon'
-# itag      = 12
-# min_sf    = -1
-# max_sf    = 1
+var_name  = 'coslon'
+itag      = 12
+min_sf    = -1
+max_sf    = 1
 
 print(var_name)
 # -----------------------------------------------------------------------------
@@ -164,7 +164,7 @@ for iqtl in quantiles_bin.keys():
             epe_var_scaled_pre_alltime[iqtl][ialltime],
             epe_ocean_pre_alltime[iqtl][ialltime],
             min_sf, max_sf,
-            var_name, prefix = 'epe_weighted_',
+            var_name, prefix = 'epe_weighted_', threshold = 0,
         )
     
     del epe_var_scaled_pre[iqtl], epe_ocean_pre[iqtl], epe_var_scaled_pre_alltime[iqtl], epe_ocean_pre_alltime[iqtl]
@@ -257,7 +257,7 @@ for ivar in np.arange(2, 6, 1):
                 epe_var_scaled_pre_alltime[iqtl][ialltime],
                 epe_ocean_pre_alltime[iqtl][ialltime],
                 min_sfs[ivar], max_sfs[ivar],
-                var_names[ivar], prefix = 'epe_weighted_',
+                var_names[ivar], prefix = 'epe_weighted_', threshold = 0,
             ).values
             
             with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_weighted_' + var_names[ivar] + '_binned.pkl',

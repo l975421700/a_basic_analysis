@@ -1,8 +1,8 @@
 #!/bin/bash
-#SBATCH --time=12:00:00
-#SBATCH --partition=fat
+#SBATCH --time=01:00:00
+#SBATCH --partition=mpp120
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=28
+#SBATCH --cpus-per-task=36
 #SBATCH -o %A_job.out
 #SBATCH -e %A_job.err
 
@@ -10,7 +10,7 @@ source /home/ollie/qigao001/miniconda3/bin/activate deepice
 
 cd $WORK
 
-python "/work/ollie/qigao001/a_basic_analysis/c_codes/0_basics/0.1.3_large_memory.py"
+python "/work/ollie/qigao001/a_basic_analysis/c_codes/2_tagging/2.5_extreme_precipitation/2.5.0.2.2_get_transport_distance_epe_bin.py"
 
 #Xsrun  I know what I am doing
 

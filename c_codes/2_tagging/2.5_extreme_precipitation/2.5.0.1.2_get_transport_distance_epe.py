@@ -135,7 +135,7 @@ print(begin_time)
 for iqtl in epe_weighted_lon[expid[i]].keys(): # ['90%', '95%']:
     transport_distance_epe[expid[i]][iqtl] = {}
     
-    for ialltime in epe_weighted_lon[expid[i]][iqtl].keys():
+    for ialltime in ['ann', 'am']:
         print(iqtl + ' - ' + ialltime)
         transport_distance_epe[expid[i]][iqtl][ialltime] = \
             epe_weighted_lat[expid[i]][iqtl][ialltime].copy().rename(

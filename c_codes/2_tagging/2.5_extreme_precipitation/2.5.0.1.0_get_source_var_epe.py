@@ -1,6 +1,6 @@
 
 
-exp_odir = '/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_m_416_4.9',
     'pi_m_502_5.0',
@@ -16,10 +16,10 @@ ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
 # min_sf    = 268.15
 # max_sf    = 318.15
 
-var_name  = 'lat'
-itag      = 5
-min_sf    = -90
-max_sf    = 90
+# var_name  = 'lat'
+# itag      = 5
+# min_sf    = -90
+# max_sf    = 90
 
 # var_name  = 'rh2m'
 # itag      = 8
@@ -36,10 +36,10 @@ max_sf    = 90
 # min_sf    = -1
 # max_sf    = 1
 
-# var_name  = 'coslon'
-# itag      = 12
-# min_sf    = -1
-# max_sf    = 1
+var_name  = 'coslon'
+itag      = 12
+min_sf    = -1
+max_sf    = 1
 
 print(var_name)
 # -----------------------------------------------------------------------------
@@ -161,7 +161,7 @@ for iqtl in quantiles.keys():
             epe_var_scaled_pre_alltime[iqtl][ialltime],
             epe_ocean_pre_alltime[iqtl][ialltime],
             min_sf, max_sf,
-            var_name, prefix = 'epe_weighted_',
+            var_name, prefix = 'epe_weighted_', threshold = 0,
         )
     
     del epe_var_scaled_pre[iqtl], epe_ocean_pre[iqtl], epe_var_scaled_pre_alltime[iqtl], epe_ocean_pre_alltime[iqtl]
@@ -241,7 +241,7 @@ for ivar in range(6):
                 epe_var_scaled_pre_alltime[iqtl][ialltime],
                 epe_ocean_pre_alltime[iqtl][ialltime],
                 min_sfs[ivar], max_sfs[ivar],
-                var_names[ivar], prefix = 'epe_weighted_',
+                var_names[ivar], prefix = 'epe_weighted_', threshold = 0,
             ).values
             
             res02 = epe_weighted_var[iqtl][ialltime].values
