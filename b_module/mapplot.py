@@ -803,7 +803,7 @@ cbar = fig.colorbar(
     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
     pad=0.02, fraction=0.2,
     )
-cbar.ax.set_xlabel('1st line\n2nd line', linespacing=2)
+cbar.ax.set_xlabel('1st line\n2nd line', linespacing=1.5)
 fig.savefig('figures/trial.png')
 
 
@@ -870,7 +870,7 @@ cbar = fig.colorbar(
     orientation="horizontal", shrink=0.5, ticks=pltticks, extend='max',
     anchor=(0.5, -0.3),
     )
-cbar.ax.set_xlabel('TEXT\nTEXT', linespacing=2)
+cbar.ax.set_xlabel('TEXT\nTEXT', linespacing=1.5)
 
 
 fig.subplots_adjust(left=0.04, right = 0.99, bottom = 0.12, top = 0.96)
@@ -934,6 +934,54 @@ fig.savefig('figures/trial.png')
 #     theta1=310, theta2=70,
 #     lw=1, linestyle=':', color='black', fill=False, zorder=2)
 # ax.add_patch(indian_arc)
+
+#-------------------------------- plot subpanels with separate colorbars
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    0, 100, 10, 20, cmap='Blues', reversed=False)
+
+nrow = 2
+ncol = 4
+
+wspace = 0.02
+hspace = 0.12
+fm_left = 0.02
+fm_bottom = hspace / nrow
+fm_right = 0.98
+fm_top = 0.98
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 7.8*nrow]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    )
+
+ipanel=0
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(
+            northextent=-60, ax_org = axs[irow, jcol])
+        
+        plt.text(
+            0.05, 1, panel_labels[ipanel],
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        ipanel += 1
+        
+        cbar = fig.colorbar(
+            cm.ScalarMappable(norm=pltnorm, cmap=pltcmp),
+            ax=axs[irow, jcol], aspect=30,
+            pad=0.05,
+            orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
+            # anchor=(0.5, -0.1),
+            )
+        cbar.ax.set_xlabel('TEXT\nTEXT', linespacing=1.5)
+
+fig.subplots_adjust(
+    left=fm_left, right = fm_right, bottom = fm_bottom, top = fm_top,
+    wspace=wspace, hspace=hspace,
+    )
+
+fig.savefig('figures/trial.png')
 
 '''
 # endregion
