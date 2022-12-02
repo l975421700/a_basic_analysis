@@ -30,7 +30,6 @@ from scipy.stats import circstd
 import cmip6_preprocessing.preprocessing as cpp
 
 # plot
-import proplot as pplt
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm, ListedColormap
@@ -1242,5 +1241,203 @@ np.max(distances)
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# region import EC reconstruction of SAT and simulations
+
+#-------- import simulations
+with open('scratch/cmip6/lig/lig_tas_alltime.pkl', 'rb') as f:
+    lig_tas_alltime = pickle.load(f)
+with open('scratch/cmip6/lig/pi_tas_alltime.pkl', 'rb') as f:
+    pi_tas_alltime = pickle.load(f)
+
+models=sorted(lig_tas_alltime.keys())
+
+#-------- import EC reconstruction
+ec_sst_rec = {}
+ec_sst_rec['original'] = pd.read_excel(
+    'data_sources/LIG/mmc1.xlsx',
+    sheet_name='Capron et al. 2017', header=0, skiprows=12, nrows=47,
+    usecols=['Station', 'Latitude', 'Longitude', 'Area', 'Type',
+             '127 ka Median PIAn [°C]', '127 ka 2s PIAn [°C]'])
+
+ec_sst_rec['AIS_am'] = ec_sst_rec['original'].loc[
+    ec_sst_rec['original']['Area']=='Antarctica',]
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region extract indices
+
+loc_indices_rec_ec_atmos = {}
+
+for model in models:
+    # model = 'HadGEM3-GC31-LL'
+    print('#-------- ' + model)
+    
+    loc_indices_rec_ec_atmos[model] = {}
+    
+    lon = lig_tas_alltime[model]['am'].lon.values
+    lat = lig_tas_alltime[model]['am'].lat.values
+    
+    for istation in ec_sst_rec['AIS_am'].index:
+        # istation = ec_sst_rec['AIS_am'].index[0]
+        station = ec_sst_rec['AIS_am'].Station[istation]
+        print('#---- ' + str(istation) + ': ' + station)
+        
+        slon = ec_sst_rec['AIS_am'].Longitude[istation]
+        slat = ec_sst_rec['AIS_am'].Latitude[istation]
+        
+        loc_indices_rec_ec_atmos[model][station] = \
+            find_ilat_ilon_general(slat, slon, lat, lon)
+
+with open('scratch/cmip6/lig/loc_indices_rec_ec_atmos.pkl', 'wb') as f:
+    pickle.dump(loc_indices_rec_ec_atmos, f)
+
+
+'''
+#---------------- check
+from haversine import haversine
+with open('scratch/cmip6/lig/loc_indices_rec_ec_atmos.pkl', 'rb') as f:
+    loc_indices_rec_ec_atmos = pickle.load(f)
+
+for model in models:
+    # model = 'HadGEM3-GC31-LL'
+    print('#-------------------------------- ' + model)
+    
+    lon = lig_tas_alltime[model]['am'].lon.values
+    lat = lig_tas_alltime[model]['am'].lat.values
+    
+    for istation in ec_sst_rec['AIS_am'].index:
+        # istation = 10
+        station = ec_sst_rec['AIS_am'].Station[istation]
+        print('#---------------- ' + str(istation) + ': ' + station)
+        
+        slon = ec_sst_rec['AIS_am'].Longitude[istation]
+        slat = ec_sst_rec['AIS_am'].Latitude[istation]
+        
+        distance = haversine(
+            [slat, slon],
+            [lat[loc_indices_rec_ec_atmos[model][station][0],
+                 loc_indices_rec_ec_atmos[model][station][1]],
+            lon[loc_indices_rec_ec_atmos[model][station][0],
+                 loc_indices_rec_ec_atmos[model][station][1]]],
+            normalize=True,)
+        
+        if (distance > 100):
+            print(np.round(distance, 0))
+
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region extract simulated and reconstructed LIG-PI am and summer SST : MC&JH
+
+with open('scratch/cmip6/lig/loc_indices_rec_ec_atmos.pkl', 'rb') as f:
+    loc_indices_rec_ec_atmos = pickle.load(f)
+
+obs_sim_lig_pi_ais_tas = pd.DataFrame(columns=(
+    'stations', 'models',
+    'slat', 'slon', 'glat', 'glon',
+    'obs_lig_pi', 'obs_lig_pi_2s', 'sim_lig_pi', 'sim_lig_pi_2s',
+    'sim_obs_lig_pi', 'sim_obs_lig_pi_2s', ))
+
+for istation in ec_sst_rec['AIS_am'].index:
+    # istation = ec_sst_rec['AIS_am'].index[0]
+    station = ec_sst_rec['AIS_am'].Station[istation]
+    
+    print('#---- ' + str(istation) + ': ' + station)
+    
+    slat = ec_sst_rec['AIS_am'].Latitude[istation]
+    slon = ec_sst_rec['AIS_am'].Longitude[istation]
+    obs_lig_pi = ec_sst_rec['AIS_am']['127 ka Median PIAn [°C]'][istation]
+    obs_lig_pi_2s = ec_sst_rec['AIS_am']['127 ka 2s PIAn [°C]'][istation]
+    
+    for model in models:
+        # model = 'ACCESS-ESM1-5'
+        # model = 'AWI-ESM-1-1-LR'
+        # model = 'HadGEM3-GC31-LL'
+        print(model)
+        lon = lig_tas_alltime[model]['am'].lon.values
+        lat = lig_tas_alltime[model]['am'].lat.values
+        
+        if (lon.shape == lig_tas_alltime[model]['am'].shape):
+            iind0 = loc_indices_rec_ec_atmos[model][station][0]
+            iind1 = loc_indices_rec_ec_atmos[model][station][1]
+        else:
+            print('shape differs')
+            iind0 = loc_indices_rec_ec_atmos[model][station][1]
+            iind1 = loc_indices_rec_ec_atmos[model][station][0]
+        
+        glat = lat[loc_indices_rec_ec_atmos[model][station][0],
+                   loc_indices_rec_ec_atmos[model][station][1]]
+        glon = lon[loc_indices_rec_ec_atmos[model][station][0],
+                   loc_indices_rec_ec_atmos[model][station][1]]
+        sim_lig_pi = \
+            lig_tas_alltime[model]['am'][iind0, iind1].values - \
+                pi_tas_alltime[model]['am'][iind0, iind1].values
+        sigma1 = lig_tas_alltime[model]['ann'][
+            :, iind0, iind1].std(ddof=1).values
+        sigma2 = pi_tas_alltime[model]['ann'][
+            :, iind0, iind1].std(ddof=1).values
+        sim_lig_pi_2s = (sigma1**2 + sigma2**2)**0.5 * 2
+        
+        sim_obs_lig_pi = sim_lig_pi - obs_lig_pi
+        sim_obs_lig_pi_2s=((obs_lig_pi_2s/2)**2 + (sim_lig_pi_2s/2)**2)**0.5 * 2
+        
+        obs_sim_lig_pi_ais_tas = pd.concat([
+            obs_sim_lig_pi_ais_tas,
+            pd.DataFrame(data={
+                'stations': station,
+                'models': model,
+                'slat': slat,
+                'slon': slon,
+                'glat': glat,
+                'glon': glon,
+                'obs_lig_pi': obs_lig_pi,
+                'obs_lig_pi_2s': obs_lig_pi_2s,
+                'sim_lig_pi': sim_lig_pi,
+                'sim_lig_pi_2s': sim_lig_pi_2s,
+                'sim_obs_lig_pi': sim_obs_lig_pi,
+                'sim_obs_lig_pi_2s': sim_obs_lig_pi_2s,
+                }, index=[0])], ignore_index=True,)
+
+
+with open('scratch/cmip6/lig/obs_sim_lig_pi_ais_tas.pkl', 'wb') as f:
+    pickle.dump(obs_sim_lig_pi_ais_tas, f)
+
+
+
+
+'''
+#-------------------------------- check
+
+with open('scratch/cmip6/lig/obs_sim_lig_pi_ais_tas.pkl', 'rb') as f:
+    obs_sim_lig_pi_ais_tas = pickle.load(f)
+
+site_pairs = [(x, y) for x, y in zip (
+    obs_sim_lig_pi_ais_tas.slat, obs_sim_lig_pi_ais_tas.slon)]
+grid_pairs = [(x, y) for x, y in zip (
+    obs_sim_lig_pi_ais_tas.glat, obs_sim_lig_pi_ais_tas.glon)]
+
+from haversine import haversine_vector
+distances = haversine_vector(
+    site_pairs, grid_pairs, normalize=True,
+    )
+np.max(distances)
+
+
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
 
 

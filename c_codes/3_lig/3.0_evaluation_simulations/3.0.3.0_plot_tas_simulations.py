@@ -101,73 +101,52 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-with open('scratch/cmip6/lig/lig_sic_regrid_alltime.pkl', 'rb') as f:
-    lig_sic_regrid_alltime = pickle.load(f)
 
-with open('scratch/cmip6/lig/lig_sic_alltime.pkl', 'rb') as f:
-    lig_sic_alltime = pickle.load(f)
+with open('scratch/cmip6/lig/lig_tas_alltime.pkl', 'rb') as f:
+    lig_tas_alltime = pickle.load(f)
+with open('scratch/cmip6/lig/pi_tas_alltime.pkl', 'rb') as f:
+    pi_tas_alltime = pickle.load(f)
 
-with open('scratch/cmip6/lig/lig_sic.pkl', 'rb') as f:
-    lig_sic = pickle.load(f)
+models=sorted(lig_tas_alltime.keys())
 
-models=sorted(lig_sic_regrid_alltime.keys())
 
-cdo_area1deg = xr.open_dataset('scratch/others/one_degree_grids_cdo_area.nc')
+#-------- import EC reconstruction
+ec_sst_rec = {}
+# 47 cores
+ec_sst_rec['original'] = pd.read_excel(
+    'data_sources/LIG/mmc1.xlsx',
+    sheet_name='Capron et al. 2017', header=0, skiprows=12, nrows=47,
+    usecols=['Station', 'Latitude', 'Longitude', 'Area', 'Type',
+             '127 ka Median PIAn [°C]', '127 ka 2s PIAn [°C]'])
 
-with open('scratch/cmip6/lig/chadwick_interp.pkl', 'rb') as f:
-    chadwick_interp = pickle.load(f)
+ec_sst_rec['AIS_am'] = ec_sst_rec['original'].loc[
+    ec_sst_rec['original']['Area']=='Antarctica',]
 
-with open('scratch/cmip6/lig/obs_sim_lig_so_sic_mc.pkl', 'rb') as f:
-    obs_sim_lig_so_sic_mc = pickle.load(f)
+with open('scratch/cmip6/lig/obs_sim_lig_pi_ais_tas.pkl', 'rb') as f:
+    obs_sim_lig_pi_ais_tas = pickle.load(f)
 
 
 '''
+with open('scratch/cmip6/lig/lig_tas.pkl', 'rb') as f:
+    lig_tas = pickle.load(f)
+with open('scratch/cmip6/lig/pi_tas.pkl', 'rb') as f:
+    pi_tas = pickle.load(f)
 
-chadwick_interp.sic_sep
-np.round(np.sqrt(np.nanmean((chadwick_interp.sic_sep)**2)), 0)
-
-
-
-with open('scratch/cmip6/lig/amip_pi_sic_regrid.pkl', 'rb') as f:
-    amip_pi_sic_regrid = pickle.load(f)
-
-
-with open('scratch/cmip6/lig/pi_sic_regrid_alltime.pkl', 'rb') as f:
-    pi_sic_regrid_alltime = pickle.load(f)
-with open('scratch/cmip6/lig/pi_sic_alltime.pkl', 'rb') as f:
-    pi_sic_alltime = pickle.load(f)
-with open('scratch/cmip6/lig/pi_sic.pkl', 'rb') as f:
-    pi_sic = pickle.load(f)
-with open('scratch/cmip6/lig/lig_sst.pkl', 'rb') as f:
-    lig_sst = pickle.load(f)
-
-chadwick2021 = pd.read_csv(
-    'data_sources/LIG/Chadwick-etal_2021.tab', sep='\t', header=0, skiprows=43)
-indices = [10, 31, 45, 62, 75, 90, 106, 127, 140]
-
-
-chadwick2021.Event.iloc[
-    np.where(np.floor(
-        chadwick2021['Age [ka BP] (Age model, EDC3 (EPICA Ice Do...)']
-        ) == 127)]
-
-# 7 cores
-with open('scratch/cmip6/lig/lig_sic_regrid_alltime.pkl', 'rb') as f:
-    lig_sic_regrid_alltime = pickle.load(f)
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region plot lig Sep sic
+# region plot lig-pi am sst
 
-output_png = 'figures/7_lig/7.0_boundary_conditions/7.0.1_sic/7.0.1.0 lig sic sep multiple models.png'
-cbar_label = 'LIG September SIC [$\%$]'
+
+output_png = 'figures/7_lig/7.0_boundary_conditions/7.0.2_tas/7.0.2.0 lig-pi tas am multiple models.png'
+
+cbar_label = 'LIG - PI annual mean SAT [$°C$]'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=0, cm_max=100, cm_interval1=10, cm_interval2=20, cmap='Blues',
-    reversed=False)
+    cm_min=-3.5, cm_max=3.5, cm_interval1=0.5, cm_interval2=0.5, cmap='BrBG',)
 
 nrow = 3
 ncol = 4
@@ -178,11 +157,12 @@ fig, axs = plt.subplots(
     subplot_kw={'projection': ccrs.SouthPolarStereo()},
     gridspec_kw={'hspace': 0.12, 'wspace': 0.02},)
 
+
 ipanel=0
 for irow in range(nrow):
     for jcol in range(ncol):
         axs[irow, jcol] = hemisphere_plot(
-            northextent=-50, ax_org = axs[irow, jcol])
+            northextent=-60, ax_org = axs[irow, jcol])
         plt.text(
             0, 0.95, panel_labels[ipanel],
             transform=axs[irow, jcol].transAxes,
@@ -190,30 +170,35 @@ for irow in range(nrow):
         ipanel += 1
         
         axs[irow, jcol].scatter(
-            x = chadwick_interp.lon,
-            y = chadwick_interp.lat,
-            c = chadwick_interp.sic_sep,
+            x = ec_sst_rec['AIS_am'].Longitude,
+            y = ec_sst_rec['AIS_am'].Latitude,
+            c = ec_sst_rec['AIS_am']['127 ka Median PIAn [°C]'],
             s=10, lw=0.3, marker='o', edgecolors = 'black', zorder=2,
             norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
+
 for irow in range(nrow):
     for jcol in range(ncol):
+        # irow = 0
+        # jcol = 0
         model = models[jcol + ncol * irow]
         # model = 'GISS-E2-1-G'
-        # model = 'NorESM2-LM'
+        # model = 'ACCESS-ESM1-5'
         # model = 'HadGEM3-GC31-LL'
+        # model = 'CNRM-CM6-1'
+        # model = 'AWI-ESM-1-1-LR'
         print(model)
         
-        if (model != 'NorESM2-LM'):
-            lon = lig_sic[model].lon.values
-            lat = lig_sic[model].lat.values
-            plt_data = lig_sic_alltime[model]['mm'].sel(month=9).values
-            if (model == 'HadGEM3-GC31-LL'):
-                plt_data *= 100
-        else:
-            lon = lig_sic_regrid_alltime[model]['am'].lon.values
-            lat = lig_sic_regrid_alltime[model]['am'].lat.values
-            plt_data = lig_sic_regrid_alltime[model]['mm'].sel(month=9).values
+        plt_data = lig_tas_alltime[model]['am'].values - \
+            pi_tas_alltime[model]['am'].values
+        
+        ann_data_lig = lig_tas_alltime[model]['ann']
+        ann_data_pi  = pi_tas_alltime[model]['ann']
+        
+        ttest_fdr_res = ttest_fdr_control(ann_data_lig, ann_data_pi,)
+        
+        lon = pi_tas_alltime[model]['am'].lon
+        lat = pi_tas_alltime[model]['am'].lat
         
         if not (lon.shape == plt_data.shape):
             lon = lon.transpose()
@@ -221,54 +206,57 @@ for irow in range(nrow):
         
         plt_mesh = axs[irow, jcol].pcolormesh(
             lon, lat, plt_data,
-            norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+        axs[irow, jcol].scatter(
+            x=lon.values[ttest_fdr_res], y=lat.values[ttest_fdr_res],
+            s=0.3, c='k', marker='.', edgecolors='none',
+            transform=ccrs.PlateCarree(),
+            )
+        
+        rmse = np.sqrt(np.nanmean((obs_sim_lig_pi_ais_tas[
+            obs_sim_lig_pi_ais_tas.models == model
+            ].sim_obs_lig_pi)**2))
         
         plt.text(
-            0.5, 1.05, model + ': ' + \
-                str(np.round(np.sqrt(np.nanmean((obs_sim_lig_so_sic_mc[
-                    (obs_sim_lig_so_sic_mc.models == model)
-                    ].sim_obs_lig)**2)), 0)),
+            0.5, 1.05,
+            model + ': ' + str(np.round(rmse, 1)),
             transform=axs[irow, jcol].transAxes,
             ha='center', va='center', rotation='horizontal')
 
 cbar = fig.colorbar(
-    plt_mesh, ax=axs, aspect=40,
-    orientation="horizontal", shrink=0.75, ticks=pltticks, extend='neither',
+    plt_mesh, ax=axs, aspect=40, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.75, ticks=pltticks, extend='both',
     anchor=(0.5, -0.3),
     )
 cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
 cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
+
 fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom, top = 0.97)
 fig.savefig(output_png)
-
-
 
 
 '''
 nrow = 3
 ncol = 4
+
 for irow in range(nrow):
     for jcol in range(ncol):
+        # irow = 0
+        # jcol = 0
         model = models[jcol + ncol * irow]
-        print(
-            model + ': ' + \
-                str(np.round(np.sqrt(np.nanmean((obs_sim_lig_so_sic_mc[
-                    (obs_sim_lig_so_sic_mc.models == model)
-                    ].sim_obs_lig)**2)), 0)))
+        
+        rmse = np.sqrt(np.nanmean((obs_sim_lig_pi_ais_tas[
+            obs_sim_lig_pi_ais_tas.models == model
+            ].sim_obs_lig_pi)**2))
+        
+        print(model + ': ' + str(np.round(rmse, 1)))
 
 
 
-        if (np.isnan(lon).sum() == 0):
-        else:
-            axs[irow, jcol].contourf(
-                lon, lat, plt_data,
-                norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-
+model = 'HadGEM3-GC31-LL'
+regrid(lig_sst_alltime[model]['am'], ds_out = pi_sst[model]).to_netcdf('test.nc')
 '''
 # endregion
 # -----------------------------------------------------------------------------
-
-
-
 
 

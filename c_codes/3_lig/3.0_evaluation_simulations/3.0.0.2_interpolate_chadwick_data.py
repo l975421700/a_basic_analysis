@@ -30,7 +30,6 @@ from scipy.stats import circstd
 import cmip6_preprocessing.preprocessing as cpp
 
 # plot
-import proplot as pplt
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm, ListedColormap
