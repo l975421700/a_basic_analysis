@@ -48,6 +48,7 @@ plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
 import matplotlib.patches as mpatches
+from matplotlib import patches
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -120,6 +121,7 @@ lon_2d, lat_2d = np.meshgrid(lon, lat,)
 major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
 major_ice_core_site = major_ice_core_site.loc[
     major_ice_core_site['age (kyr)'] > 120, ]
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
 '''
 '''
@@ -192,6 +194,162 @@ cbar.ax.set_xlabel('Fraction of annual mean precipitation from\nOpen ocean [%]',
 fig.savefig(output_png)
 
 
+#-------------------------------- all figures
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.4_precipitation/6.1.4.0_aprt/6.1.4.0.0_aprt_frc/6.1.4.0.0 ' + expid[i] + ' aprt_frc am eight regions.png'
+
+regions = ['Southern Ocean', 'Atlantic Ocean', 'Indian Ocean', 'Pacific Ocean',
+           'Land excl. AIS', 'AIS', 'SH seaice']
+region_labels = ['Ocean south of 50$°\;S$',
+                 'Atlantic Ocean', 'Indian Ocean', 'Pacific Ocean',
+                 'Land excl. AIS', 'AIS', 'SH sea ice']
+
+cm_mins = [0, 0, 0, 0, 0, 0, 0]
+cm_maxs = [60, 60, 60, 60, 10, 10, 20]
+cm_interval1s = [5, 5, 5, 5, 1, 1, 2]
+cm_interval2s = [10, 10, 10, 10, 2, 2, 4]
+
+cmaps = ['Blues', 'Blues', 'Blues', 'Blues', 'Purples', 'Purples', 'Greens']
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    0, 100, 10, 20, cmap='Blues', reversed=False)
+
+nrow = 2
+ncol = 4
+
+wspace = 0.02
+hspace = 0.12
+fm_left = 0.02
+fm_bottom = hspace / nrow
+fm_right = 0.98
+fm_top = 0.98
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 7.8*nrow]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    )
+
+ipanel=0
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(
+            northextent=-60, ax_org = axs[irow, jcol])
+        cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, axs[irow, jcol])
+        
+        plt.text(
+            0.05, 1, panel_labels[ipanel],
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        ipanel += 1
+
+for irow in range(nrow):
+  for jcol in range(ncol):
+      # irow = 0; jcol = 0
+      if ((irow != 1) | (jcol != 3)):
+        
+        count = irow * 4 + jcol
+        iregion = regions[count]
+        print(str(count) + ': ' + iregion)
+        
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min=cm_mins[count],
+            cm_max=cm_maxs[count],
+            cm_interval1=cm_interval1s[count],
+            cm_interval2=cm_interval2s[count],
+            cmap=cmaps[count],
+            reversed=False)
+        
+        plt_cmp = axs[irow, jcol].pcolormesh(
+            lon, lat,
+            aprt_frc[iregion]['am'],
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+        
+        if (irow == 0):
+            plt_ctr = axs[irow, jcol].contour(
+                lon, lat, aprt_frc[iregion]['am'], [30],
+                colors = 'red', linewidths=0.5, transform=ccrs.PlateCarree(),)
+            axs[irow, jcol].clabel(
+                plt_ctr, inline=1, colors='red', fmt=remove_trailing_zero,
+                levels=[30], inline_spacing=10, fontsize=8,)
+        if ((irow == 1) & (jcol == 0)):
+            plt_ctr = axs[irow, jcol].contour(
+                lon, lat, aprt_frc[iregion]['am'], [5],
+                colors = 'red', linewidths=0.5, transform=ccrs.PlateCarree(),)
+            axs[irow, jcol].clabel(
+                plt_ctr, inline=1, colors='red', fmt=remove_trailing_zero,
+                levels=[5], inline_spacing=10, fontsize=8,)
+        if ((irow == 1) & (jcol == 2)):
+            plt_ctr = axs[irow, jcol].contour(
+                lon, lat, aprt_frc[iregion]['am'], [10],
+                colors = 'red', linewidths=0.5, transform=ccrs.PlateCarree(),)
+            axs[irow, jcol].clabel(
+                plt_ctr, inline=1, colors='red', fmt=remove_trailing_zero,
+                levels=[10], inline_spacing=10, fontsize=8,)
+        
+        cbar = fig.colorbar(
+            plt_cmp, ax=axs[irow, jcol], aspect=30,
+            orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
+            pad=0.05,
+            )
+        cbar.ax.set_xlabel('Fraction of annual mean precipitation from\n' + region_labels[count] + ' [$\%$]', linespacing=1.5, fontsize=8,)
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    80, 100, 2, 4, cmap='Greens', reversed=False)
+
+plt_cmp = axs[1, 3].pcolormesh(
+    lon, lat,
+    aprt_frc['Atlantic Ocean']['am'] + aprt_frc['Indian Ocean']['am'] + \
+        aprt_frc['Pacific Ocean']['am'] + aprt_frc['Southern Ocean']['am'],
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+plt_ctr = axs[1, 3].contour(
+    lon, lat,
+    aprt_frc['Atlantic Ocean']['am'] + aprt_frc['Indian Ocean']['am'] + \
+        aprt_frc['Pacific Ocean']['am'] + aprt_frc['Southern Ocean']['am'],
+    [90], colors = 'red', linewidths=0.5, transform=ccrs.PlateCarree(),)
+axs[1, 3].clabel(
+    plt_ctr, inline=1, colors='red', fmt=remove_trailing_zero,
+    levels=[90], inline_spacing=10, fontsize=8,)
+
+# Atlantic: [-70, 20] => [70, 160], 90
+atlantic_arc = patches.Arc(
+    [0.5, 0.5], width=1, height=1, angle=0, transform=axs[0, 1].transAxes,
+    theta1=70, theta2=160,
+    lw=2, linestyle='-', color='magenta', fill=False, zorder=3)
+axs[0, 1].add_patch(atlantic_arc)
+
+# Indian: [20, 140] => [310, 70], 150
+indian_arc = patches.Arc(
+    [0.5, 0.5], width=1, height=1, angle=0, transform=axs[0, 2].transAxes,
+    theta1=310, theta2=70,
+    lw=2, linestyle='-', color='magenta', fill=False, zorder=3)
+axs[0, 2].add_patch(indian_arc)
+
+# Pacific: [140, -70] => [160, 310], 150
+pacific_arc = patches.Arc(
+    [0.5, 0.5], width=1, height=1, angle=0, transform=axs[0, 3].transAxes,
+    theta1=160, theta2=310,
+    lw=2, linestyle='-', color='magenta', fill=False, zorder=3)
+axs[0, 3].add_patch(pacific_arc)
+
+cbar = fig.colorbar(
+    plt_cmp, ax=axs[irow, jcol], aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='min',
+    pad=0.05,
+    )
+cbar.ax.set_xlabel(
+    'Fraction of annual mean precipitation from\nOpen ocean [$\%$]',
+    linespacing=1.5, fontsize=8,)
+
+fig.subplots_adjust(
+    left=fm_left, right = fm_right, bottom = fm_bottom, top = fm_top,
+    wspace=wspace, hspace=hspace,
+    )
+
+fig.savefig(output_png)
+
+
+
 '''
 
 '''
@@ -207,7 +365,7 @@ imask = 'AIS'
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.4_precipitation/6.1.4.0_aprt/6.1.4.0.1_aprt_ann_circle/6.1.4.0.1 ' + expid[i] + ' ann circle aprt frc over ' + imask + '.png'
 
-fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 10.5]) / 2.54)
+fig, ax = plt.subplots(1, 1, figsize=np.array([9.3, 10.5]) / 2.54)
 lgd_handles = []
 colors = [
     'salmon', 'darkviolet',
@@ -229,15 +387,15 @@ change_snsbar_width(ax, .7)
 plt.legend(
     handles=lgd_handles,
     labels=[
-        'Southern Ocean: $27.9±1.97$',
-        'SH seaice:           $6.1±0.38$',
-        'Pacific Ocean:    $28.0±1.63$',
-        'Indian Ocean:     $23.2±1.85$',
-        'Atlantic Ocean: $9.8±0.79$',
+        'Ocean south of 50$°\;S$: $27.9±2.0$',
+        'SH sea ice:                  $6.1±0.4$',
+        'Pacific Ocean:            $28.0±1.6$',
+        'Indian Ocean:             $23.2±1.8$',
+        'Atlantic Ocean: $9.8±0.8$',
         'Land excl. AIS: $4.4±0.3$',
-        'AIS:                   $0.6±0.06$',
+        'AIS:                   $0.6±0.1$',
         ],
-    loc=(-0.1, -0.48), handlelength=0.5, handleheight = 0.5,
+    loc=(-0.1, -0.48), handlelength=0.7, handleheight = 0.5,
     frameon = False, ncol=2, handletextpad = 0.5,
     labelspacing = 0.5, columnspacing = 0.5,
     )
@@ -252,6 +410,8 @@ fig.subplots_adjust(left=0.09, right=0.99, bottom=0.32, top=0.98)
 fig.savefig(output_png)
 
 
+
+
 #-------------------------------- ann+std
 
 imask = 'AIS'
@@ -261,7 +421,7 @@ ann_values = aprt_frc_AIS_alltime[imask]['ann'][iwisotype].frc_AIS.values
 am_values  = aprt_frc_AIS_alltime[imask]['am'][iwisotype].frc_AIS.values
 print(iwisotype + ': ' + \
     str(np.round(am_values[0], 1)) + '±' + \
-        str(np.round(ann_values.std(ddof=1), 2)))
+        str(np.round(ann_values.std(ddof=1), 1)))
 
 for itype in range(6):
     iwisotype = list(aprt_frc_AIS_alltime[imask]['ann'].keys())[itype+1]
@@ -278,7 +438,7 @@ for itype in range(6):
     
     print(iwisotype + ': ' + \
         str(np.round(am_values[0], 1)) + '±' + \
-            str(np.round(ann_values.std(ddof=1), 2)))
+            str(np.round(ann_values.std(ddof=1), 1)))
 
 
 

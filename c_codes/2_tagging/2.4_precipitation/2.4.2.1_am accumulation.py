@@ -122,7 +122,7 @@ with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
 major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
 major_ice_core_site = major_ice_core_site.loc[
     major_ice_core_site['age (kyr)'] > 120, ]
-
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
 '''
 acc_recon
@@ -196,8 +196,7 @@ fig, axs = plt.subplots(
 ipanel=0
 for jcol in range(ncol):
     axs[jcol] = hemisphere_plot(northextent=-60, ax_org = axs[jcol])
-    cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat,
-                    axs[jcol])
+    cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
     plt.text(
         0.05, 0.975, panel_labels[ipanel],
         transform=axs[jcol].transAxes,

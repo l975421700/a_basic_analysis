@@ -556,6 +556,42 @@ for isite in stations_sites.Site:
     fig.savefig(output_png)
 
 
+mpl.rc('font', family='Times New Roman', size=10)
+
+Sites = ['EDC', 'Halley']
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.2_pre_source_sites/6.1.7.2.1_frc/6.1.7.2.1 heavy precipitation frc at EDC and Halley.png'
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
+
+for isite in Sites:
+    # isite = 'EDC'
+    ax.plot(
+        wisoaprt_masked_icores[expid[i]][isite]['frc']['am'].quantiles * 100,
+        wisoaprt_masked_icores[expid[i]][isite]['frc']['am'].am * 100,
+        '.-', lw=0.5, markersize=1.5,
+        label=isite,
+        )
+
+ax.legend(
+    loc='lower right', handlelength=2, framealpha = 1, ncol=1,
+    columnspacing=0.5, handletextpad=0.5)
+
+# ax.vlines(
+#     90,
+#     ymin = 0, ymax = 11, lw=0.5, linestyles='--', colors='gray')
+
+ax.set_ylabel('Cumulative precipitation fraction [$\%$]', labelpad=0.5)
+ax.set_ylim(0, 100)
+ax.set_yticks(np.arange(0, 100 + 1e-4, 10))
+ax.invert_yaxis()
+
+ax.set_xlabel('Percentiles [$\%$]')
+ax.set_xlim(0, 100)
+ax.set_xticks(np.arange(0, 100 + 1e-4, 10))
+ax.grid(True, linewidth=0.4, color='lightgray', alpha=0.5, linestyle=':')
+fig.subplots_adjust(left=0.14, right=0.95, bottom=0.15, top=0.97)
+fig.savefig(output_png)
+
 
 '''
 '''

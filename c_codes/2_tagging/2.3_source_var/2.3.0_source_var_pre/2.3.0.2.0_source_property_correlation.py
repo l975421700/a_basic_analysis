@@ -35,6 +35,7 @@ from metpy.interpolate import cross_section
 from statsmodels.stats import multitest
 import pycircstat as circ
 from scipy.stats import linregress
+from scipy.stats import pearsonr
 
 # plot
 import matplotlib as mpl
@@ -191,13 +192,22 @@ for isite in stations_sites.Site:
 
 
 
+for ivar in ['sst', 'rh2m', 'wind10', 'distance']:
+    print('#---------------- ' + ivar)
+    for isite in ['EDC', 'Halley']:
+        print('#-------- ' + isite)
+        for ialltime in ['mon', 'sea', 'ann']:
+            print('#---- ' + ialltime)
+            
+            corr = pearsonr(
+                pre_weighted_var_icores[expid[i]][isite]['lat'][ialltime],
+                pre_weighted_var_icores[expid[i]][isite][ivar][ialltime],
+                ).statistic**2
+            
+            print(np.round(corr, 1))
+
 
 '''
-from scipy.stats import pearsonr
-coeff_deter = pearsonr(
-    pre_weighted_var_icores[expid[i]][isite]['lat']['ann'],
-    pre_weighted_var_icores[expid[i]][isite]['sst']['ann'],
-).statistic**2
 
 # 0.85
 pearsonr(
@@ -432,4 +442,87 @@ for isite in stations_sites.Site:
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region pre_weighted_lat vs. westerlies
+
+wind10_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wind10_alltime.pkl', 'rb') as f:
+    wind10_alltime[expid[i]] = pickle.load(f)
+
+t63_cellarea = xr.open_dataset('scratch/others/land_sea_masks/echam6_t63_cellarea.nc')
+
+
+#-------------------------------- mon relation
+
+b_cellarea = np.broadcast_to(
+    t63_cellarea.cell_area.sel(lat=slice(-45, -55)),
+    wind10_alltime[expid[i]]['mon'].sel(lat=slice(-45, -55)).shape
+)
+
+westerlies_mon = np.average(
+    wind10_alltime[expid[i]]['mon'].sel(lat=slice(-45, -55)),
+    weights = b_cellarea,
+    axis=(1, 2)
+)
+
+isite = 'EDC'
+pearsonr(
+    westerlies_mon,
+    pre_weighted_var_icores[expid[i]][isite]['lat']['mon'],
+    ).statistic
+# -0.45
+
+
+
+#-------------------------------- mm relation
+
+
+b_cellarea = np.broadcast_to(
+    t63_cellarea.cell_area.sel(lat=slice(-45, -55)),
+    wind10_alltime[expid[i]]['mm'].sel(lat=slice(-45, -55)).shape
+)
+
+westerlies_mm = np.average(
+    wind10_alltime[expid[i]]['mm'].sel(lat=slice(-45, -55)),
+    weights = b_cellarea,
+    axis=(1, 2)
+)
+
+isite = 'Halley'
+pearsonr(
+    westerlies_mm,
+    pre_weighted_var_icores[expid[i]][isite]['wind10']['mm'],
+    ).statistic
+# 0.9427280753237633
+
+
+
+#-------------------------------- ann relation
+
+b_cellarea = np.broadcast_to(
+    t63_cellarea.cell_area.sel(lat=slice(-45, -55)),
+    wind10_alltime[expid[i]]['ann'].sel(lat=slice(-45, -55)).shape
+)
+
+westerlies_ann = np.average(
+    wind10_alltime[expid[i]]['ann'].sel(lat=slice(-45, -55)),
+    weights = b_cellarea,
+    axis=(1, 2)
+)
+
+pearsonr(
+    westerlies_ann,
+    pre_weighted_var_icores[expid[i]][isite]['lat']['ann'],
+    ).statistic
+# 0.05301844265636421
+
+pearsonr(
+    westerlies_ann,
+    pre_weighted_var_icores[expid[i]][isite]['wind10']['ann'],
+    ).statistic
+# 0.024436680744233854
+
+# endregion
+# -----------------------------------------------------------------------------
 

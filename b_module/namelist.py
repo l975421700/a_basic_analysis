@@ -74,6 +74,11 @@ panel_labels = ['(a)', '(b)', '(c)', '(d)', '(e)', '(f)', '(g)',
                 '(v)', '(w)', '(x)', '(y)', '(z)',
                 ]
 
+
+ten_sites_names = [
+    'EDC', 'DOME F', 'Vostok', 'EDML', 'WDC',
+    'Rothera', 'Halley', 'Neumayer', 'Law Dome', "Dumont d'Urville"]
+
 # endregion
 # -----------------------------------------------------------------------------
 

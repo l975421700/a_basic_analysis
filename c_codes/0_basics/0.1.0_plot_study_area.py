@@ -109,6 +109,7 @@ from a_basic_analysis.b_module.component_plot import (
 major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
 major_ice_core_site = major_ice_core_site.loc[
     major_ice_core_site['age (kyr)'] > 120, ]
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
 ais_imbie2 = gpd.read_file(
     'data_sources/products/IMBIE_2016_drainage_basins/Rignot_Basins/ANT_IceSheets_IMBIE2/ANT_IceSheets_IMBIE2_v1.6.shp')
@@ -168,8 +169,8 @@ for jcol in range(ncol):
         0, 1.12, panel_labels[ipanel],
         transform=axs[jcol].transAxes,
         ha='center', va='center', rotation='horizontal')
-    cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat,
-                    axs[jcol], s=5)
+    
+    cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
     
     # plot AIS divisions
     plt_wais = ais_imbie2.loc[ais_imbie2.Regions == 'West'].plot(
@@ -183,13 +184,6 @@ for jcol in range(ncol):
         edgecolor='m', facecolor='none', linewidths=1, zorder=2)
     
     ipanel += 1
-
-for irow in range(major_ice_core_site.shape[0]):
-    # irow = 0
-    axs[1].text(
-        major_ice_core_site.lon[irow], major_ice_core_site.lat[irow]+1,
-        major_ice_core_site.Site[irow], transform=ccrs.PlateCarree(),
-        fontsize = 6, color='black')
 
 axs[0].pcolormesh(
     bedmap_tif.x.values,
@@ -240,6 +234,17 @@ fig.savefig(output_png)
 
 
 '''
+    # cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat,
+    #                 axs[jcol], s=5)
+
+# for irow in range(major_ice_core_site.shape[0]):
+#     # irow = 0
+#     axs[1].text(
+#         major_ice_core_site.lon[irow], major_ice_core_site.lat[irow]+1,
+#         major_ice_core_site.Site[irow], transform=ccrs.PlateCarree(),
+#         fontsize = 6, color='black')
+
+
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -250,44 +255,68 @@ fig.savefig(output_png)
 
 major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
 Antarctic_stations = pd.read_csv('data_sources/others/Antarctic_stations.csv')
+stations_sites = pd.concat(
+    [major_ice_core_site[['Site', 'lon', 'lat']],
+     Antarctic_stations[['Site', 'lon', 'lat']],],
+    ignore_index=True,)
+
+ten_sites_names = [
+    'EDC', 'DOME F', 'Vostok', 'EDML', 'WDC',
+    'Rothera', 'Halley', 'Neumayer', 'Law Dome', "Dumont d'Urville"]
+
+# ten_sites_loc = stations_sites.loc[
+#     [(isite in ten_sites_names) for isite in stations_sites.Site.values],
+#     ].reset_index(drop=True)
+# ten_sites_loc.to_pickle('data_sources/others/ten_sites_loc.pkl')
 
 
-output_png = 'figures/1_study_area/1.0_Antarctic core sites and stations.png'
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
-fig, ax = hemisphere_plot(northextent=-50, lw=0.1)
+output_png = 'figures/test/trial.png'
 
-cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax, s=5,
-                zorder=4,)
-for irow in range(major_ice_core_site.shape[0]):
-    ax.text(
-        major_ice_core_site.lon[irow]+2, major_ice_core_site.lat[irow]+1,
-        major_ice_core_site.Site[irow], transform=ccrs.PlateCarree(),
-        fontsize = 3, color='black')
+fig, ax = hemisphere_plot(northextent=-60)
 
-cplot_ice_cores(Antarctic_stations.lon, Antarctic_stations.lat, ax, s=5,
-                marker='s', zorder=4)
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax, s=6,
+                zorder=4, lw=0.75)
+
 for irow in range(Antarctic_stations.shape[0]):
     ax.text(
         Antarctic_stations.lon[irow]+2, Antarctic_stations.lat[irow]+1,
         Antarctic_stations.Site[irow], transform=ccrs.PlateCarree(),
         fontsize = 3, color='black')
 
-# plot AIS divisions
-plt_wais = ais_imbie2.loc[ais_imbie2.Regions == 'West'].plot(
-    ax=ax, transform=ccrs.epsg(3031),
-    edgecolor='red', facecolor='none', linewidths=0.1, zorder=2)
-plt_eais = ais_imbie2.loc[ais_imbie2.Regions == 'East'].plot(
-    ax=ax, transform=ccrs.epsg(3031),
-    edgecolor='blue', facecolor='none', linewidths=0.1, zorder=2)
-plt_ap = ais_imbie2.loc[ais_imbie2.Regions == 'Peninsula'].plot(
-    ax=ax, transform=ccrs.epsg(3031),
-    edgecolor='m', facecolor='none', linewidths=0.1, zorder=2)
-
 fig.savefig(output_png)
 
 
 
 '''
+# output_png = 'figures/1_study_area/1.0_Antarctic core sites and stations.png'
+# cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax, s=5,
+#                 zorder=4,)
+# cplot_ice_cores(Antarctic_stations.lon, Antarctic_stations.lat, ax, s=5,
+#                 marker='s', zorder=4)
+
+# for irow in range(major_ice_core_site.shape[0]):
+#     ax.text(
+#         major_ice_core_site.lon[irow]+2, major_ice_core_site.lat[irow]+1,
+#         major_ice_core_site.Site[irow], transform=ccrs.PlateCarree(),
+#         fontsize = 3, color='black')
+
+# # plot AIS divisions
+# plt_wais = ais_imbie2.loc[ais_imbie2.Regions == 'West'].plot(
+#     ax=ax, transform=ccrs.epsg(3031),
+#     edgecolor='red', facecolor='none', linewidths=0.1, zorder=2)
+# plt_eais = ais_imbie2.loc[ais_imbie2.Regions == 'East'].plot(
+#     ax=ax, transform=ccrs.epsg(3031),
+#     edgecolor='blue', facecolor='none', linewidths=0.1, zorder=2)
+# plt_ap = ais_imbie2.loc[ais_imbie2.Regions == 'Peninsula'].plot(
+#     ax=ax, transform=ccrs.epsg(3031),
+#     edgecolor='m', facecolor='none', linewidths=0.1, zorder=2)
+
+
+
+
+
 major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
 Antarctic_stations = pd.read_csv('data_sources/others/Antarctic_stations.csv')
 

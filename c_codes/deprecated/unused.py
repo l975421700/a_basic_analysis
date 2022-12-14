@@ -1,6 +1,105 @@
 
 
 # -----------------------------------------------------------------------------
+# region compare three quantiles [90%, 95%, 99%]
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.1_pre/6.1.7.1 ' + expid[i] + ' compare quantiles frc_source_lat Antarctica.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=0, cm_max=50, cm_interval1=5, cm_interval2=5, cmap='PuOr',
+    reversed=False)
+
+pltlevel2 = np.arange(0, 10 + 1e-4, 1)
+pltticks2 = np.arange(0, 10 + 1e-4, 1)
+pltnorm2 = BoundaryNorm(pltlevel2, ncolors=len(pltlevel2)-1, clip=False)
+pltcmp2 = cm.get_cmap('PiYG', len(pltlevel2)-1).reversed()
+
+nrow = 2
+ncol = 3
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.01, 'wspace': 0.01},)
+
+ipanel=0
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(
+            northextent=-50, ax_org = axs[irow, jcol])
+        cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat,
+                        axs[irow, jcol])
+        plt.text(
+            0.05, 1, panel_labels[ipanel],
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        ipanel += 1
+
+# Contribution to total precipitation
+for icount,iqtl in enumerate(quantiles.keys()):
+    plt1 = axs[0, icount].pcolormesh(
+        lon,
+        lat,
+        wisoaprt_epe[expid[i]]['frc_aprt']['am'][iqtl] * 100,
+        norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+    
+    plt2 = axs[1, icount].pcolormesh(
+        lon,
+        lat,
+        epe_weighted_lat[expid[i]][iqtl]['am'] - pre_weighted_lat[expid[i]]['am'],
+        norm=pltnorm2, cmap=pltcmp2, transform=ccrs.PlateCarree(),)
+    ttest_fdr_res = ttest_fdr_control(
+        epe_weighted_lat[expid[i]][iqtl]['ann'],
+        pre_weighted_lat[expid[i]]['ann'],)
+    axs[1, icount].scatter(
+        x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
+        s=0.5, c='k', marker='.', edgecolors='none',
+        transform=ccrs.PlateCarree(),)
+
+for icount,iqtl in enumerate(quantiles.keys()):
+    plt.text(
+        0.5, 1.05, iqtl,
+        transform=axs[0, icount].transAxes,
+        ha='center', va='center', rotation='horizontal')
+
+cbar1 = fig.colorbar(
+    plt1, ax=axs,
+    orientation="horizontal",shrink=0.5,aspect=40,extend='max',
+    anchor=(-0.2, -0.3), ticks=pltticks)
+cbar1.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
+cbar1.ax.set_xlabel('Contribution to total precipitation [$\%$]', linespacing=2)
+
+cbar2 = fig.colorbar(
+    plt2, ax=axs,
+    orientation="horizontal",shrink=0.5,aspect=40,extend='max',
+    anchor=(1.1,-3.8),ticks=pltticks2)
+cbar2.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
+cbar2.ax.set_xlabel('EPE source latitude anomalies [$°$]', linespacing=2)
+
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = 0.12, top = 0.96)
+fig.savefig(output_png)
+
+
+
+'''
+plt.text(
+    -0.05, 0.5, 'Contribution to total precipitation [$\%$]',
+    transform=axs[0, 0].transAxes,
+    ha='center', va='center', rotation='vertical')
+
+plt.text(
+    -0.05, 0.5, 'EPE source latitude anomalies [$°$]',
+    transform=axs[1, 0].transAxes,
+    ha='center', va='center', rotation='vertical')
+
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
 # region plot aprt_frc from geo7
 stats.describe(
     aprt_frc['NHseaice']['am'] + aprt_frc['SHseaice']['am'] + aprt_frc['NHocean']['am'] + aprt_frc['SHocean']['am'] + aprt_frc['Antarctica']['am'] + aprt_frc['NHland']['am'] + aprt_frc['SHland']['am'],

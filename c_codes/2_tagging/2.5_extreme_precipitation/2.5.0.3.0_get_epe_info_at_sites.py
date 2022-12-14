@@ -1017,6 +1017,107 @@ for iind in np.arange(0, 5, 1):
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region get wisoaprt_mask_bin at ice core sites
+
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_mask_bin.pkl',
+    'rb') as f:
+    wisoaprt_mask_bin = pickle.load(f)
+
+quantile_interval_bin = np.arange(0.5, 99.5 + 1e-4, 1, dtype=np.float64)
+quantiles_bin = dict(zip(
+    [str(x) + '%' for x in quantile_interval_bin],
+    [x for x in quantile_interval_bin],
+    ))
+
+wisoaprt_mask_bin_icores = {}
+wisoaprt_mask_bin_icores[expid[i]] = {}
+
+for icores in stations_sites.Site:
+    # icores = 'EDC'
+    print('#-------- ' + icores)
+    
+    wisoaprt_mask_bin_icores[expid[i]][icores] = {}
+    
+    wisoaprt_mask_bin_icores[expid[i]][icores]['daily'] = {}
+    
+    for iqtl in quantiles_bin.keys():
+        # iqtl = '90.5%'
+        # print('#---- ' + iqtl)
+        
+        wisoaprt_mask_bin_icores[expid[i]][icores]['daily'][iqtl] = \
+            wisoaprt_mask_bin[iqtl][
+                :,
+                t63_sites_indices[icores]['ilat'],
+                t63_sites_indices[icores]['ilon']]
+    
+    wisoaprt_mask_bin_icores[expid[i]][icores]['am'] = pd.DataFrame(
+        columns=('iqtl', 'quantiles', 'am',))
+    
+    for iqtl in quantiles_bin.keys():
+        # iqtl = '90.5%'
+        # print('#---- ' + iqtl)
+        
+        wisoaprt_mask_bin_icores[expid[i]][icores]['am'] = pd.concat([
+            wisoaprt_mask_bin_icores[expid[i]][icores]['am'],
+            pd.DataFrame(data={
+                'iqtl': iqtl,
+                'quantiles': quantiles_bin[iqtl],
+                'am': wisoaprt_mask_bin_icores[expid[i]][icores]['daily'][
+                    iqtl].mean().values * 365,
+                }, index=[0])],
+            ignore_index=True,)
+
+
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_mask_bin_icores.pkl',
+    'wb') as f:
+    pickle.dump(wisoaprt_mask_bin_icores[expid[i]], f)
+
+
+
+
+'''
+#------------------------ check
+
+wisoaprt_mask_bin_icores = {}
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_mask_bin_icores.pkl',
+    'rb') as f:
+    wisoaprt_mask_bin_icores[expid[i]] = pickle.load(f)
+
+#---- distance between data points
+
+iqtl = '90.5%'
+from haversine import haversine
+
+for icores in stations_sites.Site:
+    # icores = 'EDC'
+    print('#----------------' + icores)
+    
+    slat = t63_sites_indices[icores]['lat']
+    slon = t63_sites_indices[icores]['lon']
+    glat = wisoaprt_mask_bin_icores[expid[i]][icores]['daily'][iqtl].lat.values
+    glon = wisoaprt_mask_bin_icores[expid[i]][icores]['daily'][iqtl].lon.values
+    
+    distance = haversine([slat, slon], [glat, glon], normalize = True)
+    
+    if(distance > 100):
+        print(distance)
+
+iqtl = '90.5%'
+icores = 'EDC'
+wisoaprt_mask_bin_icores[expid[i]][icores]['daily'][iqtl].mean() * 365
+wisoaprt_mask_bin_icores[expid[i]][icores]['am'].am.values
+
+
+
+wisoaprt_mask_bin['0.5%']
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
 
 
 

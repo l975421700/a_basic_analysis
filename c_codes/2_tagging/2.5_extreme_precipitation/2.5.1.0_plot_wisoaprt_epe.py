@@ -102,44 +102,23 @@ from a_basic_analysis.b_module.component_plot import (
 
 
 # -----------------------------------------------------------------------------
-# region import data
+# region percentile of 10% heaviest precipitation days of total precipitation
 
-wisoaprt_epe = {}
+
+wisoaprt_masked = {}
 with open(
-    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe.pkl',
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_masked.pkl',
     'rb') as f:
-    wisoaprt_epe[expid[i]] = pickle.load(f)
+    wisoaprt_masked[expid[i]] = pickle.load(f)
 
-wisoaprt_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
-    wisoaprt_alltime[expid[i]] = pickle.load(f)
+lon = wisoaprt_masked[expid[i]]['frc']['90%']['am'].lon
+lat = wisoaprt_masked[expid[i]]['frc']['90%']['am'].lat
+lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
 major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
 major_ice_core_site = major_ice_core_site.loc[
     major_ice_core_site['age (kyr)'] > 120, ]
-
-lon = wisoaprt_alltime[expid[i]]['am'].lon
-lat = wisoaprt_alltime[expid[i]]['am'].lat
-lon_2d, lat_2d = np.meshgrid(lon, lat,)
-
-quantiles = {'90%': 0.9, '95%': 0.95, '99%': 0.99}
-
-# epe_weighted_lat = {}
-# with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_weighted_lat.pkl', 'rb') as f:
-#     epe_weighted_lat[expid[i]] = pickle.load(f)
-
-# pre_weighted_lat = {}
-# with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lat.pkl', 'rb') as f:
-#     pre_weighted_lat[expid[i]] = pickle.load(f)
-
-'''
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region percentile of 10% heaviest precipitation days of total precipitation
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
 
 iqtl = '90%'
@@ -153,13 +132,23 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
 fig, ax = hemisphere_plot(
     northextent=-60, figsize=np.array([5.8, 7.8]) / 2.54)
 
-cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
 plt1 = ax.pcolormesh(
     lon,
     lat,
-    wisoaprt_epe[expid[i]]['frc_aprt']['am'][iqtl] * 100,
+    wisoaprt_masked[expid[i]]['frc']['90%']['am'] * 100,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+plt_ctr = ax.contour(
+    lon,
+    lat.sel(lat=slice(-60, -90)),
+    wisoaprt_masked[expid[i]]['frc']['90%']['am'].sel(lat=slice(-60, -90))*100,
+    [40],
+    colors = 'b', linewidths=0.3, transform=ccrs.PlateCarree(),)
+ax.clabel(
+    plt_ctr, inline=1, colors='b', fmt=remove_trailing_zero,
+    levels=[40], inline_spacing=10, fontsize=6,)
 
 cbar = fig.colorbar(
     plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
@@ -178,100 +167,67 @@ fig.savefig(output_png, dpi=600)
 
 
 # -----------------------------------------------------------------------------
-# region compare three quantiles [90%, 95%, 99%]
+# region number of days with 10% heaviest precipitation
 
-output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.1_pre/6.1.7.1 ' + expid[i] + ' compare quantiles frc_source_lat Antarctica.png'
+wisoaprt_epe = {}
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe.pkl',
+    'rb') as f:
+    wisoaprt_epe[expid[i]] = pickle.load(f)
+
+lon = wisoaprt_epe[expid[i]]['mask']['90%'].lon
+lat = wisoaprt_epe[expid[i]]['mask']['90%'].lat
+lon_2d, lat_2d = np.meshgrid(lon, lat,)
+
+major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
+major_ice_core_site = major_ice_core_site.loc[
+    major_ice_core_site['age (kyr)'] > 120, ]
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
+
+
+iqtl = '90%'
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.1_pre/6.1.7.1 ' + expid[i] + ' daily precipitation percentile_' + iqtl[:2] + '_days Antarctica.png'
+
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=0, cm_max=50, cm_interval1=5, cm_interval2=5, cmap='PuOr',
+    cm_min=10, cm_max=40, cm_interval1=2.5, cm_interval2=5, cmap='Oranges',
     reversed=False)
 
-pltlevel2 = np.arange(0, 10 + 1e-4, 1)
-pltticks2 = np.arange(0, 10 + 1e-4, 1)
-pltnorm2 = BoundaryNorm(pltlevel2, ncolors=len(pltlevel2)-1, clip=False)
-pltcmp2 = cm.get_cmap('PiYG', len(pltlevel2)-1).reversed()
+fig, ax = hemisphere_plot(
+    northextent=-60, figsize=np.array([5.8, 7.8]) / 2.54)
 
-nrow = 2
-ncol = 3
-
-fig, axs = plt.subplots(
-    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
-    subplot_kw={'projection': ccrs.SouthPolarStereo()},
-    gridspec_kw={'hspace': 0.01, 'wspace': 0.01},)
-
-ipanel=0
-for irow in range(nrow):
-    for jcol in range(ncol):
-        axs[irow, jcol] = hemisphere_plot(
-            northextent=-50, ax_org = axs[irow, jcol])
-        cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat,
-                        axs[irow, jcol])
-        plt.text(
-            0.05, 1, panel_labels[ipanel],
-            transform=axs[irow, jcol].transAxes,
-            ha='center', va='center', rotation='horizontal')
-        ipanel += 1
-
-# Contribution to total precipitation
-for icount,iqtl in enumerate(quantiles.keys()):
-    plt1 = axs[0, icount].pcolormesh(
-        lon,
-        lat,
-        wisoaprt_epe[expid[i]]['frc_aprt']['am'][iqtl] * 100,
-        norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
-    
-    plt2 = axs[1, icount].pcolormesh(
-        lon,
-        lat,
-        epe_weighted_lat[expid[i]][iqtl]['am'] - pre_weighted_lat[expid[i]]['am'],
-        norm=pltnorm2, cmap=pltcmp2, transform=ccrs.PlateCarree(),)
-    ttest_fdr_res = ttest_fdr_control(
-        epe_weighted_lat[expid[i]][iqtl]['ann'],
-        pre_weighted_lat[expid[i]]['ann'],)
-    axs[1, icount].scatter(
-        x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
-        s=0.5, c='k', marker='.', edgecolors='none',
-        transform=ccrs.PlateCarree(),)
-
-for icount,iqtl in enumerate(quantiles.keys()):
-    plt.text(
-        0.5, 1.05, iqtl,
-        transform=axs[0, icount].transAxes,
-        ha='center', va='center', rotation='horizontal')
-
-cbar1 = fig.colorbar(
-    plt1, ax=axs,
-    orientation="horizontal",shrink=0.5,aspect=40,extend='max',
-    anchor=(-0.2, -0.3), ticks=pltticks)
-cbar1.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
-cbar1.ax.set_xlabel('Contribution to total precipitation [$\%$]', linespacing=2)
-
-cbar2 = fig.colorbar(
-    plt2, ax=axs,
-    orientation="horizontal",shrink=0.5,aspect=40,extend='max',
-    anchor=(1.1,-3.8),ticks=pltticks2)
-cbar2.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
-cbar2.ax.set_xlabel('EPE source latitude anomalies [$°$]', linespacing=2)
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
 
-fig.subplots_adjust(left=0.01, right = 0.99, bottom = 0.12, top = 0.96)
-fig.savefig(output_png)
+plt1 = ax.pcolormesh(
+    lon,
+    lat,
+    wisoaprt_epe[expid[i]]['mask'][iqtl].mean(dim='time') * 365,
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
+plt_ctr = ax.contour(
+    lon,
+    lat.sel(lat=slice(-60, -90)),
+    wisoaprt_epe[expid[i]]['mask'][iqtl].mean(
+        dim='time').sel(lat=slice(-60, -90)) * 365,
+    [15],
+    colors = 'b', linewidths=0.3, transform=ccrs.PlateCarree(),)
+ax.clabel(
+    plt_ctr, inline=1, colors='b', fmt=remove_trailing_zero,
+    levels=[15], inline_spacing=10, fontsize=6,)
 
+cbar = fig.colorbar(
+    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.95, ticks=pltticks, extend='both',
+    pad=0.02, fraction=0.2,
+    )
+cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
+cbar.ax.tick_params(labelsize=8)
+cbar.ax.set_xlabel(
+    'Number of days with\n10$\%$ heaviest precipitation [$\#$]', linespacing=1.5)
+fig.savefig(output_png, dpi=600)
 
-'''
-plt.text(
-    -0.05, 0.5, 'Contribution to total precipitation [$\%$]',
-    transform=axs[0, 0].transAxes,
-    ha='center', va='center', rotation='vertical')
-
-plt.text(
-    -0.05, 0.5, 'EPE source latitude anomalies [$°$]',
-    transform=axs[1, 0].transAxes,
-    ha='center', va='center', rotation='vertical')
-
-
-'''
 # endregion
 # -----------------------------------------------------------------------------
 

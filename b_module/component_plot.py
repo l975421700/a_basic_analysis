@@ -5,7 +5,7 @@
 
 def cplot_ice_cores(
     lon, lat, ax,
-    s=3, c='none', lw=0.5, marker='o', edgecolors = 'black', zorder=2,
+    s=6, c='none', lw=0.75, marker='o', edgecolors = 'black', zorder=4,
     ):
     '''
     #-------- Input
@@ -224,7 +224,7 @@ def cplot_lon180_ctr(
 
 def plt_mesh_pars(
     cm_min, cm_max, cm_interval1, cm_interval2, cmap,
-    clip=True, reversed=True,
+    clip=True, reversed=True, asymmetric=False,
     ):
     '''
     #-------- Input
@@ -233,7 +233,7 @@ def plt_mesh_pars(
     
     '''
     import numpy as np
-    from matplotlib.colors import BoundaryNorm
+    from matplotlib.colors import BoundaryNorm, ListedColormap
     from matplotlib import cm
     
     pltlevel = np.arange(cm_min, cm_max + 1e-4, cm_interval1, dtype=np.float64)
@@ -243,6 +243,20 @@ def plt_mesh_pars(
     
     if(reversed):
         pltcmp = pltcmp.reversed()
+    
+    if (asymmetric):
+        cm_range = np.max((abs(cm_min), abs(cm_max))) * 2
+        pltcmp = cm.get_cmap(cmap, int(cm_range / cm_interval1))
+        
+        if(reversed):
+            pltcmp = pltcmp.reversed()
+        
+        if (abs(cm_min) > abs(cm_max)):
+            pltcmp = ListedColormap(
+                [pltcmp(i) for i in range(pltcmp.N)][:(len(pltlevel)-1)])
+        else:
+            pltcmp = ListedColormap(
+                [pltcmp(i) for i in range(pltcmp.N)][-(len(pltlevel)-1):])
     
     return([pltlevel, pltticks, pltnorm, pltcmp])
 
@@ -255,6 +269,41 @@ def plt_mesh_pars(
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=-55, cm_max=-20, cm_interval1=2.5, cm_interval2=5, cmap='PuOr',
 )
+
+
+#-------- derive diverging colormap
+from matplotlib import colors
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-0.4, cm_max=0.1, cm_interval1=0.05, cm_interval2=0.1,
+    cmap='viridis',)
+pltcmp = cm.get_cmap(
+    'PuOr', len(np.arange(-0.4,0.4+1e-4, 0.05))-1).reversed()
+pltcmp = ListedColormap(
+    [pltcmp(i) for i in range(pltcmp.N)][:(len(pltlevel)-1)])
+
+pltlevel = np.arange(-0.4, 0.1 + 1e-4, 0.05, dtype=np.float64)
+pltticks = np.arange(-0.4, 0.1 + 1e-4, 0.1, dtype=np.float64)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+# pltnorm = colors.TwoSlopeNorm(vmin=-0.4, vcenter=0, vmax=0.1)
+# pltcmp = 'PuOr'
+pltcmp = cm.get_cmap(
+    'PuOr',
+    len(np.arange(-0.4, 0.4 + 1e-4, 0.05))-1).reversed()
+pltcmp = colors.ListedColormap(
+    [pltcmp(i) for i in range(pltcmp.N)][:(len(pltlevel)-1)]
+)
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-0.4, cm_max=0.4, cm_interval1=0.05, cm_interval2=0.1,
+    cmap='PuOr',)
+# pltticks[-2] = 0
+pltlevel = pltlevel[:11]
+pltticks = pltticks[:6]
+pltcmp = colors.ListedColormap(
+    [pltcmp(i) for i in range(pltcmp.N)][:(len(pltlevel)-1)]
+)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
 
 '''
 # endregion

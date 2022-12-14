@@ -115,6 +115,7 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_r
 major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
 major_ice_core_site = major_ice_core_site.loc[
     major_ice_core_site['age (kyr)'] > 120, ]
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
 lon = pre_weighted_rh2m[expid[i]]['am'].lon
 lat = pre_weighted_rh2m[expid[i]]['am'].lat
@@ -144,7 +145,7 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
 fig, ax = hemisphere_plot(
     northextent=-60, figsize=np.array([5.8, 7]) / 2.54)
 
-cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
 plt1 = ax.pcolormesh(
     lon,
@@ -187,12 +188,12 @@ iqtl = '90%'
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.3_source_rh2m/6.1.7.0.3 ' + expid[i] + ' epe_weighted_rh2m - pre_weighted_rh2m am.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-3.5, cm_max=3.5, cm_interval1=0.5, cm_interval2=0.5, cmap='Purples')
-pltcmp = pplt.Colormap('DryWet', samples=len(pltlevel)-1)
+    cm_min=-3.5, cm_max=3.5, cm_interval1=0.5, cm_interval2=0.5, cmap='PiYG')
+# pltcmp = pplt.Colormap('DryWet', samples=len(pltlevel)-1)
 
 fig, ax = globe_plot()
 
-cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
 plt1 = ax.pcolormesh(
     lon,

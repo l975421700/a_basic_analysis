@@ -111,6 +111,7 @@ lon_2d, lat_2d = np.meshgrid(lon, lat,)
 major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
 major_ice_core_site = major_ice_core_site.loc[
     major_ice_core_site['age (kyr)'] > 120, ]
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
 wisoaprt_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
@@ -141,7 +142,7 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
 
 fig, ax = hemisphere_plot(northextent=-60, figsize=np.array([5.8, 7]) / 2.54,)
 
-cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
 plt1 = ax.pcolormesh(
     lon,
@@ -202,7 +203,7 @@ fig, ax = hemisphere_plot(
     northextent=-60, figsize=np.array([5.8, 7]) / 2.54,
     llatlabel = True,)
 
-cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
 pltctr1 = np.array([0.05, 0.1, 0.5, ])
 pltctr2 = np.array([1, 2, 4, ])
@@ -272,7 +273,7 @@ for jcol in range(ncol):
         northextent=-60, ax_org = axs[jcol],
         l45label = False, loceanarcs = False)
     cplot_ice_cores(
-        major_ice_core_site.lon, major_ice_core_site.lat, axs[jcol])
+        ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
 
 #-------- Am
 plt_mesh1 = axs[0].pcolormesh(
@@ -373,7 +374,7 @@ pltcmp = cm.get_cmap('PiYG', len(pltlevel)-1).reversed()
 
 fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 7]) / 2.54,)
 
-cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
 plt1 = ax.pcolormesh(
     lon,
@@ -553,6 +554,144 @@ pre_weighted_var['ann_highres'] = xr.open_dataset(
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region plot am source properties
+
+#-------- import data
+pre_weighted_var = {}
+pre_weighted_var[expid[i]] = {}
+
+source_var = ['lat', 'lon', 'rellon', 'sst', 'rh2m', 'wind10']
+
+prefix = exp_odir + expid[i] + '/analysis/echam/' + expid[i]
+source_var_files = [
+    prefix + '.pre_weighted_lat.pkl',
+    prefix + '.pre_weighted_lon.pkl',
+    prefix + '.pre_weighted_lon.pkl',
+    prefix + '.pre_weighted_sst.pkl',
+    prefix + '.pre_weighted_rh2m.pkl',
+    prefix + '.pre_weighted_wind10.pkl',
+]
+
+for ivar, ifile in zip(source_var, source_var_files):
+    print(ivar + ':    ' + ifile)
+    with open(ifile, 'rb') as f:
+        pre_weighted_var[expid[i]][ivar] = pickle.load(f)
+
+cm_mins = [-50, 0, -180, 9, 75, 10, ]
+cm_maxs = [-34, 360, 180, 17, 83, 11.5, ]
+cm_interval1s = [2, 20, 30, 1, 1, 0.25, ]
+cm_interval2s = [2, 60, 60, 1, 1, 0.25, ]
+cmaps = ['PuOr', 'BrBG', 'twilight_shifted', 'RdBu', 'PRGn', 'PiYG', ]
+cbar_labels = [
+    'Source latitude [$°\;S$]', 'Source longitude [$°$]',
+    'Relative source longitude [$°$]',
+    'Source SST [$°C$]', 'Source rh2m [$\%$]', 'Source wind10 [$m \; s^{-1}$]',
+]
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3 ' + expid[i] + ' pre_weighted_var am Antarctica + am aprt.png'
+
+
+nrow = 2
+ncol = 3
+
+wspace = 0.02
+hspace = 0.12
+fm_left = 0.02
+fm_bottom = hspace / nrow
+fm_right = 0.98
+fm_top = 0.98
+
+# plot am aprt
+pltctr1 = np.array([0.05, 0.1, 0.5, ])
+pltctr2 = np.array([1, 2, 4, ])
+plt_data = wisoaprt_alltime[expid[i]]['am'][0] * seconds_per_d
+
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 7.8*nrow]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    )
+
+ipanel=0
+for irow in range(nrow):
+  for jcol in range(ncol):
+    # if ((irow != 0) | (jcol == 2)):
+        axs[irow, jcol] = hemisphere_plot(
+            northextent=-60, ax_org = axs[irow, jcol])
+        cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, axs[irow, jcol])
+        
+        plt.text(
+            0.05, 1, panel_labels[ipanel],
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        ipanel += 1
+        
+        icount = irow * ncol + jcol
+        ivar = source_var[icount]
+        
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min = cm_mins[icount],
+            cm_max = cm_maxs[icount],
+            cm_interval1 = cm_interval1s[icount],
+            cm_interval2 = cm_interval2s[icount],
+            cmap = cmaps[icount],)
+        if (ivar == 'rh2m'):
+            pltcmp = pltcmp.reversed()
+        
+        plt_meshdata = pre_weighted_var[expid[i]][ivar]['am']
+        if(ivar == 'rellon'):
+            plt_meshdata = calc_lon_diff(
+                pre_weighted_var[expid[i]][ivar]['am'], lon_2d)
+        
+        plt1 = axs[irow, jcol].pcolormesh(
+            lon,
+            lat,
+            plt_meshdata,
+            norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+        
+        plt2 = axs[irow, jcol].contour(
+            lon, lat.sel(lat=slice(-50, -90)),
+            plt_data.sel(lat=slice(-50, -90)),
+            levels=pltctr1, colors = 'blue', transform=ccrs.PlateCarree(),
+            linewidths=0.5, linestyles='dotted',)
+        axs[irow, jcol].clabel(
+            plt2, inline=1, colors='blue', fmt=remove_trailing_zero,
+            levels=pltctr1, inline_spacing=10, fontsize=6,)
+
+        plt3 = axs[irow, jcol].contour(
+            lon, lat.sel(lat=slice(-50, -90)),
+            plt_data.sel(lat=slice(-50, -90)),
+            levels=pltctr2, colors = 'blue', transform=ccrs.PlateCarree(),
+            linewidths=0.5, linestyles='solid',)
+        axs[irow, jcol].clabel(
+            plt3, inline=1, colors='blue', fmt=remove_trailing_zero,
+            levels=pltctr2, inline_spacing=5, fontsize=6,)
+        
+        extend = 'both'
+        if ((ivar == 'lon') | (ivar == 'rellon')):
+            extend = 'neither'
+        
+        cbar = fig.colorbar(
+            plt1, ax=axs[irow, jcol], aspect=30,
+            format=remove_trailing_zero_pos,
+            orientation="horizontal", shrink=0.9, ticks=pltticks, extend=extend,
+            pad=0.05,
+            )
+        if ((irow == 0) & (jcol == 0)):
+            cbar.ax.set_xticklabels(
+                [remove_trailing_zero(x) for x in np.negative(pltticks)])
+        cbar.ax.tick_params(labelsize=8)
+        cbar.ax.set_xlabel(cbar_labels[icount])
+
+fig.subplots_adjust(
+    left=fm_left, right = fm_right, bottom = fm_bottom, top = fm_top,
+    wspace=wspace, hspace=hspace,)
+fig.savefig(output_png)
+
+# endregion
+# -----------------------------------------------------------------------------
 
 
 
@@ -761,7 +900,7 @@ for irow in range(nrow):
         if ((irow != 0) | (jcol != 3)):
             axs[irow, jcol] = hemisphere_plot(
                 northextent=-50, ax_org = axs[irow, jcol])
-            cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, axs[irow, jcol])
+            cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, axs[irow, jcol])
             plt.text(
                 0, 0.95, panel_labels[ipanel],
                 transform=axs[irow, jcol].transAxes,

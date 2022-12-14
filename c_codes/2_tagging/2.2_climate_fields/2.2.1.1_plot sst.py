@@ -94,20 +94,13 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-ds_names = ['pi', 'pi_final', 'lig_final', 'lgm_50']
-
 boundary_conditions = {}
-
-pi_sst_file = 'startdump/model_input/pi/alex/T63_amipsst_pcmdi_187001-189912.nc'
-pi_final_sst_file = 'startdump/model_input/lig/bc_lig_pi_final/sst.fesom.2900_2999.pi_final_t63.nc'
-lig_final_sst_file = 'startdump/model_input/lig/bc_lig_pi_final/sst.fesom.2900_2999.lig_final_t63.nc'
-lgm_50_sst_file = 'startdump/model_input/lgm/lgm-50/sst.fesom.2200_2229.lgm-50_t63.nc'
-
 boundary_conditions['sst'] = {}
-boundary_conditions['sst']['pi'] = xr.open_dataset(pi_sst_file)
-boundary_conditions['sst']['pi_final'] = xr.open_dataset(pi_final_sst_file)
-boundary_conditions['sst']['lig_final'] = xr.open_dataset(lig_final_sst_file)
-boundary_conditions['sst']['lgm_50'] = xr.open_dataset(lgm_50_sst_file)
+boundary_conditions['sst']['pi'] = xr.open_dataset(
+    'startdump/model_input/pi/alex/T63_amipsst_pcmdi_187001-189912.nc')
+boundary_conditions['sic'] = {}
+boundary_conditions['sic']['pi'] = xr.open_dataset(
+    'startdump/model_input/pi/alex/T63_amipsic_pcmdi_187001-189912.nc')
 
 lon = boundary_conditions['sst']['pi'].lon
 lat = boundary_conditions['sst']['pi'].lat
@@ -116,10 +109,9 @@ lon_2d, lat_2d = np.meshgrid(lon, lat,)
 major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
 major_ice_core_site = major_ice_core_site.loc[
     major_ice_core_site['age (kyr)'] > 120, ]
-
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
 # set land points as np.nan
-
 esacci_echam6_t63_trim = xr.open_dataset('startdump/tagging/tagmap/auxiliaries/sst_mon_ESACCI-2.1_198201_201612_am_rg_echam6_t63_slm_trim.nc')
 
 b_slm = np.broadcast_to(
@@ -128,7 +120,9 @@ b_slm = np.broadcast_to(
     )
 
 boundary_conditions['sst']['pi'].sst.values[b_slm] = np.nan
-
+boundary_conditions['sic']['pi'].sic.values[b_slm] = np.nan
+boundary_conditions['sic']['pi'].sic.values[:] = \
+    boundary_conditions['sic']['pi'].sic.clip(0, 100, keep_attrs=True).values
 
 '''
 # echam6_t63_slm = xr.open_dataset('scratch/others/land_sea_masks/echam6_t63_slm.nc')
@@ -154,7 +148,17 @@ for ikeys in boundary_conditions['sst'].keys():
         boundary_conditions['sst'][ikeys].sst.groupby(
             'time.season').map(time_weighted_mean)
 
+boundary_conditions['am_sic'] = {}
+boundary_conditions['sm_sic'] = {}
 
+for ikeys in boundary_conditions['sic'].keys():
+    # ikeys = 'pi'
+    print(ikeys)
+    boundary_conditions['am_sic'][ikeys] = \
+        time_weighted_mean(boundary_conditions['sic'][ikeys].sic)
+    boundary_conditions['sm_sic'][ikeys] = \
+        boundary_conditions['sic'][ikeys].sic.groupby(
+            'time.season').map(time_weighted_mean)
 
 '''
 #-------- check am calculation
@@ -487,4 +491,133 @@ fig.savefig(output_png)
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region plot am sic/sst/rh2m/wind10
+
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+expid = [
+    # 'pi_m_416_4.9',
+    'pi_m_502_5.0',
+    ]
+i = 0
+
+rh2m_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.rh2m_alltime.pkl', 'rb') as f:
+    rh2m_alltime[expid[i]] = pickle.load(f)
+
+wind10_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wind10_alltime.pkl', 'rb') as f:
+    wind10_alltime[expid[i]] = pickle.load(f)
+
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.2_climatology/6.1.2 am sic_sst_rh2m_wind10 Antarctica.png'
+
+nrow = 1
+ncol = 4
+
+wspace = 0.02
+hspace = 0.12
+fm_left = 0.02
+fm_bottom = hspace / nrow
+fm_right = 0.98
+fm_top = 0.98
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 7.8*nrow]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    )
+
+northextents = [-50, -20, -20, -20]
+ipanel=0
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[jcol] = hemisphere_plot(
+            northextent=northextents[jcol], ax_org = axs[jcol])
+        cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
+        
+        plt.text(
+            0.05, 1, panel_labels[ipanel],
+            transform=axs[jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        ipanel += 1
+
+# am sic
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=0, cm_max=100, cm_interval1=10, cm_interval2=10, cmap='Blues',
+    reversed=False)
+
+plt_mesh1 = axs[0].pcolormesh(
+    lon, lat,
+    boundary_conditions['am_sic']['pi'],
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    plt_mesh1, ax=axs[0], aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='neither',
+    pad=0.05,
+    )
+cbar.ax.set_xlabel('Sea ice concentration (SIC) [$\%$]', linespacing=1.5,)
+
+# am sst
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-2, cm_max=26, cm_interval1=2, cm_interval2=4, cmap='RdBu',)
+
+plt_mesh1 = axs[1].pcolormesh(
+    lon, lat,
+    boundary_conditions['am_sst']['pi'] - zerok,
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    plt_mesh1, ax=axs[1], aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+    pad=0.05,
+    )
+cbar.ax.set_xlabel('Sea surface temperature (SST) [$°C$]', linespacing=1.5,)
+
+# am rh2m
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=60, cm_max=110, cm_interval1=5, cm_interval2=10, cmap='PRGn',
+    reversed=False)
+
+plt_mesh1 = axs[2].pcolormesh(
+    lon, lat,
+    rh2m_alltime[expid[i]]['am'] * 100,
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    plt_mesh1, ax=axs[2], aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+    pad=0.05,
+    )
+cbar.ax.set_xlabel('2-metre relative humidity (rh2m) [$\%$]', linespacing=1.5,)
+
+
+# am wind10
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=1, cm_max=13, cm_interval1=1, cm_interval2=1, cmap='PiYG')
+
+plt_mesh1 = axs[3].pcolormesh(
+    lon, lat,
+    wind10_alltime[expid[i]]['am'],
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    plt_mesh1, ax=axs[3], aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
+    pad=0.05,
+    )
+cbar.ax.set_xlabel('10-metre wind speed (wind10) [$m\;s^{-1}$]',
+                   linespacing=1.5,)
+
+fig.subplots_adjust(
+    left=fm_left, right = fm_right, bottom = fm_bottom, top = fm_top,
+    wspace=wspace, hspace=hspace,
+    )
+
+fig.savefig(output_png)
+
+
+# endregion
+# -----------------------------------------------------------------------------
 

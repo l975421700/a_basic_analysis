@@ -104,7 +104,6 @@ from a_basic_analysis.b_module.component_plot import (
 # region import data
 
 pre_weighted_lon = {}
-
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lon.pkl', 'rb') as f:
     pre_weighted_lon[expid[i]] = pickle.load(f)
 
@@ -115,6 +114,7 @@ lon_2d, lat_2d = np.meshgrid(lon, lat,)
 major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
 major_ice_core_site = major_ice_core_site.loc[
     major_ice_core_site['age (kyr)'] > 120, ]
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
 wisoaprt_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
@@ -148,7 +148,7 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
 
 fig, ax = hemisphere_plot(northextent=-60, figsize=np.array([5.8, 7]) / 2.54)
 
-cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
 plt1 = ax.pcolormesh(
     lon,
@@ -184,7 +184,7 @@ cbar = fig.colorbar(
     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='neither',
     pad=0.02, fraction=0.15,
     )
-cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
+# cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel('Source longitude [$°$]', linespacing=2)
 fig.savefig(output_png, dpi=1200)
@@ -208,7 +208,7 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
 
 fig, ax = hemisphere_plot(northextent=-60, figsize=np.array([5.8, 7]) / 2.54)
 
-cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
 plt1 = ax.pcolormesh(
     lon,
@@ -277,7 +277,7 @@ for jcol in range(ncol):
         northextent=-60, ax_org = axs[jcol],
         l45label = False, loceanarcs = False)
     cplot_ice_cores(
-        major_ice_core_site.lon, major_ice_core_site.lat, axs[jcol])
+        ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
 
 #-------- Am
 plt_mesh1 = axs[0].pcolormesh(
@@ -345,6 +345,55 @@ fig.savefig(output_png)
             high=360, low=0, axis=0, nan_policy='omit'),
 
 '''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot rel. pre_weighted_lon DJF-JJA
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/6.1.3.1 ' + expid[i] + ' pre_weighted_lon DJF-JJA Antarctica.png'
+
+pltlevel = np.arange(-30, 30 + 1e-4, 5)
+pltticks = np.arange(-30, 30 + 1e-4, 5)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+pltcmp = cm.get_cmap('PRGn', len(pltlevel)-1).reversed()
+
+fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 7]) / 2.54)
+
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
+
+plt1 = ax.pcolormesh(
+    lon,
+    lat,
+    calc_lon_diff(
+        pre_weighted_lon[expid[i]]['sm'].sel(season='DJF'),
+        pre_weighted_lon[expid[i]]['sm'].sel(season='JJA'),),
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+wwtest_res = circ.watson_williams(
+    pre_weighted_lon[expid[i]]['sea'].sel(
+        time=(pre_weighted_lon[expid[i]]['sea'].time.dt.month == 2)).values * np.pi / 180,
+    pre_weighted_lon[expid[i]]['sea'].sel(
+        time=(pre_weighted_lon[expid[i]]['sea'].time.dt.month == 8)).values * np.pi / 180,
+    axis=0,
+    )[0] < 0.05
+ax.scatter(
+    x=lon_2d[wwtest_res], y=lat_2d[wwtest_res],
+    s=0.5, c='k', marker='.', edgecolors='none',
+    transform=ccrs.PlateCarree(),
+    )
+
+cbar = fig.colorbar(
+    plt1, ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+    pad=0.02, fraction=0.15,
+    )
+cbar.ax.tick_params(labelsize=7)
+cbar.ax.set_xlabel('DJF - JJA source longitude [$°$]', linespacing=2)
+fig.savefig(output_png, dpi=1200)
+
+
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -443,55 +492,6 @@ fig.savefig(output_png)
 
 np.min(calc_lon_diff(pre_weighted_var['am_highres'].pre_weighted_lon_am,
               pre_weighted_lon[expid[i]]['am'],))
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot rel. pre_weighted_lon DJF-JJA
-
-output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/6.1.3.1 ' + expid[i] + ' pre_weighted_lon DJF-JJA Antarctica.png'
-
-pltlevel = np.arange(-30, 30 + 1e-4, 5)
-pltticks = np.arange(-30, 30 + 1e-4, 5)
-pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
-pltcmp = cm.get_cmap('PRGn', len(pltlevel)-1).reversed()
-
-fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 7]) / 2.54)
-
-cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
-
-plt1 = ax.pcolormesh(
-    lon,
-    lat,
-    calc_lon_diff(
-        pre_weighted_lon[expid[i]]['sm'].sel(season='DJF'),
-        pre_weighted_lon[expid[i]]['sm'].sel(season='JJA'),),
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-
-wwtest_res = circ.watson_williams(
-    pre_weighted_lon[expid[i]]['sea'].sel(
-        time=(pre_weighted_lon[expid[i]]['sea'].time.dt.month == 2)).values * np.pi / 180,
-    pre_weighted_lon[expid[i]]['sea'].sel(
-        time=(pre_weighted_lon[expid[i]]['sea'].time.dt.month == 8)).values * np.pi / 180,
-    axis=0,
-    )[0] < 0.05
-ax.scatter(
-    x=lon_2d[wwtest_res], y=lat_2d[wwtest_res],
-    s=0.5, c='k', marker='.', edgecolors='none',
-    transform=ccrs.PlateCarree(),
-    )
-
-cbar = fig.colorbar(
-    plt1, ax=ax, aspect=30,
-    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
-    pad=0.02, fraction=0.15,
-    )
-cbar.ax.tick_params(labelsize=7)
-cbar.ax.set_xlabel('DJF - JJA source longitude [$°$]', linespacing=2)
-fig.savefig(output_png, dpi=1200)
-
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -707,7 +707,7 @@ for irow in range(nrow):
         if ((irow != 0) | (jcol != 3)):
             axs[irow, jcol] = hemisphere_plot(
                 northextent=-50, ax_org = axs[irow, jcol])
-            cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, axs[irow, jcol])
+            cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, axs[irow, jcol])
             plt.text(
                 0, 0.95, panel_labels[ipanel],
                 transform=axs[irow, jcol].transAxes,

@@ -115,6 +115,7 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_s
 major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
 major_ice_core_site = major_ice_core_site.loc[
     major_ice_core_site['age (kyr)'] > 120, ]
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
 lon = pre_weighted_sst[expid[i]]['am'].lon
 lat = pre_weighted_sst[expid[i]]['am'].lat
@@ -144,7 +145,7 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
 fig, ax = hemisphere_plot(
     northextent=-60, figsize=np.array([5.8, 7]) / 2.54)
 
-cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
 plt1 = ax.pcolormesh(
     lon,
@@ -194,7 +195,7 @@ pltcmp = cm.get_cmap('BrBG', len(pltlevel)-1).reversed()
 
 fig, ax = globe_plot()
 
-cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
 plt1 = ax.pcolormesh(
     lon,

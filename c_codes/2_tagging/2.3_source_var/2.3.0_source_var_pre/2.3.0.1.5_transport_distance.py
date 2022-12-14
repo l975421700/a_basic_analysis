@@ -118,6 +118,7 @@ lon_2d, lat_2d = np.meshgrid(lon, lat,)
 major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
 major_ice_core_site = major_ice_core_site.loc[
     major_ice_core_site['age (kyr)'] > 120, ]
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
 wisoaprt_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
@@ -137,7 +138,7 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
 
 fig, ax = hemisphere_plot(northextent=-60, figsize=np.array([5.8, 7]) / 2.54,)
 
-cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
 plt1 = ax.pcolormesh(
     lon,
@@ -209,7 +210,7 @@ for jcol in range(ncol):
         northextent=-60, ax_org = axs[jcol],
         l45label = False, loceanarcs = False)
     cplot_ice_cores(
-        major_ice_core_site.lon, major_ice_core_site.lat, axs[jcol])
+        ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
 
 #-------- Am
 plt_mesh1 = axs[0].pcolormesh(
@@ -278,11 +279,11 @@ output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.5_transport_distan
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=-12, cm_max=12, cm_interval1=2, cm_interval2=2, cmap='PRGn',)
-pltcmp = pplt.Colormap('Curl', samples=len(pltlevel)-1)
+# pltcmp = pplt.Colormap('Curl', samples=len(pltlevel)-1)
 
 fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 7]) / 2.54,)
 
-cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
 plt1 = ax.pcolormesh(
     lon,
