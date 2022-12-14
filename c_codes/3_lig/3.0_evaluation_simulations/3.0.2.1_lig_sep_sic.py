@@ -193,7 +193,7 @@ for irow in range(nrow):
             x = chadwick_interp.lon,
             y = chadwick_interp.lat,
             c = chadwick_interp.sic_sep,
-            s=10, lw=0.3, marker='o', edgecolors = 'black', zorder=2,
+            s=10, lw=0.3, marker='^', edgecolors = 'black', zorder=2,
             norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
 for irow in range(nrow):

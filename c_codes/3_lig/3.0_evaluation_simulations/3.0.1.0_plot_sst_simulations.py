@@ -132,6 +132,22 @@ ec_sst_rec['SO_djf'] = ec_sst_rec['original'].loc[
     (ec_sst_rec['original']['Area']=='Southern Ocean') & \
         (ec_sst_rec['original']['Type']=='Summer SST'),]
 
+# 1 core
+ec_sst_rec['NH_ann'] = ec_sst_rec['original'].loc[
+    ((ec_sst_rec['original']['Area']=='Norwegian Sea') | \
+        (ec_sst_rec['original']['Area']=='North Atlantic') | \
+            (ec_sst_rec['original']['Area']=='Labrador Sea')) & \
+                (ec_sst_rec['original']['Type']=='Annual SST'),]
+# 23 cores
+ec_sst_rec['NH_sum'] = ec_sst_rec['original'].loc[
+    ((ec_sst_rec['original']['Area']=='Norwegian Sea') | \
+        (ec_sst_rec['original']['Area']=='North Atlantic') | \
+            (ec_sst_rec['original']['Area']=='Labrador Sea')) & \
+                (ec_sst_rec['original']['Type']=='Summer SST'),]
+# 1 core
+ec_sst_rec['GrIS_am'] = ec_sst_rec['original'].loc[
+    (ec_sst_rec['original']['Area']=='Greenland'),]
+
 
 #-------- import JH reconstruction
 jh_sst_rec = {}
@@ -149,6 +165,15 @@ jh_sst_rec['SO_djf'] = jh_sst_rec['original'].loc[
     (jh_sst_rec['original']['Region']=='Southern Ocean') & \
         ['Summer SST' in string for string in jh_sst_rec['original']['Type']],
         ]
+
+# 9 cores
+jh_sst_rec['NH_ann'] = jh_sst_rec['original'].loc[
+    (jh_sst_rec['original']['Region']=='North Atlantic') & \
+        ['Annual SST' in string for string in jh_sst_rec['original']['Type']], ]
+# 9 cores
+jh_sst_rec['NH_sum'] = jh_sst_rec['original'].loc[
+    (jh_sst_rec['original']['Region']=='North Atlantic') & \
+        ['Summer SST' in string for string in jh_sst_rec['original']['Type']], ]
 
 with open('scratch/cmip6/lig/obs_sim_lig_pi_so_sst.pkl', 'rb') as f:
     obs_sim_lig_pi_so_sst = pickle.load(f)
@@ -170,7 +195,7 @@ with open('scratch/cmip6/lig/obs_sim_lig_pi_so_sst_mc.pkl', 'rb') as f:
 # region plot lig-pi am sst
 
 output_png = 'figures/7_lig/7.0_boundary_conditions/7.0.0_sst/7.0.0.0 lig-pi sst am multiple models.png'
-cbar_label = 'LIG - PI annual mean SST [$°C$]'
+cbar_label = 'LIG annual mean SST anomalies [$°C$]'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='BrBG',)
@@ -188,7 +213,7 @@ ipanel=0
 for irow in range(nrow):
     for jcol in range(ncol):
         axs[irow, jcol] = hemisphere_plot(
-            northextent=-30, ax_org = axs[irow, jcol])
+            northextent=-38, ax_org = axs[irow, jcol])
         plt.text(
             0, 0.95, panel_labels[ipanel],
             transform=axs[irow, jcol].transAxes,
@@ -336,7 +361,7 @@ regrid(lig_sst_alltime[model]['am'], ds_out = pi_sst[model]).to_netcdf('test.nc'
 # region plot lig-pi DJF sst
 
 output_png = 'figures/7_lig/7.0_boundary_conditions/7.0.0_sst/7.0.0.0 lig-pi sst djf multiple models.png'
-cbar_label = 'LIG - PI summer SST [$°C$]'
+cbar_label = 'LIG summer SST anomalies [$°C$]'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='BrBG',)
@@ -354,7 +379,7 @@ ipanel=0
 for irow in range(nrow):
     for jcol in range(ncol):
         axs[irow, jcol] = hemisphere_plot(
-            northextent=-30, ax_org = axs[irow, jcol])
+            northextent=-38, ax_org = axs[irow, jcol])
         plt.text(
             0, 0.95, panel_labels[ipanel],
             transform=axs[irow, jcol].transAxes,
@@ -583,7 +608,7 @@ for model in models:
     am_diff = lig_sst_so_mean - pi_sst_so_mean
     ann_std = (lig_sst_so_ann.std(ddof=1)**2 + pi_sst_so_ann.std(ddof=1)**2)**0.5
     
-    print(str(np.round(am_diff, 1)) + '±' + str(np.round(ann_std, 2)))
+    print(str(np.round(am_diff, 1)) + '±' + str(np.round(ann_std, 1)))
 
 
 print('#---------------- DJF SST')
@@ -651,9 +676,297 @@ for model in models:
     sm_diff = lig_sst_so_mean - pi_sst_so_mean
     sea_std = (lig_sst_so_sea.std(ddof=1)**2 + pi_sst_so_sea.std(ddof=1)**2)**0.5
     
-    print(str(np.round(sm_diff, 1)) + '±' + str(np.round(sea_std, 2)))
+    print(str(np.round(sm_diff, 1)) + '±' + str(np.round(sea_std, 1)))
 
 
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot lig-pi am sst NH
+
+output_png = 'figures/7_lig/7.0_boundary_conditions/7.0.0_sst/7.0.0.0 lig-pi sst am multiple models NH.png'
+cbar_label = 'LIG annual mean SST anomalies [$°C$]'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='BrBG',)
+
+nrow = 3
+ncol = 4
+fm_bottom = 2 / (5.8*nrow + 2)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.NorthPolarStereo()},
+    gridspec_kw={'hspace': 0.12, 'wspace': 0.02},)
+
+ipanel=0
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(
+            southextent=38, ax_org = axs[irow, jcol])
+        plt.text(
+            0, 0.95, panel_labels[ipanel],
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        ipanel += 1
+        
+        axs[irow, jcol].scatter(
+            x = jh_sst_rec['NH_ann'].Longitude,
+            y = jh_sst_rec['NH_ann'].Latitude,
+            c = jh_sst_rec['NH_ann']['127 ka SST anomaly (°C)'],
+            s=10, lw=0.3, marker='s', edgecolors = 'black', zorder=2,
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+        axs[irow, jcol].scatter(
+            x = ec_sst_rec['NH_ann'].Longitude,
+            y = ec_sst_rec['NH_ann'].Latitude,
+            c = ec_sst_rec['NH_ann']['127 ka Median PIAn [°C]'],
+            s=10, lw=0.3, marker='o', edgecolors = 'black', zorder=2,
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+for irow in range(nrow):
+    for jcol in range(ncol):
+        # irow = 0
+        # jcol = 0
+        model = models[jcol + ncol * irow]
+        # model = 'GISS-E2-1-G'
+        # model = 'ACCESS-ESM1-5'
+        # model = 'HadGEM3-GC31-LL'
+        # model = 'CNRM-CM6-1'
+        # model = 'AWI-ESM-1-1-LR'
+        print(model)
+        
+        if (model != 'HadGEM3-GC31-LL'):
+            plt_data = lig_sst_alltime[model]['am'].values - \
+                pi_sst_alltime[model]['am'].values
+        elif (model == 'HadGEM3-GC31-LL'):
+            plt_data = regrid(
+                lig_sst_alltime[model]['am'], ds_out = pi_sst[model]).values - \
+                pi_sst_alltime[model]['am'].values
+        
+        ann_data_lig = lig_sst_alltime[model]['ann']
+        ann_data_pi  = pi_sst_alltime[model]['ann']
+        
+        if (model == 'HadGEM3-GC31-LL'):
+            ann_data_lig = regrid(ann_data_lig, ds_out = pi_sst[model])
+        
+        ttest_fdr_res = ttest_fdr_control(ann_data_lig, ann_data_pi,)
+        
+        lon = pi_sst[model].lon
+        lat = pi_sst[model].lat
+        
+        if (model != 'AWI-ESM-1-1-LR'):
+            if not (lon.shape == plt_data.shape):
+                lon = lon.transpose()
+                lat = lat.transpose()
+            
+            plt_mesh = axs[irow, jcol].pcolormesh(
+                lon, lat, plt_data,
+                norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+            # axs[irow, jcol].scatter(
+            #     x=lon.values[ttest_fdr_res], y=lat.values[ttest_fdr_res],
+            #     s=0.3, c='k', marker='.', edgecolors='none',
+            #     transform=ccrs.PlateCarree(),
+            #     )
+        elif (model == 'AWI-ESM-1-1-LR'):
+            # model = 'AWI-ESM-1-1-LR'
+            tri2plot = mesh2plot(
+                meshdir='startdump/fesom2/mesh/CORE2_final/',
+                abg=[50, 15, -90], usepickle=False)
+            axs[irow, jcol].tripcolor(
+                tri2plot['x2'], tri2plot['y2'], tri2plot['elem2plot'],
+                plt_data,
+                norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+            # axs[irow, jcol].scatter(
+            #     x=lon.values[ttest_fdr_res], y=lat.values[ttest_fdr_res],
+            #     s=0.3, c='k', marker='.', edgecolors='none',
+            #     transform=ccrs.PlateCarree(),
+            #     )
+        
+        # ec_rmse = np.sqrt(np.nanmean((obs_sim_lig_pi_so_sst[
+        #     (obs_sim_lig_pi_so_sst.datasets == 'EC') & \
+        #         (obs_sim_lig_pi_so_sst.types == 'Annual SST') & \
+        #             (obs_sim_lig_pi_so_sst.models == model)
+        #             ].sim_obs_lig_pi)**2))
+        # jh_rmse = np.sqrt(np.nanmean((obs_sim_lig_pi_so_sst[
+        #     (obs_sim_lig_pi_so_sst.datasets == 'JH') & \
+        #         (obs_sim_lig_pi_so_sst.types == 'Annual SST') & \
+        #             (obs_sim_lig_pi_so_sst.models == model)
+        #             ].sim_obs_lig_pi)**2))
+        
+        # plt.text(
+        #     0.5, 1.05, model + ': ' + \
+        #         str(np.round(ec_rmse, 1)) + ', ' + \
+        #             str(np.round(jh_rmse, 1)),
+        #     transform=axs[irow, jcol].transAxes,
+        #     ha='center', va='center', rotation='horizontal')
+        
+        plt.text(
+            0.5, 1.05, model,
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+
+cbar = fig.colorbar(
+    plt_mesh, ax=axs, aspect=40, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.75, ticks=pltticks, extend='both',
+    anchor=(0.5, -0.3),
+    )
+cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
+cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom, top = 0.97)
+fig.savefig(output_png)
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot lig-pi summer sst NH
+
+output_png = 'figures/7_lig/7.0_boundary_conditions/7.0.0_sst/7.0.0.0 lig-pi sst summer multiple models NH.png'
+cbar_label = 'LIG summer SST anomalies [$°C$]'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='BrBG',)
+
+nrow = 3
+ncol = 4
+fm_bottom = 2 / (5.8*nrow + 2)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.NorthPolarStereo()},
+    gridspec_kw={'hspace': 0.12, 'wspace': 0.02},)
+
+ipanel=0
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(
+            southextent=38, ax_org = axs[irow, jcol])
+        plt.text(
+            0, 0.95, panel_labels[ipanel],
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        ipanel += 1
+        
+        axs[irow, jcol].scatter(
+            x = jh_sst_rec['NH_sum'].Longitude,
+            y = jh_sst_rec['NH_sum'].Latitude,
+            c = jh_sst_rec['NH_sum']['127 ka SST anomaly (°C)'],
+            s=10, lw=0.3, marker='s', edgecolors = 'black', zorder=2,
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+        axs[irow, jcol].scatter(
+            x = ec_sst_rec['NH_sum'].Longitude,
+            y = ec_sst_rec['NH_sum'].Latitude,
+            c = ec_sst_rec['NH_sum']['127 ka Median PIAn [°C]'],
+            s=10, lw=0.3, marker='o', edgecolors = 'black', zorder=2,
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+for irow in range(nrow):
+    for jcol in range(ncol):
+        model = models[jcol + ncol * irow]
+        # model = 'GISS-E2-1-G'
+        # model = 'ACCESS-ESM1-5'
+        # model = 'HadGEM3-GC31-LL'
+        # model = 'CNRM-CM6-1'
+        # model = 'AWI-ESM-1-1-LR'
+        print(model)
+        
+        if (model != 'HadGEM3-GC31-LL'):
+            plt_data = lig_sst_alltime[model]['sm'].sel(season='JJA').values - \
+                pi_sst_alltime[model]['sm'].sel(season='JJA').values
+        elif (model == 'HadGEM3-GC31-LL'):
+            # model = 'HadGEM3-GC31-LL'
+            plt_data = regrid(
+                lig_sst_alltime[model]['sm'].sel(season='JJA'),
+                ds_out = pi_sst[model]).values - \
+                pi_sst_alltime[model]['sm'].sel(season='JJA').values
+        
+        # djf_data_lig = lig_sst_alltime[model]['sea'][3::4]
+        # djf_data_pi  = pi_sst_alltime[model]['sea'][3::4]
+        
+        # if (model == 'HadGEM3-GC31-LL'):
+        #     djf_data_lig = regrid(djf_data_lig, ds_out = pi_sst[model])
+        
+        # ttest_fdr_res = ttest_fdr_control(djf_data_lig, djf_data_pi,)
+        
+        lon = pi_sst[model].lon
+        lat = pi_sst[model].lat
+        
+        if (model != 'AWI-ESM-1-1-LR'):
+            if not (lon.shape == plt_data.shape):
+                lon = lon.transpose()
+                lat = lat.transpose()
+            
+            plt_mesh = axs[irow, jcol].pcolormesh(
+                lon, lat, plt_data,
+                norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+            # axs[irow, jcol].scatter(
+            #     x=lon.values[ttest_fdr_res], y=lat.values[ttest_fdr_res],
+            #     s=0.3, c='k', marker='.', edgecolors='none',
+            #     transform=ccrs.PlateCarree(),
+            #     )
+        elif (model == 'AWI-ESM-1-1-LR'):
+            # model = 'AWI-ESM-1-1-LR'
+            tri2plot = mesh2plot(
+                meshdir='startdump/fesom2/mesh/CORE2_final/',
+                abg=[50, 15, -90], usepickle=False)
+            axs[irow, jcol].tripcolor(
+                tri2plot['x2'], tri2plot['y2'], tri2plot['elem2plot'],
+                plt_data,
+                norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+            # axs[irow, jcol].scatter(
+            #     x=lon.values[ttest_fdr_res], y=lat.values[ttest_fdr_res],
+            #     s=0.3, c='k', marker='.', edgecolors='none',
+            #     transform=ccrs.PlateCarree(),
+            #     )
+        
+        # ec_rmse = np.sqrt(np.nanmean((obs_sim_lig_pi_so_sst[
+        #     (obs_sim_lig_pi_so_sst.datasets == 'EC') & \
+        #         (obs_sim_lig_pi_so_sst.types == 'Summer SST') & \
+        #             (obs_sim_lig_pi_so_sst.models == model)
+        #             ].sim_obs_lig_pi)**2))
+        # jh_rmse = np.sqrt(np.nanmean((obs_sim_lig_pi_so_sst[
+        #     (obs_sim_lig_pi_so_sst.datasets == 'JH') & \
+        #         (obs_sim_lig_pi_so_sst.types == 'Summer SST') & \
+        #             (obs_sim_lig_pi_so_sst.models == model)
+        #             ].sim_obs_lig_pi)**2))
+        # mc_rmse = np.sqrt(np.nanmean((obs_sim_lig_pi_so_sst_mc[
+        #     (obs_sim_lig_pi_so_sst_mc.models == model)
+        #     ].sim_obs_lig_pi)**2))
+        
+        # plt.text(
+        #     0.5, 1.05, model + ': ' + \
+        #         str(np.round(ec_rmse, 1)) + ', ' + \
+        #             str(np.round(jh_rmse, 1)) + ', ' + \
+        #                 str(np.round(mc_rmse, 1)),
+        #     transform=axs[irow, jcol].transAxes,
+        #     ha='center', va='center', rotation='horizontal')
+        
+        plt.text(
+            0.5, 1.05, model,
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+
+cbar = fig.colorbar(
+    plt_mesh, ax=axs, aspect=40, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.75, ticks=pltticks, extend='both',
+    anchor=(0.5, -0.3),
+    )
+cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
+cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom, top = 0.97)
+fig.savefig(output_png)
+
+
+'''
+'''
 # endregion
 # -----------------------------------------------------------------------------
 

@@ -171,6 +171,9 @@ with open('scratch/cmip6/lig/chadwick_interp.pkl', 'wb') as f:
 '''
 with open('scratch/cmip6/lig/chadwick_interp.pkl', 'rb') as f:
     chadwick_interp = pickle.load(f)
+
+chadwick_interp
+
 '''
 # endregion
 # -----------------------------------------------------------------------------

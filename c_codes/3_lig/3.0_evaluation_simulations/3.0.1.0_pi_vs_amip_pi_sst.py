@@ -174,7 +174,7 @@ with open('scratch/cmip6/lig/obs_sim_lig_pi_so_sst.pkl', 'rb') as f:
 
 
 output_png = 'figures/7_lig/7.0_boundary_conditions/7.0.0_sst/7.0.0.0 pi-amip_pi sst am multiple models.png'
-cbar_label = 'PI - AMIP_PI annual mean SST [$°C$]'
+cbar_label = 'PI annual mean SST anomalies [$°C$] relative to AMIP_PI'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='BrBG',)
@@ -192,7 +192,7 @@ ipanel=0
 for irow in range(nrow):
     for jcol in range(ncol):
         axs[irow, jcol] = hemisphere_plot(
-            northextent=-30, ax_org = axs[irow, jcol])
+            northextent=-38, ax_org = axs[irow, jcol])
         plt.text(
             0, 0.95, panel_labels[ipanel],
             transform=axs[irow, jcol].transAxes,
@@ -373,7 +373,7 @@ AWI-ESM-1-1-LR: 1.45, 1.33/1.48/1.50
 
 
 output_png = 'figures/7_lig/7.0_boundary_conditions/7.0.0_sst/7.0.0.0 pi-amip_pi sst DJF multiple models.png'
-cbar_label = 'PI - AMIP_PI summer SST [$°C$]'
+cbar_label = 'PI summer SST anomalies [$°C$] relative to AMIP_PI'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='BrBG',)
@@ -391,7 +391,7 @@ ipanel=0
 for irow in range(nrow):
     for jcol in range(ncol):
         axs[irow, jcol] = hemisphere_plot(
-            northextent=-30, ax_org = axs[irow, jcol])
+            northextent=-38, ax_org = axs[irow, jcol])
         plt.text(
             0, 0.95, panel_labels[ipanel],
             transform=axs[irow, jcol].transAxes,
