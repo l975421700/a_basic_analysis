@@ -1,6 +1,340 @@
 
 
 # -----------------------------------------------------------------------------
+# region extract indices for WOA2018
+
+woa18_sst = {}
+woa18_sst['ann'] = xr.open_dataset(
+    'data_sources/LIG/WOA_2018/woa18_decav_t00_01.nc', decode_times=False)
+woa18_sst['JFM'] = xr.open_dataset(
+    'data_sources/LIG/WOA_2018/woa18_decav_t13_01.nc', decode_times=False)
+woa18_sst['JAS'] = xr.open_dataset(
+    'data_sources/LIG/WOA_2018/woa18_decav_t15_01.nc', decode_times=False)
+
+
+
+
+
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region check difference between DJF and JFM
+
+with open('scratch/cmip6/lig/sst/lig_sst_regrid.pkl', 'rb') as f:
+    lig_sst_regrid = pickle.load(f)
+
+model = 'AWI-ESM-1-1-LR'
+
+lig_sst_regrid_djf = mon_sea_ann(var_monthly=lig_sst_regrid[model].tos)
+
+lig_sst_regrid_jfm = mon_sea_ann(var_monthly=lig_sst_regrid[model].tos,
+                                 seasons = 'Q-MAR',)
+
+data1 = lig_sst_regrid_djf['sm'].sel(season='DJF')
+data2 = lig_sst_regrid_jfm['sm'].sel(month=3)
+np.max((data1 - data2.values).isel(y=slice(0, 50)))
+np.mean(abs((data1 - data2.values).isel(y=slice(0, 50))))
+(data1 - data2.values).to_netcdf('scratch/test/test0.nc')
+
+data1.isel(y=slice(0, 50))
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get regridded AMIP SIC
+
+amip_pi_sic = xr.open_dataset(
+    'startdump/model_input/pi/alex/T63_amipsic_pcmdi_187001-189912.nc')
+
+# set land points as np.nan
+esacci_echam6_t63_trim = xr.open_dataset('startdump/tagging/tagmap/auxiliaries/sst_mon_ESACCI-2.1_198201_201612_am_rg_echam6_t63_slm_trim.nc')
+b_slm = np.broadcast_to(
+    np.isnan(esacci_echam6_t63_trim.analysed_sst.values),
+    amip_pi_sic.sic.shape,)
+amip_pi_sic.sic.values[b_slm] = np.nan
+
+amip_pi_sic_regrid = {}
+amip_pi_sic_regrid['mm'] = regrid(amip_pi_sic.sic)
+amip_pi_sic_regrid['am'] = time_weighted_mean(amip_pi_sic_regrid['mm'])
+amip_pi_sic_regrid['sm'] = amip_pi_sic_regrid['mm'].groupby(
+    'time.season').map(time_weighted_mean)
+
+with open('scratch/cmip6/lig/amip_pi_sic_regrid.pkl', 'wb') as f:
+    pickle.dump(amip_pi_sic_regrid, f)
+
+
+'''
+with open('scratch/cmip6/lig/amip_pi_sic_regrid.pkl', 'rb') as f:
+    amip_pi_sic_regrid = pickle.load(f)
+amip_pi_sic_regrid['am']
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get mon_sea_ann sic
+
+with open('scratch/cmip6/lig/lig_sic.pkl', 'rb') as f:
+    lig_sic = pickle.load(f)
+with open('scratch/cmip6/lig/pi_sic.pkl', 'rb') as f:
+    pi_sic = pickle.load(f)
+
+models=sorted(lig_sic.keys())
+
+lig_sic_alltime = {}
+pi_sic_alltime = {}
+
+for model in models:
+    # model = 'NorESM2-LM'
+    print(model)
+    lig_sic_alltime[model] = mon_sea_ann(var_monthly = lig_sic[model].siconc)
+    pi_sic_alltime[model] = mon_sea_ann(var_monthly = pi_sic[model].siconc)
+
+with open('scratch/cmip6/lig/lig_sic_alltime.pkl', 'wb') as f:
+    pickle.dump(lig_sic_alltime, f)
+with open('scratch/cmip6/lig/pi_sic_alltime.pkl', 'wb') as f:
+    pickle.dump(pi_sic_alltime, f)
+
+
+'''
+with open('scratch/cmip6/lig/lig_sic.pkl', 'rb') as f:
+    lig_sic = pickle.load(f)
+with open('scratch/cmip6/lig/pi_sic.pkl', 'rb') as f:
+    pi_sic = pickle.load(f)
+
+with open('scratch/cmip6/lig/lig_sic_alltime.pkl', 'rb') as f:
+    lig_sic_alltime = pickle.load(f)
+with open('scratch/cmip6/lig/pi_sic_alltime.pkl', 'rb') as f:
+    pi_sic_alltime = pickle.load(f)
+
+models=sorted(lig_sic.keys())
+
+#-------------------------------- check monthly values
+for model in models:
+    # model = 'NorESM2-LM'
+    print('#-------- ' + model)
+    data1 = lig_sic[model].siconc.values
+    data2 = lig_sic_alltime[model]['mon'].values
+    print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
+
+    data1 = pi_sic[model].siconc.values
+    data2 = pi_sic_alltime[model]['mon'].values
+    print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
+
+
+#-------------------------------- check one model
+with open('scratch/cmip6/lig/lig_sic_alltime.pkl', 'rb') as f:
+    lig_sic_alltime = pickle.load(f)
+
+model = 'NorESM2-LM'
+files = glob.glob('/gws/nopw/j04/bas_palaeoclim/rahul/data/PMIP_LIG/ESGF_download/CMIP6/model-output/seaIce/siconc/siconc_SImon_'+model+'_lig127k_*.nc')
+ds=xr.open_mfdataset(paths=files,use_cftime=True,parallel=True)
+ds_pp=combined_preprocessing(ds.isel(time=slice(-2400,None)))
+
+data1 = ds_pp.siconc.values
+data2 = lig_sic_alltime['NorESM2-LM']['mon'].values
+(data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all()
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get mon_sea_ann tas
+
+with open('scratch/cmip6/lig/lig_tas.pkl', 'rb') as f:
+    lig_tas = pickle.load(f)
+with open('scratch/cmip6/lig/pi_tas.pkl', 'rb') as f:
+    pi_tas = pickle.load(f)
+
+models=sorted(lig_tas.keys())
+
+
+lig_tas_alltime = {}
+pi_tas_alltime = {}
+
+for model in models:
+    # model = 'NorESM2-LM'
+    print(model)
+    lig_tas_alltime[model] = mon_sea_ann(var_monthly = lig_tas[model].tas)
+    pi_tas_alltime[model] = mon_sea_ann(var_monthly = pi_tas[model].tas)
+
+with open('scratch/cmip6/lig/lig_tas_alltime.pkl', 'wb') as f:
+    pickle.dump(lig_tas_alltime, f)
+with open('scratch/cmip6/lig/pi_tas_alltime.pkl', 'wb') as f:
+    pickle.dump(pi_tas_alltime, f)
+
+
+'''
+for model in models:
+    print('#------------------------' + model)
+    print(lig_tas[model].lon.shape)
+    print(lig_tas[model].lat.shape)
+    print(lig_tas[model].tas.shape)
+
+
+with open('scratch/cmip6/lig/lig_tas.pkl', 'rb') as f:
+    lig_tas = pickle.load(f)
+with open('scratch/cmip6/lig/pi_tas.pkl', 'rb') as f:
+    pi_tas = pickle.load(f)
+
+with open('scratch/cmip6/lig/lig_tas_alltime.pkl', 'rb') as f:
+    lig_tas_alltime = pickle.load(f)
+with open('scratch/cmip6/lig/pi_tas_alltime.pkl', 'rb') as f:
+    pi_tas_alltime = pickle.load(f)
+
+models=sorted(lig_tas.keys())
+
+#---- check monthly values
+for model in models:
+    # model = 'NorESM2-LM'
+    print('#-------- ' + model)
+    data1 = lig_tas[model].tas.values
+    data2 = lig_tas_alltime[model]['mon'].values
+    print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
+
+    data1 = pi_tas[model].tas.values
+    data2 = pi_tas_alltime[model]['mon'].values
+    print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
+
+
+#---- check 'AWI-ESM-1-1-LR'
+ds = xr.open_mfdataset(
+    '/gws/nopw/j04/bas_palaeoclim/rahul/data/PMIP_LIG/ESGF_download/CMIP6/model-output/atmos/tas/tas_Amon_AWI-ESM-1-1-LR_lig127k_r1i1p1f1_gn_*.nc', use_cftime=True,parallel=True
+)
+
+with open('scratch/cmip6/lig/lig_tas_alltime.pkl', 'rb') as f:
+    lig_tas_alltime = pickle.load(f)
+
+data1 = ds.tas.values
+data2 = lig_tas_alltime['AWI-ESM-1-1-LR']['mon'].values
+(data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all()
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get regridded AMIP SST
+
+pi_sst_file = 'startdump/model_input/pi/alex/T63_amipsst_pcmdi_187001-189912.nc'
+boundary_conditions = {}
+boundary_conditions['sst'] = {}
+boundary_conditions['sst']['pi'] = xr.open_dataset(pi_sst_file)
+
+# set land points as np.nan
+esacci_echam6_t63_trim = xr.open_dataset('startdump/tagging/tagmap/auxiliaries/sst_mon_ESACCI-2.1_198201_201612_am_rg_echam6_t63_slm_trim.nc')
+b_slm = np.broadcast_to(
+    np.isnan(esacci_echam6_t63_trim.analysed_sst.values),
+    boundary_conditions['sst']['pi'].sst.shape,)
+boundary_conditions['sst']['pi'].sst.values[b_slm] = np.nan
+boundary_conditions['sst']['pi'].sst.values -= zerok
+
+amip_pi_sst_regrid = {}
+amip_pi_sst_regrid['mm'] = regrid(boundary_conditions['sst']['pi'].sst)
+amip_pi_sst_regrid['am'] = time_weighted_mean(amip_pi_sst_regrid['mm'])
+amip_pi_sst_regrid['sm'] = amip_pi_sst_regrid['mm'].groupby(
+    'time.season').map(time_weighted_mean)
+
+with open('scratch/cmip6/lig/amip_pi_sst_regrid.pkl', 'wb') as f:
+    pickle.dump(amip_pi_sst_regrid, f)
+
+'''
+with open('scratch/cmip6/lig/amip_pi_sst_regrid.pkl', 'rb') as f:
+    amip_pi_sst_regrid = pickle.load(f)
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get mon_sea_ann sst
+
+with open('scratch/cmip6/lig/lig_sst.pkl', 'rb') as f:
+    lig_sst = pickle.load(f)
+with open('scratch/cmip6/lig/pi_sst.pkl', 'rb') as f:
+    pi_sst = pickle.load(f)
+
+models=sorted(lig_sst.keys())
+
+lig_sst_alltime = {}
+pi_sst_alltime = {}
+
+for model in models:
+    # model = 'NorESM2-LM'
+    print(model)
+    lig_sst_alltime[model] = mon_sea_ann(var_monthly = lig_sst[model].tos)
+    pi_sst_alltime[model] = mon_sea_ann(var_monthly = pi_sst[model].tos)
+
+with open('scratch/cmip6/lig/lig_sst_alltime.pkl', 'wb') as f:
+    pickle.dump(lig_sst_alltime, f)
+with open('scratch/cmip6/lig/pi_sst_alltime.pkl', 'wb') as f:
+    pickle.dump(pi_sst_alltime, f)
+
+
+'''
+with open('scratch/cmip6/lig/lig_sst.pkl', 'rb') as f:
+    lig_sst = pickle.load(f)
+with open('scratch/cmip6/lig/pi_sst.pkl', 'rb') as f:
+    pi_sst = pickle.load(f)
+
+with open('scratch/cmip6/lig/lig_sst_alltime.pkl', 'rb') as f:
+    lig_sst_alltime = pickle.load(f)
+with open('scratch/cmip6/lig/pi_sst_alltime.pkl', 'rb') as f:
+    pi_sst_alltime = pickle.load(f)
+
+models=sorted(lig_sst.keys())
+
+#---- check monthly values
+for model in models:
+    # model = 'NorESM2-LM'
+    print('#-------- ' + model)
+    data1 = lig_sst[model].tos.values
+    data2 = lig_sst_alltime[model]['mon'].values
+    print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
+
+    data1 = pi_sst[model].tos.values
+    data2 = pi_sst_alltime[model]['mon'].values
+    print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
+
+#---- check storage
+for model in models:
+    # model = 'NorESM2-LM'
+    print('#-------- ' + model)
+    print(lig_sst[model].tos.nbytes / 2**30)
+    
+    # print(lig_sst_alltime[model].keys())
+    
+    for ialltime in lig_sst_alltime[model].keys():
+        print(lig_sst_alltime[model][ialltime].nbytes / 2**30)
+
+#---- check 'NorESM2-LM'
+with open('scratch/cmip6/lig/lig_sst_alltime.pkl', 'rb') as f:
+    lig_sst_alltime = pickle.load(f)
+
+files=glob.glob('/gws/nopw/j04/bas_palaeoclim/rahul/data/PMIP_LIG/ESGF_download/CMIP6/model-output/ocean/tos/tos_Omon_NorESM2-LM_lig127k_*.nc')
+ds=xr.open_mfdataset(paths=files,use_cftime=True,parallel=True)
+ds_pp=combined_preprocessing(ds.isel(time=slice(-2400,None)))
+
+data1 = ds_pp.tos.values
+data2 = lig_sst_alltime['NorESM2-LM']['mon'].values
+(data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all()
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
 # region compare three quantiles [90%, 95%, 99%]
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.1_pre/6.1.7.1 ' + expid[i] + ' compare quantiles frc_source_lat Antarctica.png'

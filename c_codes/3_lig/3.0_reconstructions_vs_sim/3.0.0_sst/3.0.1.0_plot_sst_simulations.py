@@ -107,10 +107,6 @@ with open('scratch/cmip6/lig/lig_sst.pkl', 'rb') as f:
 with open('scratch/cmip6/lig/pi_sst.pkl', 'rb') as f:
     pi_sst = pickle.load(f)
 
-with open('scratch/cmip6/lig/lig_sst_alltime.pkl', 'rb') as f:
-    lig_sst_alltime = pickle.load(f)
-with open('scratch/cmip6/lig/pi_sst_alltime.pkl', 'rb') as f:
-    pi_sst_alltime = pickle.load(f)
 
 models=sorted(lig_sst_alltime.keys())
 
@@ -971,11 +967,13 @@ fig.savefig(output_png)
 # -----------------------------------------------------------------------------
 
 
-
-
-
 # -----------------------------------------------------------------------------
 # region plot lig am sst
+
+with open('scratch/cmip6/lig/deprecated/lig_sst_alltime.pkl', 'rb') as f:
+    lig_sst_alltime = pickle.load(f)
+with open('scratch/cmip6/lig/deprecated/pi_sst_alltime.pkl', 'rb') as f:
+    pi_sst_alltime = pickle.load(f)
 
 output_png = 'figures/7_lig/7.0_boundary_conditions/7.0.0_sst/7.0.0.0 lig sst am multiple models.png'
 # output_png = 'figures/0_test/trial.png'
@@ -1056,6 +1054,67 @@ for irow in range(nrow):
             # axs[irow, jcol].clabel(
             #     plt_ctr, inline=1, colors='m', fmt=remove_trailing_zero,
             #     levels=ctrlevel, inline_spacing=10, fontsize=6,)
+        
+        plt.text(
+            0.5, 1.05, model,
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+
+cbar = fig.colorbar(
+    plt_mesh, ax=axs, aspect=40,
+    orientation="horizontal", shrink=0.75, ticks=pltticks, extend='both',
+    anchor=(0.5, -0.3),
+    )
+cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
+cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom, top = 0.97)
+fig.savefig(output_png)
+
+
+
+
+with open('scratch/cmip6/lig/sst/lig_sst_regrid_alltime.pkl', 'rb') as f:
+    lig_sst_regrid_alltime = pickle.load(f)
+
+lon = lig_sst_regrid_alltime['ACCESS-ESM1-5']['am'].lon
+lat = lig_sst_regrid_alltime['ACCESS-ESM1-5']['am'].lat
+
+models = list(lig_sst_regrid_alltime.keys())
+output_png = 'figures/test/trial.png'
+cbar_label = 'LIG annual mean SST [$°C$]'
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-2, cm_max=26, cm_interval1=2, cm_interval2=2, cmap='RdBu',)
+
+nrow = 3
+ncol = 4
+fm_bottom = 2 / (5.8*nrow + 2)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.12, 'wspace': 0.02},)
+
+ipanel=0
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(
+            northextent=-30, ax_org = axs[irow, jcol])
+        plt.text(
+            0, 0.95, panel_labels[ipanel],
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        ipanel += 1
+
+for irow in range(nrow):
+    for jcol in range(ncol):
+        model = models[jcol + ncol * irow]
+        print(model)
+        
+        plt_data = lig_sst_regrid_alltime[model]['am'].values
+        
+        plt_mesh = axs[irow, jcol].pcolormesh(
+            lon, lat, plt_data,
+            norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
         
         plt.text(
             0.5, 1.05, model,

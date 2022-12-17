@@ -60,6 +60,8 @@ mamba install -c conda-forge eofs -y
 pip install Pympler
 
 
+
+
 '''
 #-------------------------------- TEST REGION
 
@@ -83,7 +85,6 @@ source ${HOME}/miniconda3/bin/activate test
 
 # mamba install -c conda-forge nco
 # mamba install -c conda-forge pynco
-# mamba install -c conda-forge eofs
 # mamba install -c conda-forge bottleneck
 # mamba install -c conda-forge gh
 # mamba install -c conda-forge mpich esmpy

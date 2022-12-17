@@ -127,10 +127,14 @@ with open('scratch/cmip6/lig/obs_sim_lig_pi_ais_tas.pkl', 'rb') as f:
 
 
 '''
-with open('scratch/cmip6/lig/lig_tas.pkl', 'rb') as f:
-    lig_tas = pickle.load(f)
-with open('scratch/cmip6/lig/pi_tas.pkl', 'rb') as f:
-    pi_tas = pickle.load(f)
+with open('scratch/cmip6/lig/deprecated/lig_tas_alltime.pkl', 'rb') as f:
+    lig_tas_alltime = pickle.load(f)
+with open('scratch/cmip6/lig/tas/lig_tas_regrid_alltime.pkl', 'rb') as f:
+    lig_tas_regrid_alltime = pickle.load(f)
+
+lig_tas_alltime['NorESM2-LM']['am'].to_netcdf('scratch/test/test0.nc')
+lig_tas_regrid_alltime['NorESM2-LM']['am'].to_netcdf('scratch/test/test1.nc')
+
 
 '''
 # endregion
