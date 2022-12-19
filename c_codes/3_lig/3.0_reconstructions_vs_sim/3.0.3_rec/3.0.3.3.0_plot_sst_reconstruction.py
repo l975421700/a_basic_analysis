@@ -101,6 +101,23 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
+lig_recs = {}
+
+with open('scratch/cmip6/lig/rec/lig_recs_dc.pkl', 'rb') as f:
+    lig_recs['DC'] = pickle.load(f)
+
+with open('scratch/cmip6/lig/rec/lig_recs_ec.pkl', 'rb') as f:
+    lig_recs['EC'] = pickle.load(f)
+
+with open('scratch/cmip6/lig/rec/lig_recs_jh.pkl', 'rb') as f:
+    lig_recs['JH'] = pickle.load(f)
+
+with open('scratch/cmip6/lig/rec/lig_recs_mc.pkl', 'rb') as f:
+    lig_recs['MC'] = pickle.load(f)
+
+
+
+'''
 #-------- import EC reconstruction
 ec_sst_rec = {}
 # 47 cores
@@ -170,7 +187,7 @@ with open('scratch/cmip6/lig/chadwick_interp.pkl', 'rb') as f:
 lig_datasets = pd.read_excel(
     'data_sources/LIG/lig_datasets.xlsx', header=0, nrows=49,)
 
-'''
+
 # 14 cores for am
 # 22 cores for djf
 # 36 cores in total
@@ -183,40 +200,48 @@ lig_datasets = pd.read_excel(
 # region plot reconstructions of am sst
 
 
-output_png = 'figures/7_lig/7.0_boundary_conditions/7.0.0_sst/7.0.0.0 lig-pi sst am reconstruction.png'
-cbar_label = 'LIG annual mean SST/SAT anomalies [$°C$]'
+output_png = 'figures/7_lig/7.0_boundary_conditions/7.0.3_rec/7.0.3.0 rec am sst lig-pi.png'
+cbar_label = 'LIG annual SST/SAT anomalies [$°C$]'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='BrBG',)
 
 fig, ax = hemisphere_plot(northextent=-38)
 
+# JH
+# lig_recs['JH']['SO_ann']
 ax.scatter(
-    x = jh_sst_rec['SO_ann'].Longitude,
-    y = jh_sst_rec['SO_ann'].Latitude,
-    c = jh_sst_rec['SO_ann']['127 ka SST anomaly (°C)'],
+    x = lig_recs['JH']['SO_ann'].Longitude,
+    y = lig_recs['JH']['SO_ann'].Latitude,
+    c = lig_recs['JH']['SO_ann']['127 ka SST anomaly (°C)'],
     # s=10,
-    s = 16 - 2.5 * jh_sst_rec['SO_ann']['127 ka 2σ (°C)'],
+    s = 16 - 2.5 * lig_recs['JH']['SO_ann']['127 ka 2σ (°C)'],
     lw=0.3, marker='s', edgecolors = 'black', zorder=2,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
+# EC SST
+# lig_recs['EC']['SO_ann']
 ax.scatter(
-    x = ec_sst_rec['SO_ann'].Longitude,
-    y = ec_sst_rec['SO_ann'].Latitude,
-    c = ec_sst_rec['SO_ann']['127 ka Median PIAn [°C]'],
+    x = lig_recs['EC']['SO_ann'].Longitude,
+    y = lig_recs['EC']['SO_ann'].Latitude,
+    c = lig_recs['EC']['SO_ann']['127 ka Median PIAn [°C]'],
     # s=10,
-    s = 16 - 2.5 * ec_sst_rec['SO_ann']['127 ka 2s PIAn [°C]'],
+    s = 16 - 2.5 * lig_recs['EC']['SO_ann']['127 ka 2s PIAn [°C]'],
     lw=0.3, marker='o', edgecolors = 'black', zorder=2,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
+# EC SAT
+# lig_recs['EC']['AIS_am']
 ax.scatter(
-    x = ec_sst_rec['AIS_am'].Longitude,
-    y = ec_sst_rec['AIS_am'].Latitude,
-    c = ec_sst_rec['AIS_am']['127 ka Median PIAn [°C]'],
+    x = lig_recs['EC']['AIS_am'].Longitude,
+    y = lig_recs['EC']['AIS_am'].Latitude,
+    c = lig_recs['EC']['AIS_am']['127 ka Median PIAn [°C]'],
     # s=10,
-    s = 16 - 2.5 * ec_sst_rec['AIS_am']['127 ka 2s PIAn [°C]'],
+    s = 16 - 2.5 * lig_recs['EC']['AIS_am']['127 ka 2s PIAn [°C]'],
     lw=0.3, marker='o', edgecolors = 'black', zorder=2,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+# DC
 
 l1 = plt.scatter(
     [],[], c='white', marker='s', s=16 - 2.5 * 1, lw=0.3, edgecolors = 'black',)
@@ -257,6 +282,15 @@ sns.scatterplot(
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
 
 
 # -----------------------------------------------------------------------------

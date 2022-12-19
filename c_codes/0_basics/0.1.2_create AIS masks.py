@@ -131,3 +131,81 @@ fig.savefig('figures/trial.png')
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region create cdo_1deg_mask
+
+ais_shpfile = gpd.read_file('data_sources/products/IMBIE_2016_drainage_basins/Rignot_Basins/ANT_IceSheets_IMBIE2/ANT_IceSheets_IMBIE2_v1.6.shp')
+
+cdo_area1deg = xr.open_dataset('scratch/others/one_degree_grids_cdo_area.nc')
+
+lon = cdo_area1deg.lon.values
+lat = cdo_area1deg.lat.values
+cell_area = cdo_area1deg.cell_area.values
+
+cdo_1deg_ais_mask = create_ais_mask(
+    lon, lat, ais_shpfile, cell_area,
+)
+
+with open('scratch/others/land_sea_masks/cdo_1deg_ais_mask.pkl', 'wb') as f:
+    pickle.dump(cdo_1deg_ais_mask, f)
+
+
+'''
+#-------------------------------- check
+with open('scratch/others/land_sea_masks/cdo_1deg_ais_mask.pkl', 'rb') as f:
+    cdo_1deg_ais_mask = pickle.load(f)
+
+cdo_area1deg = xr.open_dataset('scratch/others/one_degree_grids_cdo_area.nc')
+lon = cdo_area1deg.lon.values
+lat = cdo_area1deg.lat.values
+
+cdo_1deg_ais_mask['cellarea']
+# 9761642.045593847 + 2110804.571811703 + 232127.50065176177 = 12104574.118057309
+
+from a_basic_analysis.b_module.mapplot import (
+    globe_plot,
+    hemisphere_plot,
+    quick_var_plot,
+    mesh2plot,
+    framework_plot1,
+    remove_trailing_zero,
+    remove_trailing_zero_pos,
+)
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+import matplotlib as mpl
+mpl.rcParams['figure.dpi'] = 300
+fig, ax = hemisphere_plot(northextent=-60)
+
+ax.contour(
+    lon, lat,
+    cdo_1deg_ais_mask['mask01']['EAIS'],
+    colors='blue', levels=np.array([0.5]),
+    transform=ccrs.PlateCarree(), linewidths=0.5, linestyles='solid')
+ax.contour(
+    lon, lat,
+    cdo_1deg_ais_mask['mask01']['WAIS'],
+    colors='red', levels=np.array([0.5]),
+    transform=ccrs.PlateCarree(), linewidths=0.5, linestyles='solid')
+ax.contour(
+    lon, lat,
+    cdo_1deg_ais_mask['mask01']['AP'],
+    colors='yellow', levels=np.array([0.5]),
+    transform=ccrs.PlateCarree(), linewidths=0.5, linestyles='solid')
+# ax.contour(
+#     lon, lat,
+#     cdo_1deg_ais_mask['mask01']['AIS'],
+#     colors='m', levels=np.array([0.5]),
+#     transform=ccrs.PlateCarree(), linewidths=0.5, linestyles='solid')
+
+coastline = cfeature.NaturalEarthFeature(
+    'physical', 'coastline', '10m', edgecolor='black',
+    facecolor='none', lw=0.1)
+ax.add_feature(coastline, zorder=2)
+
+fig.savefig('figures/test/trial.png')
+'''
+# endregion
+# -----------------------------------------------------------------------------

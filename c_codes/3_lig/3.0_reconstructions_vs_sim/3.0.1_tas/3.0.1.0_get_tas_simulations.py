@@ -507,13 +507,13 @@ with open('scratch/cmip6/lig/tas/tas_regrid_alltime_ens_stats.pkl', 'wb') as f:
 
 '''
 #-------------------------------- check
+with open('scratch/cmip6/lig/tas/tas_regrid_alltime_ens_stats.pkl', 'rb') as f:
+    tas_regrid_alltime_ens_stats = pickle.load(f)
+
 with open('scratch/cmip6/lig/tas/lig_tas_regrid_alltime_ens.pkl', 'rb') as f:
     lig_tas_regrid_alltime_ens = pickle.load(f)
 with open('scratch/cmip6/lig/tas/pi_tas_regrid_alltime_ens.pkl', 'rb') as f:
     pi_tas_regrid_alltime_ens = pickle.load(f)
-
-with open('scratch/cmip6/lig/tas/tas_regrid_alltime_ens_stats.pkl', 'rb') as f:
-    tas_regrid_alltime_ens_stats = pickle.load(f)
 
 ialltime = 'am'
 

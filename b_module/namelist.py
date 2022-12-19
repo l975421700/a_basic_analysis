@@ -79,6 +79,8 @@ ten_sites_names = [
     'EDC', 'DOME F', 'Vostok', 'EDML', 'WDC',
     'Rothera', 'Halley', 'Neumayer', 'Law Dome', "Dumont d'Urville"]
 
+marker_recs = {'EC': 'o', 'JH': 's', 'DC': 'v', 'MC': '^'}
+
 # endregion
 # -----------------------------------------------------------------------------
 
