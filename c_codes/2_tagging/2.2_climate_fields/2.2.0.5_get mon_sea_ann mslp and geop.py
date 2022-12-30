@@ -146,6 +146,33 @@ test['am'] = test['ann'].mean(dim='time', skipna=True).compute()
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region ERA5 mon_sea_ann psl
+
+psl_era5_mon_sl_79_21 = xr.open_dataset(
+    'scratch/cmip6/hist/psl/psl_era5_mon_sl_79_21.nc')
+
+psl_era5_79_21_alltime = mon_sea_ann(
+    var_monthly=psl_era5_mon_sl_79_21.msl)
+
+with open('scratch/cmip6/hist/psl/psl_era5_79_21_alltime.pkl', 'wb') as f:
+    pickle.dump(psl_era5_79_21_alltime, f)
+
+
+'''
+# check
+
+with open('scratch/cmip6/hist/psl/psl_era5_79_21_alltime.pkl', 'rb') as f:
+    psl_era5_79_21_alltime = pickle.load(f)
+
+data1 = psl_era5_79_21_alltime['mon'].values
+data2 = psl_era5_mon_sl_79_21.msl.values
+(data1 == data2).all()
+
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
 
 
 

@@ -51,7 +51,10 @@ def mon_sea_ann(
         
     elif not var_monthly is None:
         #-------- monthly
-        var_alltime['mon'] = var_monthly.copy()
+        if lcopy:
+            var_alltime['mon'] = var_monthly.copy()
+        else:
+            var_alltime['mon'] = var_monthly
     
     #-------- seasonal
     if (seasons == 'Q-FEB'):

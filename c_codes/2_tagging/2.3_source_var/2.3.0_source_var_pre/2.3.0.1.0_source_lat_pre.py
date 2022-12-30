@@ -108,9 +108,6 @@ lon = pre_weighted_lat[expid[i]]['am'].lon
 lat = pre_weighted_lat[expid[i]]['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
-major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
-major_ice_core_site = major_ice_core_site.loc[
-    major_ice_core_site['age (kyr)'] > 120, ]
 ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
 wisoaprt_alltime = {}
@@ -556,7 +553,7 @@ pre_weighted_var['ann_highres'] = xr.open_dataset(
 
 
 # -----------------------------------------------------------------------------
-# region plot am source properties
+# region plot am all source properties
 
 #-------- import data
 pre_weighted_var = {}
@@ -692,6 +689,50 @@ fig.savefig(output_png)
 
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot pre_weighted_lat am + am aprt
+
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.0_lat/6.1.3.0 ' + expid[i] + ' relative pre_weighted_lat am Antarctica.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=10, cm_max=50, cm_interval1=4, cm_interval2=8, cmap='PiYG',
+    reversed=False)
+
+fig, ax = hemisphere_plot(northextent=-60, figsize=np.array([5.8, 7]) / 2.54,)
+
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
+
+plt1 = ax.pcolormesh(
+    lon,
+    lat,
+    pre_weighted_lat[expid[i]]['am'] - lat_2d,
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    plt1, ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+    pad=0.02, fraction=0.15,
+    )
+# cbar.ax.set_xticklabels(
+#     [remove_trailing_zero(x) for x in np.negative(pltticks)])
+cbar.ax.tick_params(labelsize=8)
+cbar.ax.set_xlabel('Relative source latitude [$°$]',)
+fig.savefig(output_png)
+
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+
+
+
 
 
 

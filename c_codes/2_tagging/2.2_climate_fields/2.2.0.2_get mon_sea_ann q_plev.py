@@ -1,10 +1,13 @@
 
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_416_4.9',]
+expid = [
+    # 'pi_m_416_4.9',
+    'pi_m_502_5.0',
+    ]
 i = 0
 ifile_start = 120
-ifile_end =   1080
+ifile_end =   720
 
 
 # -----------------------------------------------------------------------------
@@ -85,11 +88,12 @@ from a_basic_analysis.b_module.source_properties import (
 exp_org_o = {}
 exp_org_o[expid[i]] = {}
 
-filenames_uvq_plev = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_uvq_plev.nc'))
+filenames_q_plev = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_q_plev.nc'))
 
-exp_org_o[expid[i]]['uvq_plev'] = xr.open_mfdataset(
-    filenames_uvq_plev[ifile_start:ifile_end],
-    data_vars='minimal', coords='minimal', parallel=True)
+exp_org_o[expid[i]]['q_plev'] = xr.open_mfdataset(
+    filenames_q_plev[ifile_start:ifile_end],
+    data_vars='minimal', coords='minimal', parallel=True,)
+
 
 '''
 '''
@@ -100,12 +104,13 @@ exp_org_o[expid[i]]['uvq_plev'] = xr.open_mfdataset(
 # -----------------------------------------------------------------------------
 # region calculate mon_sea_ann q_plev
 
+monthly_q_plev = (
+    exp_org_o[expid[i]]['q_plev'].q + \
+        exp_org_o[expid[i]]['q_plev'].xl + \
+            exp_org_o[expid[i]]['q_plev'].xi ).compute()
+
 q_plev = {}
-q_plev[expid[i]] = mon_sea_ann(
-    var_monthly=(
-        exp_org_o[expid[i]]['uvq_plev'].q + \
-            exp_org_o[expid[i]]['uvq_plev'].xl + \
-                exp_org_o[expid[i]]['uvq_plev'].xi ).compute())
+q_plev[expid[i]] = mon_sea_ann(var_monthly=monthly_q_plev)
 
 with open(
     exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_plev.pkl',

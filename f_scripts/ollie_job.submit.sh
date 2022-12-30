@@ -1,16 +1,20 @@
 #!/bin/bash
-#SBATCH --time=01:00:00
-#SBATCH --partition=mpp120
+#SBATCH --time=10:00:00
+#SBATCH --partition=fat
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=36
 #SBATCH -o %A_job.out
 #SBATCH -e %A_job.err
 
+echo "Current time : " $(date +"%T")
+
 source /home/ollie/qigao001/miniconda3/bin/activate deepice
 
 cd $WORK
 
-python "/work/ollie/qigao001/a_basic_analysis/c_codes/2_tagging/2.5_extreme_precipitation/2.5.0.2.2_get_transport_distance_epe_bin.py"
+python "/work/ollie/qigao001/a_basic_analysis/c_codes/2_tagging/2.5_extreme_precipitation/2.5.0.0.7_get_binned_masked_nt.py"
+
+echo "Current time : " $(date +"%T")
 
 #Xsrun  I know what I am doing
 
@@ -28,9 +32,6 @@ python "/work/ollie/qigao001/a_basic_analysis/c_codes/2_tagging/2.5_extreme_prec
 # ${pp_dir}/job.get.wiso_d.sh ${output_dir} ${expid} ${yrstart} ${yrend}
 
 # /work/ollie/qigao001/a_basic_analysis/f_scripts/short_run_get_echam_nc.sh
-
-# python /work/ollie/qigao001/a_basic_analysis/c_codes/2_awiesm/2.0._tagging/2.0.1.0_check_tagging_results/2.0.1.0.0_collect_correction_factors.py
-
 
 # partition: https://spaces.awi.de/display/HELP/SLURM
 

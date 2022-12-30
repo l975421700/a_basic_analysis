@@ -108,72 +108,33 @@ epe_weighted_lat = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_weighted_lat.pkl', 'rb') as f:
     epe_weighted_lat[expid[i]] = pickle.load(f)
 
-pre_weighted_lat = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lat.pkl', 'rb') as f:
-    pre_weighted_lat[expid[i]] = pickle.load(f)
+dc_weighted_lat = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dc_weighted_lat.pkl', 'rb') as f:
+    dc_weighted_lat[expid[i]] = pickle.load(f)
 
-major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
-major_ice_core_site = major_ice_core_site.loc[
-    major_ice_core_site['age (kyr)'] > 120, ]
-ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
-
-lon = pre_weighted_lat[expid[i]]['am'].lon
-lat = pre_weighted_lat[expid[i]]['am'].lat
+lon = epe_weighted_lat[expid[i]]['90%']['am'].lon
+lat = epe_weighted_lat[expid[i]]['90%']['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
-# quantiles = {'90%': 0.9, '95%': 0.95, '99%': 0.99}
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
 
 '''
-wisoaprt_epe = {}
-with open(
-    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe.pkl',
-    'rb') as f:
-    wisoaprt_epe[expid[i]] = pickle.load(f)
-
-
-# wrong way to get epe_source_lat
-epe_source_lat = {}
-
-for iqtl in quantiles.keys():
-    # iqtl = '90%'
-    print(iqtl)
-    epe_source_lat[iqtl] = {}
-    
-    # am
-    epe_source_lat[iqtl]['am'] = pre_weighted_lat[expid[i]]['daily'].weighted(
-        wisoaprt_epe[expid[i]]['masked_data_ocean'][iqtl]).mean(dim='time')
-    # daily
-
-#-------- check
-ilat = 40
-ilon = 90
-
-iqtl = '90%'
-# am
-res001 = epe_source_lat[iqtl]['am'][ilat, ilon].values
-data = pre_weighted_lat[expid[i]]['daily'][:, ilat, ilon].values
-weights = wisoaprt_epe[expid[i]]['masked_data_ocean'][iqtl][:, ilat, ilon]
-res002 = np.average(data[np.isfinite(data)], weights=weights[np.isfinite(data)])
-print(res001 == res002)
-print((res001 - res002) / res001)
-
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region plot (epe_source_lat - pre_weighted_lat) am Antarctica
+# region plot (epe_weighted_lat - dc_weighted_lat) am Antarctica
 
 iqtl = '90%'
 
-output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.0_source_lat/6.1.7.0.0 ' + expid[i] + ' epe_source_lat - pre_weighted_lat am Antarctica.png'
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.0_source_lat/6.1.7.0.0 ' + expid[i] + ' epe_weighted_lat - dc_weighted_lat am Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=0, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='viridis',
-    reversed=True)
-# pltcmp = pplt.Colormap('Stellar', samples=len(pltlevel)-1)
+    cm_min=1, cm_max=11, cm_interval1=1, cm_interval2=1, cmap='PiYG',
+    reversed=False)
 
 fig, ax = hemisphere_plot(
     northextent=-60, figsize=np.array([5.8, 7]) / 2.54)
@@ -183,11 +144,12 @@ cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 plt1 = ax.pcolormesh(
     lon,
     lat,
-    epe_weighted_lat[expid[i]][iqtl]['am'] - pre_weighted_lat[expid[i]]['am'],
+    epe_weighted_lat[expid[i]][iqtl]['am'] - \
+        dc_weighted_lat[expid[i]][iqtl]['am'],
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 ttest_fdr_res = ttest_fdr_control(
     epe_weighted_lat[expid[i]][iqtl]['ann'],
-    pre_weighted_lat[expid[i]]['ann'],
+    dc_weighted_lat[expid[i]][iqtl]['ann'],
     )
 ax.scatter(
     x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
@@ -203,7 +165,7 @@ cbar = fig.colorbar(
 cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel('EPE source latitude anomalies [$°$]', linespacing=2)
-fig.savefig(output_png, dpi=1200)
+fig.savefig(output_png, dpi=600)
 
 
 
@@ -212,6 +174,10 @@ fig.savefig(output_png, dpi=1200)
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+
+
 
 
 # -----------------------------------------------------------------------------

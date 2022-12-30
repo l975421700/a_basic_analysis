@@ -158,7 +158,7 @@ cbar = fig.colorbar(
 cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel(
-    'Contribution of 10$\%$ heaviest\nprecipitation to total precipitation [$\%$]', linespacing=1.5)
+    'Contribution of EPE to\nannual mean precipitation [$\%$]', linespacing=1.5)
 fig.savefig(output_png, dpi=600)
 
 

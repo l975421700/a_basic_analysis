@@ -108,20 +108,15 @@ epe_weighted_sst = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_weighted_sst.pkl', 'rb') as f:
     epe_weighted_sst[expid[i]] = pickle.load(f)
 
-pre_weighted_sst = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_sst.pkl', 'rb') as f:
-    pre_weighted_sst[expid[i]] = pickle.load(f)
+dc_weighted_sst = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dc_weighted_sst.pkl', 'rb') as f:
+    dc_weighted_sst[expid[i]] = pickle.load(f)
 
-major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
-major_ice_core_site = major_ice_core_site.loc[
-    major_ice_core_site['age (kyr)'] > 120, ]
-ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
-
-lon = pre_weighted_sst[expid[i]]['am'].lon
-lat = pre_weighted_sst[expid[i]]['am'].lat
+lon = epe_weighted_sst[expid[i]]['90%']['am'].lon
+lat = epe_weighted_sst[expid[i]]['90%']['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
-# quantiles = {'90%': 0.9, '95%': 0.95, '99%': 0.99}
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
 
 '''
@@ -131,16 +126,15 @@ lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
 
 # -----------------------------------------------------------------------------
-# region plot (epe_weighted_sst - pre_weighted_sst) am Antarctica
+# region plot (epe_weighted_sst - dc_weighted_sst) am Antarctica
 
 iqtl = '90%'
 
-output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.2_source_sst/6.1.7.0.2 ' + expid[i] + ' epe_weighted_sst - pre_weighted_sst am Antarctica.png'
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.2_source_sst/6.1.7.0.2 ' + expid[i] + ' epe_weighted_sst - dc_weighted_sst am Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=0, cm_max=3, cm_interval1=0.5, cm_interval2=0.5, cmap='viridis',
-    reversed=True)
-# pltcmp = pplt.Colormap('Fire', samples=len(pltlevel)-1)
+    cm_min=0, cm_max=8, cm_interval1=1, cm_interval2=1, cmap='BrBG',
+    reversed=False)
 
 fig, ax = hemisphere_plot(
     northextent=-60, figsize=np.array([5.8, 7]) / 2.54)
@@ -150,11 +144,12 @@ cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 plt1 = ax.pcolormesh(
     lon,
     lat,
-    epe_weighted_sst[expid[i]][iqtl]['am'] - pre_weighted_sst[expid[i]]['am'],
+    epe_weighted_sst[expid[i]][iqtl]['am'] - \
+        dc_weighted_sst[expid[i]][iqtl]['am'],
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 ttest_fdr_res = ttest_fdr_control(
     epe_weighted_sst[expid[i]][iqtl]['ann'],
-    pre_weighted_sst[expid[i]]['ann'],
+    dc_weighted_sst[expid[i]][iqtl]['ann'],
     )
 ax.scatter(
     x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
@@ -170,7 +165,7 @@ cbar = fig.colorbar(
 cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel('EPE source SST anomalies [$°C$]', linespacing=2)
-fig.savefig(output_png, dpi=1200)
+fig.savefig(output_png, dpi=600)
 
 
 
@@ -179,6 +174,11 @@ fig.savefig(output_png, dpi=1200)
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+
+
+
 
 
 # -----------------------------------------------------------------------------

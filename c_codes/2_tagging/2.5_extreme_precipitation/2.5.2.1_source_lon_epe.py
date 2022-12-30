@@ -2,7 +2,6 @@
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_m_416_4.9',
     'pi_m_502_5.0',
     ]
 i = 0
@@ -108,20 +107,15 @@ epe_weighted_lon = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_weighted_lon.pkl', 'rb') as f:
     epe_weighted_lon[expid[i]] = pickle.load(f)
 
-pre_weighted_lon = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lon.pkl', 'rb') as f:
-    pre_weighted_lon[expid[i]] = pickle.load(f)
+dc_weighted_lon = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dc_weighted_lon.pkl', 'rb') as f:
+    dc_weighted_lon[expid[i]] = pickle.load(f)
 
-major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
-major_ice_core_site = major_ice_core_site.loc[
-    major_ice_core_site['age (kyr)'] > 120, ]
-ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
-
-lon = pre_weighted_lon[expid[i]]['am'].lon
-lat = pre_weighted_lon[expid[i]]['am'].lat
+lon = epe_weighted_lon[expid[i]]['90%']['am'].lon
+lat = epe_weighted_lon[expid[i]]['90%']['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
-# quantiles = {'90%': 0.9, '95%': 0.95, '99%': 0.99}
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
 
 '''
@@ -131,16 +125,15 @@ lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
 
 # -----------------------------------------------------------------------------
-# region plot (epe_weighted_lon - pre_weighted_lon) am Antarctica
+# region plot (epe_weighted_lon - dc_weighted_lon) am Antarctica
 
 iqtl = '90%'
 
-output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.1_source_lon/6.1.7.0.1 ' + expid[i] + ' epe_weighted_lon - pre_weighted_lon am Antarctica.png'
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.1_source_lon/6.1.7.0.1 ' + expid[i] + ' epe_weighted_lon - dc_weighted_lon am Antarctica.png'
 
-pltlevel = np.arange(-15, 15 + 1e-4, 3)
-pltticks = np.arange(-15, 15 + 1e-4, 3)
-pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
-pltcmp = cm.get_cmap('PRGn', len(pltlevel)-1).reversed()
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-25, cm_max=25, cm_interval1=5, cm_interval2=5, cmap='PRGn',
+    reversed=True)
 
 fig, ax = hemisphere_plot(
     northextent=-60, figsize=np.array([5.8, 7]) / 2.54)
@@ -152,12 +145,12 @@ plt1 = ax.pcolormesh(
     lat,
     calc_lon_diff(
         epe_weighted_lon[expid[i]][iqtl]['am'],
-        pre_weighted_lon[expid[i]]['am']),
+        dc_weighted_lon[expid[i]][iqtl]['am']),
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
 wwtest_res = circ.watson_williams(
     epe_weighted_lon[expid[i]][iqtl]['ann'] * np.pi / 180,
-    pre_weighted_lon[expid[i]]['ann'] * np.pi / 180,
+    dc_weighted_lon[expid[i]][iqtl]['ann'] * np.pi / 180,
     axis=0,
     )[0] < 0.05
 ax.scatter(
@@ -174,7 +167,7 @@ cbar = fig.colorbar(
 cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel('EPE source longitude anomalies [$°$]', linespacing=2)
-fig.savefig(output_png, dpi=1200)
+fig.savefig(output_png, dpi=600)
 
 
 
@@ -182,6 +175,12 @@ fig.savefig(output_png, dpi=1200)
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+
+
+
+
 
 
 # -----------------------------------------------------------------------------

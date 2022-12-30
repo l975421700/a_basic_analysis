@@ -1,27 +1,26 @@
 
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_416_4.9',]
+expid = [
+    # 'pi_m_416_4.9',
+    'pi_m_502_5.0',
+    ]
 i = 0
 
 ifile_start = 120
-ifile_end =   1080 #1080
+ifile_end =   720
 
 ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
-
-# ntags = [0, 0, 0, 0, 0,   3, 3, 3, 3, 3,   7]
-# ntags = [0, 0, 0, 0, 0,   0, 0, 0, 0, 0,   7, 3, 3, 0]
-
 
 # var_name  = 'sst'
 # itag      = 7
 # min_sf    = 268.15
 # max_sf    = 318.15
 
-# var_name  = 'lat'
-# itag      = 5
-# min_sf    = -90
-# max_sf    = 90
+var_name  = 'lat'
+itag      = 5
+min_sf    = -90
+max_sf    = 90
 
 # var_name  = 'rh2m'
 # itag      = 8
@@ -38,10 +37,10 @@ ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
 # min_sf    = -1
 # max_sf    = 1
 
-var_name  = 'coslon'
-itag      = 12
-min_sf    = -1
-max_sf    = 1
+# var_name  = 'coslon'
+# itag      = 12
+# min_sf    = -1
+# max_sf    = 1
 
 
 # -----------------------------------------------------------------------------
@@ -98,10 +97,6 @@ print(kstart); print(str_ind1); print(str_ind2)
 
 '''
 exp_out_wiso_q_1m['q_' + str_ind1]
-
-
-kend   = kwiso2 + sum(ntags[:(itag+1)])
-print(kend)
 '''
 # endregion
 # -----------------------------------------------------------------------------

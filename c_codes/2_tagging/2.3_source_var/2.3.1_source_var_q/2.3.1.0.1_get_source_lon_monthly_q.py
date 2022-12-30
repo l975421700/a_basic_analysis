@@ -1,7 +1,10 @@
 
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_416_4.9',]
+expid = [
+    # 'pi_m_416_4.9',
+    'pi_m_502_5.0',
+    ]
 i=0
 
 # -----------------------------------------------------------------------------
@@ -65,14 +68,15 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_weighted_lon
 
 '''
 #-------- check
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_weighted_lon.pkl', 'rb') as f:
+    q_weighted_lon = pickle.load(f)
+
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_weighted_sinlon.pkl', 'rb') as f:
     q_weighted_sinlon = pickle.load(f)
 
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_weighted_coslon.pkl', 'rb') as f:
     q_weighted_coslon = pickle.load(f)
-
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_weighted_lon.pkl', 'rb') as f:
-    q_weighted_lon = pickle.load(f)
 
 ialltime = 'sea'
 itime = 20

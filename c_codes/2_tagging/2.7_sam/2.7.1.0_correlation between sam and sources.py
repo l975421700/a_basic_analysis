@@ -135,9 +135,6 @@ lat = pre_weighted_var[expid[i]]['lat']['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
 #---- import ice core sites
-major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
-major_ice_core_site = major_ice_core_site.loc[
-    major_ice_core_site['age (kyr)'] > 120, ]
 ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
 #---- broadcast sam_mon
@@ -168,9 +165,9 @@ cor_sam_var_anom_p = xs.pearson_r_eff_p_value(b_sam_mon, anom,dim='time').values
 #---------------- plot
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.5, cm_max=0.1, cm_interval1=0.05, cm_interval2=0.1,
+    cm_min=-0.5, cm_max=0.3, cm_interval1=0.1, cm_interval2=0.1,
     cmap='PuOr', asymmetric=True, reversed=False)
-pltticks[-2] = 0
+pltticks[-4] = 0
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' correlation sam_' + ivar + ' mon.png'
 
@@ -240,9 +237,9 @@ cor_sam_var_anom_p = xs.pearson_r_eff_p_value(b_sam_mon, anom,dim='time').values
 output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' correlation sam_' + ivar + ' mon.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.4, cm_max=0.1, cm_interval1=0.05, cm_interval2=0.1,
-    cmap='viridis',)
-pltticks[-2] = 0
+    cm_min=-0.5, cm_max=0.2, cm_interval1=0.1, cm_interval2=0.1,
+    cmap='PuOr', asymmetric=True, reversed=False)
+pltticks[-3] = 0
 
 fig, ax = hemisphere_plot(northextent=-60,)
 
@@ -296,9 +293,9 @@ cor_sam_var_anom_p = xs.pearson_r_eff_p_value(b_sam_mon, anom,dim='time').values
 output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' correlation sam_' + ivar + ' mon.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.1, cm_max=0.4, cm_interval1=0.05, cm_interval2=0.1,
-    cmap='viridis', reversed=False, )
-# pltticks[-1] = 0
+    cm_min=-0.3, cm_max=0.5, cm_interval1=0.1, cm_interval2=0.1,
+    cmap='PuOr', asymmetric=True, reversed=False)
+# pltticks[-2] = 0
 
 fig, ax = hemisphere_plot(northextent=-60,)
 
@@ -352,9 +349,9 @@ cor_sam_var_anom_p = xs.pearson_r_eff_p_value(b_sam_mon, anom,dim='time').values
 output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' correlation sam_' + ivar + ' mon.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.1, cm_max=0.4, cm_interval1=0.05, cm_interval2=0.1,
-    cmap='viridis', reversed=False, )
-# pltticks[-1] = 0
+    cm_min=-0.1, cm_max=0.6, cm_interval1=0.1, cm_interval2=0.1,
+    cmap='PuOr', asymmetric=True, reversed=False)
+# pltticks[-2] = 0
 
 fig, ax = hemisphere_plot(northextent=-60,)
 
@@ -408,8 +405,13 @@ cor_sam_var_anom_p = xs.pearson_r_eff_p_value(b_sam_mon, anom,dim='time').values
 output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' correlation sam_' + ivar + ' mon.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.4, cm_max=0.4, cm_interval1=0.05, cm_interval2=0.1,
-    cmap='BrBG', reversed=False, )
+    cm_min=-0.4, cm_max=0.5, cm_interval1=0.1, cm_interval2=0.1,
+    cmap='PuOr', asymmetric=True, reversed=False)
+# pltticks[-4] = 0
+
+# pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+#     cm_min=-0.4, cm_max=0.4, cm_interval1=0.05, cm_interval2=0.1,
+#     cmap='BrBG', reversed=False, )
 # pltticks[-1] = 0
 
 fig, ax = hemisphere_plot(northextent=-60,)
@@ -465,7 +467,7 @@ cor_sam_var_anom_p = xs.pearson_r_eff_p_value(b_sam_mon, anom,dim='time').values
 output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' correlation sam_' + ivar + ' mon.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.5, cm_max=0.1, cm_interval1=0.05, cm_interval2=0.1,
+    cm_min=-0.6, cm_max=0.1, cm_interval1=0.1, cm_interval2=0.1,
     cmap='PuOr', asymmetric=True, reversed=False)
 pltticks[-2] = 0
 

@@ -315,6 +315,8 @@ with open(
     exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_alltime_icores.pkl', 'rb') as f:
     wisoaprt_alltime_icores[expid[i]] = pickle.load(f)
 
+wisoaprt_alltime_icores[expid[i]]['EDC']['daily']
+
 for icores in wisoaprt_alltime_icores[expid[i]].keys():
     # icores = 'EDC'
     print('#----------------' + icores)

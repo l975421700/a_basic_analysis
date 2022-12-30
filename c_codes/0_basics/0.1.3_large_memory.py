@@ -2,10 +2,10 @@
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_m_416_4.9',
     'pi_m_502_5.0',
     ]
 i = 0
+
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -18,8 +18,6 @@ warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
 sys.path.append('/work/ollie/qigao001')
-import datetime
-import psutil
 
 # data analysis
 import numpy as np
@@ -35,8 +33,6 @@ import pandas as pd
 from metpy.interpolate import cross_section
 from statsmodels.stats import multitest
 import pycircstat as circ
-from geopy.distance import geodesic, great_circle
-from haversine import haversine, haversine_vector
 
 # plot
 import matplotlib as mpl
@@ -96,6 +92,7 @@ from a_basic_analysis.b_module.statistics import (
 
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
+    plt_mesh_pars,
 )
 
 # endregion
@@ -105,138 +102,118 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-epe_weighted_lon = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_weighted_lon_binned.pkl', 'rb') as f:
-    epe_weighted_lon[expid[i]] = pickle.load(f)
+wisoaprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
+    wisoaprt_alltime[expid[i]] = pickle.load(f)
 
-epe_weighted_lat = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_weighted_lat_binned.pkl', 'rb') as f:
-    epe_weighted_lat[expid[i]] = pickle.load(f)
+quantile_interval  = np.arange(1, 99 + 1e-4, 1, dtype=np.int64)
+quantiles = dict(zip(
+    [str(x) + '%' for x in quantile_interval],
+    [x/100 for x in quantile_interval],
+    ))
 
-lon = epe_weighted_lon[expid[i]]['90.5%']['am'].lon
-lat = epe_weighted_lon[expid[i]]['90.5%']['am'].lat
-lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
 '''
+lon = wisoaprt_alltime[expid[i]]['am'].lon
+lat = wisoaprt_alltime[expid[i]]['am'].lat
+lon_2d, lat_2d = np.meshgrid(lon, lat,)
+
+# quantiles = {'90%': 0.9, '95%': 0.95, '99%': 0.99}
+
+ocean_aprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_aprt_alltime.pkl', 'rb') as f:
+    ocean_aprt_alltime[expid[i]] = pickle.load(f)
+
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region get transport distance
+# region get wisoaprt_epe_nt
 
-transport_distance_epe = {}
-transport_distance_epe[expid[i]] = {}
+wisoaprt_epe_nt = {}
+wisoaprt_epe_nt[expid[i]] = {}
+wisoaprt_epe_nt[expid[i]]['quantiles'] = {}
+wisoaprt_epe_nt[expid[i]]['mask'] = {}
+wisoaprt_epe_nt[expid[i]]['masked_data'] = {}
 
-begin_time = datetime.datetime.now()
-print(begin_time)
+# set a threshold of 0 mm/d
+wisoaprt_epe_nt[expid[i]]['masked_data']['original'] = \
+    wisoaprt_alltime[expid[i]]['daily'].sel(wisotype=1).copy().compute()
 
-for iqtl in epe_weighted_lon[expid[i]].keys(): # ['90%', '95%']:
-    transport_distance_epe[expid[i]][iqtl] = {}
+for iqtl in quantiles.keys():
+    # iqtl = '90%'
+    print(iqtl + ': ' + str(quantiles[iqtl]))
     
-    for ialltime in epe_weighted_lon[expid[i]][iqtl].keys():
-        print(iqtl + ' - ' + ialltime)
-        transport_distance_epe[expid[i]][iqtl][ialltime] = \
-            epe_weighted_lat[expid[i]][iqtl][ialltime].copy().rename(
-                'transport_distance_epe')
-        transport_distance_epe[expid[i]][iqtl][ialltime][:] = 0
-        
-        if (ialltime in ['mon', 'sea', 'ann']):
-            print(ialltime)
-            
-            years = np.unique(
-                transport_distance_epe[expid[i]][iqtl][ialltime].time.dt.year)
-            
-            for iyear in years:
-                # iyear = 2010
-                print(str(iyear) + ' / ' + str(years[-1]))
-                
-                time_indices = np.where(
-                    transport_distance_epe[expid[i]][iqtl][
-                        ialltime].time.dt.year == iyear)
-                
-                b_lon_2d = np.broadcast_to(
-                    lon_2d,
-                    transport_distance_epe[expid[i]][iqtl][ialltime][
-                        time_indices].shape,
-                    )
-                b_lat_2d = np.broadcast_to(
-                    lat_2d,
-                    transport_distance_epe[expid[i]][iqtl][ialltime][
-                        time_indices].shape,
-                    )
-                b_lon_2d_flatten = b_lon_2d.reshape(-1, 1)
-                b_lat_2d_flatten = b_lat_2d.reshape(-1, 1)
-                local_pairs = [[x, y] for x, y in \
-                    zip(b_lat_2d_flatten, b_lon_2d_flatten)]
-                
-                lon_src_flatten = epe_weighted_lon[expid[i]][iqtl][ialltime][
-                    time_indices].values.reshape(-1, 1).copy()
-                lat_src_flatten = epe_weighted_lat[expid[i]][iqtl][ialltime][
-                    time_indices].values.reshape(-1, 1).copy()
-                source_pairs = [[x, y] for x, y in \
-                    zip(lat_src_flatten, lon_src_flatten)]
-                
-                transport_distance_epe[expid[i]][iqtl][ialltime][time_indices] = haversine_vector(
-                    local_pairs, source_pairs, normalize=True).reshape(
-                        transport_distance_epe[expid[i]][iqtl][ialltime][time_indices].shape)
-                print(datetime.datetime.now() - begin_time)
-        elif (ialltime in ['mm', 'sm', 'am']):
-            print(ialltime)
-            b_lon_2d = np.broadcast_to(
-                lon_2d, epe_weighted_lon[expid[i]][iqtl][ialltime].shape, )
-            b_lat_2d = np.broadcast_to(
-                lat_2d, epe_weighted_lat[expid[i]][iqtl][ialltime].shape, )
-            b_lon_2d_flatten = b_lon_2d.reshape(-1, 1)
-            b_lat_2d_flatten = b_lat_2d.reshape(-1, 1)
-            local_pairs = [[x, y] for x, y in \
-                zip(b_lat_2d_flatten, b_lon_2d_flatten)]
-            
-            lon_src_flatten = epe_weighted_lon[expid[i]][iqtl][
-                ialltime].values.reshape(-1, 1).copy()
-            lat_src_flatten = epe_weighted_lat[expid[i]][iqtl][
-                ialltime].values.reshape(-1, 1).copy()
-            source_pairs = [[x, y] for x, y in \
-                zip(lat_src_flatten, lon_src_flatten)]
-            
-            transport_distance_epe[expid[i]][iqtl][ialltime][:] = haversine_vector(
-                local_pairs, source_pairs, normalize=True).reshape(
-                    transport_distance_epe[expid[i]][iqtl][ialltime].shape)
+    #-------- calculate quantiles
+    wisoaprt_epe_nt[expid[i]]['quantiles'][iqtl] = \
+        wisoaprt_epe_nt[expid[i]]['masked_data']['original'].quantile(
+            quantiles[iqtl], dim='time', skipna=True).compute()
+    
+    #-------- get mask
+    wisoaprt_epe_nt[expid[i]]['mask'][iqtl] = \
+        (wisoaprt_alltime[expid[i]]['daily'].sel(wisotype=1).copy() >= \
+            wisoaprt_epe_nt[expid[i]]['quantiles'][iqtl]).compute()
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance_epe_binned.pkl', 'wb') as f:
-    pickle.dump(transport_distance_epe[expid[i]], f)
+import os, psutil
+process = psutil.Process(os.getpid())
+print(process.memory_info().rss / 2**30)
+
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe_nt.pkl',
+    'wb') as f:
+    pickle.dump(wisoaprt_epe_nt[expid[i]], f)
+
 
 '''
 #-------------------------------- check
-transport_distance_epe = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance_epe_binned.pkl', 'rb') as f:
-    transport_distance_epe[expid[i]] = pickle.load(f)
+wisoaprt_epe_nt = {}
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe_nt.pkl',
+    'rb') as f:
+    wisoaprt_epe_nt[expid[i]] = pickle.load(f)
 
-iqtl = '90.5%'
-ilat = 40
-ilon = 90
+ilat=48
+ilon=90
 
-for ialltime in ['mon', 'ann', 'mm', 'sm']:
-    # ialltime = 'mm'
-    itime = -4
-    
-    local = [lat_2d[ilat, ilon], lon_2d[ilat, ilon]]
-    source = [
-        epe_weighted_lat[expid[i]][iqtl][ialltime][itime, ilat, ilon].values,
-        epe_weighted_lon[expid[i]][iqtl][ialltime][itime, ilat, ilon].values,]
-    
-    print(haversine(local, source, normalize=True))
-    print(transport_distance_epe[expid[i]][iqtl][ialltime][itime, ilat, ilon].values)
+#-------- check ['masked_data']['original']
+res001 = wisoaprt_epe_nt[expid[i]]['masked_data']['original'][:, ilat, ilon]
+res002 = wisoaprt_alltime[expid[i]]['daily'][:, 0, ilat, ilon].copy().where(
+    wisoaprt_alltime[expid[i]]['daily'][:, 0, ilat, ilon] >= (0 / seconds_per_d),
+    other=np.nan,)
+print((res001[np.isfinite(res001)] == res002[np.isfinite(res002)]).all().values)
 
-ialltime = 'am'
-local = [lat_2d[ilat, ilon], lon_2d[ilat, ilon]]
-source = [
-    epe_weighted_lat[expid[i]][iqtl][ialltime][ilat, ilon].values,
-    epe_weighted_lon[expid[i]][iqtl][ialltime][ilat, ilon].values,]
+for iqtl in quantiles.keys():
+    print('#-------- ' + iqtl)
+    # iqtl = '90%'
+    #-------- check ['quantiles'][iqtl]
+    res01 = wisoaprt_epe_nt[expid[i]]['quantiles'][iqtl][ilat, ilon].values
+    res02 = np.nanquantile(res002, quantiles[iqtl],)
+    print(res01 == res02)
+    #-------- check ['mask'][iqtl]
+    res11 = wisoaprt_epe_nt[expid[i]]['mask'][iqtl][:, ilat, ilon]
+    res12 = wisoaprt_alltime[expid[i]]['daily'][:, 0, ilat, ilon] >= res02
+    print((res11 == res12).all().values)
 
-print(haversine(local, source, normalize=True))
-print(transport_distance_epe[expid[i]][iqtl][ialltime][ilat, ilon].values)
+
+
+
+#-------------------------------- check size information
+wisoaprt_epe_nt = {}
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe_nt.pkl',
+    'rb') as f:
+    wisoaprt_epe_nt[expid[i]] = pickle.load(f)
+
+from pympler import asizeof
+asizeof.asizeof(wisoaprt_epe_nt) / 2**30
+asizeof.asizeof(wisoaprt_epe_nt[expid[i]]['quantiles']) / 2**30
+asizeof.asizeof(wisoaprt_epe_nt[expid[i]]['mask']) / 2**30
+asizeof.asizeof(wisoaprt_epe_nt[expid[i]]['frc_aprt']) / 2**30
+asizeof.asizeof(wisoaprt_alltime) / 2**30
+
+
 '''
 # endregion
 # -----------------------------------------------------------------------------

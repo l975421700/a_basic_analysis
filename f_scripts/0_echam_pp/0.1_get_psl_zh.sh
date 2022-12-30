@@ -16,6 +16,7 @@ source ${HOME}/miniconda3/bin/activate deepice
 which cdo
 which python
 
+# cdo="/global/AWIsoft/cdo/1.9.2/bin/cdo"
 
 echo '#-------- processing monthly output'
 

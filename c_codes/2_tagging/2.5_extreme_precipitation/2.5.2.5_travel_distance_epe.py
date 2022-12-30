@@ -2,7 +2,6 @@
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_m_416_4.9',
     'pi_m_502_5.0',
     ]
 i = 0
@@ -108,21 +107,15 @@ transport_distance_epe = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance_epe.pkl', 'rb') as f:
     transport_distance_epe[expid[i]] = pickle.load(f)
 
-transport_distance = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance.pkl', 'rb') as f:
-    transport_distance[expid[i]] = pickle.load(f)
+transport_distance_dc = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance_dc.pkl', 'rb') as f:
+    transport_distance_dc[expid[i]] = pickle.load(f)
 
-major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
-major_ice_core_site = major_ice_core_site.loc[
-    major_ice_core_site['age (kyr)'] > 120, ]
-ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
-
-lon = transport_distance[expid[i]]['am'].lon
-lat = transport_distance[expid[i]]['am'].lat
+lon = transport_distance_epe[expid[i]]['90%']['am'].lon
+lat = transport_distance_epe[expid[i]]['90%']['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
-# quantiles = {'90%': 0.9, '95%': 0.95, '99%': 0.99}
-
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
 '''
 '''
@@ -131,16 +124,15 @@ lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
 
 # -----------------------------------------------------------------------------
-# region plot (transport_distance_epe - transport_distance) am Antarctica
+# region plot (transport_distance_epe - transport_distance_dc) am Antarctica
 
 iqtl = '90%'
 
-output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.5_travel_distance/6.1.7.0.5 ' + expid[i] + ' transport_distance_epe - transport_distance am Antarctica.png'
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.5_travel_distance/6.1.7.0.5 ' + expid[i] + ' transport_distance_epe - transport_distance_dc am Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=0, cm_max=6, cm_interval1=0.5, cm_interval2=1, cmap='viridis',
-    reversed=True)
-# pltcmp = pplt.Colormap('Marine', samples=len(pltlevel)-1)
+    cm_min=-2, cm_max=18, cm_interval1=2, cm_interval2=2, cmap='BrBG',
+    reversed=False)
 
 fig, ax = hemisphere_plot(northextent=-60, figsize=np.array([5.8, 7]) / 2.54)
 
@@ -150,11 +142,11 @@ plt1 = ax.pcolormesh(
     lon,
     lat,
     (transport_distance_epe[expid[i]][iqtl]['am'] - \
-        transport_distance[expid[i]]['am']) / 100,
+        transport_distance_dc[expid[i]][iqtl]['am']) / 100,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 ttest_fdr_res = ttest_fdr_control(
     transport_distance_epe[expid[i]][iqtl]['ann'],
-    transport_distance[expid[i]]['ann'],
+    transport_distance_dc[expid[i]][iqtl]['ann'],
     )
 ax.scatter(
     x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
@@ -171,7 +163,7 @@ cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel('EPE source-sink distance anomalies [$10^{2} \; km$]',
                    linespacing=2, fontsize=8)
-fig.savefig(output_png, dpi=1200)
+fig.savefig(output_png)
 
 
 
@@ -179,6 +171,10 @@ fig.savefig(output_png, dpi=1200)
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+
+
 
 
 # -----------------------------------------------------------------------------
