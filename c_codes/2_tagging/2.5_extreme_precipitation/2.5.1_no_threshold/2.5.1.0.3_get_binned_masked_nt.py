@@ -189,6 +189,10 @@ with open(
 
 
 '''
+# 28 min to run
+#SBATCH --time=10:00:00
+#SBATCH --partition=fat
+
 #-------------------------------- check
 
 ilat=45

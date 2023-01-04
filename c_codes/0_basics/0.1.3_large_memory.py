@@ -18,6 +18,7 @@ warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
 sys.path.append('/work/ollie/qigao001')
+import gc
 
 # data analysis
 import numpy as np
@@ -33,11 +34,12 @@ import pandas as pd
 from metpy.interpolate import cross_section
 from statsmodels.stats import multitest
 import pycircstat as circ
+from scipy.stats import circstd
 
 # plot
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib.colors import BoundaryNorm
+from matplotlib.colors import BoundaryNorm, ListedColormap
 from matplotlib import cm
 import cartopy.crs as ccrs
 plt.rcParams['pcolor.shading'] = 'auto'
@@ -47,6 +49,7 @@ mpl.rcParams['axes.linewidth'] = 0.2
 plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
+from matplotlib.ticker import AutoMinorLocator
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -61,6 +64,7 @@ from a_basic_analysis.b_module.mapplot import (
 
 from a_basic_analysis.b_module.basic_calculations import (
     mon_sea_ann,
+    find_ilat_ilon,
 )
 
 from a_basic_analysis.b_module.namelist import (
@@ -100,121 +104,186 @@ from a_basic_analysis.b_module.component_plot import (
 
 
 # -----------------------------------------------------------------------------
-# region import data
+# -----------------------------------------------------------------------------
+# region import sites information
 
-wisoaprt_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
-    wisoaprt_alltime[expid[i]] = pickle.load(f)
+# import sites information
+major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
+Antarctic_stations = pd.read_csv('data_sources/others/Antarctic_stations.csv')
+stations_sites = pd.concat(
+    [major_ice_core_site[['Site', 'lon', 'lat']],
+     Antarctic_stations[['Site', 'lon', 'lat']],],
+    ignore_index=True,
+    )
 
-quantile_interval  = np.arange(1, 99 + 1e-4, 1, dtype=np.int64)
-quantiles = dict(zip(
-    [str(x) + '%' for x in quantile_interval],
-    [x/100 for x in quantile_interval],
-    ))
+# import sites indices
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.t63_sites_indices.pkl',
+    'rb') as f:
+    t63_sites_indices = pickle.load(f)
 
 
-'''
-lon = wisoaprt_alltime[expid[i]]['am'].lon
-lat = wisoaprt_alltime[expid[i]]['am'].lat
-lon_2d, lat_2d = np.meshgrid(lon, lat,)
-
-# quantiles = {'90%': 0.9, '95%': 0.95, '99%': 0.99}
-
-ocean_aprt_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_aprt_alltime.pkl', 'rb') as f:
-    ocean_aprt_alltime[expid[i]] = pickle.load(f)
-
-'''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region get wisoaprt_epe_nt
+# region get epe_nt_binned sources
 
-wisoaprt_epe_nt = {}
-wisoaprt_epe_nt[expid[i]] = {}
-wisoaprt_epe_nt[expid[i]]['quantiles'] = {}
-wisoaprt_epe_nt[expid[i]]['mask'] = {}
-wisoaprt_epe_nt[expid[i]]['masked_data'] = {}
+quantile_interval_bin = np.arange(0.5, 99.5 + 1e-4, 1, dtype=np.float64)
+quantiles_bin = dict(zip(
+    [str(x) + '%' for x in quantile_interval_bin],
+    [x for x in quantile_interval_bin],
+    ))
 
-# set a threshold of 0 mm/d
-wisoaprt_epe_nt[expid[i]]['masked_data']['original'] = \
-    wisoaprt_alltime[expid[i]]['daily'].sel(wisotype=1).copy().compute()
+# set epe_nt source files
+source_var = ['lat', 'lon', 'sst', 'rh2m', 'wind10',
+              'distance',
+              ]
+prefix = exp_odir + expid[i] + '/analysis/echam/' + expid[i]
+source_var_files = [
+    prefix + '.epe_nt_weighted_lat_binned.pkl',
+    prefix + '.epe_nt_weighted_lon_binned.pkl',
+    prefix + '.epe_nt_weighted_sst_binned.pkl',
+    prefix + '.epe_nt_weighted_rh2m_binned.pkl',
+    prefix + '.epe_nt_weighted_wind10_binned.pkl',
+    prefix + '.transport_distance_epe_nt_binned.pkl',
+    ]
 
-for iqtl in quantiles.keys():
-    # iqtl = '90%'
-    print(iqtl + ': ' + str(quantiles[iqtl]))
+epe_nt_sources_sites_binned = {}
+epe_nt_sources_sites_binned[expid[i]] = {}
+
+for ivar, ifile in zip(source_var, source_var_files):
+    # ivar = 'lat'
+    # ifile = 'output/echam-6.3.05p2-wiso/pi/pi_m_502_5.0/analysis/echam/pi_m_502_5.0.epe_nt_weighted_lat_binned.pkl'
+    print('#------------ ' + ivar + ': ' + ifile)
     
-    #-------- calculate quantiles
-    wisoaprt_epe_nt[expid[i]]['quantiles'][iqtl] = \
-        wisoaprt_epe_nt[expid[i]]['masked_data']['original'].quantile(
-            quantiles[iqtl], dim='time', skipna=True).compute()
+    with open(ifile, 'rb') as f:
+        epe_nt_weighted_var = pickle.load(f)
     
-    #-------- get mask
-    wisoaprt_epe_nt[expid[i]]['mask'][iqtl] = \
-        (wisoaprt_alltime[expid[i]]['daily'].sel(wisotype=1).copy() >= \
-            wisoaprt_epe_nt[expid[i]]['quantiles'][iqtl]).compute()
-
-import os, psutil
-process = psutil.Process(os.getpid())
-print(process.memory_info().rss / 2**30)
+    if (ivar == 'distance'):
+        alltimes = ['ann']
+    else:
+        alltimes = ['mon', 'sea', 'ann', 'mm', 'sm']
+    
+    epe_nt_sources_sites_binned[expid[i]][ivar] = {}
+    
+    for isite in stations_sites.Site:
+        # isite = 'EDC'
+        print('#-------- ' + isite)
+        
+        epe_nt_sources_sites_binned[expid[i]][ivar][isite] = {}
+        
+        for ialltime in alltimes:
+            # ialltime = 'daily'
+            print('#---- ' + ialltime)
+            epe_nt_sources_sites_binned[expid[i]][ivar][isite][ialltime] = {}
+            
+            for iqtl in epe_nt_weighted_var.keys():
+                # iqtl = '90%'
+                # print('#-- ' + iqtl)
+                epe_nt_sources_sites_binned[expid[i]][ivar][isite][ialltime][iqtl] = \
+                    epe_nt_weighted_var[iqtl][ialltime][
+                        :,
+                        t63_sites_indices[isite]['ilat'],
+                        t63_sites_indices[isite]['ilon']].copy()
+        
+        ialltime = 'am'
+        print('#---- ' + ialltime)
+        epe_nt_sources_sites_binned[expid[i]][ivar][isite][ialltime] = pd.DataFrame(
+            columns=('iqtl', 'quantiles', 'am',))
+        
+        for iqtl in epe_nt_weighted_var.keys():
+            # iqtl = '90%'
+            # print('#-- ' + iqtl)
+            
+            epe_nt_sources_sites_binned[expid[i]][ivar][isite][ialltime] = pd.concat([
+                epe_nt_sources_sites_binned[expid[i]][ivar][isite][ialltime],
+                pd.DataFrame(data={
+                    'iqtl': iqtl,
+                    'quantiles': quantiles_bin[iqtl],
+                    'am': epe_nt_weighted_var[iqtl][ialltime][
+                        t63_sites_indices[isite]['ilat'],
+                        t63_sites_indices[isite]['ilon']].values,
+                    }, index=[0])],
+                ignore_index=True,)
 
 with open(
-    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe_nt.pkl',
-    'wb') as f:
-    pickle.dump(wisoaprt_epe_nt[expid[i]], f)
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_nt_sources_sites_binned.pkl', 'wb') as f:
+    pickle.dump(epe_nt_sources_sites_binned[expid[i]], f)
+
+
+
 
 
 '''
 #-------------------------------- check
-wisoaprt_epe_nt = {}
+epe_nt_sources_sites_binned = {}
 with open(
-    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe_nt.pkl',
-    'rb') as f:
-    wisoaprt_epe_nt[expid[i]] = pickle.load(f)
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_nt_sources_sites_binned.pkl', 'rb') as f:
+    epe_nt_sources_sites_binned[expid[i]] = pickle.load(f)
 
-ilat=48
-ilon=90
+source_var = ['lat', 'lon', 'sst', 'rh2m', 'wind10',
+            #   'distance',
+              ]
+prefix = exp_odir + expid[i] + '/analysis/echam/' + expid[i]
+source_var_files = [
+    prefix + '.epe_nt_weighted_lat_binned.pkl',
+    prefix + '.epe_nt_weighted_lon_binned.pkl',
+    prefix + '.epe_nt_weighted_sst_binned.pkl',
+    prefix + '.epe_nt_weighted_rh2m_binned.pkl',
+    prefix + '.epe_nt_weighted_wind10_binned.pkl',
+    # prefix + '.transport_distance_epe_nt_binned.pkl',
+    ]
 
-#-------- check ['masked_data']['original']
-res001 = wisoaprt_epe_nt[expid[i]]['masked_data']['original'][:, ilat, ilon]
-res002 = wisoaprt_alltime[expid[i]]['daily'][:, 0, ilat, ilon].copy().where(
-    wisoaprt_alltime[expid[i]]['daily'][:, 0, ilat, ilon] >= (0 / seconds_per_d),
-    other=np.nan,)
-print((res001[np.isfinite(res001)] == res002[np.isfinite(res002)]).all().values)
-
-for iqtl in quantiles.keys():
-    print('#-------- ' + iqtl)
-    # iqtl = '90%'
-    #-------- check ['quantiles'][iqtl]
-    res01 = wisoaprt_epe_nt[expid[i]]['quantiles'][iqtl][ilat, ilon].values
-    res02 = np.nanquantile(res002, quantiles[iqtl],)
-    print(res01 == res02)
-    #-------- check ['mask'][iqtl]
-    res11 = wisoaprt_epe_nt[expid[i]]['mask'][iqtl][:, ilat, ilon]
-    res12 = wisoaprt_alltime[expid[i]]['daily'][:, 0, ilat, ilon] >= res02
-    print((res11 == res12).all().values)
-
-
-
-
-#-------------------------------- check size information
-wisoaprt_epe_nt = {}
-with open(
-    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe_nt.pkl',
-    'rb') as f:
-    wisoaprt_epe_nt[expid[i]] = pickle.load(f)
-
-from pympler import asizeof
-asizeof.asizeof(wisoaprt_epe_nt) / 2**30
-asizeof.asizeof(wisoaprt_epe_nt[expid[i]]['quantiles']) / 2**30
-asizeof.asizeof(wisoaprt_epe_nt[expid[i]]['mask']) / 2**30
-asizeof.asizeof(wisoaprt_epe_nt[expid[i]]['frc_aprt']) / 2**30
-asizeof.asizeof(wisoaprt_alltime) / 2**30
+for iind in np.arange(0, 5, 1):
+    # iind = 0
+    ivar = source_var[iind]
+    ifile = source_var_files[iind]
+    print('#------------ ' + ivar + ': ' + ifile)
+    
+    with open(ifile, 'rb') as f: epe_nt_weighted_var = pickle.load(f)
+    
+    for isite in stations_sites.Site:
+        # isite = 'EDC'
+        print('#-------- ' + isite)
+        
+        for ialltime in ['mon', 'sea', 'ann', 'mm', 'sm']:
+            # ialltime = 'daily'
+            print('#---- ' + ialltime)
+            
+            for iqtl in epe_nt_weighted_var.keys():
+                # iqtl = '90%'
+                # print('#-- ' + iqtl)
+                data1 = epe_nt_sources_sites_binned[expid[i]][ivar][isite][
+                    ialltime][iqtl].values
+                data2 = epe_nt_weighted_var[iqtl][ialltime][
+                    :,
+                    t63_sites_indices[isite]['ilat'],
+                    t63_sites_indices[isite]['ilon']].copy().values
+                print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
+        
+        ialltime = 'am'
+        print('#---- ' + ialltime)
+        for iqtl in epe_nt_weighted_var.keys():
+            # iqtl = '90.5%'
+            # print('#-- ' + iqtl)
+            
+            data1 = epe_nt_sources_sites_binned[expid[i]][ivar][isite][ialltime].loc[
+                epe_nt_sources_sites_binned[expid[i]][ivar][isite][ialltime].iqtl == iqtl
+            ].am.values[0]
+            
+            data2 = epe_nt_weighted_var[iqtl][ialltime][
+                t63_sites_indices[isite]['ilat'],
+                t63_sites_indices[isite]['ilon']].values
+            print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
+            # print(data1 == data2)
+    
+    del epe_nt_weighted_var
 
 
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
 
