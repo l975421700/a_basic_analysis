@@ -102,17 +102,21 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-wisoaprt_epe = {}
+wisoaprt_epe_st = {}
 with open(
-    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe.pkl',
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe_st.pkl',
     'rb') as f:
-    wisoaprt_epe[expid[i]] = pickle.load(f)
+    wisoaprt_epe_st[expid[i]] = pickle.load(f)
 
 quantile_interval  = np.arange(1, 99 + 1e-4, 1, dtype=np.int64)
 quantiles = dict(zip(
     [str(x) + '%' for x in quantile_interval],
     [x/100 for x in quantile_interval],
     ))
+
+wisoaprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
+    wisoaprt_alltime[expid[i]] = pickle.load(f)
 
 '''
 '''
@@ -129,10 +133,12 @@ quantiles_bin = dict(zip(
     [x for x in quantile_interval_bin],
     ))
 
-wisoaprt_mask_bin = {}
+wisoaprt_mask_bin_st = {}
 
 # !1% (< 1%)
-wisoaprt_mask_bin['0.5%'] = (wisoaprt_epe[expid[i]]['mask']['1%'] == False)
+wisoaprt_mask_bin_st['0.5%'] = \
+    (wisoaprt_epe_st[expid[i]]['mask']['1%'] == False) & \
+        (wisoaprt_alltime[expid[i]]['daily'].sel(wisotype=1) >= (0.002 / seconds_per_d))
 
 for iind in range(98):
     # iind = 0
@@ -144,16 +150,16 @@ for iind in range(98):
     
     # e.g. 1.5% : 1% (>= 1%) & !2% (< 2%)
     
-    wisoaprt_mask_bin[iqtl1] = (wisoaprt_epe[expid[i]]['mask'][iqtl2] & \
-        (wisoaprt_epe[expid[i]]['mask'][iqtl3] == False))
+    wisoaprt_mask_bin_st[iqtl1] = (wisoaprt_epe_st[expid[i]]['mask'][iqtl2] & \
+        (wisoaprt_epe_st[expid[i]]['mask'][iqtl3] == False))
 
 # 99% (>= 99%)
-wisoaprt_mask_bin['99.5%'] = wisoaprt_epe[expid[i]]['mask']['99%']
+wisoaprt_mask_bin_st['99.5%'] = wisoaprt_epe_st[expid[i]]['mask']['99%']
 
 with open(
-    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_mask_bin.pkl',
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_mask_bin_st.pkl',
     'wb') as f:
-    pickle.dump(wisoaprt_mask_bin, f)
+    pickle.dump(wisoaprt_mask_bin_st, f)
 
 
 
@@ -161,55 +167,69 @@ with open(
 
 
 '''
+# 2 min to run
+#SBATCH --time=00:30:00
+#SBATCH --partition=fat
 
 #-------------------------------- check
+
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_mask_bin_st.pkl',
+    'rb') as f:
+    wisoaprt_mask_bin_st = pickle.load(f)
+
+quantile_interval  = np.arange(1, 99 + 1e-4, 1, dtype=np.int64)
+quantiles = dict(zip(
+    [str(x) + '%' for x in quantile_interval],
+    [x/100 for x in quantile_interval],
+    ))
+
+wisoaprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
+    wisoaprt_alltime[expid[i]] = pickle.load(f)
+
 quantile_interval_bin = np.arange(0.5, 99.5 + 1e-4, 1, dtype=np.float64)
 quantiles_bin = dict(zip(
     [str(x) + '%' for x in quantile_interval_bin],
     [x for x in quantile_interval_bin],
     ))
 
-with open(
-    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_mask_bin.pkl',
-    'rb') as f:
-    wisoaprt_mask_bin = pickle.load(f)
-
-
-wisoaprt_mask_and = wisoaprt_mask_bin['0.5%'].sum()
-wisoaprt_mask_or  = wisoaprt_mask_bin['0.5%'].copy()
+wisoaprt_mask_and = wisoaprt_mask_bin_st['0.5%'].sum()
+wisoaprt_mask_or  = wisoaprt_mask_bin_st['0.5%'].copy()
 
 for iqtl in list(quantiles_bin.keys())[1:]:
     print(iqtl)
     
-    wisoaprt_mask_and = wisoaprt_mask_and + wisoaprt_mask_bin[iqtl].sum()
-    wisoaprt_mask_or  = (wisoaprt_mask_or  | wisoaprt_mask_bin[iqtl])
+    wisoaprt_mask_and = wisoaprt_mask_and + wisoaprt_mask_bin_st[iqtl].sum()
+    wisoaprt_mask_or  = (wisoaprt_mask_or  | wisoaprt_mask_bin_st[iqtl])
 
-print(wisoaprt_mask_and)
-print(wisoaprt_mask_or.sum())
+print(wisoaprt_mask_and.values)
+print(wisoaprt_mask_or.sum().values)
+print(wisoaprt_mask_and.values == wisoaprt_mask_or.sum().values)
 
+res01 = wisoaprt_mask_bin_st['0.5%'].copy()
+res02 = wisoaprt_mask_bin_st['45.5%'].copy()
+res03 = wisoaprt_mask_bin_st['99.5%'].copy()
 
-res01 = wisoaprt_mask_bin['0.5%'].copy()
-res02 = wisoaprt_mask_bin['45.5%'].copy()
-res03 = wisoaprt_mask_bin['99.5%'].copy()
+del wisoaprt_mask_bin_st
 
-del wisoaprt_mask_bin
-
-wisoaprt_epe = {}
+wisoaprt_epe_st = {}
 with open(
-    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe.pkl',
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe_st.pkl',
     'rb') as f:
-    wisoaprt_epe[expid[i]] = pickle.load(f)
+    wisoaprt_epe_st[expid[i]] = pickle.load(f)
 
-res11 = (wisoaprt_epe[expid[i]]['mask']['1%'] == False)
-res12 = (wisoaprt_epe[expid[i]]['mask']['45%'] & \
-    (wisoaprt_epe[expid[i]]['mask']['46%'] == False))
-res13 = wisoaprt_epe[expid[i]]['mask']['99%']
+res11 = (wisoaprt_epe_st[expid[i]]['mask']['1%'] == False) & \
+        (wisoaprt_alltime[expid[i]]['daily'].sel(wisotype=1) >= (0.002 / seconds_per_d))
+res12 = (wisoaprt_epe_st[expid[i]]['mask']['45%'] & \
+    (wisoaprt_epe_st[expid[i]]['mask']['46%'] == False))
+res13 = wisoaprt_epe_st[expid[i]]['mask']['99%']
 
 print((res01 == res11).all().values)
 print((res02 == res12).all().values)
 print((res03 == res13).all().values)
 
-del wisoaprt_epe
+del wisoaprt_epe_st
 
 
 '''

@@ -106,11 +106,11 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-# epe_nt sources
-epe_nt_sources_sites_binned = {}
+# epe_st sources
+epe_st_sources_sites_binned = {}
 with open(
-    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_nt_sources_sites_binned.pkl', 'rb') as f:
-    epe_nt_sources_sites_binned[expid[i]] = pickle.load(f)
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_st_sources_sites_binned.pkl', 'rb') as f:
+    epe_st_sources_sites_binned[expid[i]] = pickle.load(f)
 
 # import sites information
 major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
@@ -121,11 +121,11 @@ stations_sites = pd.concat(
     ignore_index=True,
     )
 
-wisoaprt_masked_bin_nt_icores = {}
+wisoaprt_masked_bin_st_icores = {}
 with open(
-    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_masked_bin_nt_icores.pkl',
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_masked_bin_st_icores.pkl',
     'rb') as f:
-    wisoaprt_masked_bin_nt_icores[expid[i]] = pickle.load(f)
+    wisoaprt_masked_bin_st_icores[expid[i]] = pickle.load(f)
 
 
 # normal sources
@@ -143,11 +143,11 @@ with open(
 
 
 '''
-wisoaprt_mask_bin_nt_icores = {}
+wisoaprt_mask_bin_st_icores = {}
 with open(
-    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_mask_bin_nt_icores.pkl',
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_mask_bin_st_icores.pkl',
     'rb') as f:
-    wisoaprt_mask_bin_nt_icores[expid[i]] = pickle.load(f)
+    wisoaprt_mask_bin_st_icores[expid[i]] = pickle.load(f)
 
 '''
 # endregion
@@ -158,7 +158,7 @@ with open(
 # region subset source properties against precipitation rates
 
 Sites = ['EDC', 'Halley']
-output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.2_pre_source_sites/6.1.7.2 binned_prerate epe_nt_source_anomalies_subset at EDC and Halley.png'
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.2_pre_source_sites/6.1.7.2 binned_prerate epe_st_source_anomalies_subset at EDC and Halley.png'
 
 
 ncol = 3
@@ -193,20 +193,20 @@ for irow, isite in enumerate(Sites):
     print('#---- ' + str(irow) + ': ' + isite)
     
     # yaxis
-    max_value = np.nanmax(epe_nt_sources_sites_binned[expid[i]][ivar][isite]['am'].am)
-    min_value = np.nanmin(epe_nt_sources_sites_binned[expid[i]][ivar][isite]['am'].am)
+    max_value = np.nanmax(epe_st_sources_sites_binned[expid[i]][ivar][isite]['am'].am)
+    min_value = np.nanmin(epe_st_sources_sites_binned[expid[i]][ivar][isite]['am'].am)
     ymax = max_value + 0.25
     ymin = min_value - 0.25
     
     # xaxis
-    max_value = np.nanmax(wisoaprt_masked_bin_nt_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
+    max_value = np.nanmax(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
     min_value = 10**-3
     xmax = max_value * 1.1
     xmin = min_value
     
     axs[irow, jcol].plot(
-        wisoaprt_masked_bin_nt_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
-        epe_nt_sources_sites_binned[expid[i]][ivar][isite]['am'].am,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
+        epe_st_sources_sites_binned[expid[i]][ivar][isite]['am'].am,
         '.-', lw=0.5, markersize=1.5,
         )
     plt_text = plt.text(
@@ -252,7 +252,7 @@ for irow, isite in enumerate(Sites):
     
     local_lon = stations_sites.loc[stations_sites.Site==isite].lon.values
     rel_lon = calc_lon_diff_np(
-        epe_nt_sources_sites_binned[expid[i]][ivar][isite]['am'].am.values,
+        epe_st_sources_sites_binned[expid[i]][ivar][isite]['am'].am.values,
         local_lon,)
     
     # yaxis
@@ -262,13 +262,13 @@ for irow, isite in enumerate(Sites):
     ymin = min_value - 0.25
     
     # xaxis
-    max_value = np.nanmax(wisoaprt_masked_bin_nt_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
+    max_value = np.nanmax(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
     min_value = 10**-3
     xmax = max_value * 1.1
     xmin = min_value
     
     axs[irow, jcol].plot(
-        wisoaprt_masked_bin_nt_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
         rel_lon,
         '.-', lw=0.5, markersize=1.5,
         )
@@ -318,20 +318,20 @@ for irow, isite in enumerate(Sites):
     print('#---- ' + str(irow) + ': ' + isite)
     
     # yaxis
-    max_value = np.nanmax(epe_nt_sources_sites_binned[expid[i]][ivar][isite]['am'].am)
-    min_value = np.nanmin(epe_nt_sources_sites_binned[expid[i]][ivar][isite]['am'].am)
+    max_value = np.nanmax(epe_st_sources_sites_binned[expid[i]][ivar][isite]['am'].am)
+    min_value = np.nanmin(epe_st_sources_sites_binned[expid[i]][ivar][isite]['am'].am)
     ymax = max_value + 0.05
     ymin = min_value - 0.05
     
     # xaxis
-    max_value = np.nanmax(wisoaprt_masked_bin_nt_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
+    max_value = np.nanmax(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
     min_value = 10**-3
     xmax = max_value * 1.1
     xmin = min_value
     
     axs[irow, jcol].plot(
-        wisoaprt_masked_bin_nt_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
-        epe_nt_sources_sites_binned[expid[i]][ivar][isite]['am'].am,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
+        epe_st_sources_sites_binned[expid[i]][ivar][isite]['am'].am,
         '.-', lw=0.5, markersize=1.5,
         )
     plt_text = plt.text(
@@ -392,8 +392,8 @@ for isite in stations_sites.Site:
     fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
     
     ax.plot(
-        wisoaprt_masked_bin_nt_icores[expid[i]][isite]['frc']['am'].quantiles,
-        wisoaprt_masked_bin_nt_icores[expid[i]][isite]['frc']['am'].am * 100,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['frc']['am'].quantiles,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['frc']['am'].am * 100,
         '.-', lw=0.5, markersize=1.5,
         )
     plt_text = plt.text(0.05, 0.9, isite, transform=ax.transAxes, color='gray',)
@@ -418,15 +418,15 @@ for isite in stations_sites.Site:
 mpl.rc('font', family='Times New Roman', size=10)
 
 Sites = ['EDC', 'Halley']
-output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.2_pre_source_sites/6.1.7.2.1_frc/6.1.7.2.1 nt_binned heavy precipitation frc at EDC and Halley.png'
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.2_pre_source_sites/6.1.7.2.1_frc/6.1.7.2.1 st_binned heavy precipitation frc at EDC and Halley.png'
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
 
 for isite in Sites:
     # isite = 'EDC'
     ax.plot(
-        wisoaprt_masked_bin_nt_icores[expid[i]][isite]['frc']['am'].quantiles,
-        wisoaprt_masked_bin_nt_icores[expid[i]][isite]['frc']['am'].am * 100,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['frc']['am'].quantiles,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['frc']['am'].am * 100,
         '.-', lw=0.5, markersize=1.5,
         label=isite,
         )
@@ -458,15 +458,15 @@ fig.savefig(output_png)
 mpl.rc('font', family='Times New Roman', size=10)
 
 Sites = ['EDC', 'Halley']
-output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.2_pre_source_sites/6.1.7.2.1_frc/6.1.7.2.1 nt_binned heavy precipitation frc_cumulative at EDC and Halley.png'
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.2_pre_source_sites/6.1.7.2.1_frc/6.1.7.2.1 st_binned heavy precipitation frc_cumulative at EDC and Halley.png'
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
 
 for isite in Sites:
     # isite = 'EDC'
     ax.plot(
-        wisoaprt_masked_bin_nt_icores[expid[i]][isite]['frc']['am'].quantiles,
-        np.cumsum(wisoaprt_masked_bin_nt_icores[expid[i]][isite]['frc']['am'].am * 100),
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['frc']['am'].quantiles,
+        np.cumsum(wisoaprt_masked_bin_st_icores[expid[i]][isite]['frc']['am'].am * 100),
         '.-', lw=0.5, markersize=1.5,
         label=isite,
         )
@@ -489,11 +489,11 @@ fig.savefig(output_png)
 
 
 '''
-wisoaprt_masked_bin_icores[expid[i]][isite]['frc']['am'].am.values.sum()
+wisoaprt_masked_bin_st_icores[expid[i]][isite]['frc']['am'].am.values.sum()
 
 for isite in stations_sites.Site:
     print('#---- ' + isite)
-    max_val = np.max(wisoaprt_masked_bin_icores[expid[i]][isite]['frc']['am'].am * 100)
+    max_val = np.max(wisoaprt_masked_bin_st_icores[expid[i]][isite]['frc']['am'].am * 100)
     if (max_val > 10):
         print(max_val)
 
@@ -509,7 +509,7 @@ for isite in stations_sites.Site:
     # isite = 'Taylor Dome'
     print('#---- ' + isite)
     
-    max_value = np.max(wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
+    max_value = np.max(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
     min_value = 10**-3
     
     ymax = max_value * 1.1
@@ -520,8 +520,8 @@ for isite in stations_sites.Site:
     fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
     
     ax.plot(
-        wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].quantiles,
-        wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].quantiles,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
         '.-', lw=0.5, markersize=1.5,
         )
     plt_text = plt.text(0.05, 0.9, isite, transform=ax.transAxes, color='gray',)
@@ -569,12 +569,12 @@ for isite in Sites:
     
     max_value = np.max((
         max_value,
-        np.max(wisoaprt_masked_bin_nt_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
+        np.max(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
         ))
     
     plt_line = ax.plot(
-        wisoaprt_masked_bin_nt_icores[expid[i]][isite]['meannan']['am'].quantiles,
-        wisoaprt_masked_bin_nt_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].quantiles,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
         '.-', lw=0.5, markersize=1.5,
         label=isite,
         )
@@ -623,8 +623,8 @@ for isite in stations_sites.Site:
     # isite = 'EDC'
     print('#---- ' + isite)
     
-    max_value = np.max(wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
-    min_value = np.min(wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
+    max_value = np.max(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
+    min_value = np.min(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
     
     
     print(min_value)
@@ -1045,7 +1045,7 @@ for isite in stations_sites.Site:
     ymin = min_value - 0.25
     
     # xaxis
-    max_value = np.max(wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
+    max_value = np.max(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
     min_value = 10**-3
     xmax = max_value * 1.1
     xmin = min_value
@@ -1054,7 +1054,7 @@ for isite in stations_sites.Site:
     fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
     
     ax.plot(
-        wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
         epe_sources_sites_binned[expid[i]][ivar][isite]['am'].am,
         '.-', lw=0.5, markersize=1.5,
         )
@@ -1114,7 +1114,7 @@ for isite in stations_sites.Site:
     ymin = min_value - 0.25
     
     # xaxis
-    max_value = np.max(wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
+    max_value = np.max(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
     min_value = 10**-3
     xmax = max_value * 1.1
     xmin = min_value
@@ -1123,7 +1123,7 @@ for isite in stations_sites.Site:
     fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
     
     ax.plot(
-        wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
         epe_sources_sites_binned[expid[i]][ivar][isite]['am'].am,
         '.-', lw=0.5, markersize=1.5,
         )
@@ -1175,7 +1175,7 @@ for isite in stations_sites.Site:
     ymin = min_value - 0.15
     
     # xaxis
-    max_value = np.max(wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
+    max_value = np.max(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
     min_value = 10**-3
     xmax = max_value * 1.1
     xmin = min_value
@@ -1184,7 +1184,7 @@ for isite in stations_sites.Site:
     fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
     
     ax.plot(
-        wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
         epe_sources_sites_binned[expid[i]][ivar][isite]['am'].am,
         '.-', lw=0.5, markersize=1.5,
         )
@@ -1237,7 +1237,7 @@ for isite in stations_sites.Site:
     ymin = min_value - 0.05
     
     # xaxis
-    max_value = np.max(wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
+    max_value = np.max(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
     min_value = 10**-3
     xmax = max_value * 1.1
     xmin = min_value
@@ -1246,7 +1246,7 @@ for isite in stations_sites.Site:
     fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
     
     ax.plot(
-        wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
         epe_sources_sites_binned[expid[i]][ivar][isite]['am'].am,
         '.-', lw=0.5, markersize=1.5,
         )
@@ -1304,7 +1304,7 @@ for isite in stations_sites.Site:
     ymin = min_value - 0.25
     
     # xaxis
-    max_value = np.max(wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
+    max_value = np.max(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
     min_value = 10**-3
     xmax = max_value * 1.1
     xmin = min_value
@@ -1313,7 +1313,7 @@ for isite in stations_sites.Site:
     fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
     
     ax.plot(
-        wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
         rel_lon,
         '.-', lw=0.5, markersize=1.5,
         )
@@ -1368,7 +1368,7 @@ for isite in stations_sites.Site:
     ymin = min_value - 0.25
     
     # xaxis
-    max_value = np.max(wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
+    max_value = np.max(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
     min_value = 10**-3
     xmax = max_value * 1.1
     xmin = min_value
@@ -1377,7 +1377,7 @@ for isite in stations_sites.Site:
     fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
     
     ax.plot(
-        wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
         epe_sources_sites_binned[expid[i]][ivar][isite]['am'].am / 100,
         '.-', lw=0.5, markersize=1.5,
         )
@@ -1463,13 +1463,13 @@ for irow, isite in enumerate(Sites):
     ymin = min_value - 0.25
     
     # xaxis
-    max_value = np.max(wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
+    max_value = np.max(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
     min_value = 10**-3
     xmax = max_value * 1.1
     xmin = min_value
     
     axs[irow, jcol].plot(
-        wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
         epe_sources_sites_binned[expid[i]][ivar][isite]['am'].am,
         '.-', lw=0.5, markersize=1.5,
         )
@@ -1524,13 +1524,13 @@ for irow, isite in enumerate(Sites):
     ymin = min_value - 0.25
     
     # xaxis
-    max_value = np.max(wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
+    max_value = np.max(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
     min_value = 10**-3
     xmax = max_value * 1.1
     xmin = min_value
     
     axs[irow, jcol].plot(
-        wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
         rel_lon,
         '.-', lw=0.5, markersize=1.5,
         )
@@ -1583,13 +1583,13 @@ for irow, isite in enumerate(Sites):
     ymin = min_value - 0.25
     
     # xaxis
-    max_value = np.max(wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
+    max_value = np.max(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
     min_value = 10**-3
     xmax = max_value * 1.1
     xmin = min_value
     
     axs[irow, jcol].plot(
-        wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
         epe_sources_sites_binned[expid[i]][ivar][isite]['am'].am / 100,
         '.-', lw=0.5, markersize=1.5,
         )
@@ -1640,13 +1640,13 @@ for irow, isite in enumerate(Sites):
     ymin = min_value - 0.25
     
     # xaxis
-    max_value = np.max(wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
+    max_value = np.max(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
     min_value = 10**-3
     xmax = max_value * 1.1
     xmin = min_value
     
     axs[irow, jcol].plot(
-        wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
         epe_sources_sites_binned[expid[i]][ivar][isite]['am'].am,
         '.-', lw=0.5, markersize=1.5,
         )
@@ -1696,13 +1696,13 @@ for irow, isite in enumerate(Sites):
     ymin = min_value - 0.15
     
     # xaxis
-    max_value = np.max(wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
+    max_value = np.max(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
     min_value = 10**-3
     xmax = max_value * 1.1
     xmin = min_value
     
     axs[irow, jcol].plot(
-        wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
         epe_sources_sites_binned[expid[i]][ivar][isite]['am'].am,
         '.-', lw=0.5, markersize=1.5,
         )
@@ -1753,13 +1753,13 @@ for irow, isite in enumerate(Sites):
     ymin = min_value - 0.05
     
     # xaxis
-    max_value = np.max(wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
+    max_value = np.max(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
     min_value = 10**-3
     xmax = max_value * 1.1
     xmin = min_value
     
     axs[irow, jcol].plot(
-        wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
         epe_sources_sites_binned[expid[i]][ivar][isite]['am'].am,
         '.-', lw=0.5, markersize=1.5,
         )
@@ -1905,13 +1905,13 @@ for irow, isite in enumerate(Sites):
     ymin = min_value - 0.25
     
     # xaxis
-    max_value = np.max(wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
+    max_value = np.max(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
     min_value = 10**-3
     xmax = max_value * 1.1
     xmin = min_value
     
     axs[irow, jcol].plot(
-        wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
         epe_sources_sites_binned[expid[i]][ivar][isite]['am'].am,
         '.-', lw=0.5, markersize=1.5,
         )
@@ -1968,13 +1968,13 @@ for irow, isite in enumerate(Sites):
     ymin = min_value - 0.25
     
     # xaxis
-    max_value = np.max(wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
+    max_value = np.max(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
     min_value = 10**-3
     xmax = max_value * 1.1
     xmin = min_value
     
     axs[irow, jcol].plot(
-        wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
         rel_lon,
         '.-', lw=0.5, markersize=1.5,
         )
@@ -2030,13 +2030,13 @@ for irow, isite in enumerate(Sites):
     ymin = min_value - 0.05
     
     # xaxis
-    max_value = np.max(wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
+    max_value = np.max(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
     min_value = 10**-3
     xmax = max_value * 1.1
     xmin = min_value
     
     axs[irow, jcol].plot(
-        wisoaprt_masked_bin_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
         epe_sources_sites_binned[expid[i]][ivar][isite]['am'].am,
         '.-', lw=0.5, markersize=1.5,
         )

@@ -12,7 +12,7 @@ source /home/ollie/qigao001/miniconda3/bin/activate deepice
 
 cd $WORK
 
-python "/work/ollie/qigao001/a_basic_analysis/c_codes/0_basics/0.1.3_large_memory.py"
+python "/work/ollie/qigao001/a_basic_analysis/c_codes/0_basics/0.3_srun/0.3.0_srun2.py"
 
 echo "Current time : " $(date +"%T")
 

@@ -107,11 +107,11 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_allti
     wisoaprt_alltime[expid[i]] = pickle.load(f)
 
 
-wisoaprt_epe = {}
+wisoaprt_epe_st = {}
 with open(
-    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe.pkl',
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe_st.pkl',
     'rb') as f:
-    wisoaprt_epe[expid[i]] = pickle.load(f)
+    wisoaprt_epe_st[expid[i]] = pickle.load(f)
 
 
 quantile_interval  = np.arange(1, 99 + 1e-4, 1, dtype=np.int64)
@@ -129,11 +129,11 @@ quantiles = dict(zip(
 # -----------------------------------------------------------------------------
 # region get mon_sea_ann masked wisoaprt
 
-wisoaprt_masked = {}
-wisoaprt_masked[expid[i]] = {}
-wisoaprt_masked[expid[i]]['mean'] = {}
-wisoaprt_masked[expid[i]]['frc']  = {}
-wisoaprt_masked[expid[i]]['meannan'] = {}
+wisoaprt_masked_st = {}
+wisoaprt_masked_st[expid[i]] = {}
+wisoaprt_masked_st[expid[i]]['mean'] = {}
+wisoaprt_masked_st[expid[i]]['frc']  = {}
+wisoaprt_masked_st[expid[i]]['meannan'] = {}
 
 for iqtl in quantiles.keys():
     # iqtl = '90%'
@@ -141,48 +141,48 @@ for iqtl in quantiles.keys():
     
     masked_data = \
         wisoaprt_alltime[expid[i]]['daily'].sel(wisotype=1).copy().where(
-            wisoaprt_epe[expid[i]]['mask'][iqtl],
+            wisoaprt_epe_st[expid[i]]['mask'][iqtl],
             other=0,
         ).compute()
     
-    wisoaprt_masked[expid[i]]['mean'][iqtl] = mon_sea_ann(masked_data)
-    wisoaprt_masked[expid[i]]['mean'][iqtl].pop('daily')
-    # wisoaprt_masked[expid[i]]['mean'][iqtl].pop('mon')
+    wisoaprt_masked_st[expid[i]]['mean'][iqtl] = mon_sea_ann(masked_data)
+    wisoaprt_masked_st[expid[i]]['mean'][iqtl].pop('daily')
+    # wisoaprt_masked_st[expid[i]]['mean'][iqtl].pop('mon')
     
-    wisoaprt_masked[expid[i]]['frc'][iqtl] = {}
+    wisoaprt_masked_st[expid[i]]['frc'][iqtl] = {}
     
-    for ialltime in wisoaprt_masked[expid[i]]['mean'][iqtl].keys():
-        wisoaprt_masked[expid[i]]['frc'][iqtl][ialltime] = \
-            (wisoaprt_masked[expid[i]]['mean'][iqtl][ialltime] / \
+    for ialltime in wisoaprt_masked_st[expid[i]]['mean'][iqtl].keys():
+        wisoaprt_masked_st[expid[i]]['frc'][iqtl][ialltime] = \
+            (wisoaprt_masked_st[expid[i]]['mean'][iqtl][ialltime] / \
                 wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1)).compute()
     
     masked_data_nan = \
         wisoaprt_alltime[expid[i]]['daily'].sel(wisotype=1).copy().where(
-            wisoaprt_epe[expid[i]]['mask'][iqtl],
+            wisoaprt_epe_st[expid[i]]['mask'][iqtl],
             other=np.nan,
         ).compute()
     
-    wisoaprt_masked[expid[i]]['meannan'][iqtl] = {}
+    wisoaprt_masked_st[expid[i]]['meannan'][iqtl] = {}
     # am
-    wisoaprt_masked[expid[i]]['meannan'][iqtl]['am'] = masked_data_nan.mean(
+    wisoaprt_masked_st[expid[i]]['meannan'][iqtl]['am'] = masked_data_nan.mean(
         dim='time', skipna=True).compute()
     # sm
-    wisoaprt_masked[expid[i]]['meannan'][iqtl]['sm'] = masked_data_nan.groupby(
+    wisoaprt_masked_st[expid[i]]['meannan'][iqtl]['sm'] = masked_data_nan.groupby(
         'time.season').mean(skipna=True).compute()
     # mm
-    wisoaprt_masked[expid[i]]['meannan'][iqtl]['mm'] = masked_data_nan.groupby(
+    wisoaprt_masked_st[expid[i]]['meannan'][iqtl]['mm'] = masked_data_nan.groupby(
         'time.month').mean(skipna=True).compute()
     # ann
-    wisoaprt_masked[expid[i]]['meannan'][iqtl]['ann'] = masked_data_nan.resample({'time': '1Y'}).mean(skipna=True).compute()
+    wisoaprt_masked_st[expid[i]]['meannan'][iqtl]['ann'] = masked_data_nan.resample({'time': '1Y'}).mean(skipna=True).compute()
     # sea
-    wisoaprt_masked[expid[i]]['meannan'][iqtl]['sea'] = masked_data_nan.resample({'time': 'Q-FEB'}).mean(skipna=True)[1:-1].compute()
+    wisoaprt_masked_st[expid[i]]['meannan'][iqtl]['sea'] = masked_data_nan.resample({'time': 'Q-FEB'}).mean(skipna=True)[1:-1].compute()
     # mon
-    wisoaprt_masked[expid[i]]['meannan'][iqtl]['mon'] = masked_data_nan.resample({'time': '1M'}).mean(skipna=True).compute()
+    wisoaprt_masked_st[expid[i]]['meannan'][iqtl]['mon'] = masked_data_nan.resample({'time': '1M'}).mean(skipna=True).compute()
 
 with open(
-    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_masked.pkl',
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_masked_st.pkl',
     'wb') as f:
-    pickle.dump(wisoaprt_masked[expid[i]], f)
+    pickle.dump(wisoaprt_masked_st[expid[i]], f)
 
 
 
@@ -190,7 +190,22 @@ with open(
 
 
 '''
+# 31 min to run
+#SBATCH --time=10:00:00
+#SBATCH --partition=fat
+
 #-------------------------------- check
+
+wisoaprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
+    wisoaprt_alltime[expid[i]] = pickle.load(f)
+
+
+quantile_interval  = np.arange(1, 99 + 1e-4, 1, dtype=np.int64)
+quantiles = dict(zip(
+    [str(x) + '%' for x in quantile_interval],
+    [x/100 for x in quantile_interval],
+    ))
 
 ilat=48
 ilon=90
@@ -200,20 +215,20 @@ for iqtl in quantiles.keys():
     # iqtl = '90%'
     print(iqtl + ': ' + str(quantiles[iqtl]))
     
-    wisoaprt_epe = {}
+    wisoaprt_epe_st = {}
     with open(
-        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe.pkl',
+        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe_st.pkl',
         'rb') as f:
-        wisoaprt_epe[expid[i]] = pickle.load(f)
+        wisoaprt_epe_st[expid[i]] = pickle.load(f)
     
     masked_data = \
         wisoaprt_alltime[expid[i]]['daily'][:, 0, ilat, ilon].copy().where(
-            wisoaprt_epe[expid[i]]['mask'][iqtl][:, ilat, ilon],
+            wisoaprt_epe_st[expid[i]]['mask'][iqtl][:, ilat, ilon],
             other=0,
         ).compute()
     masked_data_nan = \
         wisoaprt_alltime[expid[i]]['daily'][:, 0, ilat, ilon].copy().where(
-            wisoaprt_epe[expid[i]]['mask'][iqtl][:, ilat, ilon],
+            wisoaprt_epe_st[expid[i]]['mask'][iqtl][:, ilat, ilon],
             other=np.nan,
         ).compute()
     
@@ -238,33 +253,33 @@ for iqtl in quantiles.keys():
     meannan_values['sm'] = masked_data_nan.groupby('time.season').mean(skipna=True).compute()
     meannan_values['am'] = masked_data_nan.mean(dim='time', skipna=True).compute()
     
-    del wisoaprt_epe
+    del wisoaprt_epe_st
     
-    wisoaprt_masked = {}
+    wisoaprt_masked_st = {}
     with open(
-        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_masked.pkl',
+        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_masked_st.pkl',
         'rb') as f:
-        wisoaprt_masked[expid[i]] = pickle.load(f)
+        wisoaprt_masked_st[expid[i]] = pickle.load(f)
     
     for ialltime in ['mon', 'sea', 'ann', 'mm', 'sm']:
         # ialltime = 'mon'
         # check mean_values
         data1 = mean_values[ialltime].values
-        data2 = wisoaprt_masked[expid[i]]['mean'][iqtl][ialltime].values[
+        data2 = wisoaprt_masked_st[expid[i]]['mean'][iqtl][ialltime].values[
             :, ilat, ilon
         ]
         # print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
         print(np.max(data1[np.isfinite(data1)] - data2[np.isfinite(data2)]))
         
         data1 = frc_values[ialltime].values
-        data2 = wisoaprt_masked[expid[i]]['frc'][iqtl][ialltime].values[
+        data2 = wisoaprt_masked_st[expid[i]]['frc'][iqtl][ialltime].values[
             :, ilat, ilon
         ]
         # print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
         print(np.max(data1[np.isfinite(data1)] - data2[np.isfinite(data2)]))
         
         data1 = meannan_values[ialltime].values
-        data2 = wisoaprt_masked[expid[i]]['meannan'][iqtl][ialltime].values[
+        data2 = wisoaprt_masked_st[expid[i]]['meannan'][iqtl][ialltime].values[
             :, ilat, ilon
         ]
         # print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
@@ -274,27 +289,27 @@ for iqtl in quantiles.keys():
         # ialltime = 'mon'
         # check mean_values
         data1 = mean_values[ialltime].values
-        data2 = wisoaprt_masked[expid[i]]['mean'][iqtl][ialltime].values[
+        data2 = wisoaprt_masked_st[expid[i]]['mean'][iqtl][ialltime].values[
             ilat, ilon
         ]
         # print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
         print(np.max(data1[np.isfinite(data1)] - data2[np.isfinite(data2)]))
         
         data1 = frc_values[ialltime].values
-        data2 = wisoaprt_masked[expid[i]]['frc'][iqtl][ialltime].values[
+        data2 = wisoaprt_masked_st[expid[i]]['frc'][iqtl][ialltime].values[
             ilat, ilon
         ]
         # print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
         print(np.max(data1[np.isfinite(data1)] - data2[np.isfinite(data2)]))
         
         data1 = meannan_values[ialltime].values
-        data2 = wisoaprt_masked[expid[i]]['meannan'][iqtl][ialltime].values[
+        data2 = wisoaprt_masked_st[expid[i]]['meannan'][iqtl][ialltime].values[
             ilat, ilon
         ]
         # print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
         print(np.max(data1[np.isfinite(data1)] - data2[np.isfinite(data2)]))
     
-    del wisoaprt_masked
+    del wisoaprt_masked_st
 
 
 

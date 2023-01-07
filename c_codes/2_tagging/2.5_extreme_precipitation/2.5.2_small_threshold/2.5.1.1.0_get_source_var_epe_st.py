@@ -85,11 +85,11 @@ exp_out_wiso_daily = xr.open_mfdataset(
     fl_wiso_daily[ifile_start:ifile_end],
     data_vars='minimal', coords='minimal', parallel=True)
 
-wisoaprt_epe_nt = {}
+wisoaprt_epe_st = {}
 with open(
-    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe_nt.pkl',
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe_st.pkl',
     'rb') as f:
-    wisoaprt_epe_nt[expid[i]] = pickle.load(f)
+    wisoaprt_epe_st[expid[i]] = pickle.load(f)
 
 quantile_interval  = np.arange(1, 99 + 1e-4, 1, dtype=np.int64)
 quantiles = dict(zip(
@@ -140,11 +140,11 @@ for iqtl in quantiles.keys():
     print(iqtl)
     
     epe_var_scaled_pre[iqtl] = var_scaled_pre.copy().where(
-        wisoaprt_epe_nt[expid[i]]['mask'][iqtl],
+        wisoaprt_epe_st[expid[i]]['mask'][iqtl],
         other=0,
     )
     epe_ocean_pre[iqtl] = ocean_pre.copy().where(
-        wisoaprt_epe_nt[expid[i]]['mask'][iqtl],
+        wisoaprt_epe_st[expid[i]]['mask'][iqtl],
         other=0,
     )
     
@@ -163,12 +163,12 @@ for iqtl in quantiles.keys():
             epe_var_scaled_pre_alltime[iqtl][ialltime],
             epe_ocean_pre_alltime[iqtl][ialltime],
             min_sf, max_sf,
-            var_name, prefix = 'epe_nt_weighted_', threshold = 0,
+            var_name, prefix = 'epe_st_weighted_', threshold = 0,
         )
     
     del epe_var_scaled_pre[iqtl], epe_ocean_pre[iqtl], epe_var_scaled_pre_alltime[iqtl], epe_ocean_pre_alltime[iqtl]
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_nt_weighted_' + var_name + '.pkl',
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_st_weighted_' + var_name + '.pkl',
           'wb') as f:
     pickle.dump(epe_weighted_var, f)
 
@@ -196,7 +196,7 @@ for ivar in range(6):
     kstart = kwiso2 + sum(ntags[:itags[ivar]])
     kend   = kwiso2 + sum(ntags[:(itags[ivar]+1)])
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_nt_weighted_' + var_names[ivar] + '.pkl',
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_st_weighted_' + var_names[ivar] + '.pkl',
           'rb') as f:
         epe_weighted_var = pickle.load(f)
     
@@ -208,6 +208,9 @@ for ivar in range(6):
         exp_out_wiso_daily.wisoaprl.sel(wisotype=kstart+2) + \
             exp_out_wiso_daily.wisoaprc.sel(wisotype=kstart+2)).compute()
     
+    var_scaled_pre.values[ocean_pre.values < 2e-8] = 0
+    ocean_pre.values[ocean_pre.values < 2e-8] = 0
+    
     epe_var_scaled_pre = {}
     epe_ocean_pre = {}
     epe_var_scaled_pre_alltime = {}
@@ -218,19 +221,19 @@ for ivar in range(6):
         print(iqtl)
         
         epe_var_scaled_pre[iqtl] = var_scaled_pre.copy().where(
-            wisoaprt_epe_nt[expid[i]]['mask'][iqtl],
+            wisoaprt_epe_st[expid[i]]['mask'][iqtl],
             other=0,
         )
         epe_ocean_pre[iqtl] = ocean_pre.copy().where(
-            wisoaprt_epe_nt[expid[i]]['mask'][iqtl],
+            wisoaprt_epe_st[expid[i]]['mask'][iqtl],
             other=0,
         )
         
         #---- check
-        print((epe_var_scaled_pre[iqtl].values[wisoaprt_epe_nt[expid[i]]['mask'][iqtl]] == var_scaled_pre.values[wisoaprt_epe_nt[expid[i]]['mask'][iqtl]]).all())
-        print((epe_var_scaled_pre[iqtl].values[wisoaprt_epe_nt[expid[i]]['mask'][iqtl] == False] == 0).all())
-        print((epe_ocean_pre[iqtl].values[wisoaprt_epe_nt[expid[i]]['mask'][iqtl]] == ocean_pre.values[wisoaprt_epe_nt[expid[i]]['mask'][iqtl]]).all())
-        print((epe_ocean_pre[iqtl].values[wisoaprt_epe_nt[expid[i]]['mask'][iqtl] == False] == 0).all())
+        print((epe_var_scaled_pre[iqtl].values[wisoaprt_epe_st[expid[i]]['mask'][iqtl]] == var_scaled_pre.values[wisoaprt_epe_st[expid[i]]['mask'][iqtl]]).all())
+        print((epe_var_scaled_pre[iqtl].values[wisoaprt_epe_st[expid[i]]['mask'][iqtl] == False] == 0).all())
+        print((epe_ocean_pre[iqtl].values[wisoaprt_epe_st[expid[i]]['mask'][iqtl]] == ocean_pre.values[wisoaprt_epe_st[expid[i]]['mask'][iqtl]]).all())
+        print((epe_ocean_pre[iqtl].values[wisoaprt_epe_st[expid[i]]['mask'][iqtl] == False] == 0).all())
         
         #-------- mon_sea_ann values
         epe_var_scaled_pre_alltime[iqtl] = mon_sea_ann(epe_var_scaled_pre[iqtl])
