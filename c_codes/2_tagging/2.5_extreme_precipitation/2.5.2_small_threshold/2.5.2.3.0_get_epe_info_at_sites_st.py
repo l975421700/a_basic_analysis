@@ -250,6 +250,19 @@ with open(
     'rb') as f:
     wisoaprt_masked_bin_st_icores[expid[i]] = pickle.load(f)
 
+wisoaprt_masked_bin_st = {}
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_masked_bin_st.pkl',
+    'rb') as f:
+    wisoaprt_masked_bin_st[expid[i]] = pickle.load(f)
+
+
+quantile_interval_bin = np.arange(0.5, 99.5 + 1e-4, 1, dtype=np.float64)
+quantiles_bin = dict(zip(
+    [str(x) + '%' for x in quantile_interval_bin],
+    [x for x in quantile_interval_bin],
+    ))
+
 iqtl = '90.5%'
 
 from haversine import haversine
@@ -268,26 +281,8 @@ for icores in stations_sites.Site:
         print(distance)
 
 
+
 #---- check values
-
-wisoaprt_masked_bin_st_icores = {}
-with open(
-    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_masked_bin_st_icores.pkl',
-    'rb') as f:
-    wisoaprt_masked_bin_st_icores[expid[i]] = pickle.load(f)
-
-wisoaprt_masked_bin_st = {}
-with open(
-    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_masked_bin_st.pkl',
-    'rb') as f:
-    wisoaprt_masked_bin_st[expid[i]] = pickle.load(f)
-
-quantile_interval_bin = np.arange(0.5, 99.5 + 1e-4, 1, dtype=np.float64)
-quantiles_bin = dict(zip(
-    [str(x) + '%' for x in quantile_interval_bin],
-    [x for x in quantile_interval_bin],
-    ))
-
 
 for icores in stations_sites.Site:
     # icores = 'EDC'
@@ -297,7 +292,7 @@ for icores in stations_sites.Site:
         # ialltime = 'mon'
         print('#---- ' + ialltime)
         
-        for iqtl in quantiles_bin.keys():
+        for iqtl in ['90.5%']:
             # iqtl = '90%'
             print('#---- ' + iqtl)
             
@@ -313,7 +308,7 @@ for icores in stations_sites.Site:
         # ialltime = 'am'
         print('#---- ' + ialltime)
         
-        for iqtl in quantiles_bin.keys():
+        for iqtl in ['90.5%']:
             # iqtl = '90.5%'
             print('#---- ' + iqtl)
             
@@ -325,30 +320,6 @@ for icores in stations_sites.Site:
                     t63_sites_indices[icores]['ilon']].values
             # print((d1 == d2).all())
             print(d1[np.isfinite(d1)] == d2[np.isfinite(d2)])
-
-
-
-
-
-#-------------------------------- print annual mean values
-iqtl = '90%'
-for icores in stations_sites.Site:
-    # icores = 'EDC'
-    print('#----------------' + icores)
-    wisoaprt_epe_am_icores = \
-        np.round(
-            wisoaprt_epe_alltime_icores[expid[i]][icores][
-                'am'][iqtl].values * 100, 1)
-    wisoaprt_epe_annstd_icores = \
-        np.round(
-            (wisoaprt_epe_alltime_icores[expid[i]][icores][
-                'ann'][iqtl] * 100).std(ddof=1).values,
-            1)
-    print(str(wisoaprt_epe_am_icores) + ' ± ' + str(wisoaprt_epe_annstd_icores))
-
-
-
-
 
 
 
@@ -590,6 +561,17 @@ with open(
     'rb') as f:
     wisoaprt_mask_bin_st_icores[expid[i]] = pickle.load(f)
 
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_mask_bin_st.pkl',
+    'rb') as f:
+    wisoaprt_mask_bin_st = pickle.load(f)
+
+quantile_interval_bin = np.arange(0.5, 99.5 + 1e-4, 1, dtype=np.float64)
+quantiles_bin = dict(zip(
+    [str(x) + '%' for x in quantile_interval_bin],
+    [x for x in quantile_interval_bin],
+    ))
+
 #---- distance between data points
 
 iqtl = '90.5%'
@@ -619,4 +601,7 @@ wisoaprt_mask_bin_st_icores[expid[i]][icores]['am'].am.values
 # -----------------------------------------------------------------------------
 
 
+# 2min to run
+#SBATCH --time=00:30:00
+#SBATCH --partition=fat
 

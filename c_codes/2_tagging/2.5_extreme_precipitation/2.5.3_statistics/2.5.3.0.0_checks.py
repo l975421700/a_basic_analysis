@@ -1,5 +1,12 @@
 
 
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+expid = [
+    'pi_m_502_5.0',
+    ]
+i = 0
+
+
 # -----------------------------------------------------------------------------
 # region import packages
 
@@ -30,12 +37,12 @@ import pycircstat as circ
 # plot
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib.colors import BoundaryNorm
+from matplotlib.colors import BoundaryNorm, ListedColormap
 from matplotlib import cm
 import cartopy.crs as ccrs
 plt.rcParams['pcolor.shading'] = 'auto'
 mpl.rcParams['figure.dpi'] = 600
-mpl.rc('font', family='Times New Roman', size=10)
+mpl.rc('font', family='Times New Roman', size=8)
 mpl.rcParams['axes.linewidth'] = 0.2
 plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
@@ -51,6 +58,7 @@ from a_basic_analysis.b_module.mapplot import (
     framework_plot1,
     remove_trailing_zero,
     remove_trailing_zero_pos,
+    remove_trailing_zero_pos_abs,
 )
 
 from a_basic_analysis.b_module.basic_calculations import (
@@ -70,11 +78,13 @@ from a_basic_analysis.b_module.namelist import (
     zerok,
     panel_labels,
     seconds_per_d,
+    ten_sites_names,
 )
 
 from a_basic_analysis.b_module.source_properties import (
     source_properties,
     calc_lon_diff,
+    calc_lon_diff_np,
 )
 
 from a_basic_analysis.b_module.statistics import (
@@ -94,46 +104,51 @@ from a_basic_analysis.b_module.component_plot import (
 
 
 # -----------------------------------------------------------------------------
-# region resample hourly era5 tp to daily tp
+# region fraction of precipitation below 0.02 mm/day
 
-input_files = [
-    'scratch/cmip6/hist/pre/tp_ERA5_hourly_sl_79_89_Antarctica.nc',
-    'scratch/cmip6/hist/pre/tp_ERA5_hourly_sl_90_00_Antarctica.nc',
-    'scratch/cmip6/hist/pre/tp_ERA5_hourly_sl_01_11_Antarctica.nc',
-    'scratch/cmip6/hist/pre/tp_ERA5_hourly_sl_12_21_Antarctica.nc',
-]
+wisoaprt_masked_st = {}
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_masked_st.pkl',
+    'rb') as f:
+    wisoaprt_masked_st[expid[i]] = pickle.load(f)
 
-output_files = [
-    'scratch/cmip6/hist/pre/tp_ERA5_daily_sl_79_89_Antarctica.nc',
-    'scratch/cmip6/hist/pre/tp_ERA5_daily_sl_90_00_Antarctica.nc',
-    'scratch/cmip6/hist/pre/tp_ERA5_daily_sl_01_11_Antarctica.nc',
-    'scratch/cmip6/hist/pre/tp_ERA5_daily_sl_12_21_Antarctica.nc',
-]
+np.min(wisoaprt_masked_st[expid[i]]['frc']['1%']['am'])
+# 0.99324927
 
+wisoaprt_masked = {}
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_masked.pkl',
+    'rb') as f:
+    wisoaprt_masked[expid[i]] = pickle.load(f)
 
-for ifile in range(len(input_files)):
-    # ifile = 0
-    print('#-------- ' + str(ifile))
-    print(input_files[ifile])
-    print(output_files[ifile])
-    
-    tp_era5_hourly = xr.open_dataset(input_files[ifile])
-    
-    tp_era5_daily = (tp_era5_hourly.tp.resample({'time': '1D'}).sum() * 1000).compute()
-    
-    tp_era5_daily.to_netcdf(output_files[ifile])
-    
-    del tp_era5_hourly, tp_era5_daily
+np.min(wisoaprt_masked[expid[i]]['frc']['1%']['am'])
+# 0.86385676
 
 
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.1_pre/6.1.7.1 ' + expid[i] + ' aprt_frc am below threshold 0.02.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    0, 14, 2, 2, cmap='Blues', reversed=False)
+
+fig, ax = hemisphere_plot(northextent=-60)
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
+plt_cmp = ax.pcolormesh(
+    wisoaprt_masked[expid[i]]['frc']['1%']['am'].lon,
+    wisoaprt_masked[expid[i]]['frc']['1%']['am'].lat,
+    100 - wisoaprt_masked[expid[i]]['frc']['1%']['am'] * 100,
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
+    pad=0.02, fraction=0.2,
+    )
+cbar.ax.set_xlabel('Fraction of daily precipitation amount\nbelow the threshold 0.02 $mm \; day^{-1}$  [$\%$]', linespacing=1.5, fontsize=8)
+fig.savefig(output_png)
 
 
 
-
-
-'''
-'''
 # endregion
 # -----------------------------------------------------------------------------
-
-

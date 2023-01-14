@@ -33,10 +33,10 @@ echam6_t63_ais_mask = create_ais_mask(
 with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'wb') as f:
     pickle.dump(echam6_t63_ais_mask, f)
 
-
-# with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
-#     echam6_t63_ais_mask = pickle.load(f)
-
+'''
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+'''
 # endregion
 # -----------------------------------------------------------------------------
 

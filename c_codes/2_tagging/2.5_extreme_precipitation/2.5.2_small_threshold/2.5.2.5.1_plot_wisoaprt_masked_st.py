@@ -1,5 +1,12 @@
 
 
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+expid = [
+    'pi_m_502_5.0',
+    ]
+i = 0
+
+
 # -----------------------------------------------------------------------------
 # region import packages
 
@@ -94,46 +101,62 @@ from a_basic_analysis.b_module.component_plot import (
 
 
 # -----------------------------------------------------------------------------
-# region resample hourly era5 tp to daily tp
-
-input_files = [
-    'scratch/cmip6/hist/pre/tp_ERA5_hourly_sl_79_89_Antarctica.nc',
-    'scratch/cmip6/hist/pre/tp_ERA5_hourly_sl_90_00_Antarctica.nc',
-    'scratch/cmip6/hist/pre/tp_ERA5_hourly_sl_01_11_Antarctica.nc',
-    'scratch/cmip6/hist/pre/tp_ERA5_hourly_sl_12_21_Antarctica.nc',
-]
-
-output_files = [
-    'scratch/cmip6/hist/pre/tp_ERA5_daily_sl_79_89_Antarctica.nc',
-    'scratch/cmip6/hist/pre/tp_ERA5_daily_sl_90_00_Antarctica.nc',
-    'scratch/cmip6/hist/pre/tp_ERA5_daily_sl_01_11_Antarctica.nc',
-    'scratch/cmip6/hist/pre/tp_ERA5_daily_sl_12_21_Antarctica.nc',
-]
+# region percentile of 10% heaviest precipitation amount of total precipitation
 
 
-for ifile in range(len(input_files)):
-    # ifile = 0
-    print('#-------- ' + str(ifile))
-    print(input_files[ifile])
-    print(output_files[ifile])
-    
-    tp_era5_hourly = xr.open_dataset(input_files[ifile])
-    
-    tp_era5_daily = (tp_era5_hourly.tp.resample({'time': '1D'}).sum() * 1000).compute()
-    
-    tp_era5_daily.to_netcdf(output_files[ifile])
-    
-    del tp_era5_hourly, tp_era5_daily
+wisoaprt_masked_st = {}
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_masked_st.pkl',
+    'rb') as f:
+    wisoaprt_masked_st[expid[i]] = pickle.load(f)
+
+lon = wisoaprt_masked_st[expid[i]]['frc']['90%']['am'].lon
+lat = wisoaprt_masked_st[expid[i]]['frc']['90%']['am'].lat
+lon_2d, lat_2d = np.meshgrid(lon, lat,)
+
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
+
+iqtl = '90%'
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.1_pre/6.1.7.1 ' + expid[i] + ' st_daily precipitation percentile_' + iqtl[:2] + '_frc Antarctica.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=30, cm_max=70, cm_interval1=2.5, cm_interval2=5, cmap='Oranges',
+    reversed=False)
+
+fig, ax = hemisphere_plot(
+    northextent=-60, figsize=np.array([5.8, 7.8]) / 2.54)
+
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
+
+plt1 = ax.pcolormesh(
+    lon,
+    lat,
+    wisoaprt_masked_st[expid[i]]['frc']['90%']['am'] * 100,
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+plt_ctr = ax.contour(
+    lon,
+    lat.sel(lat=slice(-60, -90)),
+    wisoaprt_masked_st[expid[i]]['frc']['90%']['am'].sel(lat=slice(-60, -90))*100,
+    [50],
+    colors = 'b', linewidths=0.3, transform=ccrs.PlateCarree(),)
+ax.clabel(
+    plt_ctr, inline=1, colors='b', fmt=remove_trailing_zero,
+    levels=[50], inline_spacing=10, fontsize=6,)
+
+cbar = fig.colorbar(
+    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.95, ticks=pltticks, extend='both',
+    pad=0.02, fraction=0.2,
+    )
+cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
+cbar.ax.tick_params(labelsize=8)
+cbar.ax.set_xlabel(
+    'Contribution of EPE to\nannual mean precipitation [$\%$]', linespacing=1.5)
+fig.savefig(output_png, dpi=600)
 
 
-
-
-
-
-
-'''
-'''
 # endregion
 # -----------------------------------------------------------------------------
-
 

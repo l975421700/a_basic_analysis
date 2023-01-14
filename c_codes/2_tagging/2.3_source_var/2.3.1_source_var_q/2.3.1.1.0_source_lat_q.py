@@ -360,7 +360,7 @@ cbar = fig.colorbar(
     pad=0.1, fraction=0.04,
     anchor=(1.3, -1),
     )
-cbar.ax.set_xlabel('Relative source latitude [$°\;S$]',)
+cbar.ax.set_xlabel('Relative source latitude [$°$]',)
 
 # 2nd y-axis
 height = np.round(

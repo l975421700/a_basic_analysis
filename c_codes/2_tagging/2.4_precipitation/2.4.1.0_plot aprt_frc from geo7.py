@@ -132,68 +132,6 @@ ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 # -----------------------------------------------------------------------------
 # region plot am aprt fraction
 
-regions = list(aprt_frc.keys())
-
-cm_mins = [0, 0, 0, 0, 0, 0, 0]
-cm_maxs = [5, 10, 35, 55, 45, 20, 60]
-cm_interval1s = [0.5, 1, 5, 5, 5, 2, 5]
-cm_interval2s = [1, 2, 5, 10, 5, 4, 10]
-
-for count, iregion in enumerate(regions):
-    print(str(count) + ': ' + iregion)
-    # count = 5; iregion = 'SH seaice'
-    pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-        cm_min=cm_mins[count],
-        cm_max=cm_maxs[count],
-        cm_interval1=cm_interval1s[count],
-        cm_interval2=cm_interval2s[count],
-        cmap='Blues',
-        reversed=False)
-    
-    output_png = 'figures/6_awi/6.1_echam6/6.1.4_precipitation/6.1.4.0_aprt/6.1.4.0.0_aprt_frc/6.1.4.0.0 ' + expid[i] + ' aprt_frc am ' + iregion + '.png'
-    
-    fig, ax = hemisphere_plot(northextent=-60)
-    cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
-    plt_cmp = ax.pcolormesh(
-        lon, lat,
-        aprt_frc[iregion]['am'],
-        norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
-
-    cbar = fig.colorbar(
-        plt_cmp, ax=ax, aspect=30,
-        orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
-        pad=0.02, fraction=0.2,
-        )
-    cbar.ax.set_xlabel('Fraction of annual mean precipitation from\n' + iregion + ' [%]', linespacing=1.5, fontsize=8)
-    fig.savefig(output_png)
-
-
-#-------- other Ocean
-
-output_png = 'figures/6_awi/6.1_echam6/6.1.4_precipitation/6.1.4.0_aprt/6.1.4.0.0_aprt_frc/6.1.4.0.0 ' + expid[i] + ' aprt_frc am Open ocean.png'
-
-pltlevel = np.arange(75, 100.01, 2.5)
-pltticks = np.arange(75, 100.01, 5)
-pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
-pltcmp = cm.get_cmap('Blues', len(pltlevel)-1)
-
-fig, ax = hemisphere_plot(northextent=-60)
-cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
-plt_cmp = ax.pcolormesh(
-    lon, lat,
-    aprt_frc['Atlantic Ocean']['am'] + aprt_frc['Indian Ocean']['am'] + \
-        aprt_frc['Pacific Ocean']['am'] + aprt_frc['Southern Ocean']['am'],
-    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
-
-cbar = fig.colorbar(
-    plt_cmp, ax=ax, aspect=30,
-    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='min',
-    pad=0.02, fraction=0.2,
-    )
-cbar.ax.set_xlabel('Fraction of annual mean precipitation from\nOpen ocean [%]', linespacing=1.5, fontsize=8)
-fig.savefig(output_png)
-
-
 #-------------------------------- all figures
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.4_precipitation/6.1.4.0_aprt/6.1.4.0.0_aprt_frc/6.1.4.0.0 ' + expid[i] + ' aprt_frc am eight regions.png'
@@ -351,6 +289,68 @@ fig.savefig(output_png)
 
 
 '''
+regions = list(aprt_frc.keys())
+
+cm_mins = [0, 0, 0, 0, 0, 0, 0]
+cm_maxs = [5, 10, 35, 55, 45, 20, 60]
+cm_interval1s = [0.5, 1, 5, 5, 5, 2, 5]
+cm_interval2s = [1, 2, 5, 10, 5, 4, 10]
+
+for count, iregion in enumerate(regions):
+    print(str(count) + ': ' + iregion)
+    # count = 5; iregion = 'SH seaice'
+    pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+        cm_min=cm_mins[count],
+        cm_max=cm_maxs[count],
+        cm_interval1=cm_interval1s[count],
+        cm_interval2=cm_interval2s[count],
+        cmap='Blues',
+        reversed=False)
+    
+    output_png = 'figures/6_awi/6.1_echam6/6.1.4_precipitation/6.1.4.0_aprt/6.1.4.0.0_aprt_frc/6.1.4.0.0 ' + expid[i] + ' aprt_frc am ' + iregion + '.png'
+    
+    fig, ax = hemisphere_plot(northextent=-60)
+    cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+    plt_cmp = ax.pcolormesh(
+        lon, lat,
+        aprt_frc[iregion]['am'],
+        norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+    cbar = fig.colorbar(
+        plt_cmp, ax=ax, aspect=30,
+        orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
+        pad=0.02, fraction=0.2,
+        )
+    cbar.ax.set_xlabel('Fraction of annual mean precipitation from\n' + iregion + ' [%]', linespacing=1.5, fontsize=8)
+    fig.savefig(output_png)
+
+
+#-------- other Ocean
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.4_precipitation/6.1.4.0_aprt/6.1.4.0.0_aprt_frc/6.1.4.0.0 ' + expid[i] + ' aprt_frc am Open ocean.png'
+
+pltlevel = np.arange(75, 100.01, 2.5)
+pltticks = np.arange(75, 100.01, 5)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+pltcmp = cm.get_cmap('Blues', len(pltlevel)-1)
+
+fig, ax = hemisphere_plot(northextent=-60)
+cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+plt_cmp = ax.pcolormesh(
+    lon, lat,
+    aprt_frc['Atlantic Ocean']['am'] + aprt_frc['Indian Ocean']['am'] + \
+        aprt_frc['Pacific Ocean']['am'] + aprt_frc['Southern Ocean']['am'],
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='min',
+    pad=0.02, fraction=0.2,
+    )
+cbar.ax.set_xlabel('Fraction of annual mean precipitation from\nOpen ocean [%]', linespacing=1.5, fontsize=8)
+fig.savefig(output_png)
+
+
 
 '''
 # endregion
@@ -414,7 +414,7 @@ fig.savefig(output_png)
 
 #-------------------------------- ann+std
 
-imask = 'AIS'
+imask = 'AP'
 
 iwisotype = 'AIS'
 ann_values = aprt_frc_AIS_alltime[imask]['ann'][iwisotype].frc_AIS.values
@@ -440,10 +440,11 @@ for itype in range(6):
         str(np.round(am_values[0], 1)) + '±' + \
             str(np.round(ann_values.std(ddof=1), 1)))
 
+# Land excl. AIS: 4.3±0.3, 5.6±0.4, 2.6±0.3, 2.7±0.3
+# Southern Ocean: 27.9±2.0, 23.2±1.7, 34.5±3.0, 36.1±2.5
 
 
 #-------------------------------- mm
-
 imask = 'AIS'
 iwisotype = 'AIS'
 
@@ -456,7 +457,7 @@ for itype in range(6):
     iwisotype = list(aprt_frc_AIS_alltime[imask]['ann'].keys())[itype+1]
     iwisotype1 = list(aprt_frc_AIS_alltime[imask]['ann'].keys())[itype]
     
-    print(iwisotype + ' vs. ' + iwisotype1)
+    # print(iwisotype + ' vs. ' + iwisotype1)
     
     mm_values = aprt_frc_AIS_alltime[imask]['mm'][iwisotype].frc_AIS.values - \
         aprt_frc_AIS_alltime[imask]['mm'][iwisotype1].frc_AIS.values
@@ -467,6 +468,7 @@ for itype in range(6):
 
 aprt_frc_AIS_alltime[imask]['mm']['SH seaice'].frc_AIS.values - \
         aprt_frc_AIS_alltime[imask]['mm']['Pacific Ocean'].frc_AIS.values
+
 
 '''
 #-------------------------------- ann+std

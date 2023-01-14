@@ -127,13 +127,104 @@ for ifile in range(len(input_files)):
 
 
 
-
-
-
-
 '''
+# 20 min to run
+#SBATCH --time=10:00:00
+#SBATCH --partition=fat
+
+#-------------------------------- check
+input_files = [
+    'scratch/cmip6/hist/pre/tp_ERA5_hourly_sl_79_89_Antarctica.nc',
+    'scratch/cmip6/hist/pre/tp_ERA5_hourly_sl_90_00_Antarctica.nc',
+    'scratch/cmip6/hist/pre/tp_ERA5_hourly_sl_01_11_Antarctica.nc',
+    'scratch/cmip6/hist/pre/tp_ERA5_hourly_sl_12_21_Antarctica.nc',
+]
+
+output_files = [
+    'scratch/cmip6/hist/pre/tp_ERA5_daily_sl_79_89_Antarctica.nc',
+    'scratch/cmip6/hist/pre/tp_ERA5_daily_sl_90_00_Antarctica.nc',
+    'scratch/cmip6/hist/pre/tp_ERA5_daily_sl_01_11_Antarctica.nc',
+    'scratch/cmip6/hist/pre/tp_ERA5_daily_sl_12_21_Antarctica.nc',
+]
+
+ifile = 3
+tp_era5_hourly = xr.open_dataset(input_files[ifile])
+tp_era5_daily = xr.open_dataset(output_files[ifile])
+
+ilat = 100
+ilon = 100
+
+data1 = tp_era5_hourly.tp[:, ilat, ilon].resample({'time': '1D'}).sum() * 1000
+data2 = tp_era5_daily.tp[:, ilat, ilon]
+(data1 == data2).all().values
+np.max(abs(data1 - data2) / data2)
+
+
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region get fraction of precipitation amount below 0.02 mm/day
+
+#-------------------------------- 0.02 mm/day
+
+tp_era5_daily = xr.open_mfdataset(
+    'scratch/cmip6/hist/pre/tp_ERA5_daily_sl_??_??_Antarctica.nc',
+    data_vars='minimal', coords='minimal', parallel=True,
+)
+
+tp_era5_daily_td = tp_era5_daily.copy().compute()
+
+tp_era5_daily_td.tp.values[tp_era5_daily_td.tp.values < 0.02] = 0
+
+tp_era5_frc_td = (tp_era5_daily_td.tp.mean(dim='time') / \
+    tp_era5_daily.tp.mean(dim='time')).compute()
+
+np.min(tp_era5_frc_td)
+
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.1_pre/6.1.7.1 era5 aprt_frc am below threshold 0.02.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    0, 14, 2, 2, cmap='Blues', reversed=False)
+
+fig, ax = hemisphere_plot(northextent=-60)
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
+plt_cmp = ax.pcolormesh(
+    tp_era5_frc_td.longitude,
+    tp_era5_frc_td.latitude,
+    100 - tp_era5_frc_td * 100,
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
+    pad=0.02, fraction=0.2,
+    )
+cbar.ax.set_xlabel('Fraction of daily precipitation amount\nbelow the threshold 0.02 $mm \; day^{-1}$  [$\%$]', linespacing=1.5, fontsize=8)
+fig.savefig(output_png)
+
+
+#-------------------------------- 0.002 mm/day
+
+tp_era5_daily = xr.open_mfdataset(
+    'scratch/cmip6/hist/pre/tp_ERA5_daily_sl_??_??_Antarctica.nc',
+    data_vars='minimal', coords='minimal', parallel=True,
+)
+
+tp_era5_daily_st = tp_era5_daily.copy().compute()
+
+tp_era5_daily_st.tp.values[tp_era5_daily_st.tp.values < 0.002] = 0
+
+tp_era5_frc_st = (tp_era5_daily_st.tp.mean(dim='time') / \
+    tp_era5_daily.tp.mean(dim='time')).compute()
+
+print(np.min(tp_era5_frc_st))
+
+
+# endregion
+# -----------------------------------------------------------------------------
 

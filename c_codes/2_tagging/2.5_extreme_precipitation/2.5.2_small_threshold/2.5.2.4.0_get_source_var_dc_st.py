@@ -119,6 +119,66 @@ print(kstart); print(kend)
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region calculate dc_st source var
+
+#-------------------------------- precipitation
+ocean_pre = (
+    exp_out_wiso_daily.wisoaprl.sel(wisotype=slice(kstart+2, kstart+3)) + \
+        exp_out_wiso_daily.wisoaprc.sel(wisotype=slice(kstart+2, kstart+3))
+        ).sum(dim='wisotype').compute()
+var_scaled_pre = (
+    exp_out_wiso_daily.wisoaprl.sel(wisotype=kstart+2) + \
+        exp_out_wiso_daily.wisoaprc.sel(wisotype=kstart+2)).compute()
+
+var_scaled_pre.values[ocean_pre.values < 2e-8] = 0
+ocean_pre.values[ocean_pre.values < 2e-8] = 0
+
+dc_st_var_scaled_pre = {}
+dc_st_ocean_pre = {}
+dc_st_var_scaled_pre_alltime = {}
+dc_st_ocean_pre_alltime = {}
+dc_st_weighted_var = {}
+
+for iqtl in quantiles.keys():
+    # iqtl = '90%'
+    print(iqtl)
+    
+    dc_st_var_scaled_pre[iqtl] = var_scaled_pre.copy().where(
+        wisoaprt_epe_st[expid[i]]['mask'][iqtl] == False,
+        other=0,
+    )
+    dc_st_ocean_pre[iqtl] = ocean_pre.copy().where(
+        wisoaprt_epe_st[expid[i]]['mask'][iqtl] == False,
+        other=0,
+    )
+    
+    #-------- mon_sea_ann values
+    dc_st_var_scaled_pre_alltime[iqtl] = mon_sea_ann(dc_st_var_scaled_pre[iqtl])
+    dc_st_ocean_pre_alltime[iqtl]      = mon_sea_ann(dc_st_ocean_pre[iqtl])
+    
+    
+    #-------------------------------- pre-weighted var
+    
+    dc_st_weighted_var[iqtl] = {}
+    
+    for ialltime in ['mon', 'sea', 'ann', 'mm', 'sm', 'am']:
+        print(ialltime)
+        dc_st_weighted_var[iqtl][ialltime] = source_properties(
+            dc_st_var_scaled_pre_alltime[iqtl][ialltime],
+            dc_st_ocean_pre_alltime[iqtl][ialltime],
+            min_sf, max_sf,
+            var_name, prefix = 'dc_st_weighted_', threshold = 0,
+        )
+    
+    del dc_st_var_scaled_pre[iqtl], dc_st_ocean_pre[iqtl], dc_st_var_scaled_pre_alltime[iqtl], dc_st_ocean_pre_alltime[iqtl]
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dc_st_weighted_' + var_name + '.pkl',
+          'wb') as f:
+    pickle.dump(dc_st_weighted_var, f)
+
+
+'''
 #-------------------------------- check
 
 var_names = ['sst', 'lat', 'rh2m', 'wind10', 'sinlon', 'coslon']
@@ -204,4 +264,16 @@ for ivar in range(6):
 
 
 
+
+
+import psutil
+print(psutil.Process().memory_info().rss / (2 ** 30))
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# 10 min to run
+#SBATCH --time=00:30:00
+#SBATCH --partition=mpp60
 
