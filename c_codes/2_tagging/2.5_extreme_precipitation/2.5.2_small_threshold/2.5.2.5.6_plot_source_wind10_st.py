@@ -33,6 +33,8 @@ import pandas as pd
 from metpy.interpolate import cross_section
 from statsmodels.stats import multitest
 import pycircstat as circ
+from metpy.calc import pressure_to_height_std, geopotential_to_height
+from metpy.units import units
 
 # plot
 import matplotlib as mpl
@@ -223,6 +225,82 @@ fig.savefig(output_png)
 '''
 (epe_st_weighted_wind10[expid[i]][iqtl]['am'] - pre_weighted_wind10[expid[i]]['am']).to_netcdf('scratch/test/test.nc')
 '''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region estimate statistics
+
+
+echam6_t63_cellarea = xr.open_dataset('scratch/others/land_sea_masks/echam6_t63_cellarea.nc')
+
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+
+
+iqtl = '90%'
+wind10_diff = epe_st_weighted_wind10[expid[i]][iqtl]['am'] - \
+    dc_st_weighted_wind10[expid[i]][iqtl]['am']
+
+
+for imask in ['AIS', 'EAIS', 'WAIS', 'AP']:
+    # imask = 'AIS'
+    print('#-------- ' + imask)
+    
+    mask = echam6_t63_ais_mask['mask'][imask]
+    
+    ave_wind10_diff = np.average(
+        wind10_diff.values[mask],
+        weights = echam6_t63_cellarea.cell_area.values[mask],
+    )
+    
+    print(str(np.round(ave_wind10_diff, 2)))
+
+
+echam6_t63_geosp = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/pi_m_416_4.9/input/echam/unit.24')
+echam6_t63_surface_height = geopotential_to_height(
+    echam6_t63_geosp.GEOSP * (units.m / units.s)**2)
+
+imask = 'AIS'
+mask_high = echam6_t63_ais_mask['mask'][imask] & \
+    (echam6_t63_surface_height.values >= 2250)
+mask_low = echam6_t63_ais_mask['mask'][imask] & \
+    (echam6_t63_surface_height.values < 2250)
+
+for mask in[mask_high, mask_low]:
+    
+    ave_wind10_diff = np.average(
+        wind10_diff.values[mask],
+        weights = echam6_t63_cellarea.cell_area.values[mask],
+    )
+    
+    print(str(np.round(ave_wind10_diff, 1)))
+
+echam6_t63_ais_mask['mask'][imask].sum()
+mask_high.sum() + mask_low.sum()
+
+
+
+
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.t63_sites_indices.pkl',
+    'rb') as f:
+    t63_sites_indices = pickle.load(f)
+
+for isite in ['EDC', 'Halley']:
+    # isite = 'EDC'
+    print(isite)
+    
+    res = wind10_diff.values[
+        t63_sites_indices[isite]['ilat'], t63_sites_indices[isite]['ilon']]
+    
+    print(np.round(res, 1))
+
+
+
+
+
 # endregion
 # -----------------------------------------------------------------------------
 

@@ -2,7 +2,6 @@
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_m_416_4.9',
     'pi_m_502_5.0',
     ]
 i = 0
@@ -34,8 +33,8 @@ import pandas as pd
 from metpy.interpolate import cross_section
 from statsmodels.stats import multitest
 import pycircstat as circ
-from scipy.stats import linregress
-from scipy.stats import pearsonr
+import xskillscore as xs
+from scipy.stats import circmean
 
 # plot
 import matplotlib as mpl
@@ -45,7 +44,7 @@ from matplotlib import cm
 import cartopy.crs as ccrs
 plt.rcParams['pcolor.shading'] = 'auto'
 mpl.rcParams['figure.dpi'] = 600
-mpl.rc('font', family='Times New Roman', size=8)
+mpl.rc('font', family='Times New Roman', size=10)
 mpl.rcParams['axes.linewidth'] = 0.2
 plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
@@ -61,11 +60,12 @@ from a_basic_analysis.b_module.mapplot import (
     framework_plot1,
     remove_trailing_zero,
     remove_trailing_zero_pos,
-    remove_trailing_zero_pos_abs,
 )
 
 from a_basic_analysis.b_module.basic_calculations import (
     mon_sea_ann,
+    find_nearest_1d,
+    get_mon_sam,
 )
 
 from a_basic_analysis.b_module.namelist import (
@@ -85,8 +85,8 @@ from a_basic_analysis.b_module.namelist import (
 
 from a_basic_analysis.b_module.source_properties import (
     source_properties,
-    calc_lon_diff,
     calc_lon_diff_np,
+    calc_lon_diff,
 )
 
 from a_basic_analysis.b_module.statistics import (
@@ -106,71 +106,45 @@ from a_basic_analysis.b_module.component_plot import (
 
 
 # -----------------------------------------------------------------------------
-# region import data
+# region get westerlies
 
-pre_weighted_var = {}
-pre_weighted_var[expid[i]] = {}
 
-source_var = ['lat', 'lon', 'sst', 'rh2m', 'wind10', 'distance']
+uv_plev = {}
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.uv_plev.pkl',
+    'rb') as f:
+    uv_plev[expid[i]] = pickle.load(f)
 
-prefix = exp_odir + expid[i] + '/analysis/echam/' + expid[i]
-source_var_files = [
-    prefix + '.pre_weighted_lat.pkl',
-    prefix + '.pre_weighted_lon.pkl',
-    prefix + '.pre_weighted_sst.pkl',
-    prefix + '.pre_weighted_rh2m.pkl',
-    prefix + '.pre_weighted_wind10.pkl',
-    prefix + '.transport_distance.pkl',
-]
+westerlies_40_65_zm_mm = \
+    uv_plev[expid[i]]['u']['mon'].sel(plev=85000., lat=slice(-40, -65)).mean(
+        dim={'lon', 'lat'}
+    ).compute()
 
-for ivar, ifile in zip(source_var, source_var_files):
-    print(ivar + ':    ' + ifile)
-    with open(ifile, 'rb') as f:
-        pre_weighted_var[expid[i]][ivar] = pickle.load(f)
+westerlies_40_65_zm_mm.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.westerlies_40_65_zm_mm.nc')
 
-with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
-    echam6_t63_ais_mask = pickle.load(f)
+
 
 
 '''
+#-------------------------------- check
+
+westerlies_40_65_zm_mm = xr.open_dataarray(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.westerlies_40_65_zm_mm.nc')
+
+uv_plev = {}
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.uv_plev.pkl',
+    'rb') as f:
+    uv_plev[expid[i]] = pickle.load(f)
+
+itime = 20
+
+data1 = uv_plev[expid[i]]['u']['mon'].sel(plev=85000., lat=slice(-40, -65)).isel(time=itime).values.mean()
+
+data2 = westerlies_40_65_zm_mm.isel(time=itime).values
+
+(data1 == data2)
 '''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region source lat and sst
-
-imask = 'AIS'
-mask = echam6_t63_ais_mask['mask'][imask]
-
-pearsonr(
-    pre_weighted_var[expid[i]]['lat']['am'].values[mask],
-    pre_weighted_var[expid[i]]['sst']['am'].values[mask],
-)
-# PearsonRResult(statistic=0.9635111986045921, pvalue=0.0)
-
-pearsonr(
-    pre_weighted_var[expid[i]]['lat']['am'].values[mask],
-    pre_weighted_var[expid[i]]['rh2m']['am'].values[mask],
-)
-# PearsonRResult(statistic=-0.9299568995122842, pvalue=0.0)
-
-pearsonr(
-    pre_weighted_var[expid[i]]['lat']['am'].values[mask],
-    pre_weighted_var[expid[i]]['wind10']['am'].values[mask],
-)
-# PearsonRResult(statistic=-0.8164258799993254, pvalue=0.0)
-
-
-sns.scatterplot(
-    pre_weighted_var[expid[i]]['lat']['am'].values[mask],
-    pre_weighted_var[expid[i]]['rh2m']['am'].values[mask],
-)
-plt.savefig('figures/test/trial.png')
-plt.close()
-
-
 # endregion
 # -----------------------------------------------------------------------------
 

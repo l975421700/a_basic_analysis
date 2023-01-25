@@ -133,9 +133,7 @@ lat = pre_weighted_var[expid[i]]['lat']['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
 #---- import ice core sites
-major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
-major_ice_core_site = major_ice_core_site.loc[
-    major_ice_core_site['age (kyr)'] > 120, ]
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
 
 '''
@@ -162,13 +160,14 @@ cor_lat_var_p = xs.pearson_r_eff_p_value(
 #---------------- plot
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.6_var_correlation/6.1.3.6.0_' + ivar + '/6.1.3.6.0 ' + expid[i] + ' correlation lat_' + ivar + ' ann.png'
 
+# np.min(cor_lat_var.sel(lat=slice(-60, -90)))
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=0.75, cm_max=1, cm_interval1=0.025, cm_interval2=0.05,
-    cmap='Greens', reversed=False)
+    cmap='PuOr', reversed=False)
 
 fig, ax = hemisphere_plot(northextent=-60,)
 
-cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
 plt1 = ax.pcolormesh(
     lon,
@@ -232,13 +231,16 @@ cor_lat_var_p = xs.pearson_r_eff_p_value(
 #---------------- plot
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.6_var_correlation/6.1.3.6.0_' + ivar + '/6.1.3.6.0 ' + expid[i] + ' correlation lat_' + ivar + ' ann.png'
 
+# pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+#     cm_min=-0.9, cm_max=-0.5, cm_interval1=0.025, cm_interval2=0.05,
+#     cmap='Greens')
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.9, cm_max=-0.5, cm_interval1=0.025, cm_interval2=0.05,
-    cmap='Greens')
+    cm_min=-0.9, cm_max=-0.5, cm_interval1=0.05, cm_interval2=0.05,
+    cmap='PuOr')
 
 fig, ax = hemisphere_plot(northextent=-60,)
 
-cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
 plt1 = ax.pcolormesh(
     lon,
@@ -287,16 +289,21 @@ cor_lat_var_p = xs.pearson_r_eff_p_value(
     pre_weighted_var[expid[i]]['lat']['ann'],
     dim='time').values
 
+# np.min(cor_lat_var.sel(lat=slice(-60, -90)))
+# np.max(cor_lat_var.sel(lat=slice(-60, -90)))
 #---------------- plot
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.6_var_correlation/6.1.3.6.0_' + ivar + '/6.1.3.6.0 ' + expid[i] + ' correlation lat_' + ivar + ' ann.png'
 
+# pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+#     cm_min=-0.8, cm_max=-0.4, cm_interval1=0.025, cm_interval2=0.05,
+#     cmap='Greens')
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.8, cm_max=-0.4, cm_interval1=0.025, cm_interval2=0.05,
-    cmap='Greens')
+    cm_min=-0.8, cm_max=0.6, cm_interval1=0.1, cm_interval2=0.2,
+    cmap='PuOr', asymmetric=True)
 
 fig, ax = hemisphere_plot(northextent=-60,)
 
-cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
 plt1 = ax.pcolormesh(
     lon,
@@ -345,16 +352,21 @@ cor_lat_var_p = xs.pearson_r_eff_p_value(
     pre_weighted_var[expid[i]]['lat']['ann'],
     dim='time').values
 
+# np.min(cor_lat_var.sel(lat=slice(-60, -90)))
+# np.max(cor_lat_var.sel(lat=slice(-60, -90)))
 #---------------- plot
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.6_var_correlation/6.1.3.6.0_' + ivar + '/6.1.3.6.0 ' + expid[i] + ' correlation lat_' + ivar + ' ann.png'
 
+# pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+#     cm_min=0.5, cm_max=1, cm_interval1=0.025, cm_interval2=0.05,
+#     cmap='Greens', reversed=False)
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=0.5, cm_max=1, cm_interval1=0.025, cm_interval2=0.05,
-    cmap='Greens', reversed=False)
+    cm_min=-0.1, cm_max=1, cm_interval1=0.1, cm_interval2=0.1,
+    cmap='PuOr', reversed=False, asymmetric=True)
 
 fig, ax = hemisphere_plot(northextent=-60,)
 
-cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
 plt1 = ax.pcolormesh(
     lon,

@@ -2,7 +2,6 @@
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_m_416_4.9',
     'pi_m_502_5.0',
     ]
 i = 0
@@ -34,7 +33,6 @@ import pandas as pd
 from metpy.interpolate import cross_section
 from statsmodels.stats import multitest
 import pycircstat as circ
-from scipy.stats import linregress
 from scipy.stats import pearsonr
 
 # plot
@@ -66,6 +64,7 @@ from a_basic_analysis.b_module.mapplot import (
 
 from a_basic_analysis.b_module.basic_calculations import (
     mon_sea_ann,
+    find_ilat_ilon,
 )
 
 from a_basic_analysis.b_module.namelist import (
@@ -81,6 +80,7 @@ from a_basic_analysis.b_module.namelist import (
     zerok,
     panel_labels,
     seconds_per_d,
+    ten_sites_names,
 )
 
 from a_basic_analysis.b_module.source_properties import (
@@ -108,69 +108,76 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-pre_weighted_var = {}
-pre_weighted_var[expid[i]] = {}
+# epe_st sources
+epe_st_sources_sites_binned = {}
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_st_sources_sites_binned.pkl', 'rb') as f:
+    epe_st_sources_sites_binned[expid[i]] = pickle.load(f)
 
-source_var = ['lat', 'lon', 'sst', 'rh2m', 'wind10', 'distance']
+# import sites indices
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.t63_sites_indices.pkl',
+    'rb') as f:
+    t63_sites_indices = pickle.load(f)
 
-prefix = exp_odir + expid[i] + '/analysis/echam/' + expid[i]
-source_var_files = [
-    prefix + '.pre_weighted_lat.pkl',
-    prefix + '.pre_weighted_lon.pkl',
-    prefix + '.pre_weighted_sst.pkl',
-    prefix + '.pre_weighted_rh2m.pkl',
-    prefix + '.pre_weighted_wind10.pkl',
-    prefix + '.transport_distance.pkl',
-]
+wind10_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wind10_alltime.pkl', 'rb') as f:
+    wind10_alltime[expid[i]] = pickle.load(f)
 
-for ivar, ifile in zip(source_var, source_var_files):
-    print(ivar + ':    ' + ifile)
-    with open(ifile, 'rb') as f:
-        pre_weighted_var[expid[i]][ivar] = pickle.load(f)
-
-with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
-    echam6_t63_ais_mask = pickle.load(f)
+lon = wind10_alltime[expid[i]]['am'].lon.values
+lat = wind10_alltime[expid[i]]['am'].lat.values
 
 
-'''
-'''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region source lat and sst
+# region get wind10 at sources
 
-imask = 'AIS'
-mask = echam6_t63_ais_mask['mask'][imask]
+wind10_sources = {}
 
-pearsonr(
-    pre_weighted_var[expid[i]]['lat']['am'].values[mask],
-    pre_weighted_var[expid[i]]['sst']['am'].values[mask],
-)
-# PearsonRResult(statistic=0.9635111986045921, pvalue=0.0)
-
-pearsonr(
-    pre_weighted_var[expid[i]]['lat']['am'].values[mask],
-    pre_weighted_var[expid[i]]['rh2m']['am'].values[mask],
-)
-# PearsonRResult(statistic=-0.9299568995122842, pvalue=0.0)
-
-pearsonr(
-    pre_weighted_var[expid[i]]['lat']['am'].values[mask],
-    pre_weighted_var[expid[i]]['wind10']['am'].values[mask],
-)
-# PearsonRResult(statistic=-0.8164258799993254, pvalue=0.0)
+isite = 'EDC'
+# isite = 'Halley'
+wind10_sources[isite] = \
+    epe_st_sources_sites_binned[expid[i]]['wind10'][isite]['am'].am.copy()
+wind10_sources[isite][:] = 0
 
 
-sns.scatterplot(
-    pre_weighted_var[expid[i]]['lat']['am'].values[mask],
-    pre_weighted_var[expid[i]]['rh2m']['am'].values[mask],
-)
-plt.savefig('figures/test/trial.png')
-plt.close()
+for iqtl in range(len(wind10_sources[isite])):
+    # iqtl = 0
+    
+    source_lat = \
+        epe_st_sources_sites_binned[expid[i]]['lat'][isite]['am'].am[iqtl]
+    
+    source_lon = \
+        epe_st_sources_sites_binned[expid[i]]['lon'][isite]['am'].am[iqtl]
+    
+    sources_ind = find_ilat_ilon(source_lat, source_lon, lat, lon)
+    
+    wind10_sources[isite][iqtl] = \
+        wind10_alltime[expid[i]]['am'][sources_ind[0], sources_ind[1]].values
+
+print('#-------- ' + isite)
+print(pearsonr(
+    wind10_sources[isite],
+    epe_st_sources_sites_binned[expid[i]]['wind10'][isite]['am'].am,
+))
+
+print(np.mean(
+    wind10_sources[isite] - \
+        epe_st_sources_sites_binned[expid[i]]['wind10'][isite]['am'].am,
+        ))
 
 
+
+'''
+np.std(
+    wind10_sources[isite] - \
+        epe_st_sources_sites_binned[expid[i]]['wind10'][isite]['am'].am,
+        )
+
+'''
 # endregion
 # -----------------------------------------------------------------------------
 

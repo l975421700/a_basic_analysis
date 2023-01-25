@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --time=10:00:00
-#SBATCH --partition=fat
+#SBATCH --time=00:30:00
+#SBATCH --partition=mpp
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=36
 #SBATCH -o %A_job.out
@@ -12,7 +12,7 @@ source /home/ollie/qigao001/miniconda3/bin/activate deepice
 
 cd $WORK
 
-python "/work/ollie/qigao001/a_basic_analysis/c_codes/0_basics/0.3_srun/0.3.0_srun0.py"
+python "/work/ollie/qigao001/a_basic_analysis/c_codes/2_tagging/2.2_climate_fields/2.2.0.0_get mon_sea_ann uv_plev.py"
 
 echo "Current time : " $(date +"%T")
 

@@ -86,6 +86,7 @@ from a_basic_analysis.b_module.namelist import (
 from a_basic_analysis.b_module.source_properties import (
     source_properties,
     calc_lon_diff_np,
+    calc_lon_diff,
 )
 
 from a_basic_analysis.b_module.statistics import (
@@ -298,5 +299,297 @@ normaltest(sam_mon.sam.values)
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region sam_posneg source lat - removed mm
 
+ivar = 'lat'
+
+clim = pre_weighted_var[expid[i]][ivar]['mon'].groupby(
+    'time.month').mean().compute()
+anom = (pre_weighted_var[expid[i]][ivar]['mon'].groupby(
+    'time.month') - clim).compute()
+
+sam_posneg_var = {}
+sam_posneg_var[ivar] = {}
+sam_posneg_var[ivar]['pos'] = anom[sam_posneg_ind['pos']]
+sam_posneg_var[ivar]['pos_mean'] = sam_posneg_var[ivar]['pos'].mean(dim='time')
+
+sam_posneg_var[ivar]['neg'] = anom[sam_posneg_ind['neg']]
+sam_posneg_var[ivar]['neg_mean'] = sam_posneg_var[ivar]['neg'].mean(dim='time')
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' sam_posneg_' + ivar + '_rmm Antarctica.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-6, cm_max=3, cm_interval1=1, cm_interval2=1, cmap='PiYG',
+    asymmetric=True,)
+
+fig, ax = hemisphere_plot(northextent=-60,)
+
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
+
+plt1 = ax.pcolormesh(
+    lon,
+    lat,
+    sam_posneg_var[ivar]['pos_mean'] - sam_posneg_var[ivar]['neg_mean'],
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+ttest_fdr_res = ttest_fdr_control(
+    sam_posneg_var[ivar]['pos'],
+    sam_posneg_var[ivar]['neg'],)
+ax.scatter(
+    x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
+    s=0.5, c='k', marker='.', edgecolors='none',
+    transform=ccrs.PlateCarree(),
+    )
+
+cbar = fig.colorbar(
+    plt1, ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+    pad=0.02, fraction=0.2,
+    )
+cbar.ax.tick_params(labelsize=8)
+cbar.ax.set_xlabel(
+    'Source latitude differences between\nSAM+ and SAM- months [$°$]',
+    linespacing=1.5, fontsize=8)
+fig.savefig(output_png)
+
+
+
+
+
+'''
+(pre_weighted_var[expid[i]][ivar]['mon'][sam_posneg_ind['pos']].time == \
+    sam_posneg_ind['pos'].time).all()
+(pre_weighted_var[expid[i]][ivar]['mon'][sam_posneg_ind['neg']].time == \
+    sam_posneg_ind['neg'].time).all()
+
+from scipy.stats import normaltest
+normaltest(sam_mon.sam.values)
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region sam_posneg source lon - removed mm
+
+ivar = 'lon'
+
+clim = pre_weighted_var[expid[i]][ivar]['mm']
+anom = calc_lon_diff(
+    pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month'),
+    clim,
+)
+
+sam_posneg_var = {}
+sam_posneg_var[ivar] = {}
+sam_posneg_var[ivar]['pos'] = anom[sam_posneg_ind['pos']]
+sam_posneg_var[ivar]['pos_mean'] = \
+    circmean(sam_posneg_var[ivar]['pos'].values, high=360, low=0, axis=0,
+             nan_policy='omit')
+
+sam_posneg_var[ivar]['neg'] = anom[sam_posneg_ind['neg']]
+sam_posneg_var[ivar]['neg_mean'] = \
+    circmean(sam_posneg_var[ivar]['neg'].values, high=360, low=0, axis=0,
+             nan_policy='omit')
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' sam_posneg_' + ivar + '_rmm Antarctica.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-60, cm_max=60, cm_interval1=10, cm_interval2=20, cmap='PRGn',)
+
+fig, ax = hemisphere_plot(northextent=-60,)
+
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
+
+plt1 = ax.pcolormesh(
+    lon,
+    lat,
+    calc_lon_diff_np(
+        sam_posneg_var[ivar]['pos_mean'],
+        sam_posneg_var[ivar]['neg_mean'],),
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+wwtest_res = circ.watson_williams(
+    sam_posneg_var[ivar]['pos'].values * np.pi / 180,
+    sam_posneg_var[ivar]['neg'].values * np.pi / 180,
+    axis=0,
+    )[0] < 0.05
+ax.scatter(
+    x=lon_2d[wwtest_res], y=lat_2d[wwtest_res],
+    s=0.5, c='k', marker='.', edgecolors='none',
+    transform=ccrs.PlateCarree(),
+    )
+
+cbar = fig.colorbar(
+    plt1, ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+    pad=0.02, fraction=0.2,
+    )
+cbar.ax.tick_params(labelsize=8)
+cbar.ax.set_xlabel(
+    'Source longitude differences between\nSAM+ and SAM- months [$°$]',
+    linespacing=1.5, fontsize=8)
+fig.savefig(output_png)
+
+
+
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region statistics
+
+ivar = 'lat'
+
+clim = pre_weighted_var[expid[i]][ivar]['mon'].groupby(
+    'time.month').mean().compute()
+anom = (pre_weighted_var[expid[i]][ivar]['mon'].groupby(
+    'time.month') - clim).compute()
+
+sam_posneg_var = {}
+sam_posneg_var[ivar] = {}
+sam_posneg_var[ivar]['pos'] = anom[sam_posneg_ind['pos']]
+sam_posneg_var[ivar]['pos_mean'] = sam_posneg_var[ivar]['pos'].mean(dim='time')
+
+sam_posneg_var[ivar]['neg'] = anom[sam_posneg_ind['neg']]
+sam_posneg_var[ivar]['neg_mean'] = sam_posneg_var[ivar]['neg'].mean(dim='time')
+
+var_diff = sam_posneg_var[ivar]['pos_mean'] - sam_posneg_var[ivar]['neg_mean']
+
+
+'''
+ivar = 'lon'
+
+clim = pre_weighted_var[expid[i]][ivar]['mm']
+anom = calc_lon_diff(
+    pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month'),
+    clim,
+)
+
+sam_posneg_var = {}
+sam_posneg_var[ivar] = {}
+sam_posneg_var[ivar]['pos'] = anom[sam_posneg_ind['pos']]
+sam_posneg_var[ivar]['pos_mean'] = \
+    circmean(sam_posneg_var[ivar]['pos'].values, high=360, low=0, axis=0,
+             nan_policy='omit')
+
+sam_posneg_var[ivar]['neg'] = anom[sam_posneg_ind['neg']]
+sam_posneg_var[ivar]['neg_mean'] = \
+    circmean(sam_posneg_var[ivar]['neg'].values, high=360, low=0, axis=0,
+             nan_policy='omit')
+
+var_diff = calc_lon_diff_np(
+    sam_posneg_var[ivar]['pos_mean'], sam_posneg_var[ivar]['neg_mean'],)
+'''
+
+echam6_t63_cellarea = xr.open_dataset('scratch/others/land_sea_masks/echam6_t63_cellarea.nc')
+
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+
+for imask in ['AIS', 'EAIS', 'WAIS', 'AP']:
+    # imask = 'AIS'
+    print('#-------- ' + imask)
+    
+    mask = echam6_t63_ais_mask['mask'][imask]
+    
+    ave_var_diff = np.average(
+        var_diff[mask],
+        weights = echam6_t63_cellarea.cell_area.values[mask],
+        )
+    
+    print(str(np.round(ave_var_diff, 1)))
+
+
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.t63_sites_indices.pkl',
+    'rb') as f:
+    t63_sites_indices = pickle.load(f)
+
+for isite in ['EDC', 'Halley']:
+    # isite = 'EDC'
+    print(isite)
+    
+    res = var_diff[
+        t63_sites_indices[isite]['ilat'], t63_sites_indices[isite]['ilon']]
+    
+    print(np.round(res, 1))
+
+
+np.max(var_diff[echam6_t63_ais_mask['mask']['AIS']])
+np.min(var_diff[echam6_t63_ais_mask['mask']['AIS']])
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region sensitivity to seasonality
+
+# with seasonality
+ivar = 'lat'
+
+sam_posneg_var = {}
+sam_posneg_var[ivar] = {}
+sam_posneg_var[ivar]['pos'] = \
+    pre_weighted_var[expid[i]][ivar]['mon'][sam_posneg_ind['pos']]
+sam_posneg_var[ivar]['pos_mean'] = sam_posneg_var[ivar]['pos'].mean(dim='time')
+
+sam_posneg_var[ivar]['neg'] = \
+    pre_weighted_var[expid[i]][ivar]['mon'][sam_posneg_ind['neg']]
+sam_posneg_var[ivar]['neg_mean'] = sam_posneg_var[ivar]['neg'].mean(dim='time')
+
+diff_with_sea = sam_posneg_var[ivar]['pos_mean'] - sam_posneg_var[ivar]['neg_mean']
+
+
+# without seasonality
+ivar = 'lat'
+clim = pre_weighted_var[expid[i]][ivar]['mon'].groupby(
+    'time.month').mean().compute()
+anom = (pre_weighted_var[expid[i]][ivar]['mon'].groupby(
+    'time.month') - clim).compute()
+
+sam_posneg_var = {}
+sam_posneg_var[ivar] = {}
+sam_posneg_var[ivar]['pos'] = anom[sam_posneg_ind['pos']]
+sam_posneg_var[ivar]['pos_mean'] = sam_posneg_var[ivar]['pos'].mean(dim='time')
+
+sam_posneg_var[ivar]['neg'] = anom[sam_posneg_ind['neg']]
+sam_posneg_var[ivar]['neg_mean'] = sam_posneg_var[ivar]['neg'].mean(dim='time')
+
+diff_without_sea = sam_posneg_var[ivar]['pos_mean'] - sam_posneg_var[ivar]['neg_mean']
+
+sensitivity_sea = diff_with_sea - diff_without_sea
+
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+
+echam6_t63_cellarea = xr.open_dataset('scratch/others/land_sea_masks/echam6_t63_cellarea.nc')
+
+
+np.max(sensitivity_sea.values[echam6_t63_ais_mask['mask']['AIS']])
+np.max(abs(sensitivity_sea.values[echam6_t63_ais_mask['mask']['AIS']]))
+
+np.average(
+    sensitivity_sea.values[echam6_t63_ais_mask['mask']['AIS']],
+    weights = echam6_t63_cellarea.cell_area.values[echam6_t63_ais_mask['mask']['AIS']]
+)
+
+np.average(
+    abs(sensitivity_sea.values[echam6_t63_ais_mask['mask']['AIS']]),
+    weights = echam6_t63_cellarea.cell_area.values[echam6_t63_ais_mask['mask']['AIS']]
+)
+# 0.05
+
+
+# endregion
+# -----------------------------------------------------------------------------
 

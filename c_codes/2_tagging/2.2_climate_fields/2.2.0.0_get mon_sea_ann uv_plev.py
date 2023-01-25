@@ -88,10 +88,10 @@ from a_basic_analysis.b_module.source_properties import (
 exp_org_o = {}
 exp_org_o[expid[i]] = {}
 
-filenames_uvq_plev = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_uvq_plev.nc'))
+filenames_uv_plev = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_uv_plev.nc'))
 
-exp_org_o[expid[i]]['uvq_plev'] = xr.open_mfdataset(
-    filenames_uvq_plev[ifile_start:ifile_end],
+exp_org_o[expid[i]]['uv_plev'] = xr.open_mfdataset(
+    filenames_uv_plev[ifile_start:ifile_end],
     data_vars='minimal', coords='minimal', parallel=True)
 
 
@@ -110,9 +110,9 @@ uv_plev = {}
 uv_plev[expid[i]] = {}
 
 uv_plev[expid[i]]['u'] = mon_sea_ann(
-    var_monthly=exp_org_o[expid[i]]['uvq_plev'].u)
+    var_monthly=exp_org_o[expid[i]]['uv_plev'].u)
 uv_plev[expid[i]]['v'] = mon_sea_ann(
-    var_monthly=exp_org_o[expid[i]]['uvq_plev'].v)
+    var_monthly=exp_org_o[expid[i]]['uv_plev'].v)
 
 with open(
     exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.uv_plev.pkl',
@@ -129,10 +129,10 @@ with open(
     'rb') as f:
     uv_plev[expid[i]] = pickle.load(f)
 
-filenames_uvq_plev = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_uvq_plev.nc'))
+filenames_uv_plev = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_uv_plev.nc'))
 
 ifile = -1
-ncfile = xr.open_dataset(filenames_uvq_plev[ifile_start:ifile_end][ifile])
+ncfile = xr.open_dataset(filenames_uv_plev[ifile_start:ifile_end][ifile])
 
 np.max(abs(uv_plev[expid[i]]['u']['mon'][ifile] - ncfile.u[0])).values
 np.max(abs(uv_plev[expid[i]]['v']['mon'][ifile] - ncfile.v[0])).values

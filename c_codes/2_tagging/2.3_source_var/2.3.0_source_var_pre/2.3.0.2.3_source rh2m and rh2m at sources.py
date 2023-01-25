@@ -244,7 +244,7 @@ cbar.ax.set_xlabel('Source rh2m [$\%$]', linespacing=1.5,)
 plt_mesh = axs[1].pcolormesh(
     lon,
     lat,
-    rh2m_sources[expid[i]]['am'],
+    rh2m_sources[expid[i]]['am'] * 100,
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 
 cbar = fig.colorbar(
@@ -259,13 +259,13 @@ cbar.ax.set_xlabel('rh2m at source lat/lon [$\%$]', linespacing=1.5,)
 # source rh2m - rh2m at sources
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-4, cm_max=4, cm_interval1=0.5, cm_interval2=0.5, cmap='BrBG',
+    cm_min=-4, cm_max=4, cm_interval1=1, cm_interval2=1, cmap='BrBG',
     reversed=False, asymmetric=True,)
 
 plt_mesh = axs[2].pcolormesh(
     lon,
     lat,
-    pre_weighted_rh2m[expid[i]]['am'] - rh2m_sources[expid[i]]['am'],
+    pre_weighted_rh2m[expid[i]]['am'] - rh2m_sources[expid[i]]['am'] * 100,
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 
 cbar = fig.colorbar(

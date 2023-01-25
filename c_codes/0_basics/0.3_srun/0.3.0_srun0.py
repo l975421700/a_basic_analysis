@@ -1,5 +1,15 @@
 
 
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+expid = [
+    # 'pi_m_416_4.9',
+    'pi_m_502_5.0',
+    ]
+i = 0
+
+ifile_start = 120
+ifile_end   = 720 # 1080
+
 # -----------------------------------------------------------------------------
 # region import packages
 
@@ -11,6 +21,7 @@ warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
 sys.path.append('/work/ollie/qigao001')
+import psutil
 
 # data analysis
 import numpy as np
@@ -23,9 +34,7 @@ pbar.register()
 from scipy import stats
 import xesmf as xe
 import pandas as pd
-from metpy.interpolate import cross_section
-from statsmodels.stats import multitest
-import pycircstat as circ
+
 
 # plot
 import matplotlib as mpl
@@ -40,7 +49,6 @@ mpl.rcParams['axes.linewidth'] = 0.2
 plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
-from matplotlib.ticker import AutoMinorLocator
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -55,21 +63,18 @@ from a_basic_analysis.b_module.mapplot import (
 
 from a_basic_analysis.b_module.basic_calculations import (
     mon_sea_ann,
+    regrid,
+    mean_over_ais,
+    time_weighted_mean,
 )
 
 from a_basic_analysis.b_module.namelist import (
     month,
-    month_num,
-    month_dec,
-    month_dec_num,
     seasons,
-    seasons_last_num,
     hours,
     months,
     month_days,
     zerok,
-    panel_labels,
-    seconds_per_d,
 )
 
 from a_basic_analysis.b_module.source_properties import (
@@ -77,54 +82,124 @@ from a_basic_analysis.b_module.source_properties import (
     calc_lon_diff,
 )
 
-from a_basic_analysis.b_module.statistics import (
-    fdr_control_bh,
-    check_normality_3d,
-    check_equal_variance_3d,
-    ttest_fdr_control,
-)
-
-from a_basic_analysis.b_module.component_plot import (
-    cplot_ice_cores,
-    plt_mesh_pars,
-)
-
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region resample hourly era5 tp to daily tp
+# region import output
 
-input_files = [
-    'scratch/cmip6/hist/pre/tp_ERA5_hourly_sl_79_89_Antarctica.nc',
-    'scratch/cmip6/hist/pre/tp_ERA5_hourly_sl_90_00_Antarctica.nc',
-    'scratch/cmip6/hist/pre/tp_ERA5_hourly_sl_01_11_Antarctica.nc',
-    'scratch/cmip6/hist/pre/tp_ERA5_hourly_sl_12_21_Antarctica.nc',
-]
+exp_org_o = {}
+exp_org_o[expid[i]] = {}
 
-output_files = [
-    'scratch/cmip6/hist/pre/tp_ERA5_daily_sl_79_89_Antarctica.nc',
-    'scratch/cmip6/hist/pre/tp_ERA5_daily_sl_90_00_Antarctica.nc',
-    'scratch/cmip6/hist/pre/tp_ERA5_daily_sl_01_11_Antarctica.nc',
-    'scratch/cmip6/hist/pre/tp_ERA5_daily_sl_12_21_Antarctica.nc',
-]
+filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'))
+exp_org_o[expid[i]]['wiso'] = xr.open_mfdataset(
+    filenames_wiso[ifile_start:ifile_end],
+    data_vars='minimal', coords='minimal', parallel=True)
 
 
-for ifile in range(len(input_files)):
-    # ifile = 0
-    print('#-------- ' + str(ifile))
-    print(input_files[ifile])
-    print(output_files[ifile])
+'''
+#-------- check pre
+filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'))
+filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_echam.nc'))
+
+ifile = 1000
+nc1 = xr.open_dataset(filenames_wiso[ifile])
+nc2 = xr.open_dataset(filenames_echam[ifile])
+
+np.max(abs(nc1.wisoaprl[:, 0].mean(dim='time').values - nc2.aprl[0].values))
+
+
+#-------- input previous files
+
+for i in range(len(expid)):
+    # i=0
+    print('#-------- ' + expid[i])
+    exp_org_o[expid[i]] = {}
     
-    tp_era5_hourly = xr.open_dataset(input_files[ifile])
     
-    tp_era5_daily = (tp_era5_hourly.tp.resample({'time': '1D'}).sum() * 1000).compute()
+    file_exists = os.path.exists(
+        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_echam.nc')
     
-    tp_era5_daily.to_netcdf(output_files[ifile])
-    
-    del tp_era5_hourly, tp_era5_daily
+    if (file_exists):
+        exp_org_o[expid[i]]['echam'] = xr.open_dataset(
+            exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_echam.nc')
+        exp_org_o[expid[i]]['wiso'] = xr.open_dataset(
+            exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_wiso.nc')
+    else:
+        # filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*monthly.01_echam.nc'))
+        # exp_org_o[expid[i]]['echam'] = xr.open_mfdataset(filenames_echam, data_vars='minimal', coords='minimal', parallel=True)
+        
+        # filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*monthly.01_wiso.nc'))
+        # exp_org_o[expid[i]]['wiso'] = xr.open_mfdataset(filenames_wiso, data_vars='minimal', coords='minimal', parallel=True)
+        
+        # filenames_wiso_daily = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*daily.01_wiso.nc'))
+        # exp_org_o[expid[i]]['wiso_daily'] = xr.open_mfdataset(filenames_wiso_daily, data_vars='minimal', coords='minimal', parallel=True)
+        
+        filenames_echam_daily = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*daily.01_echam.nc'))
+        exp_org_o[expid[i]]['echam_daily'] = xr.open_mfdataset(filenames_echam_daily[120:], data_vars='minimal', coords='minimal', parallel=True)
 
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get mon_sea_ann ocean_aprt
+
+time = exp_org_o[expid[i]]['wiso'].time
+lon  = exp_org_o[expid[i]]['wiso'].lon
+lat  = exp_org_o[expid[i]]['wiso'].lat
+
+ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
+kwiso2 = 3
+var_names = ['lat', 'sst', 'rh2m', 'wind10', 'sinlon', 'coslon', 'geo7']
+itags = [5, 7, 8, 9, 11, 12]
+
+ocean_aprt = {}
+ocean_aprt[expid[i]] = xr.DataArray(
+    data = np.zeros(
+        (len(time), len(var_names), len(lat), len(lon)),
+        dtype=np.float32),
+    coords={
+        'time':         time,
+        'var_names':    var_names,
+        'lat':          lat,
+        'lon':          lon,
+    }
+)
+
+for count,var_name in enumerate(var_names[:-1]):
+    # count = 0; var_name = 'lat'
+    kstart = kwiso2 + sum(ntags[:itags[count]])
+    
+    print(str(count) + ' : ' + var_name + ' : ' + str(itags[count]) + \
+        ' : ' + str(kstart))
+    
+    ocean_aprt[expid[i]].sel(var_names=var_name)[:] = \
+        (exp_org_o[expid[i]]['wiso'].wisoaprl.sel(
+            wisotype=slice(kstart+2, kstart+3)) + \
+                exp_org_o[expid[i]]['wiso'].wisoaprc.sel(
+                    wisotype=slice(kstart+2, kstart+3))
+                ).sum(dim='wisotype')
+
+ocean_aprt[expid[i]].sel(var_names='geo7')[:] = \
+    (exp_org_o[expid[i]]['wiso'].wisoaprl.sel(
+        wisotype=[19, 21]) + \
+            exp_org_o[expid[i]]['wiso'].wisoaprc.sel(
+                wisotype=[19, 21])
+            ).sum(dim='wisotype')
+
+ocean_aprt_alltime = {}
+ocean_aprt_alltime[expid[i]] = mon_sea_ann(
+    ocean_aprt[expid[i]], lcopy = False,)
+
+print(psutil.Process().memory_info().rss / (2 ** 30))
+
+del ocean_aprt[expid[i]]
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_aprt_alltime.pkl', 'wb') as f:
+    pickle.dump(ocean_aprt_alltime[expid[i]], f)
 
 
 
@@ -132,8 +207,71 @@ for ifile in range(len(input_files)):
 
 
 '''
+
+#-------------------------------- check ocean_aprt
+
+ocean_aprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_aprt_alltime.pkl', 'rb') as f:
+    ocean_aprt_alltime[expid[i]] = pickle.load(f)
+
+ocean_aprt = {}
+ocean_aprt[expid[i]] = ocean_aprt_alltime[expid[i]]['daily']
+
+filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'))
+ifile = -1
+ncfile = xr.open_dataset(filenames_wiso[ifile_start:ifile_end][ifile])
+
+ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
+kwiso2 = 3
+var_names = ['lat', 'sst', 'rh2m', 'wind10', 'sinlon', 'coslon']
+itags = [5, 7, 8, 9, 11, 12]
+
+ilat = 48
+ilon = 90
+
+for count in range(6):
+    # count = 5
+    print(count)
+    
+    kstart = kwiso2 + sum(ntags[:itags[count]])
+
+    res1 = ocean_aprt[expid[i]][-31:, :, ilat, ilon].sel(
+        var_names = var_names[count])
+
+    res2 = ncfile.wisoaprl[:, :, ilat, ilon].sel(
+        wisotype=[kstart+2, kstart+3]).sum(dim='wisotype') + \
+            ncfile.wisoaprc[:, :, ilat, ilon].sel(
+        wisotype=[kstart+2, kstart+3]).sum(dim='wisotype')
+
+    print(np.max(abs(res1 - res2)).values)
+
+# check 'geo7'
+res1 = ocean_aprt[expid[i]][-31:, :, ilat, ilon].sel(var_names = 'geo7')
+res2 = ncfile.wisoaprl[:, :, ilat, ilon].sel(
+    wisotype=[19, 21]).sum(dim='wisotype') + \
+        ncfile.wisoaprc[:, :, ilat, ilon].sel(
+    wisotype=[19, 21]).sum(dim='wisotype')
+print(np.max(abs(res1 - res2)).values)
+
+
+#-------------------------------- check alltime calculation
+ocean_aprt_alltime[expid[i]].keys()
+(ocean_aprt_alltime[expid[i]]['daily'] == ocean_aprt[expid[i]]).all().values
+
+(ocean_aprt_alltime[expid[i]]['mon'] == ocean_aprt_alltime[expid[i]]['daily'].resample({'time': '1M'}).mean()).all()
+
+#-------------------------------- check ocean pre consistency
+np.max(abs((ocean_aprt_alltime[expid[i]]['mon'][:, 5] - \
+    ocean_aprt_alltime[expid[i]]['mon'][:, 0]) / \
+        ocean_aprt_alltime[expid[i]]['mon'][:, 5]))
+np.mean(abs(ocean_aprt_alltime[expid[i]]['mon'][:, 5] - ocean_aprt_alltime[expid[i]]['mon'][:, 0]))
+np.mean(abs(ocean_aprt_alltime[expid[i]]['mon'][:, 5]))
+
+np.max(abs((ocean_aprt_alltime[expid[i]]['am'][5] - \
+    ocean_aprt_alltime[expid[i]]['am'][0]) / \
+        ocean_aprt_alltime[expid[i]]['am'][5]))
+
 '''
 # endregion
 # -----------------------------------------------------------------------------
-
 

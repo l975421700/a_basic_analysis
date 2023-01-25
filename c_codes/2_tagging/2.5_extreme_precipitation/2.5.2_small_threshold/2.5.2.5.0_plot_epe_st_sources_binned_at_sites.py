@@ -33,6 +33,7 @@ import pandas as pd
 from metpy.interpolate import cross_section
 from statsmodels.stats import multitest
 import pycircstat as circ
+from scipy.stats import pearsonr
 
 # plot
 import matplotlib as mpl
@@ -1045,8 +1046,52 @@ fig.savefig(output_png)
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region correlation between source lat & wind10
+
+epe_st_sources_sites_binned[expid[i]].keys()
+
+isite = 'EDC'
+
+pearsonr(
+    epe_st_sources_sites_binned[expid[i]]['lat'][isite]['am'].am,
+    epe_st_sources_sites_binned[expid[i]]['wind10'][isite]['am'].am,
+)
+
+isite = 'Halley'
+
+pearsonr(
+    epe_st_sources_sites_binned[expid[i]]['lat'][isite]['am'].am,
+    epe_st_sources_sites_binned[expid[i]]['wind10'][isite]['am'].am,
+)
 
 
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region correlation of source properties
+
+for isite in ['EDC', 'Halley']:
+    # isite = 'EDC'
+    
+    for ivar2 in ['sst', 'rh2m', 'distance']:
+        # ivar2 = 'sst'
+        
+        print('#---------------- ' + isite + ': lat vs. ' + ivar2)
+        
+        print(pearsonr(
+            epe_st_sources_sites_binned[expid[i]]['lat'][isite]['am'].am,
+            epe_st_sources_sites_binned[expid[i]][ivar2][isite]['am'].am,
+        ))
+
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
 
 
 

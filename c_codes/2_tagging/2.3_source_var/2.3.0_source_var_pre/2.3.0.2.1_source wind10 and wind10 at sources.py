@@ -319,3 +319,30 @@ fig.savefig(output_png)
 
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region AIS differences
+
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+
+echam6_t63_cellarea = xr.open_dataset('scratch/others/land_sea_masks/echam6_t63_cellarea.nc')
+
+diff = pre_weighted_wind10[expid[i]]['am'] - wind10_sources[expid[i]]['am']
+
+imask = 'AIS'
+mask = echam6_t63_ais_mask['mask'][imask]
+np.average(
+    diff.values[mask],
+    weights = echam6_t63_cellarea.cell_area.values[mask],
+)
+
+np.mean(diff.values[mask])
+
+'''
+np.min(diff.values[echam6_t63_ais_mask['mask']['AIS']])
+np.max(diff.values[echam6_t63_ais_mask['mask']['AIS']])
+'''
+# endregion
+# -----------------------------------------------------------------------------

@@ -34,6 +34,7 @@ from metpy.interpolate import cross_section
 from statsmodels.stats import multitest
 import pycircstat as circ
 import xskillscore as xs
+from scipy.stats import circmean
 
 # plot
 import matplotlib as mpl
@@ -84,6 +85,7 @@ from a_basic_analysis.b_module.namelist import (
 
 from a_basic_analysis.b_module.source_properties import (
     source_properties,
+    calc_lon_diff_np,
     calc_lon_diff,
 )
 
@@ -105,9 +107,6 @@ from a_basic_analysis.b_module.component_plot import (
 
 # -----------------------------------------------------------------------------
 # region import data
-
-#---- import sam
-sam_mon = xr.open_dataset(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.sam_mon.nc')
 
 #---- import source properties
 pre_weighted_var = {}
@@ -137,9 +136,15 @@ lon_2d, lat_2d = np.meshgrid(lon, lat,)
 #---- import ice core sites
 ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
-#---- broadcast sam_mon
-b_sam_mon, _ = xr.broadcast(
-    sam_mon.sam,
+westerlies_40_65_zm_mm = xr.open_dataarray(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.westerlies_40_65_zm_mm.nc')
+
+westerlies_40_65_zm_mm.time.values[:] = \
+    pre_weighted_var[expid[i]]['lat']['mon'].time.values.copy()
+
+#---- broadcast westerlies
+b_westerlies, _ = xr.broadcast(
+    westerlies_40_65_zm_mm,
     pre_weighted_var[expid[i]]['lat']['mon'])
 
 echam6_t63_cellarea = xr.open_dataset('scratch/others/land_sea_masks/echam6_t63_cellarea.nc')
@@ -147,25 +152,24 @@ echam6_t63_cellarea = xr.open_dataset('scratch/others/land_sea_masks/echam6_t63_
 with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
     echam6_t63_ais_mask = pickle.load(f)
 
-'''
-'''
+
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region sam vs. source lat
+# region westerlies vs. source lat - with seasonality
 
 ivar = 'lat'
 
-clim = pre_weighted_var[expid[i]][ivar]['mon'].groupby(
-    'time.month').mean().compute()
-anom = (pre_weighted_var[expid[i]][ivar]['mon'].groupby(
-    'time.month') - clim).compute()
+cor_westerlies_var = xr.corr(
+    b_westerlies, pre_weighted_var[expid[i]][ivar]['mon'],
+    dim='time',).compute()
 
-cor_sam_var_anom = xr.corr(b_sam_mon, anom, dim='time').compute()
+cor_westerlies_var_p = xs.pearson_r_eff_p_value(
+    b_westerlies, pre_weighted_var[expid[i]][ivar]['mon'],
+    dim='time',).values
 
-cor_sam_var_anom_p = xs.pearson_r_eff_p_value(b_sam_mon, anom,dim='time').values
 
 #---------------- plot
 
@@ -174,7 +178,7 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cmap='PuOr', asymmetric=True, reversed=False)
 pltticks[-4] = 0
 
-output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' correlation sam_' + ivar + ' mon.png'
+output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' correlation westerlies_' + ivar + ' mon.png'
 
 fig, ax = hemisphere_plot(northextent=-60,)
 
@@ -183,12 +187,12 @@ cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 plt1 = ax.pcolormesh(
     lon,
     lat,
-    cor_sam_var_anom,
+    cor_westerlies_var,
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 
 ax.scatter(
-    x=lon_2d[cor_sam_var_anom_p <= 0.05],
-    y=lat_2d[cor_sam_var_anom_p <= 0.05],
+    x=lon_2d[cor_westerlies_var_p <= 0.05],
+    y=lat_2d[cor_westerlies_var_p <= 0.05],
     s=0.5, c='k', marker='.', edgecolors='none',
     transform=ccrs.PlateCarree(),)
 
@@ -199,69 +203,57 @@ cbar = fig.colorbar(
     )
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel(
-    'Correlation coefficient between SAM\nand source latitude [$-$]',
+    'Correlation coefficient between westerlies\nand source latitude [$-$]',
     linespacing=1.5, fontsize=8)
 fig.savefig(output_png)
 
 
-for imask in ['AIS', 'EAIS', 'WAIS', 'AP']:
-    # imask = 'AIS'
-    print('#-------- ' + imask)
-    
-    mask = echam6_t63_ais_mask['mask'][imask]
-    
-    # ave_cor = 
-
-np.min(cor_sam_var_anom.values[echam6_t63_ais_mask['mask']['AIS']])
+np.min(cor_westerlies_var.values[echam6_t63_ais_mask['mask']['AIS']])
 
 area1 = echam6_t63_cellarea.cell_area.values[echam6_t63_ais_mask['mask']['AIS']].sum()
 area2 = echam6_t63_cellarea.cell_area.values[
     echam6_t63_ais_mask['mask']['AIS'] & \
-        (cor_sam_var_anom_p <= 0.05)
+        (cor_westerlies_var_p <= 0.05)
     ].sum()
 area2 / area1
 
 '''
-cor_sam_var = xr.corr(b_sam_mon, b_src_var, dim='time').compute()
-# cor_sam_var.to_netcdf('scratch/test/test.nc')
-# cor_sam_var_anom.to_netcdf('scratch/test/test1.nc')
-
-
-#---- check
-ilat = 48
-ilon = 96
-from scipy.stats import pearsonr
-cor_sam_var_anom[ilat, ilon].values
-cor_sam_var_anom_p[ilat, ilon].values
-pearsonr(sam_mon.sam, anom[:, ilat, ilon])
-
-
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region sam vs. source sst
+# region westerlies vs. source lat - without seasonality
 
-ivar = 'sst'
+ivar = 'lat'
 
-clim = pre_weighted_var[expid[i]][ivar]['mon'].groupby(
+b_westerlies_mm = b_westerlies.groupby('time.month').mean().compute()
+b_westerlies_anom = (b_westerlies.groupby('time.month') - \
+    b_westerlies_mm).compute()
+
+pre_weighted_var_mm = pre_weighted_var[expid[i]][ivar]['mon'].groupby(
     'time.month').mean().compute()
-anom = (pre_weighted_var[expid[i]][ivar]['mon'].groupby(
-    'time.month') - clim).compute()
+pre_weighted_var_anom = (pre_weighted_var[expid[i]][ivar]['mon'].groupby(
+    'time.month') - pre_weighted_var_mm).compute()
 
-cor_sam_var_anom = xr.corr(b_sam_mon, anom, dim='time').compute()
+cor_westerlies_var_anom = xr.corr(
+    b_westerlies_anom, pre_weighted_var_anom,
+    dim='time',).compute()
 
-cor_sam_var_anom_p = xs.pearson_r_eff_p_value(b_sam_mon, anom,dim='time').values
+cor_westerlies_var_anom_p = xs.pearson_r_eff_p_value(
+    b_westerlies_anom, pre_weighted_var_anom,
+    dim='time',).values
+
 
 #---------------- plot
-output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' correlation sam_' + ivar + ' mon.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.5, cm_max=0.2, cm_interval1=0.1, cm_interval2=0.1,
+    cm_min=-0.5, cm_max=0.3, cm_interval1=0.1, cm_interval2=0.1,
     cmap='PuOr', asymmetric=True, reversed=False)
-pltticks[-3] = 0
+pltticks[-4] = 0
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' correlation westerlies_' + ivar + '_anom mon.png'
 
 fig, ax = hemisphere_plot(northextent=-60,)
 
@@ -270,12 +262,12 @@ cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 plt1 = ax.pcolormesh(
     lon,
     lat,
-    cor_sam_var_anom,
+    cor_westerlies_var_anom,
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 
 ax.scatter(
-    x=lon_2d[cor_sam_var_anom_p <= 0.05],
-    y=lat_2d[cor_sam_var_anom_p <= 0.05],
+    x=lon_2d[cor_westerlies_var_anom_p <= 0.05],
+    y=lat_2d[cor_westerlies_var_anom_p <= 0.05],
     s=0.5, c='k', marker='.', edgecolors='none',
     transform=ccrs.PlateCarree(),)
 
@@ -286,10 +278,19 @@ cbar = fig.colorbar(
     )
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel(
-    'Correlation coefficient between SAM\nand source SST [$-$]',
+    'Correlation coefficient between westerlies\nand source latitude anomalies [$-$]',
     linespacing=1.5, fontsize=8)
 fig.savefig(output_png)
 
+
+np.min(cor_westerlies_var_anom.values[echam6_t63_ais_mask['mask']['AIS']])
+
+area1 = echam6_t63_cellarea.cell_area.values[echam6_t63_ais_mask['mask']['AIS']].sum()
+area2 = echam6_t63_cellarea.cell_area.values[
+    echam6_t63_ais_mask['mask']['AIS'] & \
+        (cor_westerlies_var_anom_p <= 0.05)
+    ].sum()
+area2 / area1
 
 '''
 '''
@@ -298,201 +299,114 @@ fig.savefig(output_png)
 
 
 # -----------------------------------------------------------------------------
-# region sam vs. source rh2m
-
-ivar = 'rh2m'
-
-clim = pre_weighted_var[expid[i]][ivar]['mon'].groupby(
-    'time.month').mean().compute()
-anom = (pre_weighted_var[expid[i]][ivar]['mon'].groupby(
-    'time.month') - clim).compute()
-
-cor_sam_var_anom = xr.corr(b_sam_mon, anom, dim='time').compute()
-
-cor_sam_var_anom_p = xs.pearson_r_eff_p_value(b_sam_mon, anom,dim='time').values
-
-#---------------- plot
-output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' correlation sam_' + ivar + ' mon.png'
-
-pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.3, cm_max=0.5, cm_interval1=0.1, cm_interval2=0.1,
-    cmap='PuOr', asymmetric=True, reversed=False)
-# pltticks[-2] = 0
-
-fig, ax = hemisphere_plot(northextent=-60,)
-
-cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
-
-plt1 = ax.pcolormesh(
-    lon,
-    lat,
-    cor_sam_var_anom,
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-
-ax.scatter(
-    x=lon_2d[cor_sam_var_anom_p <= 0.05],
-    y=lat_2d[cor_sam_var_anom_p <= 0.05],
-    s=0.5, c='k', marker='.', edgecolors='none',
-    transform=ccrs.PlateCarree(),)
-
-cbar = fig.colorbar(
-    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
-    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
-    pad=0.02, fraction=0.2,
-    )
-cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel(
-    'Correlation coefficient between SAM\nand source ' + ivar + ' [$-$]',
-    linespacing=1.5, fontsize=8)
-fig.savefig(output_png)
-
-
-'''
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region sam vs. source wind10
-
-ivar = 'wind10'
-
-clim = pre_weighted_var[expid[i]][ivar]['mon'].groupby(
-    'time.month').mean().compute()
-anom = (pre_weighted_var[expid[i]][ivar]['mon'].groupby(
-    'time.month') - clim).compute()
-
-cor_sam_var_anom = xr.corr(b_sam_mon, anom, dim='time').compute()
-
-cor_sam_var_anom_p = xs.pearson_r_eff_p_value(b_sam_mon, anom,dim='time').values
-
-#---------------- plot
-output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' correlation sam_' + ivar + ' mon.png'
-
-pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.1, cm_max=0.6, cm_interval1=0.1, cm_interval2=0.1,
-    cmap='PuOr', asymmetric=True, reversed=False)
-# pltticks[-2] = 0
-
-fig, ax = hemisphere_plot(northextent=-60,)
-
-cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
-
-plt1 = ax.pcolormesh(
-    lon,
-    lat,
-    cor_sam_var_anom,
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-
-ax.scatter(
-    x=lon_2d[cor_sam_var_anom_p <= 0.05],
-    y=lat_2d[cor_sam_var_anom_p <= 0.05],
-    s=0.5, c='k', marker='.', edgecolors='none',
-    transform=ccrs.PlateCarree(),)
-
-cbar = fig.colorbar(
-    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
-    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
-    pad=0.02, fraction=0.2,
-    )
-cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel(
-    'Correlation coefficient between SAM\nand source ' + ivar + ' [$-$]',
-    linespacing=1.5, fontsize=8)
-fig.savefig(output_png)
-
-
-'''
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region sam vs. source distance
-
-ivar = 'distance'
-
-clim = pre_weighted_var[expid[i]][ivar]['mon'].groupby(
-    'time.month').mean().compute()
-anom = (pre_weighted_var[expid[i]][ivar]['mon'].groupby(
-    'time.month') - clim).compute()
-
-cor_sam_var_anom = xr.corr(b_sam_mon, anom, dim='time').compute()
-
-cor_sam_var_anom_p = xs.pearson_r_eff_p_value(b_sam_mon, anom,dim='time').values
-
-#---------------- plot
-output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' correlation sam_' + ivar + ' mon.png'
-
-pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.4, cm_max=0.5, cm_interval1=0.1, cm_interval2=0.1,
-    cmap='PuOr', asymmetric=True, reversed=False)
-# pltticks[-4] = 0
-
-# pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-#     cm_min=-0.4, cm_max=0.4, cm_interval1=0.05, cm_interval2=0.1,
-#     cmap='BrBG', reversed=False, )
-# pltticks[-1] = 0
-
-fig, ax = hemisphere_plot(northextent=-60,)
-
-cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
-
-plt1 = ax.pcolormesh(
-    lon,
-    lat,
-    cor_sam_var_anom,
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-
-ax.scatter(
-    x=lon_2d[cor_sam_var_anom_p <= 0.05],
-    y=lat_2d[cor_sam_var_anom_p <= 0.05],
-    s=0.5, c='k', marker='.', edgecolors='none',
-    transform=ccrs.PlateCarree(),)
-
-cbar = fig.colorbar(
-    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
-    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
-    pad=0.02, fraction=0.2,
-    )
-cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel(
-    'Correlation coefficient between SAM\nand source-sink distance [$-$]',
-    linespacing=1.5, fontsize=8)
-fig.savefig(output_png)
-
-
-'''
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region sam vs. source lon
+# region westerlies vs. relative source lon - with seasonality
 
 ivar = 'lon'
 
-clim = pre_weighted_var[expid[i]][ivar]['mm']
-anom = calc_lon_diff(
-    pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month'),
-    clim,
-)
+source_lon_mon = pre_weighted_var[expid[i]][ivar]['mon']
+rel_source_lon_mon = calc_lon_diff(source_lon_mon, lon_2d)
 
-cor_sam_var_anom = xr.corr(b_sam_mon, anom, dim='time').compute()
-
-cor_sam_var_anom_p = xs.pearson_r_eff_p_value(b_sam_mon, anom,dim='time').values
+cor_westerlies_var = xr.corr(
+    b_westerlies, rel_source_lon_mon,
+    dim='time',).compute()
+cor_westerlies_var_p = xs.pearson_r_eff_p_value(
+    b_westerlies, rel_source_lon_mon,
+    dim='time',).values
 
 #---------------- plot
-output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' correlation sam_' + ivar + ' mon.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-0.6, cm_max=0.3, cm_interval1=0.1, cm_interval2=0.1,
+    cmap='PuOr', asymmetric=True, reversed=False)
+pltticks[-4] = 0
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' correlation westerlies_' + ivar + ' mon.png'
+
+fig, ax = hemisphere_plot(northextent=-60,)
+
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
+
+plt1 = ax.pcolormesh(
+    lon,
+    lat,
+    cor_westerlies_var,
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+ax.scatter(
+    x=lon_2d[cor_westerlies_var_p <= 0.05],
+    y=lat_2d[cor_westerlies_var_p <= 0.05],
+    s=0.5, c='k', marker='.', edgecolors='none',
+    transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+    pad=0.02, fraction=0.2,
+    )
+cbar.ax.tick_params(labelsize=8)
+cbar.ax.set_xlabel(
+    'Correlation coefficient between westerlies\nand relative source longitude [$-$]',
+    linespacing=1.5, fontsize=8)
+fig.savefig(output_png)
+
+
+np.min(cor_westerlies_var.values[echam6_t63_ais_mask['mask']['AIS']])
+
+area1 = echam6_t63_cellarea.cell_area.values[echam6_t63_ais_mask['mask']['AIS']].sum()
+area2 = echam6_t63_cellarea.cell_area.values[
+    echam6_t63_ais_mask['mask']['AIS'] & \
+        (cor_westerlies_var_p <= 0.05)
+    ].sum()
+area2 / area1
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region westerlies vs. relative source lon - without seasonality
+
+ivar = 'lon'
+
+b_westerlies_mm = b_westerlies.groupby('time.month').mean().compute()
+b_westerlies_anom = (b_westerlies.groupby('time.month') - \
+    b_westerlies_mm).compute()
+
+pre_weighted_var_mm = pre_weighted_var[expid[i]][ivar]['mm']
+pre_weighted_var_anom = calc_lon_diff(
+    pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month'),
+    pre_weighted_var_mm,
+)
+
+
+# pre_weighted_var_mm = calc_lon_diff(
+#     pre_weighted_var[expid[i]][ivar]['mm'], lon_2d)
+# pre_weighted_var_anom = calc_lon_diff(
+#     calc_lon_diff(
+#         pre_weighted_var[expid[i]][ivar]['mon'],
+#         lon_2d).groupby('time.month'),
+#     pre_weighted_var_mm,
+# )
+
+cor_westerlies_var = xr.corr(
+    b_westerlies_anom, pre_weighted_var_anom,
+    dim='time',).compute()
+
+cor_westerlies_var_p = xs.pearson_r_eff_p_value(
+    b_westerlies_anom, pre_weighted_var_anom,
+    dim='time',).values
+
+#---------------- plot
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=-0.6, cm_max=0.2, cm_interval1=0.1, cm_interval2=0.1,
     cmap='PuOr', asymmetric=True, reversed=False)
 pltticks[-3] = 0
 
+output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' correlation westerlies_' + ivar + '_anom mon.png'
+
 fig, ax = hemisphere_plot(northextent=-60,)
 
 cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
@@ -500,12 +414,12 @@ cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 plt1 = ax.pcolormesh(
     lon,
     lat,
-    cor_sam_var_anom,
+    cor_westerlies_var,
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 
 ax.scatter(
-    x=lon_2d[cor_sam_var_anom_p <= 0.05],
-    y=lat_2d[cor_sam_var_anom_p <= 0.05],
+    x=lon_2d[cor_westerlies_var_p <= 0.05],
+    y=lat_2d[cor_westerlies_var_p <= 0.05],
     s=0.5, c='k', marker='.', edgecolors='none',
     transform=ccrs.PlateCarree(),)
 
@@ -516,27 +430,42 @@ cbar = fig.colorbar(
     )
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel(
-    'Correlation coefficient between SAM\nand relative source longitude [$-$]',
+    'Correlation coefficient between westerlies\nand relative source longitude anomalies [$-$]',
     linespacing=1.5, fontsize=8)
 fig.savefig(output_png)
 
 
-
-
-np.min(cor_sam_var_anom.values[echam6_t63_ais_mask['mask']['AIS']])
-np.max(cor_sam_var_anom.values[echam6_t63_ais_mask['mask']['AIS']])
+np.min(cor_westerlies_var.values[echam6_t63_ais_mask['mask']['AIS']])
+np.max(cor_westerlies_var.values[echam6_t63_ais_mask['mask']['AIS']])
 
 area1 = echam6_t63_cellarea.cell_area.values[echam6_t63_ais_mask['mask']['AIS']].sum()
 area2 = echam6_t63_cellarea.cell_area.values[
     echam6_t63_ais_mask['mask']['AIS'] & \
-        (cor_sam_var_anom_p <= 0.05)
+        (cor_westerlies_var_p <= 0.05)
     ].sum()
 area2 / area1
 
-
-
 '''
 '''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region SAM and westerlies
+
+westerlies_mm = westerlies_40_65_zm_mm.groupby('time.month').mean().compute()
+westerlies_anom = (westerlies_40_65_zm_mm.groupby('time.month') - \
+    westerlies_mm).compute()
+
+sam_mon = xr.open_dataset(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.sam_mon.nc')
+
+from scipy.stats import pearsonr
+pearsonr(sam_mon.sam, westerlies_anom)
+# 0.96
+
+
+
 # endregion
 # -----------------------------------------------------------------------------
 

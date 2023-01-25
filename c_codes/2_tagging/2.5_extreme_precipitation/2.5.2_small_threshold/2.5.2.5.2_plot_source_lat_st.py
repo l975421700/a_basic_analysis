@@ -33,6 +33,9 @@ import pandas as pd
 from metpy.interpolate import cross_section
 from statsmodels.stats import multitest
 import pycircstat as circ
+from metpy.calc import pressure_to_height_std, geopotential_to_height
+from metpy.units import units
+from scipy.stats import pearsonr
 
 # plot
 import matplotlib as mpl
@@ -221,6 +224,159 @@ fig.savefig(output_png, dpi=600)
 
 '''
 '''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region estimate statistics
+
+
+echam6_t63_cellarea = xr.open_dataset('scratch/others/land_sea_masks/echam6_t63_cellarea.nc')
+
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+
+
+iqtl = '90%'
+lat_diff = epe_st_weighted_lat[expid[i]][iqtl]['am'] - \
+    dc_st_weighted_lat[expid[i]][iqtl]['am']
+
+
+for imask in ['AIS', 'EAIS', 'WAIS', 'AP']:
+    # imask = 'AIS'
+    print('#-------- ' + imask)
+    
+    mask = echam6_t63_ais_mask['mask'][imask]
+    
+    ave_lat_diff = np.average(
+        lat_diff.values[mask],
+        weights = echam6_t63_cellarea.cell_area.values[mask],
+    )
+    
+    print(str(np.round(ave_lat_diff, 1)))
+
+
+echam6_t63_geosp = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/pi_m_416_4.9/input/echam/unit.24')
+echam6_t63_surface_height = geopotential_to_height(
+    echam6_t63_geosp.GEOSP * (units.m / units.s)**2)
+
+imask = 'AIS'
+mask_high = echam6_t63_ais_mask['mask'][imask] & \
+    (echam6_t63_surface_height.values >= 2250)
+mask_low = echam6_t63_ais_mask['mask'][imask] & \
+    (echam6_t63_surface_height.values < 2250)
+
+for mask in[mask_high, mask_low]:
+    
+    ave_lat_diff = np.average(
+        lat_diff.values[mask],
+        weights = echam6_t63_cellarea.cell_area.values[mask],
+    )
+    
+    print(str(np.round(ave_lat_diff, 1)))
+
+echam6_t63_ais_mask['mask'][imask].sum()
+mask_high.sum() + mask_low.sum()
+
+
+
+
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.t63_sites_indices.pkl',
+    'rb') as f:
+    t63_sites_indices = pickle.load(f)
+
+for isite in ['EDC', 'Halley']:
+    # isite = 'EDC'
+    print(isite)
+    
+    res = lat_diff.values[
+        t63_sites_indices[isite]['ilat'], t63_sites_indices[isite]['ilon']]
+    
+    print(np.round(res, 1))
+
+
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region correlation with source sst/rh2m
+
+epe_st_weighted_sst = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_st_weighted_sst.pkl', 'rb') as f:
+    epe_st_weighted_sst[expid[i]] = pickle.load(f)
+
+dc_st_weighted_sst = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dc_st_weighted_sst.pkl', 'rb') as f:
+    dc_st_weighted_sst[expid[i]] = pickle.load(f)
+
+epe_st_weighted_rh2m = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_st_weighted_rh2m.pkl', 'rb') as f:
+    epe_st_weighted_rh2m[expid[i]] = pickle.load(f)
+
+dc_st_weighted_rh2m = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dc_st_weighted_rh2m.pkl', 'rb') as f:
+    dc_st_weighted_rh2m[expid[i]] = pickle.load(f)
+
+transport_distance_epe_st = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance_epe_st.pkl', 'rb') as f:
+    transport_distance_epe_st[expid[i]] = pickle.load(f)
+
+transport_distance_dc_st = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance_dc_st.pkl', 'rb') as f:
+    transport_distance_dc_st[expid[i]] = pickle.load(f)
+
+epe_st_weighted_wind10 = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_st_weighted_wind10.pkl', 'rb') as f:
+    epe_st_weighted_wind10[expid[i]] = pickle.load(f)
+
+dc_st_weighted_wind10 = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dc_st_weighted_wind10.pkl', 'rb') as f:
+    dc_st_weighted_wind10[expid[i]] = pickle.load(f)
+
+iqtl = '90%'
+lat_diff = epe_st_weighted_lat[expid[i]][iqtl]['am'] - \
+    dc_st_weighted_lat[expid[i]][iqtl]['am']
+sst_diff = epe_st_weighted_sst[expid[i]][iqtl]['am'] - \
+    dc_st_weighted_sst[expid[i]][iqtl]['am']
+rh2m_diff = epe_st_weighted_rh2m[expid[i]][iqtl]['am'] - \
+    dc_st_weighted_rh2m[expid[i]][iqtl]['am']
+distance_diff = (transport_distance_epe_st[expid[i]][iqtl]['am'] - \
+    transport_distance_dc_st[expid[i]][iqtl]['am'])
+wind10_diff = epe_st_weighted_wind10[expid[i]][iqtl]['am'] - \
+    dc_st_weighted_wind10[expid[i]][iqtl]['am']
+
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+
+imask = 'AIS'
+mask = echam6_t63_ais_mask['mask'][imask]
+
+pearsonr(
+    lat_diff.values[mask],
+    sst_diff.values[mask],
+)
+
+pearsonr(
+    lat_diff.values[mask],
+    rh2m_diff.values[mask],
+)
+
+pearsonr(
+    lat_diff.values[mask],
+    distance_diff.values[mask],
+)
+
+pearsonr(
+    lat_diff.values[mask],
+    wind10_diff.values[mask],
+)
+
 # endregion
 # -----------------------------------------------------------------------------
 

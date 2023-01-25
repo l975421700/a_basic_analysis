@@ -424,6 +424,25 @@ fig.savefig(output_png)
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region check source sst statistics
+
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+
+echam6_t63_cellarea = xr.open_dataset('scratch/others/land_sea_masks/echam6_t63_cellarea.nc')
+
+imask = 'AIS'
+mask = echam6_t63_ais_mask['mask'][imask]
+np.min(pre_weighted_sst[expid[i]]['am'].values[mask])
+np.max(pre_weighted_sst[expid[i]]['am'].values[mask])
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
 
 
 
