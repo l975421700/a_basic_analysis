@@ -58,7 +58,7 @@ mamba install -c conda-forge iris -y
 mamba install -c conda-forge xskillscore -y
 mamba install -c conda-forge eofs -y
 pip install Pympler
-
+pip install pingouin
 
 
 '''

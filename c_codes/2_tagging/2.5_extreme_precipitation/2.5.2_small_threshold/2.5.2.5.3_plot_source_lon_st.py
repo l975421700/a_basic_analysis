@@ -309,5 +309,57 @@ for isite in ['EDC', 'Halley', 'DOME F', 'Vostok']:
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region plot (epe_st_weighted_lon - dc_st_weighted_lon) am Antarctica
+
+iqtl = '10%'
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.1_source_lon/6.1.7.0.1 ' + expid[i] + ' dc_st_weighted_lon_10 - epe_st_weighted_lon_10 am Antarctica.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-120, cm_max=120, cm_interval1=20, cm_interval2=40, cmap='PRGn',
+    reversed=True, asymmetric=True)
+
+fig, ax = hemisphere_plot(
+    northextent=-60, figsize=np.array([5.8, 7]) / 2.54)
+
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
+
+plt1 = ax.pcolormesh(
+    lon,
+    lat,
+    calc_lon_diff(
+        dc_st_weighted_lon[expid[i]][iqtl]['am'],
+        epe_st_weighted_lon[expid[i]][iqtl]['am'],
+        ),
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+wwtest_res = circ.watson_williams(
+    dc_st_weighted_lon[expid[i]][iqtl]['ann'] * np.pi / 180,
+    epe_st_weighted_lon[expid[i]][iqtl]['ann'] * np.pi / 180,
+    axis=0,
+    )[0] < 0.05
+ax.scatter(
+    x=lon_2d[wwtest_res], y=lat_2d[wwtest_res],
+    s=0.5, c='k', marker='.', edgecolors='none',
+    transform=ccrs.PlateCarree(),
+    )
+
+cbar = fig.colorbar(
+    plt1, ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+    pad=0.02, fraction=0.15,
+    )
+cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
+cbar.ax.tick_params(labelsize=8)
+cbar.ax.set_xlabel('LP source longitude anomalies [$°$]', linespacing=2)
+fig.savefig(output_png, dpi=600)
+
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
 
 

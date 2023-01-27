@@ -380,3 +380,53 @@ pearsonr(
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region plot (dc_st_weighted_lat '10%'-epe_st_weighted_lat '10%') am Antarctica
+
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.0_source_lat/6.1.7.0.0 ' + expid[i] + ' dc_st_weighted_lat_10 - epe_st_weighted_lat_10 am Antarctica.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-20, cm_max=6, cm_interval1=2, cm_interval2=2, cmap='PiYG',
+    reversed=False, asymmetric=True)
+
+fig, ax = hemisphere_plot(
+    northextent=-60, figsize=np.array([5.8, 7]) / 2.54)
+
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
+
+plt1 = ax.pcolormesh(
+    lon,
+    lat,
+    dc_st_weighted_lat[expid[i]]['10%']['am'] - \
+        epe_st_weighted_lat[expid[i]]['10%']['am'],
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+ttest_fdr_res = ttest_fdr_control(
+    dc_st_weighted_lat[expid[i]]['10%']['ann'],
+    epe_st_weighted_lat[expid[i]]['10%']['ann'],
+    )
+ax.scatter(
+    x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
+    s=0.5, c='k', marker='.', edgecolors='none',
+    transform=ccrs.PlateCarree(),
+    )
+
+cbar = fig.colorbar(
+    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+    pad=0.02, fraction=0.15,
+    )
+cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
+cbar.ax.tick_params(labelsize=8)
+cbar.ax.set_xlabel('LP source latitude anomalies [$°$]', linespacing=2)
+fig.savefig(output_png, dpi=600)
+
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
