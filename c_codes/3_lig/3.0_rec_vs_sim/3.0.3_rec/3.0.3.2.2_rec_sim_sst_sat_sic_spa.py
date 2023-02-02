@@ -115,6 +115,17 @@ with open('scratch/cmip6/lig/rec/lig_recs_jh.pkl', 'rb') as f:
 with open('scratch/cmip6/lig/rec/lig_recs_mc.pkl', 'rb') as f:
     lig_recs['MC'] = pickle.load(f)
 
+with open('scratch/cmip6/lig/sst/sst_regrid_alltime_ens_stats.pkl', 'rb') as f:
+    sst_regrid_alltime_ens_stats = pickle.load(f)
+
+with open('scratch/cmip6/lig/tas/tas_regrid_alltime_ens_stats.pkl', 'rb') as f:
+    tas_regrid_alltime_ens_stats = pickle.load(f)
+
+with open('scratch/cmip6/lig/sic/sic_regrid_alltime_ens_stats.pkl', 'rb') as f:
+    sic_regrid_alltime_ens_stats = pickle.load(f)
+
+lon = sst_regrid_alltime_ens_stats['lig_pi']['am']['mean'].lon
+lat = sst_regrid_alltime_ens_stats['lig_pi']['am']['mean'].lat
 
 
 '''
@@ -199,16 +210,6 @@ lig_datasets = pd.read_excel(
 # -----------------------------------------------------------------------------
 # region plot reconstructions of am sst/sat
 
-with open('scratch/cmip6/lig/sst/sst_regrid_alltime_ens_stats.pkl', 'rb') as f:
-    sst_regrid_alltime_ens_stats = pickle.load(f)
-
-with open('scratch/cmip6/lig/tas/tas_regrid_alltime_ens_stats.pkl', 'rb') as f:
-    tas_regrid_alltime_ens_stats = pickle.load(f)
-
-lon = sst_regrid_alltime_ens_stats['lig_pi']['am']['mean'].lon
-lat = sst_regrid_alltime_ens_stats['lig_pi']['am']['mean'].lat
-# sst_regrid_alltime_ens_stats['lig_pi']['am']['mean'][0]
-
 
 output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.0 rec am sst lig-pi.png'
 cbar_label = 'LIG annual SST/SAT anomalies [$°C$]'
@@ -219,7 +220,7 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
 max_size = 20
 scale_size = 4
 
-fig, ax = hemisphere_plot(northextent=-38)
+fig, ax = hemisphere_plot(northextent=-38, figsize=np.array([5.8, 6.8]) / 2.54,)
 
 ax.pcolormesh(
     lon,
@@ -261,7 +262,7 @@ ax.scatter(
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
 # DC
-ax.scatter(
+plt_scatter = ax.scatter(
     x = lig_recs['DC']['annual_128'].Longitude,
     y = lig_recs['DC']['annual_128'].Latitude,
     c = lig_recs['DC']['annual_128']['sst_anom_hadisst_ann'],
@@ -270,26 +271,10 @@ ax.scatter(
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
 
-l1 = plt.scatter(
-    [],[], c='white', marker='s', s=max_size - scale_size * 1,
-    lw=0.5, edgecolors = 'black',)
-l2 = plt.scatter(
-    [],[], c='white', marker='s', s=max_size - scale_size * 2,
-    lw=0.5, edgecolors = 'black',)
-l3 = plt.scatter(
-    [],[], c='white', marker='s', s=max_size - scale_size * 3,
-    lw=0.5, edgecolors = 'black',)
-l4 = plt.scatter(
-    [],[], c='white', marker='s', s=max_size - scale_size * 4,
-    lw=0.5, edgecolors = 'black',)
-plt.legend(
-    [l1, l2, l3, l4,], ['1', '2', '3', '4 $°C$'], ncol=4, frameon=False,
-    loc = (0.1, -0.35), handletextpad=0.05, columnspacing=0.3,)
-
 cbar = fig.colorbar(
-    cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=ax, aspect=30,
+    plt_scatter, ax=ax, aspect=30,
     orientation="horizontal", shrink=1, ticks=pltticks, extend='both',
-    pad=0.02, fraction=0.22, format=remove_trailing_zero_pos,
+    pad=0.02, fraction=0.14, format=remove_trailing_zero_pos,
     )
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
@@ -297,9 +282,6 @@ fig.savefig(output_png)
 
 
 '''
-np.max(jh_sst_rec['SO_ann']['127 ka 2σ (°C)']) - np.min(jh_sst_rec['SO_ann']['127 ka 2σ (°C)'])
-np.max(ec_sst_rec['SO_ann']['127 ka 2s PIAn [°C]']) - np.min(ec_sst_rec['SO_ann']['127 ka 2s PIAn [°C]'])
-
 sns.scatterplot(
     x = lig_datasets.Latitude, y = lig_datasets.Longitude,
     size = lig_datasets['two-sigma errors [°C]'],
@@ -307,9 +289,6 @@ sns.scatterplot(
     transform=ccrs.PlateCarree(),
     )
 
-
-, figsize=np.array([5.8, 7]) / 2.54
-\nReconstruction from Capron et al. 2017
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -318,12 +297,6 @@ sns.scatterplot(
 # -----------------------------------------------------------------------------
 # region plot reconstructions of djf sst
 
-with open('scratch/cmip6/lig/sst/sst_regrid_alltime_ens_stats.pkl', 'rb') as f:
-    sst_regrid_alltime_ens_stats = pickle.load(f)
-
-lon = sst_regrid_alltime_ens_stats['lig_pi']['am']['mean'].lon
-lat = sst_regrid_alltime_ens_stats['lig_pi']['am']['mean'].lat
-# sst_regrid_alltime_ens_stats['lig_pi']['sm']['mean'][0]
 
 output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.0 rec jfm sst lig-pi.png'
 cbar_label = 'LIG summer SST anomalies [$°C$]'
@@ -334,7 +307,7 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
 max_size = 20
 scale_size = 4
 
-fig, ax = hemisphere_plot(northextent=-38)
+fig, ax = hemisphere_plot(northextent=-38, figsize=np.array([5.8, 6.8]) / 2.54,)
 
 ax.pcolormesh(
     lon,
@@ -370,7 +343,7 @@ ax.scatter(
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
 # DC
-ax.scatter(
+plt_scatter = ax.scatter(
     x = lig_recs['DC']['JFM_128'].Longitude,
     y = lig_recs['DC']['JFM_128'].Latitude,
     c = lig_recs['DC']['JFM_128']['sst_anom_hadisst_jfm'],
@@ -396,9 +369,9 @@ plt.legend(
     loc = (0.1, -0.35), handletextpad=0.05, columnspacing=0.3,)
 
 cbar = fig.colorbar(
-    cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=ax, aspect=30,
+    plt_scatter, ax=ax, aspect=30,
     orientation="horizontal", shrink=1, ticks=pltticks, extend='both',
-    pad=0.02, fraction=0.22, format=remove_trailing_zero_pos,
+    pad=0.02, fraction=0.14, format=remove_trailing_zero_pos,
     )
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
@@ -417,11 +390,7 @@ fig.savefig(output_png)
 # -----------------------------------------------------------------------------
 # region plot reconstructions of sep sic
 
-with open('scratch/cmip6/lig/sic/sic_regrid_alltime_ens_stats.pkl', 'rb') as f:
-    sic_regrid_alltime_ens_stats = pickle.load(f)
 
-lon = sic_regrid_alltime_ens_stats['lig_pi']['am']['mean'].lon
-lat = sic_regrid_alltime_ens_stats['lig_pi']['am']['mean'].lat
 plt_data = sic_regrid_alltime_ens_stats['lig_pi']['mm']['mean'][8].values
 
 with open('scratch/cmip6/lig/sst/sst_regrid_alltime_ens_stats.pkl', 'rb') as f:
@@ -436,7 +405,7 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=-70, cm_max=20, cm_interval1=10, cm_interval2=10, cmap='PuOr',
     reversed=False, asymmetric=True,)
 
-fig, ax = hemisphere_plot(northextent=-50)
+fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 6.8]) / 2.54,)
 
 ax.pcolormesh(
     lon,
@@ -444,7 +413,7 @@ ax.pcolormesh(
     plt_data,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(), zorder=1)
 
-ax.scatter(
+plt_scatter = ax.scatter(
     x = lig_recs['MC']['interpolated'].Longitude,
     y = lig_recs['MC']['interpolated'].Latitude,
     c = lig_recs['MC']['interpolated']['sic_anom_hadisst_sep'],
@@ -452,9 +421,9 @@ ax.scatter(
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
 cbar = fig.colorbar(
-    cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=ax, aspect=30,
-    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
-    pad=0.02, fraction=0.22, format=remove_trailing_zero_pos,
+    plt_scatter, ax=ax, aspect=30,
+    orientation="horizontal", shrink=1, ticks=pltticks, extend='both',
+    pad=0.02, fraction=0.14, format=remove_trailing_zero_pos,
     )
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
@@ -467,124 +436,5 @@ fig.savefig(output_png)
 '''
 # endregion
 # -----------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-# -----------------------------------------------------------------------------
-# region plot site locations
-
-output_png = 'figures/test/trial.pdf'
-fig, ax = hemisphere_plot(northextent=-38, loceanarcs=True)
-
-# output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_site_names/7.0.3 am sst site names.pdf'
-# for isite in range(len(jh_sst_rec['SO_ann'].Longitude)):
-#     ax.text(
-#         jh_sst_rec['SO_ann'].Longitude.iloc[isite],
-#         jh_sst_rec['SO_ann'].Latitude.iloc[isite],
-#         jh_sst_rec['SO_ann'].Station.iloc[isite],
-#         transform=ccrs.PlateCarree(), c='gray', fontsize=6,)
-# cplot_ice_cores(
-#     jh_sst_rec['SO_ann'].Longitude, jh_sst_rec['SO_ann'].Latitude, ax, s=10,
-#     marker='s', )
-
-# for isite in range(len(ec_sst_rec['SO_ann'].Longitude)):
-#     ax.text(
-#         ec_sst_rec['SO_ann'].Longitude.iloc[isite],
-#         ec_sst_rec['SO_ann'].Latitude.iloc[isite],
-#         ec_sst_rec['SO_ann'].Station.iloc[isite],
-#         transform=ccrs.PlateCarree(), c='gray', fontsize=6,)
-# cplot_ice_cores(
-#     ec_sst_rec['SO_ann'].Longitude, ec_sst_rec['SO_ann'].Latitude, ax, s=10,
-#     marker='o', )
-
-# output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_site_names/7.0.3 summer sst site names.pdf'
-# for isite in range(len(jh_sst_rec['SO_djf'].Longitude)):
-#     ax.text(
-#         jh_sst_rec['SO_djf'].Longitude.iloc[isite],
-#         jh_sst_rec['SO_djf'].Latitude.iloc[isite],
-#         jh_sst_rec['SO_djf'].Station.iloc[isite],
-#         transform=ccrs.PlateCarree(), c='gray', fontsize=6,)
-# cplot_ice_cores(
-#     jh_sst_rec['SO_djf'].Longitude, jh_sst_rec['SO_djf'].Latitude, ax, s=10,
-#     marker='s', )
-
-# for isite in range(len(ec_sst_rec['SO_djf'].Longitude)):
-#     ax.text(
-#         ec_sst_rec['SO_djf'].Longitude.iloc[isite],
-#         ec_sst_rec['SO_djf'].Latitude.iloc[isite],
-#         ec_sst_rec['SO_djf'].Station.iloc[isite],
-#         transform=ccrs.PlateCarree(), c='gray', fontsize=6,)
-# cplot_ice_cores(
-#     ec_sst_rec['SO_djf'].Longitude, ec_sst_rec['SO_djf'].Latitude, ax, s=10,
-#     marker='o', )
-
-for isite in range(len(chadwick_interp.lon)):
-    ax.text(
-        chadwick_interp.lon.iloc[isite],
-        chadwick_interp.lat.iloc[isite],
-        chadwick_interp.sites.iloc[isite],
-        transform=ccrs.PlateCarree(), c='gray', fontsize=6,)
-cplot_ice_cores(
-    chadwick_interp.lon, chadwick_interp.lat, ax, s=10,
-    marker='^', )
-
-
-fig.savefig(output_png)
-
-
-'''
-# lig_datasets_jh = lig_datasets.loc[
-#     lig_datasets.Dataset == 'Hoffman et al. (2017)']
-# for isite in range(len(lig_datasets_jh.Longitude)):
-#     ax.text(
-#         lig_datasets_jh.Longitude.iloc[isite],
-#         lig_datasets_jh.Latitude.iloc[isite],
-#         lig_datasets_jh.Station.iloc[isite],
-#         transform=ccrs.PlateCarree(), c='gray', fontsize=6,)
-# cplot_ice_cores(
-#     lig_datasets_jh.Longitude, lig_datasets_jh.Latitude, ax, s=10,
-#     marker='s', )
-
-# lig_datasets_mc = lig_datasets.loc[
-#     lig_datasets.Dataset == 'Chadwick et al. (2021)']
-# for isite in range(len(lig_datasets_mc.Longitude)):
-#     ax.text(
-#         lig_datasets_mc.Longitude.iloc[isite],
-#         lig_datasets_mc.Latitude.iloc[isite],
-#         lig_datasets_mc.Station.iloc[isite],
-#         transform=ccrs.PlateCarree(), c='gray', fontsize=6,)
-# cplot_ice_cores(
-#     lig_datasets_mc.Longitude, lig_datasets_mc.Latitude, ax, s=10,
-#     marker='^', )
-
-# lig_datasets_ec = lig_datasets.loc[
-#     lig_datasets.Dataset == 'Capron et al. (2017)']
-# for isite in range(len(lig_datasets_ec.Longitude)):
-#     ax.text(
-#         lig_datasets_ec.Longitude.iloc[isite],
-#         lig_datasets_ec.Latitude.iloc[isite],
-#         lig_datasets_ec.Station.iloc[isite],
-#         transform=ccrs.PlateCarree(), c='gray', fontsize=6,)
-# cplot_ice_cores(
-#     lig_datasets_ec.Longitude, lig_datasets_ec.Latitude, ax, s=10,
-#     marker='o', )
-
-double station entries: ODP-1089, MD88-770
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-
 
 

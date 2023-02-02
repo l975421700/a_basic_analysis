@@ -424,7 +424,7 @@ plt.legend(
     ['Chadwick et al. (2021): ' + \
         str(mean_err['MC']) + ', ' + str(rms_err['MC']),],
     ncol=1, frameon=True,
-    loc = 'lower right', handletextpad=0.05,)
+    loc = 'upper left', handletextpad=0.05,)
 
 ax.grid(True, which='both', linewidth=0.4, color='lightgray', linestyle=':')
 fig.subplots_adjust(left=0.16, right=0.95, bottom=0.15, top=0.97)

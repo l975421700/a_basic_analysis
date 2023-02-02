@@ -193,6 +193,8 @@ irec1 = 'Chandler et al. (2021)'
 irec2 = 'Chadwick et al. (2021)'
 
 
+
+
 data_subsets = lig_datasets.loc[
     (lig_datasets.Type == itype) & \
         ((lig_datasets.Dataset == irec1) | \
@@ -204,6 +206,19 @@ duplicate_stations = list(duplicates(data_subsets.station_unified))
 print(duplicate_stations)
 
 
+
+
+
+
+
+
+
+
+
+
+'''
+
+#-------------------------------- check differences
 
 for isite in duplicate_stations:
     # isite = duplicate_stations[0]
@@ -224,18 +239,6 @@ for isite in duplicate_stations:
         print('two datasets differ significantly')
 
 
-
-
-
-
-
-'''
-
-duplicate_subsets = data_subsets.loc[
-    [isite in duplicate_stations for isite in data_subsets.station_unified]
-]
-
-
 (lig_datasets.Dataset == 'Capron et al. (2017)').sum()
 (lig_datasets.Dataset == 'Hoffman et al. (2017)').sum()
 ((lig_datasets.Dataset == 'Capron et al. (2017)') | \
@@ -246,4 +249,77 @@ duplicate_subsets = data_subsets.loc[
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region values of common sites
+
+itypes = [
+    'Annual SST', 'Annual SST', 'Annual SST',
+    'Summer SST', 'Summer SST', 'Summer SST',]
+
+irec1s = [
+    'Capron et al. (2017)', 'Capron et al. (2017)', 'Hoffman et al. (2017)',
+    'Capron et al. (2017)', 'Capron et al. (2017)', 'Hoffman et al. (2017)',]
+
+irec2s = [
+    'Hoffman et al. (2017)', 'Chandler et al. (2021)', 'Chandler et al. (2021)',
+    'Hoffman et al. (2017)', 'Chandler et al. (2021)', 'Chandler et al. (2021)',
+]
+
+for iind in range(len(itypes)):
+    # iind = 0
+    print('#-------------------------------- ' + itypes[iind])
+    
+    print('#---------------- ' + irec1s[iind] + ' vs. ' + irec2s[iind])
+    
+    data_subsets = lig_datasets.loc[
+        (lig_datasets.Type == itypes[iind]) & \
+            ((lig_datasets.Dataset == irec1s[iind]) | \
+                (lig_datasets.Dataset == irec2s[iind]))
+            ]
+    
+    duplicate_stations = list(duplicates(data_subsets.station_unified))
+    
+    # print(duplicate_stations)
+    
+    if (len(duplicate_stations) > 0):
+        for istation in duplicate_stations:
+            # istation = duplicate_stations[1]
+            print('#-------- ' + istation)
+            
+            station_subsets = lig_datasets.loc[
+                (lig_datasets.station_unified == istation) & \
+                    (lig_datasets.Type == itypes[iind])
+            ]
+            
+            for idataset in station_subsets.Dataset:
+                # idataset = station_subsets.Dataset.iloc[0]
+                print('#---- ' + idataset)
+                anomaly = np.round(station_subsets.loc[
+                    station_subsets.Dataset == idataset
+                    ]['127 ka SST anomalies [°C]'].values[0], 1)
+                
+                try:
+                    std = np.round(station_subsets.loc[
+                        station_subsets.Dataset == idataset
+                        ]['two-sigma errors [°C]'].values[0], 1)
+                except:
+                    std = np.nan
+                
+                if(np.isnan(std)):
+                    print(anomaly)
+                else:
+                    print(str(anomaly) + ' ± ' + str(std))
+
+
+
+
+
+'''
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
 
