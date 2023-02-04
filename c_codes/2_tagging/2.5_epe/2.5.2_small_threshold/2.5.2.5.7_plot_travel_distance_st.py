@@ -105,20 +105,23 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-epe_st_weighted_wind10 = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_st_weighted_wind10.pkl', 'rb') as f:
-    epe_st_weighted_wind10[expid[i]] = pickle.load(f)
+transport_distance_epe_st = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance_epe_st.pkl', 'rb') as f:
+    transport_distance_epe_st[expid[i]] = pickle.load(f)
 
-dc_st_weighted_wind10 = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dc_st_weighted_wind10.pkl', 'rb') as f:
-    dc_st_weighted_wind10[expid[i]] = pickle.load(f)
+transport_distance_dc_st = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance_dc_st.pkl', 'rb') as f:
+    transport_distance_dc_st[expid[i]] = pickle.load(f)
 
-lon = epe_st_weighted_wind10[expid[i]]['90%']['am'].lon
-lat = epe_st_weighted_wind10[expid[i]]['90%']['am'].lat
+lon = transport_distance_epe_st[expid[i]]['90%']['am'].lon
+lat = transport_distance_epe_st[expid[i]]['90%']['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
 ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+
 '''
 '''
 # endregion
@@ -126,31 +129,29 @@ ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
 
 # -----------------------------------------------------------------------------
-# region plot (epe_st_weighted_wind10 - dc_st_weighted_wind10) am Antarctica
+# region plot (transport_distance_epe_st - transport_distance_dc_st) am Antarctica
 
 iqtl = '90%'
 
-output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.4_source_wind10/6.1.7.0.4 ' + expid[i] + ' epe_st_weighted_wind10 - dc_st_weighted_wind10 am Antarctica.png'
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.5_travel_distance/6.1.7.0.5 ' + expid[i] + ' transport_distance_epe_st - transport_distance_dc_st am Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.8, cm_max=1.2, cm_interval1=0.2, cm_interval2=0.4, cmap='PuOr',
-    reversed=True, asymmetric=True,)
-# pltticks[-5] = 0
+    cm_min=-2, cm_max=18, cm_interval1=2, cm_interval2=2, cmap='BrBG',
+    reversed=False)
 
-fig, ax = hemisphere_plot(
-    northextent=-60, figsize=np.array([5.8, 7]) / 2.54)
+fig, ax = hemisphere_plot(northextent=-60, figsize=np.array([5.8, 7]) / 2.54)
 
 cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
 plt1 = ax.pcolormesh(
     lon,
     lat,
-    epe_st_weighted_wind10[expid[i]][iqtl]['am'] - \
-        dc_st_weighted_wind10[expid[i]][iqtl]['am'],
+    (transport_distance_epe_st[expid[i]][iqtl]['am'] - \
+        transport_distance_dc_st[expid[i]][iqtl]['am']) / 100,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 ttest_fdr_res = ttest_fdr_control(
-    epe_st_weighted_wind10[expid[i]][iqtl]['ann'],
-    dc_st_weighted_wind10[expid[i]][iqtl]['ann'],
+    transport_distance_epe_st[expid[i]][iqtl]['ann'],
+    transport_distance_dc_st[expid[i]][iqtl]['ann'],
     )
 ax.scatter(
     x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
@@ -165,44 +166,42 @@ cbar = fig.colorbar(
     )
 cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel('EPE source wind10 anomalies [$m \; s^{-1}$]', linespacing=2)
+cbar.ax.set_xlabel('EPE source-sink distance anomalies [$10^{2} \; km$]',
+                   linespacing=2, fontsize=8)
 fig.savefig(output_png)
 
 
 
 '''
-(epe_st_weighted_wind10[expid[i]][iqtl]['am'] - pre_weighted_wind10[expid[i]]['am']).to_netcdf('scratch/test/test.nc')
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region plot (epe_st_weighted_wind10 '90%'-dc_st_weighted_wind10 '10%') am Antarctica
+# region plot (transport_distance_epe_st - transport_distance_dc_st) am Antarctica
 
 # iqtl = '90%'
 
-output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.4_source_wind10/6.1.7.0.4 ' + expid[i] + ' epe_st_weighted_wind10_90 - dc_st_weighted_wind10_10 am Antarctica.png'
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.5_travel_distance/6.1.7.0.5 ' + expid[i] + ' transport_distance_epe_st_90 - transport_distance_dc_st_10 am Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-1.2, cm_max=2, cm_interval1=0.2, cm_interval2=0.4, cmap='PuOr',
-    reversed=True, asymmetric=True,)
-# pltticks[-5] = 0
+    cm_min=-25, cm_max=45, cm_interval1=5, cm_interval2=5, cmap='BrBG',
+    reversed=False, asymmetric=True,)
 
-fig, ax = hemisphere_plot(
-    northextent=-60, figsize=np.array([5.8, 7]) / 2.54)
+fig, ax = hemisphere_plot(northextent=-60, figsize=np.array([5.8, 7]) / 2.54)
 
 cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
 plt1 = ax.pcolormesh(
     lon,
     lat,
-    epe_st_weighted_wind10[expid[i]]['90%']['am'] - \
-        dc_st_weighted_wind10[expid[i]]['10%']['am'],
+    (transport_distance_epe_st[expid[i]]['90%']['am'] - \
+        transport_distance_dc_st[expid[i]]['10%']['am']) / 100,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 ttest_fdr_res = ttest_fdr_control(
-    epe_st_weighted_wind10[expid[i]]['90%']['ann'],
-    dc_st_weighted_wind10[expid[i]]['10%']['ann'],
+    transport_distance_epe_st[expid[i]]['90%']['ann'],
+    transport_distance_dc_st[expid[i]]['10%']['ann'],
     )
 ax.scatter(
     x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
@@ -217,13 +216,13 @@ cbar = fig.colorbar(
     )
 cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel('EPE-DD source wind10 [$m \; s^{-1}$]', linespacing=2)
+cbar.ax.set_xlabel('EPE-DD source-sink distance [$10^{2} \; km$]',
+                   linespacing=2, fontsize=8)
 fig.savefig(output_png)
 
 
 
 '''
-(epe_st_weighted_wind10[expid[i]][iqtl]['am'] - pre_weighted_wind10[expid[i]]['am']).to_netcdf('scratch/test/test.nc')
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -240,8 +239,10 @@ with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
 
 
 iqtl = '90%'
-wind10_diff = epe_st_weighted_wind10[expid[i]][iqtl]['am'] - \
-    dc_st_weighted_wind10[expid[i]][iqtl]['am']
+
+distance_diff = (transport_distance_epe_st[expid[i]][iqtl]['am'] - \
+    transport_distance_dc_st[expid[i]][iqtl]['am'])
+
 
 
 for imask in ['AIS', 'EAIS', 'WAIS', 'AP']:
@@ -250,12 +251,12 @@ for imask in ['AIS', 'EAIS', 'WAIS', 'AP']:
     
     mask = echam6_t63_ais_mask['mask'][imask]
     
-    ave_wind10_diff = np.average(
-        wind10_diff.values[mask],
+    ave_distance_diff = np.average(
+        distance_diff.values[mask],
         weights = echam6_t63_cellarea.cell_area.values[mask],
     )
     
-    print(str(np.round(ave_wind10_diff, 2)))
+    print(str(np.round(ave_distance_diff, 0)))
 
 
 echam6_t63_geosp = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/pi_m_416_4.9/input/echam/unit.24')
@@ -270,12 +271,12 @@ mask_low = echam6_t63_ais_mask['mask'][imask] & \
 
 for mask in[mask_high, mask_low]:
     
-    ave_wind10_diff = np.average(
-        wind10_diff.values[mask],
+    ave_distance_diff = np.average(
+        distance_diff.values[mask],
         weights = echam6_t63_cellarea.cell_area.values[mask],
     )
     
-    print(str(np.round(ave_wind10_diff, 1)))
+    print(str(np.round(ave_distance_diff, 1)))
 
 echam6_t63_ais_mask['mask'][imask].sum()
 mask_high.sum() + mask_low.sum()
@@ -292,7 +293,7 @@ for isite in ['EDC', 'Halley']:
     # isite = 'EDC'
     print(isite)
     
-    res = wind10_diff.values[
+    res = distance_diff.values[
         t63_sites_indices[isite]['ilat'], t63_sites_indices[isite]['ilon']]
     
     print(np.round(res, 1))
@@ -306,34 +307,36 @@ for isite in ['EDC', 'Halley']:
 
 
 # -----------------------------------------------------------------------------
-# region plot (dc_st_weighted_wind10_10 - epe_st_weighted_wind10_10) am Antarctica
+# region plot (transport_distance_dc_st_10 - transport_distance_epe_st_10) am Antarctica
 
 iqtl = '10%'
+plt_data = (transport_distance_dc_st[expid[i]][iqtl]['am'] - \
+    transport_distance_epe_st[expid[i]][iqtl]['am']) / 100
+plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
 
-output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.4_source_wind10/6.1.7.0.4 ' + expid[i] + ' dc_st_weighted_wind10_10 - epe_st_weighted_wind10_10 am Antarctica.png'
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.5_travel_distance/6.1.7.0.5 ' + expid[i] + ' transport_distance_dc_st_10 - transport_distance_epe_st_10 am Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-3, cm_max=1, cm_interval1=0.5, cm_interval2=0.5, cmap='PuOr',
-    reversed=True, asymmetric=True,)
-# pltticks[-5] = 0
+    cm_min=-25, cm_max=25, cm_interval1=5, cm_interval2=5, cmap='BrBG',
+    reversed=False, asymmetric=True,)
 
-fig, ax = hemisphere_plot(
-    northextent=-60, figsize=np.array([5.8, 7]) / 2.54)
+fig, ax = hemisphere_plot(northextent=-60, figsize=np.array([5.8, 7]) / 2.54)
 
 cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
 plt1 = ax.pcolormesh(
     lon,
     lat,
-    dc_st_weighted_wind10[expid[i]][iqtl]['am'] - \
-        epe_st_weighted_wind10[expid[i]][iqtl]['am'],
+    plt_data,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 ttest_fdr_res = ttest_fdr_control(
-    dc_st_weighted_wind10[expid[i]][iqtl]['ann'],
-    epe_st_weighted_wind10[expid[i]][iqtl]['ann'],
+    transport_distance_dc_st[expid[i]][iqtl]['ann'],
+    transport_distance_epe_st[expid[i]][iqtl]['ann'],
     )
 ax.scatter(
-    x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
+    x=lon_2d[ttest_fdr_res & echam6_t63_ais_mask['mask']['AIS']],
+    y=lat_2d[ttest_fdr_res & echam6_t63_ais_mask['mask']['AIS']],
     s=0.5, c='k', marker='.', edgecolors='none',
     transform=ccrs.PlateCarree(),
     )
@@ -345,13 +348,13 @@ cbar = fig.colorbar(
     )
 cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel('LP source wind10 anomalies [$m \; s^{-1}$]', linespacing=2)
+cbar.ax.set_xlabel('LP source-sink distance anomalies [$10^{2} \; km$]',
+                   linespacing=2, fontsize=8)
 fig.savefig(output_png)
 
 
 
 '''
-(epe_st_weighted_wind10[expid[i]][iqtl]['am'] - pre_weighted_wind10[expid[i]]['am']).to_netcdf('scratch/test/test.nc')
 '''
 # endregion
 # -----------------------------------------------------------------------------

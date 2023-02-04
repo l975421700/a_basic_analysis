@@ -414,7 +414,7 @@ fig.savefig(output_png)
 
 #-------------------------------- ann+std
 
-imask = 'AP'
+imask = 'AIS'
 
 iwisotype = 'AIS'
 ann_values = aprt_frc_AIS_alltime[imask]['ann'][iwisotype].frc_AIS.values

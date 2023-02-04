@@ -35,6 +35,7 @@ from statsmodels.stats import multitest
 import pycircstat as circ
 from metpy.calc import pressure_to_height_std, geopotential_to_height
 from metpy.units import units
+from scipy.stats import pearsonr
 
 # plot
 import matplotlib as mpl
@@ -105,20 +106,22 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-epe_st_weighted_lon = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_st_weighted_lon.pkl', 'rb') as f:
-    epe_st_weighted_lon[expid[i]] = pickle.load(f)
+epe_st_weighted_lat = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_st_weighted_lat.pkl', 'rb') as f:
+    epe_st_weighted_lat[expid[i]] = pickle.load(f)
 
-dc_st_weighted_lon = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dc_st_weighted_lon.pkl', 'rb') as f:
-    dc_st_weighted_lon[expid[i]] = pickle.load(f)
+dc_st_weighted_lat = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dc_st_weighted_lat.pkl', 'rb') as f:
+    dc_st_weighted_lat[expid[i]] = pickle.load(f)
 
-lon = epe_st_weighted_lon[expid[i]]['90%']['am'].lon
-lat = epe_st_weighted_lon[expid[i]]['90%']['am'].lat
+lon = epe_st_weighted_lat[expid[i]]['90%']['am'].lon
+lat = epe_st_weighted_lat[expid[i]]['90%']['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
 ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
 
 '''
 '''
@@ -127,15 +130,15 @@ ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
 
 # -----------------------------------------------------------------------------
-# region plot (epe_st_weighted_lon - dc_st_weighted_lon) am Antarctica
+# region plot (epe_st_weighted_lat 90% - dc_st_weighted_lat 90%) am Antarctica
 
 iqtl = '90%'
 
-output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.1_source_lon/6.1.7.0.1 ' + expid[i] + ' epe_st_weighted_lon - dc_st_weighted_lon am Antarctica.png'
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.0_source_lat/6.1.7.0.0 ' + expid[i] + ' epe_st_weighted_lat - dc_st_weighted_lat am Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-30, cm_max=30, cm_interval1=5, cm_interval2=10, cmap='PRGn',
-    reversed=True)
+    cm_min=0, cm_max=12, cm_interval1=1, cm_interval2=1, cmap='PiYG',
+    reversed=False)
 
 fig, ax = hemisphere_plot(
     northextent=-60, figsize=np.array([5.8, 7]) / 2.54)
@@ -145,49 +148,51 @@ cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 plt1 = ax.pcolormesh(
     lon,
     lat,
-    calc_lon_diff(
-        epe_st_weighted_lon[expid[i]][iqtl]['am'],
-        dc_st_weighted_lon[expid[i]][iqtl]['am']),
+    epe_st_weighted_lat[expid[i]][iqtl]['am'] - \
+        dc_st_weighted_lat[expid[i]][iqtl]['am'],
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
-
-wwtest_res = circ.watson_williams(
-    epe_st_weighted_lon[expid[i]][iqtl]['ann'] * np.pi / 180,
-    dc_st_weighted_lon[expid[i]][iqtl]['ann'] * np.pi / 180,
-    axis=0,
-    )[0] < 0.05
+ttest_fdr_res = ttest_fdr_control(
+    epe_st_weighted_lat[expid[i]][iqtl]['ann'],
+    dc_st_weighted_lat[expid[i]][iqtl]['ann'],
+    )
 ax.scatter(
-    x=lon_2d[wwtest_res], y=lat_2d[wwtest_res],
+    x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
     s=0.5, c='k', marker='.', edgecolors='none',
     transform=ccrs.PlateCarree(),
     )
 
 cbar = fig.colorbar(
-    plt1, ax=ax, aspect=30,
+    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
     pad=0.02, fraction=0.15,
     )
 cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel('EPE source longitude anomalies [$°$]', linespacing=2)
+cbar.ax.set_xlabel('EPE source latitude anomalies [$°$]', linespacing=2)
 fig.savefig(output_png, dpi=600)
 
 
 
 '''
+(epe_st_weighted_lat[expid[i]][iqtl]['am'] - pre_weighted_lat[expid[i]]['am']).to_netcdf('scratch/test/test.nc')
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region plot (epe_st_weighted_lon '90%'-dc_st_weighted_lon '10%') am Antarctica
+# region plot (epe_st_weighted_lat '90%'-dc_st_weighted_lat '10%') am Antarctica
 
+# iqtl = '90%'
 
-output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.1_source_lon/6.1.7.0.1 ' + expid[i] + ' epe_st_weighted_lon_90 - dc_st_weighted_lon_10 am Antarctica.png'
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.0_source_lat/6.1.7.0.0 ' + expid[i] + ' epe_st_weighted_lat_90 - dc_st_weighted_lat_10 am Antarctica.png'
 
+# pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+#     cm_min=-3, cm_max=24, cm_interval1=3, cm_interval2=3, cmap='PiYG',
+#     reversed=False, asymmetric=True)
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-80, cm_max=80, cm_interval1=10, cm_interval2=20, cmap='PRGn',
-    reversed=True)
+    cm_min=-6, cm_max=20, cm_interval1=2, cm_interval2=2, cmap='PiYG',
+    reversed=True, asymmetric=True)
 
 fig, ax = hemisphere_plot(
     northextent=-60, figsize=np.array([5.8, 7]) / 2.54)
@@ -197,30 +202,27 @@ cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 plt1 = ax.pcolormesh(
     lon,
     lat,
-    calc_lon_diff(
-        epe_st_weighted_lon[expid[i]]['90%']['am'],
-        dc_st_weighted_lon[expid[i]]['10%']['am']),
+    epe_st_weighted_lat[expid[i]]['90%']['am'] - \
+        dc_st_weighted_lat[expid[i]]['10%']['am'],
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
-
-wwtest_res = circ.watson_williams(
-    epe_st_weighted_lon[expid[i]]['90%']['ann'] * np.pi / 180,
-    dc_st_weighted_lon[expid[i]]['10%']['ann'] * np.pi / 180,
-    axis=0,
-    )[0] < 0.05
+ttest_fdr_res = ttest_fdr_control(
+    epe_st_weighted_lat[expid[i]]['90%']['ann'],
+    dc_st_weighted_lat[expid[i]]['10%']['ann'],
+    )
 ax.scatter(
-    x=lon_2d[wwtest_res], y=lat_2d[wwtest_res],
+    x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
     s=0.5, c='k', marker='.', edgecolors='none',
     transform=ccrs.PlateCarree(),
     )
 
 cbar = fig.colorbar(
-    plt1, ax=ax, aspect=30,
+    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
     pad=0.02, fraction=0.15,
     )
 cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel('EPE-DD source longitude [$°$]', linespacing=2)
+cbar.ax.set_xlabel('EPE-LP source latitude [$°$]', linespacing=2)
 fig.savefig(output_png, dpi=600)
 
 
@@ -242,11 +244,9 @@ with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
 
 
 iqtl = '90%'
-lon_diff = calc_lon_diff(
-        epe_st_weighted_lon[expid[i]][iqtl]['am'],
-        dc_st_weighted_lon[expid[i]][iqtl]['am'])
+lat_diff = epe_st_weighted_lat[expid[i]][iqtl]['am'] - \
+    dc_st_weighted_lat[expid[i]][iqtl]['am']
 
-np.max(lon_diff.values[echam6_t63_ais_mask['mask']['AIS']])
 
 for imask in ['AIS', 'EAIS', 'WAIS', 'AP']:
     # imask = 'AIS'
@@ -254,12 +254,12 @@ for imask in ['AIS', 'EAIS', 'WAIS', 'AP']:
     
     mask = echam6_t63_ais_mask['mask'][imask]
     
-    ave_lon_diff = np.average(
-        lon_diff.values[mask],
+    ave_lat_diff = np.average(
+        lat_diff.values[mask],
         weights = echam6_t63_cellarea.cell_area.values[mask],
     )
     
-    print(str(np.round(ave_lon_diff, 1)))
+    print(str(np.round(ave_lat_diff, 1)))
 
 
 echam6_t63_geosp = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/pi_m_416_4.9/input/echam/unit.24')
@@ -274,12 +274,12 @@ mask_low = echam6_t63_ais_mask['mask'][imask] & \
 
 for mask in[mask_high, mask_low]:
     
-    ave_lon_diff = np.average(
-        lon_diff.values[mask],
+    ave_lat_diff = np.average(
+        lat_diff.values[mask],
         weights = echam6_t63_cellarea.cell_area.values[mask],
     )
     
-    print(str(np.round(ave_lon_diff, 1)))
+    print(str(np.round(ave_lat_diff, 1)))
 
 echam6_t63_ais_mask['mask'][imask].sum()
 mask_high.sum() + mask_low.sum()
@@ -292,11 +292,11 @@ with open(
     'rb') as f:
     t63_sites_indices = pickle.load(f)
 
-for isite in ['EDC', 'Halley', 'DOME F', 'Vostok']:
+for isite in ['EDC', 'Halley']:
     # isite = 'EDC'
     print(isite)
     
-    res = lon_diff.values[
+    res = lat_diff.values[
         t63_sites_indices[isite]['ilat'], t63_sites_indices[isite]['ilon']]
     
     print(np.round(res, 1))
@@ -310,15 +310,96 @@ for isite in ['EDC', 'Halley', 'DOME F', 'Vostok']:
 
 
 # -----------------------------------------------------------------------------
-# region plot (epe_st_weighted_lon - dc_st_weighted_lon) am Antarctica
+# region correlation with source sst/rh2m
 
-iqtl = '10%'
+epe_st_weighted_sst = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_st_weighted_sst.pkl', 'rb') as f:
+    epe_st_weighted_sst[expid[i]] = pickle.load(f)
 
-output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.1_source_lon/6.1.7.0.1 ' + expid[i] + ' dc_st_weighted_lon_10 - epe_st_weighted_lon_10 am Antarctica.png'
+dc_st_weighted_sst = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dc_st_weighted_sst.pkl', 'rb') as f:
+    dc_st_weighted_sst[expid[i]] = pickle.load(f)
+
+epe_st_weighted_rh2m = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_st_weighted_rh2m.pkl', 'rb') as f:
+    epe_st_weighted_rh2m[expid[i]] = pickle.load(f)
+
+dc_st_weighted_rh2m = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dc_st_weighted_rh2m.pkl', 'rb') as f:
+    dc_st_weighted_rh2m[expid[i]] = pickle.load(f)
+
+transport_distance_epe_st = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance_epe_st.pkl', 'rb') as f:
+    transport_distance_epe_st[expid[i]] = pickle.load(f)
+
+transport_distance_dc_st = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance_dc_st.pkl', 'rb') as f:
+    transport_distance_dc_st[expid[i]] = pickle.load(f)
+
+epe_st_weighted_wind10 = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_st_weighted_wind10.pkl', 'rb') as f:
+    epe_st_weighted_wind10[expid[i]] = pickle.load(f)
+
+dc_st_weighted_wind10 = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dc_st_weighted_wind10.pkl', 'rb') as f:
+    dc_st_weighted_wind10[expid[i]] = pickle.load(f)
+
+iqtl = '90%'
+lat_diff = epe_st_weighted_lat[expid[i]][iqtl]['am'] - \
+    dc_st_weighted_lat[expid[i]][iqtl]['am']
+sst_diff = epe_st_weighted_sst[expid[i]][iqtl]['am'] - \
+    dc_st_weighted_sst[expid[i]][iqtl]['am']
+rh2m_diff = epe_st_weighted_rh2m[expid[i]][iqtl]['am'] - \
+    dc_st_weighted_rh2m[expid[i]][iqtl]['am']
+distance_diff = (transport_distance_epe_st[expid[i]][iqtl]['am'] - \
+    transport_distance_dc_st[expid[i]][iqtl]['am'])
+wind10_diff = epe_st_weighted_wind10[expid[i]][iqtl]['am'] - \
+    dc_st_weighted_wind10[expid[i]][iqtl]['am']
+
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+
+imask = 'AIS'
+mask = echam6_t63_ais_mask['mask'][imask]
+
+pearsonr(
+    lat_diff.values[mask],
+    sst_diff.values[mask],
+)
+
+pearsonr(
+    lat_diff.values[mask],
+    rh2m_diff.values[mask],
+)
+
+pearsonr(
+    lat_diff.values[mask],
+    distance_diff.values[mask],
+)
+
+pearsonr(
+    lat_diff.values[mask],
+    wind10_diff.values[mask],
+)
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot (dc_st_weighted_lat '10%'-epe_st_weighted_lat '10%') am Antarctica
+
+plt_data = dc_st_weighted_lat[expid[i]]['10%']['am'] - \
+    epe_st_weighted_lat[expid[i]]['10%']['am']
+
+plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.0_source_lat/6.1.7.0.0 ' + expid[i] + ' dc_st_weighted_lat_10 - epe_st_weighted_lat_10 am Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-120, cm_max=120, cm_interval1=20, cm_interval2=40, cmap='PRGn',
-    reversed=True, asymmetric=True)
+    cm_min=-6, cm_max=6, cm_interval1=1, cm_interval2=1, cmap='PiYG',
+    reversed=False, asymmetric=True)
 
 fig, ax = hemisphere_plot(
     northextent=-60, figsize=np.array([5.8, 7]) / 2.54)
@@ -328,31 +409,27 @@ cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 plt1 = ax.pcolormesh(
     lon,
     lat,
-    calc_lon_diff(
-        dc_st_weighted_lon[expid[i]][iqtl]['am'],
-        epe_st_weighted_lon[expid[i]][iqtl]['am'],
-        ),
+    plt_data,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
-
-wwtest_res = circ.watson_williams(
-    dc_st_weighted_lon[expid[i]][iqtl]['ann'] * np.pi / 180,
-    epe_st_weighted_lon[expid[i]][iqtl]['ann'] * np.pi / 180,
-    axis=0,
-    )[0] < 0.05
+ttest_fdr_res = ttest_fdr_control(
+    dc_st_weighted_lat[expid[i]]['10%']['ann'],
+    epe_st_weighted_lat[expid[i]]['10%']['ann'],
+    )
 ax.scatter(
-    x=lon_2d[wwtest_res], y=lat_2d[wwtest_res],
+    x=lon_2d[ttest_fdr_res & echam6_t63_ais_mask['mask']['AIS']],
+    y=lat_2d[ttest_fdr_res & echam6_t63_ais_mask['mask']['AIS']],
     s=0.5, c='k', marker='.', edgecolors='none',
     transform=ccrs.PlateCarree(),
     )
 
 cbar = fig.colorbar(
-    plt1, ax=ax, aspect=30,
+    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
     pad=0.02, fraction=0.15,
     )
 cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel('LP source longitude anomalies [$°$]', linespacing=2)
+cbar.ax.set_xlabel('LP source latitude anomalies [$°$]', linespacing=2)
 fig.savefig(output_png, dpi=600)
 
 
