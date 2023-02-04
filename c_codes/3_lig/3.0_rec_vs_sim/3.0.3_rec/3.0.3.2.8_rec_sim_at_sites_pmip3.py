@@ -104,17 +104,8 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-with open('scratch/cmip6/lig/sst/SO_ann_sst_site_values.pkl', 'rb') as f:
-    SO_ann_sst_site_values = pickle.load(f)
-
-with open('scratch/cmip6/lig/sst/SO_jfm_sst_site_values.pkl', 'rb') as f:
-    SO_jfm_sst_site_values = pickle.load(f)
-
-with open('scratch/cmip6/lig/tas/AIS_ann_tas_site_values.pkl', 'rb') as f:
-    AIS_ann_tas_site_values = pickle.load(f)
-
-with open('scratch/cmip6/lig/sic/SO_sep_sic_site_values.pkl', 'rb') as f:
-    SO_sep_sic_site_values = pickle.load(f)
+with open('scratch/cmip6/lig/sst/pmip3_anomalies_site_values.pkl', 'rb') as f:
+    pmip3_anomalies_site_values = pickle.load(f)
 
 
 # endregion
@@ -124,23 +115,10 @@ with open('scratch/cmip6/lig/sic/SO_sep_sic_site_values.pkl', 'rb') as f:
 # -----------------------------------------------------------------------------
 # region compare sim_rec ann_sst
 
-data_to_plot = {}
-data_to_plot['EC'] = SO_ann_sst_site_values['EC'].groupby(['Station']).mean()[
-    ['rec_ann_sst_lig_pi', 'sim_ann_sst_lig_pi']]
-
-data_to_plot['JH'] = SO_ann_sst_site_values['JH'].groupby(['Station']).mean()[
-    ['rec_ann_sst_lig_pi', 'sim_ann_sst_lig_pi']]
-
-data_to_plot['DC'] = SO_ann_sst_site_values['DC'].groupby(['Station']).mean()[
-    ['rec_ann_sst_lig_pi', 'sim_ann_sst_lig_pi']]
-
-data_to_plot['EC_tas'] = AIS_ann_tas_site_values['EC'].groupby(['Station']).mean()[
-    ['rec_ann_tas_lig_pi', 'sim_ann_tas_lig_pi']]
-
 mean_err = {}
 rms_err  = {}
 
-output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.0_sim_rec_sst/7.0.3.0.0 sim_rec ann_sst ens.png'
+output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.0_sim_rec_sst/7.0.3.0.0 sim_rec ann_sst ens_pmip3.png'
 
 axis_min = -8
 axis_max = 12
@@ -152,33 +130,33 @@ for irec in ['EC', 'JH', 'DC']:
     print(irec)
     
     ax.scatter(
-        data_to_plot[irec]['rec_ann_sst_lig_pi'],
-        data_to_plot[irec]['sim_ann_sst_lig_pi'],
+        pmip3_anomalies_site_values['annual_sst'][irec]['rec_lig_pi'],
+        pmip3_anomalies_site_values['annual_sst'][irec]['sim_lig_pi'],
         marker=marker_recs[irec],
         s=25, c='white', edgecolors='k', lw=0.8, alpha=0.75,
         )
     
     mean_err[irec] = np.round(
-        (SO_ann_sst_site_values[irec].groupby(['Station']).mean()[
-            ['sim_rec_ann_sst_lig_pi']]).mean().values[0], 1)
+        pmip3_anomalies_site_values[
+            'annual_sst'][irec]['sim_rec_lig_pi'].mean(), 1)
     rms_err[irec] = np.round(mean_squared_error(
-        data_to_plot[irec]['rec_ann_sst_lig_pi'],
-        data_to_plot[irec]['sim_ann_sst_lig_pi'],
+        pmip3_anomalies_site_values['annual_sst'][irec]['rec_lig_pi'],
+        pmip3_anomalies_site_values['annual_sst'][irec]['sim_lig_pi'],
         squared=False), 1)
 
 ax.scatter(
-    data_to_plot['EC_tas']['rec_ann_tas_lig_pi'],
-    data_to_plot['EC_tas']['sim_ann_tas_lig_pi'],
+    pmip3_anomalies_site_values['annual_sat']['EC']['rec_lig_pi'],
+    pmip3_anomalies_site_values['annual_sat']['EC']['sim_lig_pi'],
     marker=marker_recs['EC'],
     s=25, c='white', edgecolors='b', lw=0.8, alpha=0.75,
     )
 mean_err['EC_tas'] = np.round(
-    (AIS_ann_tas_site_values['EC'].groupby(['Station']).mean()[
-        ['sim_rec_ann_tas_lig_pi']]).mean().values[0], 1)
+    pmip3_anomalies_site_values[
+            'annual_sat']['EC']['sim_rec_lig_pi'].mean(), 1)
 rms_err['EC_tas'] = np.round(
     mean_squared_error(
-        data_to_plot['EC_tas']['rec_ann_tas_lig_pi'],
-        data_to_plot['EC_tas']['sim_ann_tas_lig_pi'],
+        pmip3_anomalies_site_values['annual_sat']['EC']['rec_lig_pi'],
+        pmip3_anomalies_site_values['annual_sat']['EC']['sim_lig_pi'],
         squared=False), 1)
 
 ax.plot([0, 1], [0, 1], transform=ax.transAxes,
@@ -219,6 +197,11 @@ plt.legend(
     ncol=1, frameon=True,
     loc = 'upper left', handletextpad=0.05,)
 
+plt.text(
+    0.95, 0.05, 'PMIP3 model ensembles',
+    horizontalalignment='right', verticalalignment='bottom',
+    transform=ax.transAxes, backgroundcolor='white',)
+
 ax.grid(True, which='both', linewidth=0.4, color='lightgray', linestyle=':')
 fig.subplots_adjust(left=0.14, right=0.95, bottom=0.15, top=0.97)
 fig.savefig(output_png)
@@ -226,31 +209,6 @@ fig.savefig(output_png)
 
 
 '''
--8, 12
-
-
-print((SO_ann_sst_site_values['EC'].groupby(['Station']).mean()[
-    ['sim_rec_ann_sst_lig_pi']]).mean().values[0])
-
-print((SO_ann_sst_site_values['JH'].groupby(['Station']).mean()[
-    ['sim_rec_ann_sst_lig_pi']]).mean().values[0])
-
-print((SO_ann_sst_site_values['DC'].groupby(['Station']).mean()[
-    ['sim_rec_ann_sst_lig_pi']]).mean().values[0])
-
-print((AIS_ann_tas_site_values['EC'].groupby(['Station']).mean()[
-    ['sim_rec_ann_tas_lig_pi']]).mean().values[0])
-
-
-
-mean_squared_error(
-    data_to_plot['EC']['rec_ann_sst_lig_pi'],
-    data_to_plot['EC']['sim_ann_sst_lig_pi'],
-    squared=False
-)
-
-(((SO_ann_sst_site_values['EC'].groupby(['Station']).mean()[['sim_rec_ann_sst_lig_pi']]) ** 2).mean()) ** 0.5
-
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -259,23 +217,10 @@ mean_squared_error(
 # -----------------------------------------------------------------------------
 # region compare sim_rec jfm_sst
 
-data_to_plot = {}
-data_to_plot['EC'] = SO_jfm_sst_site_values['EC'].groupby(['Station']).mean()[
-    ['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']]
-
-data_to_plot['JH'] = SO_jfm_sst_site_values['JH'].groupby(['Station']).mean()[
-    ['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']]
-
-data_to_plot['DC'] = SO_jfm_sst_site_values['DC'].groupby(['Station']).mean()[
-    ['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']]
-
-data_to_plot['MC'] = SO_jfm_sst_site_values['MC'].groupby(['Station']).mean()[
-    ['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']]
-
 mean_err = {}
 rms_err  = {}
 
-output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.0_sim_rec_sst/7.0.3.0.0 sim_rec jfm_sst ens.png'
+output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.0_sim_rec_sst/7.0.3.0.0 sim_rec jfm_sst ens_pmip3.png'
 
 axis_min = -5
 axis_max = 7
@@ -287,18 +232,18 @@ for irec in ['EC', 'JH', 'DC', 'MC']:
     print(irec)
     
     ax.scatter(
-        data_to_plot[irec]['rec_jfm_sst_lig_pi'],
-        data_to_plot[irec]['sim_jfm_sst_lig_pi'],
+        pmip3_anomalies_site_values['summer_sst'][irec]['rec_lig_pi'],
+        pmip3_anomalies_site_values['summer_sst'][irec]['sim_lig_pi'],
         marker=marker_recs[irec],
         s=25, c='white', edgecolors='k', lw=0.8, alpha=0.75,
         )
     
     mean_err[irec] = np.round(
-        (SO_jfm_sst_site_values[irec].groupby(['Station']).mean()[
-            ['sim_rec_jfm_sst_lig_pi']]).mean().values[0], 1)
+        pmip3_anomalies_site_values[
+            'summer_sst'][irec]['sim_rec_lig_pi'].mean(), 1)
     rms_err[irec] = np.round(mean_squared_error(
-        data_to_plot[irec]['rec_jfm_sst_lig_pi'],
-        data_to_plot[irec]['sim_jfm_sst_lig_pi'],
+        pmip3_anomalies_site_values['summer_sst'][irec]['rec_lig_pi'],
+        pmip3_anomalies_site_values['summer_sst'][irec]['sim_lig_pi'],
         squared=False), 1)
 
 ax.plot([0, 1], [0, 1], transform=ax.transAxes,
@@ -339,6 +284,10 @@ plt.legend(
     ncol=1, frameon=True,
     loc = 'upper left', handletextpad=0.05,)
 
+plt.text(
+    0.95, 0.05, 'PMIP3 model ensembles',
+    horizontalalignment='right', verticalalignment='bottom',
+    transform=ax.transAxes, backgroundcolor='white',)
 
 ax.grid(True, which='both', linewidth=0.4, color='lightgray', linestyle=':')
 fig.subplots_adjust(left=0.14, right=0.95, bottom=0.15, top=0.97)
@@ -347,94 +296,10 @@ fig.savefig(output_png)
 
 
 '''
-print((SO_jfm_sst_site_values['EC'].groupby(['Station']).mean()[
-    ['sim_rec_jfm_sst_lig_pi']]).mean().values[0])
-
-print((SO_jfm_sst_site_values['JH'].groupby(['Station']).mean()[
-    ['sim_rec_jfm_sst_lig_pi']]).mean().values[0])
-
-print((SO_jfm_sst_site_values['DC'].groupby(['Station']).mean()[
-    ['sim_rec_jfm_sst_lig_pi']]).mean().values[0])
-
-print((SO_jfm_sst_site_values['MC'].groupby(['Station']).mean()[
-    ['sim_rec_jfm_sst_lig_pi']]).mean().values[0])
-
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
-
-# -----------------------------------------------------------------------------
-# region compare sim_rec sep SIC
-
-
-
-data_to_plot = {}
-
-data_to_plot['MC'] = SO_sep_sic_site_values['MC'].groupby(['Station']).mean()[
-    ['rec_sep_sic_lig_pi', 'sim_sep_sic_lig_pi']]
-
-mean_err = {}
-rms_err  = {}
-
-output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.2_sim_rec_sic/7.0.3.2.0 sim_rec sep_sic ens.png'
-
-axis_min = -70
-axis_max = 15
-
-fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
-
-for irec in ['MC']:
-    # irec = 'MC'
-    print(irec)
-    
-    ax.scatter(
-        data_to_plot[irec]['rec_sep_sic_lig_pi'],
-        data_to_plot[irec]['sim_sep_sic_lig_pi'],
-        marker=marker_recs[irec],
-        s=25, c='white', edgecolors='k', lw=0.8, alpha=0.75,
-        )
-    
-    mean_err[irec] = np.int(
-        (SO_sep_sic_site_values[irec].groupby(['Station']).mean()[
-            ['sim_rec_sep_sic_lig_pi']]).mean().values[0])
-    rms_err[irec] = np.int(mean_squared_error(
-        data_to_plot[irec]['rec_sep_sic_lig_pi'],
-        data_to_plot[irec]['sim_sep_sic_lig_pi'],
-        squared=False))
-
-ax.plot([0, 1], [0, 1], transform=ax.transAxes,
-        c='k', lw=0.5, ls='--')
-
-ax.set_ylabel('Simulated September SIC anomalies [$\%$]')
-ax.set_ylim(axis_min, axis_max)
-ax.set_yticks(np.arange(axis_min, axis_max + 1e-4, 10))
-ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-
-ax.set_xlabel('Reconstructed September SIC anomalies [$\%$]')
-ax.set_xlim(axis_min, axis_max)
-ax.set_xticks(np.arange(axis_min, axis_max + 1e-4, 10))
-ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-
-l1 = plt.scatter(
-    [],[], marker=marker_recs['MC'],
-    s=25, c='white', edgecolors='k', lw=0.8, alpha=0.75,)
-plt.legend(
-    [l1,],
-    ['Chadwick et al. (2021): ' + \
-        str(mean_err['MC']) + ', ' + str(rms_err['MC']),],
-    ncol=1, frameon=True,
-    loc = 'upper left', handletextpad=0.05,)
-
-ax.grid(True, which='both', linewidth=0.4, color='lightgray', linestyle=':')
-fig.subplots_adjust(left=0.16, right=0.95, bottom=0.15, top=0.97)
-fig.savefig(output_png)
-
-
-
-
-# endregion
-# -----------------------------------------------------------------------------
 
 
 

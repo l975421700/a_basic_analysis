@@ -226,6 +226,12 @@ with open('scratch/cmip6/lig/sic/SO_sep_sic_site_values.pkl', 'wb') as f:
 
 
 '''
+irec = 'MC'
+model = 'HadGEM3-GC31-LL'
+np.round(SO_sep_sic_site_values[irec].loc[
+    SO_sep_sic_site_values[irec].Model == model
+    ]['sim_rec_sep_sic_lig_pi'].mean(), 1)
+
 #-------------------------------- check
 
 with open('scratch/cmip6/lig/sic/SO_sep_sic_site_values.pkl', 'rb') as f:

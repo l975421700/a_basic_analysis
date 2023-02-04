@@ -115,93 +115,21 @@ with open('scratch/cmip6/lig/rec/lig_recs_jh.pkl', 'rb') as f:
 with open('scratch/cmip6/lig/rec/lig_recs_mc.pkl', 'rb') as f:
     lig_recs['MC'] = pickle.load(f)
 
-with open('scratch/cmip6/lig/sst/sst_regrid_alltime_ens_stats.pkl', 'rb') as f:
-    sst_regrid_alltime_ens_stats = pickle.load(f)
 
-with open('scratch/cmip6/lig/tas/tas_regrid_alltime_ens_stats.pkl', 'rb') as f:
-    tas_regrid_alltime_ens_stats = pickle.load(f)
+pmip3_lig_sim = {}
+pmip3_lig_sim['annual_sst'] = xr.open_dataset('data_sources/LIG/Supp_Info_PMIP3/netcdf_data_for_ensemble/LIG_ensemble_sst_c.nc')
+pmip3_lig_sim['summer_sst'] = xr.open_dataset('data_sources/LIG/Supp_Info_PMIP3/netcdf_data_for_ensemble/LIG_ensemble_sstdjf_c.nc')
 
-with open('scratch/cmip6/lig/sic/sic_regrid_alltime_ens_stats.pkl', 'rb') as f:
-    sic_regrid_alltime_ens_stats = pickle.load(f)
+pmip3_lig_sim['annual_sat'] = xr.open_dataset('data_sources/LIG/Supp_Info_PMIP3/netcdf_data_for_ensemble/LIG_ensemble_sfc_c.nc')
+pmip3_lig_sim['summer_sat'] = xr.open_dataset('data_sources/LIG/Supp_Info_PMIP3/netcdf_data_for_ensemble/LIG_ensemble_sfcdjf_c.nc')
 
-lon = sst_regrid_alltime_ens_stats['lig_pi']['am']['mean'].lon
-lat = sst_regrid_alltime_ens_stats['lig_pi']['am']['mean'].lat
+longitude = pmip3_lig_sim['annual_sst'].longitude
+latitude = pmip3_lig_sim['annual_sst'].latitude
 
 
 '''
-#-------- import EC reconstruction
-ec_sst_rec = {}
-# 47 cores
-ec_sst_rec['original'] = pd.read_excel(
-    'data_sources/LIG/mmc1.xlsx',
-    sheet_name='Capron et al. 2017', header=0, skiprows=12, nrows=47,
-    usecols=['Station', 'Latitude', 'Longitude', 'Area', 'Type',
-             '127 ka Median PIAn [°C]', '127 ka 2s PIAn [°C]'])
-
-# 2 cores
-ec_sst_rec['SO_ann'] = ec_sst_rec['original'].loc[
-    (ec_sst_rec['original']['Area']=='Southern Ocean') & \
-        (ec_sst_rec['original']['Type']=='Annual SST'),]
-# 15 cores
-ec_sst_rec['SO_djf'] = ec_sst_rec['original'].loc[
-    (ec_sst_rec['original']['Area']=='Southern Ocean') & \
-        (ec_sst_rec['original']['Type']=='Summer SST'),]
-# 4 cores
-ec_sst_rec['AIS_am'] = ec_sst_rec['original'].loc[
-    ec_sst_rec['original']['Area']=='Antarctica',]
-
-# 1 core
-ec_sst_rec['NH_ann'] = ec_sst_rec['original'].loc[
-    ((ec_sst_rec['original']['Area']=='Norwegian Sea') | \
-        (ec_sst_rec['original']['Area']=='North Atlantic') | \
-            (ec_sst_rec['original']['Area']=='Labrador Sea')) & \
-                (ec_sst_rec['original']['Type']=='Annual SST'),]
-# 23 cores
-ec_sst_rec['NH_sum'] = ec_sst_rec['original'].loc[
-    ((ec_sst_rec['original']['Area']=='Norwegian Sea') | \
-        (ec_sst_rec['original']['Area']=='North Atlantic') | \
-            (ec_sst_rec['original']['Area']=='Labrador Sea')) & \
-                (ec_sst_rec['original']['Type']=='Summer SST'),]
-# 1 core
-ec_sst_rec['GrIS_am'] = ec_sst_rec['original'].loc[
-    (ec_sst_rec['original']['Area']=='Greenland'),]
-
-
-#-------- import JH reconstruction
-jh_sst_rec = {}
-# 37 cores
-jh_sst_rec['original'] = pd.read_excel(
-    'data_sources/LIG/mmc1.xlsx',
-    sheet_name=' Hoffman et al. 2017', header=0, skiprows=14, nrows=37,)
-# 12 cores
-jh_sst_rec['SO_ann'] = jh_sst_rec['original'].loc[
-    (jh_sst_rec['original']['Region']=='Southern Ocean') & \
-        ['Annual SST' in string for string in jh_sst_rec['original']['Type']], ]
-# 7 cores
-jh_sst_rec['SO_djf'] = jh_sst_rec['original'].loc[
-    (jh_sst_rec['original']['Region']=='Southern Ocean') & \
-        ['Summer SST' in string for string in jh_sst_rec['original']['Type']], ]
-# 9 cores
-jh_sst_rec['NH_ann'] = jh_sst_rec['original'].loc[
-    (jh_sst_rec['original']['Region']=='North Atlantic') & \
-        ['Annual SST' in string for string in jh_sst_rec['original']['Type']], ]
-# 9 cores
-jh_sst_rec['NH_sum'] = jh_sst_rec['original'].loc[
-    (jh_sst_rec['original']['Region']=='North Atlantic') & \
-        ['Summer SST' in string for string in jh_sst_rec['original']['Type']], ]
-
-
-
-with open('scratch/cmip6/lig/chadwick_interp.pkl', 'rb') as f:
-    chadwick_interp = pickle.load(f)
-
-lig_datasets = pd.read_excel(
-    'data_sources/LIG/lig_datasets.xlsx', header=0, nrows=49,)
-
-
-# 14 cores for am
-# 22 cores for djf
-# 36 cores in total
+# lon = sst_regrid_alltime_ens_stats['lig_pi']['am']['mean'].lon
+# lat = sst_regrid_alltime_ens_stats['lig_pi']['am']['mean'].lat
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -211,8 +139,8 @@ lig_datasets = pd.read_excel(
 # region plot reconstructions of am sst/sat
 
 
-output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.0 rec am sst lig-pi.png'
-cbar_label = 'LIG annual SST/SAT anomalies [$°C$]'
+output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.0 rec am sst lig-pi_pmip3.png'
+cbar_label = 'LIG annual SST/SAT anomalies [$°C$]\nPMIP3 model ensembles'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='BrBG',)
@@ -220,18 +148,18 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
 max_size = 20
 scale_size = 4
 
-fig, ax = hemisphere_plot(northextent=-38, figsize=np.array([5.8, 6.8]) / 2.54,)
+fig, ax = hemisphere_plot(northextent=-38,)
 
 ax.pcolormesh(
-    lon,
-    lat,
-    tas_regrid_alltime_ens_stats['lig_pi']['am']['mean'][0],
+    longitude,
+    latitude,
+    pmip3_lig_sim['annual_sst'].sst,
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(), zorder=1)
 
 ax.pcolormesh(
-    lon,
-    lat,
-    sst_regrid_alltime_ens_stats['lig_pi']['am']['mean'][0],
+    longitude,
+    latitude,
+    pmip3_lig_sim['annual_sat'].sfc,
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(), zorder=1)
 
 # JH
@@ -274,7 +202,7 @@ plt_scatter = ax.scatter(
 cbar = fig.colorbar(
     plt_scatter, ax=ax, aspect=30,
     orientation="horizontal", shrink=1, ticks=pltticks, extend='both',
-    pad=0.02, fraction=0.14, format=remove_trailing_zero_pos,
+    pad=0.02, fraction=0.2, format=remove_trailing_zero_pos,
     )
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
@@ -282,13 +210,6 @@ fig.savefig(output_png)
 
 
 '''
-sns.scatterplot(
-    x = lig_datasets.Latitude, y = lig_datasets.Longitude,
-    size = lig_datasets['two-sigma errors [°C]'],
-    style = lig_datasets['Dataset'],
-    transform=ccrs.PlateCarree(),
-    )
-
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -298,8 +219,8 @@ sns.scatterplot(
 # region plot reconstructions of djf sst
 
 
-output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.0 rec jfm sst lig-pi.png'
-cbar_label = 'LIG summer SST anomalies [$°C$]'
+output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.0 rec jfm sst lig-pi_pmip3.png'
+cbar_label = 'LIG summer SST anomalies [$°C$]\nPMIP3 model ensembles'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='BrBG',)
@@ -307,13 +228,13 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
 max_size = 20
 scale_size = 4
 
-fig, ax = hemisphere_plot(northextent=-38, figsize=np.array([5.8, 6.8]) / 2.54,)
+fig, ax = hemisphere_plot(northextent=-38,)
 
 ax.pcolormesh(
-    lon,
-    lat,
-    sst_regrid_alltime_ens_stats['lig_pi']['sm']['mean'][0],
-    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(), zorder=1)
+    longitude,
+    latitude,
+    pmip3_lig_sim['summer_sst'].sstdjf,
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(), zorder=1)
 
 # JH
 ax.scatter(
@@ -352,78 +273,10 @@ plt_scatter = ax.scatter(
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
 
-l1 = plt.scatter(
-    [],[], c='white', marker='o', s=max_size - scale_size * 1,
-    lw=0.5, edgecolors = 'black',)
-l2 = plt.scatter(
-    [],[], c='white', marker='o', s=max_size - scale_size * 2,
-    lw=0.5, edgecolors = 'black',)
-l3 = plt.scatter(
-    [],[], c='white', marker='o', s=max_size - scale_size * 3,
-    lw=0.5, edgecolors = 'black',)
-l4 = plt.scatter(
-    [],[], c='white', marker='o', s=max_size - scale_size * 4,
-    lw=0.5, edgecolors = 'black',)
-plt.legend(
-    [l1, l2, l3, l4,], ['1', '2', '3', '4 $°C$'], ncol=4, frameon=False,
-    loc = (0.1, -0.35), handletextpad=0.05, columnspacing=0.3,)
-
 cbar = fig.colorbar(
     plt_scatter, ax=ax, aspect=30,
     orientation="horizontal", shrink=1, ticks=pltticks, extend='both',
-    pad=0.02, fraction=0.14, format=remove_trailing_zero_pos,
-    )
-cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
-cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
-fig.savefig(output_png)
-
-
-'''
-, figsize=np.array([5.8, 7]) / 2.54
-\nReconstruction from Capron et al. 2017
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot reconstructions of sep sic
-
-
-plt_data = sic_regrid_alltime_ens_stats['lig_pi']['mm']['mean'][8].values
-
-with open('scratch/cmip6/lig/sst/sst_regrid_alltime_ens_stats.pkl', 'rb') as f:
-    sst_regrid_alltime_ens_stats = pickle.load(f)
-
-plt_data[np.isnan(sst_regrid_alltime_ens_stats['lig_pi']['sm']['mean'][0].values)] = np.nan
-
-output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.0 rec sep sic lig-pi.png'
-cbar_label = 'LIG Sep SIC anomalies [$\%$]'
-
-pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-70, cm_max=20, cm_interval1=10, cm_interval2=10, cmap='PuOr',
-    reversed=False, asymmetric=True,)
-
-fig, ax = hemisphere_plot(northextent=-50, figsize=np.array([5.8, 6.8]) / 2.54,)
-
-ax.pcolormesh(
-    lon,
-    lat,
-    plt_data,
-    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(), zorder=1)
-
-plt_scatter = ax.scatter(
-    x = lig_recs['MC']['interpolated'].Longitude,
-    y = lig_recs['MC']['interpolated'].Latitude,
-    c = lig_recs['MC']['interpolated']['sic_anom_hadisst_sep'],
-    s=16, lw=0.5, marker='^', edgecolors = 'black', zorder=2,
-    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
-
-cbar = fig.colorbar(
-    plt_scatter, ax=ax, aspect=30,
-    orientation="horizontal", shrink=1, ticks=pltticks, extend='both',
-    pad=0.02, fraction=0.14, format=remove_trailing_zero_pos,
+    pad=0.02, fraction=0.2, format=remove_trailing_zero_pos,
     )
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel(cbar_label, linespacing=1.5)

@@ -317,3 +317,82 @@ lon_2d, lat_2d = np.meshgrid(
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region extract indices for PMIP3 ensmean
+
+pmip3_lig_sim = {}
+pmip3_lig_sim['annual_sst'] = xr.open_dataset('data_sources/LIG/Supp_Info_PMIP3/netcdf_data_for_ensemble/LIG_ensemble_sst_c.nc')
+lon, lat = np.meshgrid(
+    pmip3_lig_sim['annual_sst'].longitude.values,
+    pmip3_lig_sim['annual_sst'].latitude.values,)
+
+lig_recs_loc_indices_pmip3ens = {}
+
+for irec in ['EC', 'JH', 'DC', 'MC']:
+    # irec = 'DC'
+    print('#---------------- ' + irec)
+    
+    lig_recs_loc_indices_pmip3ens[irec] = {}
+    
+    stations = lig_recs[irec].Station.unique()
+    
+    for istation in stations:
+        # istation = stations[0]
+        # istation = 'HM71-19'
+        print('#-------- ' + istation)
+        
+        lig_data = lig_recs[irec].loc[lig_recs[irec].Station == istation]
+        
+        slat = lig_data.Latitude.values[0]
+        slon = lig_data.Longitude.values[0]
+        
+        lig_recs_loc_indices_pmip3ens[irec][istation] = \
+            find_ilat_ilon_general(slat, slon, lat, lon)
+
+with open('scratch/cmip6/lig/rec/lig_recs_loc_indices_pmip3ens.pkl', 'wb') as f:
+    pickle.dump(lig_recs_loc_indices_pmip3ens, f)
+
+
+
+
+'''
+#-------------------------------- check
+with open('scratch/cmip6/lig/rec/lig_recs_loc_indices_pmip3ens.pkl', 'rb') as f:
+    lig_recs_loc_indices_pmip3ens = pickle.load(f)
+
+pmip3_lig_sim = {}
+pmip3_lig_sim['annual_sst'] = xr.open_dataset('data_sources/LIG/Supp_Info_PMIP3/netcdf_data_for_ensemble/LIG_ensemble_sst_c.nc')
+
+from haversine import haversine
+
+for irec in ['EC', 'JH', 'DC', 'MC']:
+    # irec = 'EC'
+    print('#---------------- ' + irec)
+    
+    for istation in lig_recs[irec].Station.unique():
+        # istation = lig_recs[irec].Station.unique()[0]
+        print('#-------- ' + istation)
+        
+        lig_data = lig_recs[irec].loc[lig_recs[irec].Station == istation]
+        
+        slat = lig_data.Latitude.values[0]
+        slon = lig_data.Longitude.values[0]
+        
+        
+        glat = pmip3_lig_sim['annual_sst'].sst[
+            lig_recs_loc_indices_pmip3ens[irec][istation][0],
+            lig_recs_loc_indices_pmip3ens[irec][istation][1]
+            ].latitude
+        glon = pmip3_lig_sim['annual_sst'].sst[
+            lig_recs_loc_indices_pmip3ens[irec][istation][0],
+            lig_recs_loc_indices_pmip3ens[irec][istation][1]
+            ].longitude
+        
+        distance = haversine([slat, slon], [glat, glon], normalize=True,)
+        
+        if (distance > 150):
+            print(np.round(distance, 0))
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
