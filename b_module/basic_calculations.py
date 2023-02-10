@@ -818,6 +818,7 @@ sam_timeseries = norm.sel(lat=north_lat).values - norm.sel(lat=south_lat).values
 
 
 #------------------------ check with original code from Damien
+# https://github.com/DamienIrving/climate-analysis/blob/master/data_processing/calc_climate_index.py
 dset_in = xr.open_dataset('scratch/cmip6/hist/psl/psl_ERA5_mon_sl_197901_201412.nc')
 
 lon = dset_in.longitude

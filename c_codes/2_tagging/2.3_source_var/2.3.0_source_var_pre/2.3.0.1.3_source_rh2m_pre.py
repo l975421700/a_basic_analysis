@@ -33,6 +33,8 @@ import pandas as pd
 from metpy.interpolate import cross_section
 from statsmodels.stats import multitest
 import pycircstat as circ
+from metpy.calc import pressure_to_height_std, geopotential_to_height
+from metpy.units import units
 
 # plot
 import matplotlib as mpl
@@ -417,4 +419,89 @@ fig.savefig(output_png)
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region check pre_weighted_rh2m at EAIS/WAIS/AP
+
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+
+echam6_t63_cellarea = xr.open_dataset('scratch/others/land_sea_masks/echam6_t63_cellarea.nc')
+
+ocean_aprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_aprt_alltime.pkl', 'rb') as f:
+    ocean_aprt_alltime[expid[i]] = pickle.load(f)
+
+echam6_t63_geosp = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/pi_m_416_4.9/input/echam/unit.24')
+echam6_t63_surface_height = geopotential_to_height(
+    echam6_t63_geosp.GEOSP * (units.m / units.s)**2)
+
+for imask in ['AIS', 'EAIS', 'WAIS', 'AP']:
+    # imask = 'AIS'
+    print('#-------- ' + imask)
+    
+    mask = echam6_t63_ais_mask['mask'][imask]
+    
+    source_rh2m_max = np.max(pre_weighted_rh2m[expid[i]]['am'].values[mask])
+    source_rh2m_min = np.min(pre_weighted_rh2m[expid[i]]['am'].values[mask])
+    print(np.round(source_rh2m_max, 1))
+    print(np.round(source_rh2m_min, 1))
+
+
+for imask in ['AIS', 'EAIS', 'WAIS', 'AP']:
+    # imask = 'AIS'
+    print('#-------- ' + imask)
+    
+    mask = echam6_t63_ais_mask['mask'][imask]
+    
+    source_rh2m = np.average(
+        pre_weighted_rh2m[expid[i]]['am'].values[mask],
+        weights = echam6_t63_cellarea.cell_area.values[mask] * \
+            ocean_aprt_alltime[expid[i]]['am'].sel(var_names='rh2m').values[
+                mask],
+    )
+    
+    print(np.round(source_rh2m, 1))
+
+
+imask = 'AIS'
+mask_high = echam6_t63_ais_mask['mask'][imask] & \
+    (echam6_t63_surface_height.values >= 2250)
+mask_low = echam6_t63_ais_mask['mask'][imask] & \
+    (echam6_t63_surface_height.values < 2250)
+
+for mask in[mask_high, mask_low]:
+    # print(mask)
+    
+    source_rh2m = np.average(
+        pre_weighted_rh2m[expid[i]]['am'].values[mask],
+        weights = echam6_t63_cellarea.cell_area.values[mask] * \
+            ocean_aprt_alltime[expid[i]]['am'].sel(var_names='rh2m').values[
+                mask],
+    )
+    
+    print(np.round(source_rh2m, 1))
+
+
+imask = 'AIS'
+mask = echam6_t63_ais_mask['mask'][imask]
+djf_jja_rh2m = (pre_weighted_rh2m[expid[i]]['sm'].sel(season = 'DJF') - \
+    pre_weighted_rh2m[expid[i]]['sm'].sel(season = 'JJA')).compute()
+
+np.average(
+    djf_jja_rh2m.values[mask],
+    weights = echam6_t63_cellarea.cell_area.values[mask],
+)
+np.mean(djf_jja_rh2m.values[mask])
+
+
+'''
+imask = 'AIS'
+echam6_t63_ais_mask['mask'][imask].sum()
+(mask_high).sum()
+(mask_low).sum()
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
 

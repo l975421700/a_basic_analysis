@@ -132,11 +132,15 @@ with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
 # region plot (epe_st_weighted_lon - dc_st_weighted_lon) am Antarctica
 
 iqtl = '90%'
+plt_data = calc_lon_diff(
+    epe_st_weighted_lon[expid[i]][iqtl]['am'],
+    dc_st_weighted_lon[expid[i]][iqtl]['am'])
+plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.1_source_lon/6.1.7.0.1 ' + expid[i] + ' epe_st_weighted_lon - dc_st_weighted_lon am Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-30, cm_max=30, cm_interval1=5, cm_interval2=10, cmap='PRGn',
+    cm_min=-60, cm_max=60, cm_interval1=10, cm_interval2=20, cmap='PRGn',
     reversed=True)
 
 fig, ax = hemisphere_plot(
@@ -147,9 +151,7 @@ cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 plt1 = ax.pcolormesh(
     lon,
     lat,
-    calc_lon_diff(
-        epe_st_weighted_lon[expid[i]][iqtl]['am'],
-        dc_st_weighted_lon[expid[i]][iqtl]['am']),
+    plt_data,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
 wwtest_res = circ.watson_williams(
@@ -158,7 +160,8 @@ wwtest_res = circ.watson_williams(
     axis=0,
     )[0] < 0.05
 ax.scatter(
-    x=lon_2d[wwtest_res], y=lat_2d[wwtest_res],
+    x=lon_2d[wwtest_res & echam6_t63_ais_mask['mask']['AIS']],
+    y=lat_2d[wwtest_res & echam6_t63_ais_mask['mask']['AIS']],
     s=0.5, c='k', marker='.', edgecolors='none',
     transform=ccrs.PlateCarree(),
     )

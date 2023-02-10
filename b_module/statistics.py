@@ -278,3 +278,90 @@ def cplot_ttest(
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region Function to find a threshold cutting off cumulative amount into different portions
+
+def find_cumulative_threshold(
+    nd_data,
+    threshold = 0.1,
+    ):
+    '''
+    nd_data: 1d numpy array
+    threshold: the cumulative threshold will cut off total amounts below and above corresponding to this threshold
+    '''
+    
+    import numpy as np
+    
+    data_sorted = np.sort(nd_data.copy())
+    
+    data_cumsum = np.cumsum(data_sorted)
+    
+    data_cumsum_threshold = data_cumsum[-1] * threshold
+    
+    cumulative_threshold = np.interp(
+        data_cumsum_threshold,
+        data_cumsum, data_sorted
+    )
+    
+    return(cumulative_threshold)
+
+
+
+'''
+#-------------------------------- check
+
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+expid = [
+    'pi_m_502_5.0',
+    ]
+i = 0
+
+import pickle
+import numpy as np
+
+wisoaprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
+    wisoaprt_alltime[expid[i]] = pickle.load(f)
+
+ilat = 40
+ilon = 60
+
+aprt_data = wisoaprt_alltime[expid[i]]['daily'][:, 0, ilat, ilon].values
+threshold = 0.2
+
+res1 = find_cumulative_threshold(aprt_data, threshold = threshold)
+
+aprt_sorted = np.sort(aprt_data.copy())
+aprt_cumsum = np.cumsum(aprt_sorted)
+aprt_cumsum_half = aprt_cumsum [-1] * threshold
+res2 = np.interp(aprt_cumsum_half, aprt_cumsum, aprt_sorted)
+print(res1 == res2)
+
+
+sum1 = aprt_data[aprt_data <= res2].sum()
+sum2 = aprt_data[aprt_data > res2].sum()
+sum3 = aprt_data.sum()
+
+print((sum1 + sum2) == sum3)
+print(np.round(sum1 / sum3, 4))
+
+
+
+plt.scatter(
+    # np.arange(0, len(aprt_data), 1),
+    # aprt_data,
+    aprt_sorted,
+    aprt_cumsum,
+)
+
+plt.axhline(aprt_cumsum_half)
+plt.axvline(res1)
+
+plt.savefig('figures/test/trial.png')
+plt.close()
+
+'''
+
+# endregion
+# -----------------------------------------------------------------------------

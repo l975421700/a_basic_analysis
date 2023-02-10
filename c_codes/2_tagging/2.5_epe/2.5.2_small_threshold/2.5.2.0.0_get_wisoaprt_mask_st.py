@@ -114,16 +114,6 @@ quantiles = dict(zip(
 
 
 '''
-lon = wisoaprt_alltime[expid[i]]['am'].lon
-lat = wisoaprt_alltime[expid[i]]['am'].lat
-lon_2d, lat_2d = np.meshgrid(lon, lat,)
-
-# quantiles = {'90%': 0.9, '95%': 0.95, '99%': 0.99}
-
-ocean_aprt_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_aprt_alltime.pkl', 'rb') as f:
-    ocean_aprt_alltime[expid[i]] = pickle.load(f)
-
 '''
 # endregion
 # -----------------------------------------------------------------------------

@@ -170,13 +170,13 @@ cor_sam_var_anom_p = xs.pearson_r_eff_p_value(b_sam_mon, anom,dim='time').values
 #---------------- plot
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.5, cm_max=0.3, cm_interval1=0.1, cm_interval2=0.1,
-    cmap='PuOr', asymmetric=True, reversed=False)
-pltticks[-4] = 0
+    cm_min=-0.6, cm_max=0.6, cm_interval1=0.1, cm_interval2=0.2,
+    cmap='PuOr', asymmetric=False, reversed=True)
+# pltticks[-7] = 0
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' correlation sam_' + ivar + ' mon.png'
 
-fig, ax = hemisphere_plot(northextent=-60,)
+fig, ax = hemisphere_plot(northextent=-60, figsize=np.array([5.8, 6.8]) / 2.54,)
 
 cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
@@ -195,11 +195,11 @@ ax.scatter(
 cbar = fig.colorbar(
     plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
-    pad=0.02, fraction=0.2,
+    pad=0.02, fraction=0.15,
     )
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel(
-    'Correlation coefficient between SAM\nand source latitude [$-$]',
+    'Correlation: SAM & source latitude',
     linespacing=1.5, fontsize=8)
 fig.savefig(output_png)
 
@@ -489,11 +489,11 @@ cor_sam_var_anom_p = xs.pearson_r_eff_p_value(b_sam_mon, anom,dim='time').values
 output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' correlation sam_' + ivar + ' mon.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.6, cm_max=0.2, cm_interval1=0.1, cm_interval2=0.1,
-    cmap='PuOr', asymmetric=True, reversed=False)
-pltticks[-3] = 0
+    cm_min=-0.6, cm_max=0.6, cm_interval1=0.1, cm_interval2=0.2,
+    cmap='PuOr', asymmetric=False, reversed=True)
+# pltticks[-7] = 0
 
-fig, ax = hemisphere_plot(northextent=-60,)
+fig, ax = hemisphere_plot(northextent=-60, figsize=np.array([5.8, 6.8]) / 2.54,)
 
 cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
@@ -512,11 +512,11 @@ ax.scatter(
 cbar = fig.colorbar(
     plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
-    pad=0.02, fraction=0.2,
+    pad=0.02, fraction=0.15,
     )
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel(
-    'Correlation coefficient between SAM\nand relative source longitude [$-$]',
+    'Correlation: SAM & relative source longitude',
     linespacing=1.5, fontsize=8)
 fig.savefig(output_png)
 

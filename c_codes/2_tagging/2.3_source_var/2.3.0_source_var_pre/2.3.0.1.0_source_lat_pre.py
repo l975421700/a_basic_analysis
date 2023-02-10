@@ -437,7 +437,7 @@ pltlevel2, pltticks2, pltnorm2, pltcmp2 = plt_mesh_pars(
     cm_min=-2.5, cm_max=2.5, cm_interval1=0.5, cm_interval2=1, cmap='PiYG',)
 
 cbar_label1 = 'Source latitude [$°$]'
-cbar_label2 = 'Differences in source latitude [$°$]'
+cbar_label2 = 'Differences [$°$]'
 
 nrow = 1
 ncol = 3
@@ -484,7 +484,7 @@ plt.text(
     0.5, 1.05, '(b) Predefined-region water tracing (10$°$ latitude bins)',
     transform=axs[1].transAxes, ha='center', va='center', rotation='horizontal')
 plt.text(
-    0.5, 1.05, '(c) Differences: a - b',
+    0.5, 1.05, '(c) Differences: (a) - (b)',
     transform=axs[2].transAxes, ha='center', va='center', rotation='horizontal')
 
 cbar2 = fig.colorbar(
@@ -599,10 +599,10 @@ for ivar, ifile in zip(source_var, source_var_files):
     with open(ifile, 'rb') as f:
         pre_weighted_var[expid[i]][ivar] = pickle.load(f)
 
-cm_mins = [-50, 0, -180, 9, 75, 10, ]
-cm_maxs = [-34, 360, 180, 17, 83, 11.5, ]
-cm_interval1s = [2, 20, 30, 1, 1, 0.25, ]
-cm_interval2s = [2, 60, 60, 1, 1, 0.25, ]
+cm_mins = [-50, 0, -180, 9, 75, 9.8, ]
+cm_maxs = [-34, 360, 180, 17, 83, 11.4, ]
+cm_interval1s = [2, 20, 30, 1, 1, 0.2, ]
+cm_interval2s = [2, 60, 60, 1, 1, 0.2, ]
 cmaps = ['PuOr', 'BrBG', 'twilight_shifted', 'RdBu', 'PRGn', 'PiYG', ]
 cbar_labels = [
     'Source latitude [$°\;S$]', 'Source longitude [$°$]',
@@ -671,23 +671,23 @@ for irow in range(nrow):
             plt_meshdata,
             norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
         
-        plt2 = axs[irow, jcol].contour(
-            lon, lat.sel(lat=slice(-50, -90)),
-            plt_data.sel(lat=slice(-50, -90)),
-            levels=pltctr1, colors = 'blue', transform=ccrs.PlateCarree(),
-            linewidths=0.5, linestyles='dotted',)
-        axs[irow, jcol].clabel(
-            plt2, inline=1, colors='blue', fmt=remove_trailing_zero,
-            levels=pltctr1, inline_spacing=10, fontsize=6,)
+        # plt2 = axs[irow, jcol].contour(
+        #     lon, lat.sel(lat=slice(-50, -90)),
+        #     plt_data.sel(lat=slice(-50, -90)),
+        #     levels=pltctr1, colors = 'blue', transform=ccrs.PlateCarree(),
+        #     linewidths=0.5, linestyles='dotted',)
+        # axs[irow, jcol].clabel(
+        #     plt2, inline=1, colors='blue', fmt=remove_trailing_zero,
+        #     levels=pltctr1, inline_spacing=10, fontsize=6,)
 
-        plt3 = axs[irow, jcol].contour(
-            lon, lat.sel(lat=slice(-50, -90)),
-            plt_data.sel(lat=slice(-50, -90)),
-            levels=pltctr2, colors = 'blue', transform=ccrs.PlateCarree(),
-            linewidths=0.5, linestyles='solid',)
-        axs[irow, jcol].clabel(
-            plt3, inline=1, colors='blue', fmt=remove_trailing_zero,
-            levels=pltctr2, inline_spacing=5, fontsize=6,)
+        # plt3 = axs[irow, jcol].contour(
+        #     lon, lat.sel(lat=slice(-50, -90)),
+        #     plt_data.sel(lat=slice(-50, -90)),
+        #     levels=pltctr2, colors = 'blue', transform=ccrs.PlateCarree(),
+        #     linewidths=0.5, linestyles='solid',)
+        # axs[irow, jcol].clabel(
+        #     plt3, inline=1, colors='blue', fmt=remove_trailing_zero,
+        #     levels=pltctr2, inline_spacing=5, fontsize=6,)
         
         extend = 'both'
         if ((ivar == 'lon') | (ivar == 'rellon')):

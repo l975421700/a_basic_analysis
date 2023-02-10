@@ -33,6 +33,8 @@ from metpy.interpolate import cross_section
 from statsmodels.stats import multitest
 import pycircstat as circ
 from haversine import haversine
+from scipy.stats import pearsonr
+from scipy.stats import linregress
 
 # plot
 import matplotlib as mpl
@@ -132,6 +134,11 @@ wind10_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wind10_alltime.pkl', 'rb') as f:
     wind10_alltime[expid[i]] = pickle.load(f)
 
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+
+echam6_t63_cellarea = xr.open_dataset('scratch/others/land_sea_masks/echam6_t63_cellarea.nc')
+
 '''
 '''
 # endregion
@@ -139,7 +146,7 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wind10_alltime
 
 
 # -----------------------------------------------------------------------------
-# region get wind10 at sources
+# region get wind10 at sources - am
 
 
 wind10_sources = {}
@@ -211,7 +218,7 @@ if (distance > 130):
 
 
 # -----------------------------------------------------------------------------
-# region plot source wind10 and wind10 at sources
+# region plot source wind10 and wind10 at sources - am
 
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.4_wind10/6.1.3.4 ' + expid[i] + ' wind10 sources differences.png'
@@ -249,10 +256,13 @@ for irow in range(nrow):
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=7, cm_max=12, cm_interval1=0.5, cm_interval2=0.5, cmap='PiYG',)
 
+plt_data = pre_weighted_wind10[expid[i]]['am']
+plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+
 plt_mesh = axs[0].pcolormesh(
     lon,
     lat,
-    pre_weighted_wind10[expid[i]]['am'],
+    plt_data,
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 
 cbar = fig.colorbar(
@@ -270,10 +280,13 @@ cbar.ax.set_xlabel('Source wind10 [$m \; s^{-1}$]', linespacing=1.5,)
 #     cm_min=10-2, cm_max=11.5-2, cm_interval1=0.25, cm_interval2=0.25,
 #     cmap='PiYG',)
 
+plt_data = wind10_sources[expid[i]]['am']
+plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+
 plt_mesh = axs[1].pcolormesh(
     lon,
     lat,
-    wind10_sources[expid[i]]['am'],
+    plt_data,
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 
 cbar = fig.colorbar(
@@ -282,19 +295,22 @@ cbar = fig.colorbar(
     pad=0.05,
     )
 cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel('wind10 at source lat/lon [$m \; s^{-1}$]', linespacing=1.5,)
+cbar.ax.set_xlabel('wind10 at source lat & lon [$m \; s^{-1}$]', linespacing=1.5,)
 
 
 # source wind10 - wind10 at sources
 
+plt_data = pre_weighted_wind10[expid[i]]['am'] - wind10_sources[expid[i]]['am']
+plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-2, cm_max=4, cm_interval1=0.5, cm_interval2=0.5, cmap='PRGn',
-    reversed=False, asymmetric=True,)
+    cm_min=0, cm_max=4, cm_interval1=0.5, cm_interval2=0.5, cmap='Purples',
+    reversed=False, asymmetric=False,)
 
 plt_mesh = axs[2].pcolormesh(
     lon,
     lat,
-    pre_weighted_wind10[expid[i]]['am'] - wind10_sources[expid[i]]['am'],
+    plt_data,
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 
 cbar = fig.colorbar(
@@ -303,7 +319,7 @@ cbar = fig.colorbar(
     pad=0.05,
     )
 cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel('Differences (a - b) [$m \; s^{-1}$]', linespacing=1.5,)
+cbar.ax.set_xlabel('Differences: (a) - (b) [$m \; s^{-1}$]', linespacing=1.5,)
 
 fig.subplots_adjust(
     left=fm_left, right = fm_right, bottom = fm_bottom, top = fm_top,
@@ -311,7 +327,6 @@ fig.subplots_adjust(
     )
 
 fig.savefig(output_png)
-
 
 
 
@@ -324,11 +339,6 @@ fig.savefig(output_png)
 # -----------------------------------------------------------------------------
 # region AIS differences
 
-with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
-    echam6_t63_ais_mask = pickle.load(f)
-
-echam6_t63_cellarea = xr.open_dataset('scratch/others/land_sea_masks/echam6_t63_cellarea.nc')
-
 diff = pre_weighted_wind10[expid[i]]['am'] - wind10_sources[expid[i]]['am']
 
 imask = 'AIS'
@@ -338,7 +348,7 @@ np.average(
     weights = echam6_t63_cellarea.cell_area.values[mask],
 )
 
-np.mean(diff.values[mask])
+
 
 '''
 np.min(diff.values[echam6_t63_ais_mask['mask']['AIS']])
@@ -346,3 +356,273 @@ np.max(diff.values[echam6_t63_ais_mask['mask']['AIS']])
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot source wind10 against wind10
+
+imask = 'AIS'
+mask = echam6_t63_ais_mask['mask'][imask]
+pearsonr(
+    wind10_sources[expid[i]]['am'].values[mask],
+    pre_weighted_wind10[expid[i]]['am'].values[mask],)
+# 0.53
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.6_var_correlation/6.1.3.6.0_wind10/6.1.3.6.0 ' + expid[i] + ' correlation wind10_wind10_at_sources am_AIS.png'
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
+
+sns.scatterplot(
+    wind10_sources[expid[i]]['am'].values[mask],
+    pre_weighted_wind10[expid[i]]['am'].values[mask],
+)
+
+linearfit = linregress(
+    x = wind10_sources[expid[i]]['am'].values[mask],
+    y = pre_weighted_wind10[expid[i]]['am'].values[mask],
+    )
+ax.axline((0, linearfit.intercept), slope = linearfit.slope, lw=0.5,
+          c='r')
+plt.text(
+    0.05, 0.85,
+    '$y = $' + str(np.round(linearfit.slope, 1)) + '$x + $' + \
+        str(np.round(linearfit.intercept, 1)) + \
+            '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 2)),
+        transform=ax.transAxes, linespacing=1.5)
+
+ax.set_xlim(
+    np.min(wind10_sources[expid[i]]['am'].values[mask]) - 0.5,
+    np.max(wind10_sources[expid[i]]['am'].values[mask]) + 0.5,
+    )
+ax.set_xlabel('Wind10 at source locations[$m\;s^{-1}$]')
+
+# ax.set_ylim(
+#     np.min(pre_weighted_wind10[expid[i]]['am'].values[mask]) - 0.1,
+#     np.max(pre_weighted_wind10[expid[i]]['am'].values[mask]) + 0.1,
+#     )
+ax.set_ylim(10, 11.4,)
+ax.set_ylabel('Source wind10 [$m\;s^{-1}$]')
+
+ax.grid(
+    True, which='both',
+    linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+
+fig.subplots_adjust(left=0.16, right=0.98, bottom=0.15, top=0.98)
+plt.savefig(output_png)
+plt.close()
+
+
+
+'''
+imask = 'AIS'
+mask = echam6_t63_ais_mask['mask'][imask]
+
+pearsonr(
+    pre_weighted_wind10[expid[i]]['am'].values[mask],
+    wind10_sources[expid[i]]['am'].values[mask],
+)
+# statistic=0.5330805490996126, pvalue=2.9670112814612486e-123
+
+sns.scatterplot(
+    pre_weighted_wind10[expid[i]]['am'].values[mask],
+    wind10_sources[expid[i]]['am'].values[mask],
+)
+plt.savefig('figures/test/trial.png')
+plt.close()
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get wind10 at sources - sm
+
+
+wind10_sources = {}
+wind10_sources[expid[i]] = {}
+wind10_sources[expid[i]]['sm'] = pre_weighted_wind10[expid[i]]['sm'].copy()
+wind10_sources[expid[i]]['sm'] = wind10_sources[expid[i]]['sm'].rename('wind10_sources')
+wind10_sources[expid[i]]['sm'].values[:] = 0
+
+for iseason in ['DJF', 'MAM', 'JJA', 'SON']:
+    # iseason = 'DJF'
+    print('#---------------- ' + iseason)
+    
+    for ilat in range(len(lat)):
+        # ilat = 87
+        # print('#---------------- ' + str(ilat))
+        
+        for ilon in range(len(lon)):
+            # ilon = 23
+            # print('#-------- ' + str(ilon))
+            
+            try:
+                source_lat = pre_weighted_lat[expid[i]]['sm'].sel(
+                    season = iseason)[ilat, ilon].values
+                source_lon = pre_weighted_lon[expid[i]]['sm'].sel(
+                    season = iseason)[ilat, ilon].values
+                sources_ind = find_ilat_ilon(source_lat, source_lon, lat, lon)
+                
+                wind10_sources[expid[i]]['sm'].sel(
+                    season = iseason).values[ilat, ilon] = \
+                    wind10_alltime[expid[i]]['sm'].sel(
+                    season = iseason)[sources_ind[0], sources_ind[1]].values
+            except:
+                print('no source lat/lon')
+                wind10_sources[expid[i]]['sm'].sel(
+                    season = iseason).values[ilat, ilon] = \
+                    np.nan
+
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot source wind10 and wind10 at sources - sm
+
+nrow = 1
+ncol = 3
+
+wspace = 0.02
+hspace = 0.12
+fm_left = 0.02
+fm_bottom = hspace / nrow
+fm_right = 0.98
+fm_top = 0.98
+
+for iseason in ['DJF', 'MAM', 'JJA', 'SON']:
+    # iseason = 'DJF'
+    print(iseason)
+    
+    output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.4_wind10/6.1.3.4 ' + expid[i] + ' wind10 sources differences_' + \
+        iseason + '.png'
+
+    fig, axs = plt.subplots(
+        nrow, ncol, figsize=np.array([5.8*ncol, 7.8*nrow]) / 2.54,
+        subplot_kw={'projection': ccrs.SouthPolarStereo()},)
+    
+    ipanel=0
+    for jcol in range(ncol):
+        axs[jcol] = hemisphere_plot(northextent=-60, ax_org = axs[jcol])
+        cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
+        
+        plt.text(
+            0.05, 1, panel_labels[ipanel],
+            transform=axs[jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        ipanel += 1
+    
+    #---------------- plot source wind10
+    pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+        cm_min=7, cm_max=12, cm_interval1=0.5, cm_interval2=0.5, cmap='PiYG',)
+    
+    plt_data = pre_weighted_wind10[expid[i]]['sm'].sel(season=iseason)
+    plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+    plt_mesh = axs[0].pcolormesh(
+        lon,
+        lat,
+        plt_data,
+        norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+    
+    cbar = fig.colorbar(
+        plt_mesh, ax=axs[0], aspect=30, format=remove_trailing_zero_pos,
+        orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+        pad=0.05,)
+    cbar.ax.tick_params(labelsize=8)
+    cbar.ax.set_xlabel(
+        iseason + ' Source wind10 [$m \; s^{-1}$]',
+        linespacing=1.5,)
+    
+    #---------------- plot wind10 at sources
+    plt_data = wind10_sources[expid[i]]['sm'].sel(season=iseason)
+    plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+    plt_mesh = axs[1].pcolormesh(
+        lon,
+        lat,
+        plt_data,
+        norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+    
+    cbar = fig.colorbar(
+        plt_mesh, ax=axs[1], aspect=30, format=remove_trailing_zero_pos,
+        orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+        pad=0.05,)
+    cbar.ax.tick_params(labelsize=8)
+    cbar.ax.set_xlabel(
+        'wind10 at source lat & lon [$m \; s^{-1}$]', linespacing=1.5,)
+    
+    #---------------- plot source wind10 - wind10 at sources
+    
+    pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+        cm_min=0, cm_max=4, cm_interval1=0.5, cm_interval2=0.5, cmap='Purples',
+        reversed=False, asymmetric=False,)
+    
+    plt_data = pre_weighted_wind10[expid[i]]['sm'].sel(season=iseason) - \
+        wind10_sources[expid[i]]['sm'].sel(season=iseason)
+    plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+    plt_mesh = axs[2].pcolormesh(
+        lon,
+        lat,
+        plt_data,
+        norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+    
+    cbar = fig.colorbar(
+        plt_mesh, ax=axs[2], aspect=30, format=remove_trailing_zero_pos,
+        orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+        pad=0.05,
+        )
+    cbar.ax.tick_params(labelsize=8)
+    cbar.ax.set_xlabel(
+        'Differences: (a) - (b) [$m \; s^{-1}$]', linespacing=1.5,)
+    
+    fig.subplots_adjust(
+        left=fm_left, right = fm_right, bottom = fm_bottom, top = fm_top,
+        wspace=wspace, hspace=hspace,)
+    fig.savefig(output_png)
+
+
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region
+
+for iseason in ['DJF', 'MAM', 'JJA', 'SON']:
+    # iseason = 'DJF'
+    print(iseason)
+    
+    diff = pre_weighted_wind10[expid[i]]['sm'].sel(season=iseason) - \
+        wind10_sources[expid[i]]['sm'].sel(season=iseason)
+    
+    imask = 'AIS'
+    mask = echam6_t63_ais_mask['mask'][imask]
+    
+    ave_diff = np.average(
+        diff.values[mask],
+        weights = echam6_t63_cellarea.cell_area.values[mask],)
+    print(np.round(ave_diff, 1))
+
+
+'''
+DJF
+2.9
+MAM
+1.6
+JJA
+1.3
+SON
+2.2
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+

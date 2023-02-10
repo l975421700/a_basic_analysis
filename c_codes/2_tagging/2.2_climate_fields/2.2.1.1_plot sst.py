@@ -516,11 +516,11 @@ output_png = 'figures/6_awi/6.1_echam6/6.1.2_climatology/6.1.2 am sic_sst_rh2m_w
 nrow = 1
 ncol = 4
 
-wspace = 0.02
-hspace = 0.12
-fm_left = 0.02
+wspace = 0.01
+hspace = 0.05
+fm_left = 0.001
 fm_bottom = hspace / nrow
-fm_right = 0.98
+fm_right = 0.999
 fm_top = 0.98
 
 fig, axs = plt.subplots(
@@ -557,7 +557,7 @@ cbar = fig.colorbar(
     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='neither',
     pad=0.05,
     )
-cbar.ax.set_xlabel('Sea ice concentration (SIC) [$\%$]', linespacing=1.5,)
+cbar.ax.set_xlabel('SIC [$\%$]', linespacing=1.5,)
 
 # am sst
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
@@ -573,7 +573,7 @@ cbar = fig.colorbar(
     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
     pad=0.05,
     )
-cbar.ax.set_xlabel('Sea surface temperature (SST) [$°C$]', linespacing=1.5,)
+cbar.ax.set_xlabel('SST [$°C$]', linespacing=1.5,)
 
 # am rh2m
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
@@ -590,7 +590,7 @@ cbar = fig.colorbar(
     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
     pad=0.05,
     )
-cbar.ax.set_xlabel('2-metre relative humidity (rh2m) [$\%$]', linespacing=1.5,)
+cbar.ax.set_xlabel('rh2m [$\%$]', linespacing=1.5,)
 
 
 # am wind10
@@ -607,7 +607,7 @@ cbar = fig.colorbar(
     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
     pad=0.05,
     )
-cbar.ax.set_xlabel('10-metre wind speed (wind10) [$m\;s^{-1}$]',
+cbar.ax.set_xlabel('wind10 [$m\;s^{-1}$]',
                    linespacing=1.5,)
 
 fig.subplots_adjust(

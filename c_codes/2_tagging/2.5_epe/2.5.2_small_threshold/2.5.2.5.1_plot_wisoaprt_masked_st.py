@@ -101,8 +101,7 @@ from a_basic_analysis.b_module.component_plot import (
 
 
 # -----------------------------------------------------------------------------
-# region percentile of 10% heaviest precipitation amount of total precipitation
-
+# region import data
 
 wisoaprt_masked_st = {}
 with open(
@@ -116,6 +115,20 @@ lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
 ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+
+wisoaprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
+    wisoaprt_alltime[expid[i]] = pickle.load(f)
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region percentile of 10% heaviest precipitation amount of total precipitation
+
 iqtl = '90%'
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.1_pre/6.1.7.1 ' + expid[i] + ' st_daily precipitation percentile_' + iqtl[:2] + '_frc Antarctica.png'
@@ -125,7 +138,7 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     reversed=False)
 
 fig, ax = hemisphere_plot(
-    northextent=-60, figsize=np.array([5.8, 7.8]) / 2.54)
+    northextent=-60, figsize=np.array([5.8, 6.8]) / 2.54)
 
 cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
@@ -143,20 +156,50 @@ plt_ctr = ax.contour(
     colors = 'b', linewidths=0.3, transform=ccrs.PlateCarree(),)
 ax.clabel(
     plt_ctr, inline=1, colors='b', fmt=remove_trailing_zero,
-    levels=[50], inline_spacing=10, fontsize=6,)
+    levels=[50], inline_spacing=10, fontsize=8,)
 
 cbar = fig.colorbar(
     plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
     orientation="horizontal", shrink=0.95, ticks=pltticks, extend='both',
-    pad=0.02, fraction=0.2,
+    pad=0.02, fraction=0.15,
     )
 cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel(
-    'Contribution of EPE to\nannual mean precipitation [$\%$]', linespacing=1.5)
+    'Contribution of EPE to total precipitation [$\%$]', linespacing=1.5,
+    fontsize=8)
 fig.savefig(output_png, dpi=600)
+
+
+'''
+
+
+1 - np.mean(wisoaprt_masked_st[expid[i]]['frc']['10%']['am'].values[mask])
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region statistics of distribution
+
+imask = 'AIS'
+mask = echam6_t63_ais_mask['mask'][imask]
+
+epe_contribution = wisoaprt_masked_st[expid[i]]['frc']['90%']['am'] * 100
+
+np.max(epe_contribution.values[mask])
+np.min(epe_contribution.values[mask])
+
+np.average(
+    epe_contribution.values[mask],
+    weights=wisoaprt_alltime[expid[i]]['am'].sel(wisotype=1).values[mask]
+)
+
+
+
 
 
 # endregion
 # -----------------------------------------------------------------------------
-

@@ -158,16 +158,19 @@ with open(
 # -----------------------------------------------------------------------------
 # region subset source properties against precipitation rates
 
+mpl.rc('font', family='Times New Roman', size=8)
+
 # stations_sites.Site
-# Sites = ['EDC', 'Halley']
-# output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.2_pre_source_sites/6.1.7.2 binned_prerate epe_st_source_anomalies_subset at EDC and Halley.png'
+
+Sites = ['EDC', 'Halley']
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.2_pre_source_sites/6.1.7.2 binned_prerate epe_st_source_anomalies_subset at EDC and Halley.png'
 
 # Sites = ['DOME F', 'Vostok', 'EDML', 'WDC']
 # output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.2_pre_source_sites/6.1.7.2 binned_prerate epe_st_source_anomalies_subset at DOME F, Vostok, EDML, and WDC.png'
 
 
-Sites = ['Rothera', 'Neumayer', "Law Dome", "Dumont d'Urville"]
-output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.2_pre_source_sites/6.1.7.2 binned_prerate epe_st_source_anomalies_subset at Rothera, Neumayer, Law Dome, and Dumont.png'
+# Sites = ['Rothera', 'Neumayer', "Law Dome", "Dumont d'Urville"]
+# output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.2_pre_source_sites/6.1.7.2 binned_prerate epe_st_source_anomalies_subset at Rothera, Neumayer, Law Dome, and Dumont.png'
 
 ncol = 3
 nrow = len(Sites)
@@ -219,13 +222,13 @@ for irow, isite in enumerate(Sites):
         )
     plt_text = plt.text(
         0.05, 0.9, isite,
-        transform=axs[irow, jcol].transAxes, color='gray',)
+        transform=axs[irow, jcol].transAxes, color='black',)
     axs[irow, jcol].hlines(
         pre_weighted_var_icores[expid[i]][isite][ivar]['am'],
         xmin = 0, xmax = 100, lw=0.5, linestyles='--')
     axs[irow, jcol].vlines(
         wisoaprt_alltime_icores[expid[i]][isite]['am'].sel(wisotype=1) * seconds_per_d,
-        ymin = ymin, ymax = ymax, lw=0.5, linestyles='--', colors='gray')
+        ymin = ymin, ymax = ymax, lw=0.5, linestyles='--', colors='black')
     
     if True: # (irow==0):
         axs[irow, jcol].set_ylabel('Source latitude [$°\;S$]', labelpad=0)
@@ -235,7 +238,7 @@ for irow, isite in enumerate(Sites):
     
     if True: # (irow==(nrow-1)):
         axs[irow, jcol].set_xlabel(
-            'Precipitation rate [$mm \; day^{-1}$]', labelpad=0)
+            'Precipitation [$mm \; day^{-1}$]', labelpad=0)
     axs[irow, jcol].set_xscale('log')
     axs[irow, jcol].set_xticks(
         np.array([10**-3, 10**-2, 10**-1, 10**0, 10**1, 10**2, ]))
@@ -245,7 +248,7 @@ for irow, isite in enumerate(Sites):
     
     axs[irow, jcol].grid(
         True, which='both',
-        linewidth=0.4, color='lightgray', alpha=0.5, linestyle=':')
+        linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 
 #---------------- relative source longitude
 
@@ -280,7 +283,7 @@ for irow, isite in enumerate(Sites):
         )
     plt_text = plt.text(
         0.05, 0.9, isite,
-        transform=axs[irow, jcol].transAxes, color='gray',)
+        transform=axs[irow, jcol].transAxes, color='black',)
     axs[irow, jcol].hlines(
         calc_lon_diff_np(
             pre_weighted_var_icores[expid[i]][isite][ivar]['am'].values,
@@ -288,7 +291,7 @@ for irow, isite in enumerate(Sites):
         xmin = 0, xmax = 100, lw=0.5, linestyles='--')
     axs[irow, jcol].vlines(
         wisoaprt_alltime_icores[expid[i]][isite]['am'].sel(wisotype=1) * seconds_per_d,
-        ymin = ymin, ymax = ymax, lw=0.5, linestyles='--', colors='gray')
+        ymin = ymin, ymax = ymax, lw=0.5, linestyles='--', colors='black')
     
     if True: # (irow==0):
         axs[irow, jcol].set_ylabel(
@@ -299,7 +302,7 @@ for irow, isite in enumerate(Sites):
     
     if True: # (irow==(nrow-1)):
         axs[irow, jcol].set_xlabel(
-            'Precipitation rate [$mm \; day^{-1}$]', labelpad=0)
+            'Precipitation [$mm \; day^{-1}$]', labelpad=0)
     axs[irow, jcol].set_xscale('log')
     axs[irow, jcol].set_xticks(
         np.array([10**-3, 10**-2, 10**-1, 10**0, 10**1, 10**2, ]))
@@ -309,7 +312,7 @@ for irow, isite in enumerate(Sites):
     
     axs[irow, jcol].grid(
         True, which='both',
-        linewidth=0.4, color='lightgray', alpha=0.5, linestyle=':')
+        linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 
 
 #---------------- source wind10
@@ -340,13 +343,13 @@ for irow, isite in enumerate(Sites):
         )
     plt_text = plt.text(
         0.05, 0.9, isite,
-        transform=axs[irow, jcol].transAxes, color='gray',)
+        transform=axs[irow, jcol].transAxes, color='black',)
     axs[irow, jcol].hlines(
         pre_weighted_var_icores[expid[i]][isite][ivar]['am'],
         xmin = 0, xmax = 100, lw=0.5, linestyles='--')
     axs[irow, jcol].vlines(
         wisoaprt_alltime_icores[expid[i]][isite]['am'].sel(wisotype=1) * seconds_per_d,
-        ymin = ymin, ymax = ymax, lw=0.5, linestyles='--', colors='gray')
+        ymin = ymin, ymax = ymax, lw=0.5, linestyles='--', colors='black')
     
     if True: # (irow==0):
         axs[irow, jcol].set_ylabel('Source wind10 [$m \; s^{-1}$]', labelpad=0)
@@ -357,7 +360,7 @@ for irow, isite in enumerate(Sites):
     
     if True: # (irow==(nrow-1)):
         axs[irow, jcol].set_xlabel(
-            'Precipitation rate [$mm \; day^{-1}$]', labelpad=0)
+            'Precipitation [$mm \; day^{-1}$]', labelpad=0)
     axs[irow, jcol].set_xscale('log')
     axs[irow, jcol].set_xticks(
         np.array([10**-3, 10**-2, 10**-1, 10**0, 10**1, 10**2, ]))
@@ -367,7 +370,7 @@ for irow, isite in enumerate(Sites):
     
     axs[irow, jcol].grid(
         True, which='both',
-        linewidth=0.4, color='lightgray', alpha=0.5, linestyle=':')
+        linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 
 fig.subplots_adjust(
     left=fm_left, right=fm_right, bottom=fm_bottom, top=fm_top,
@@ -419,7 +422,7 @@ ax.set_xlabel('Percentiles [$\%$]')
 ax.set_xlim(0, 100)
 ax.set_xticks(np.arange(0, 100 + 1e-4, 10))
 ax.grid(True, which = 'both',
-        linewidth=0.4, color='lightgray', alpha=0.5, linestyle=':')
+        linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 fig.subplots_adjust(left=0.14, right=0.95, bottom=0.15, top=0.97)
 fig.savefig(output_png)
 
@@ -453,7 +456,7 @@ ax.set_yticks(np.arange(0, 100 + 1e-4, 10))
 ax.set_xlabel('Percentiles [$\%$]')
 ax.set_xlim(0, 100)
 ax.set_xticks(np.arange(0, 100 + 1e-4, 10))
-ax.grid(True, linewidth=0.4, color='lightgray', alpha=0.5, linestyle=':')
+ax.grid(True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 fig.subplots_adjust(left=0.14, right=0.95, bottom=0.15, top=0.97)
 fig.savefig(output_png)
 
@@ -487,7 +490,7 @@ for isite in stations_sites.Site:
     ax.set_xlabel('Percentiles [$\%$]')
     ax.set_xlim(0, 100)
     ax.set_xticks(np.arange(0, 100 + 1e-4, 20))
-    ax.grid(True, linewidth=0.4, color='lightgray', alpha=0.5, linestyle=':')
+    ax.grid(True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
     fig.subplots_adjust(left=0.24, right=0.95, bottom=0.25, top=0.97)
     fig.savefig(output_png)
 
@@ -540,7 +543,7 @@ for isite in Sites:
     
     ax.hlines(
         wisoaprt_alltime_icores[expid[i]][isite]['am'].sel(wisotype=1) * seconds_per_d,
-        xmin = 0, xmax = 100, lw=0.5, linestyles='--',
+        xmin = 0, xmax = 100, lw=1, linestyles='--',
         colors=plt_line[0].get_color())
 
 # ax.vlines(
@@ -570,7 +573,7 @@ ax.set_ylim(ymin, ymax)
 ax.set_xlabel('Percentiles [$\%$]')
 ax.set_xlim(0, 100)
 ax.set_xticks(np.arange(0, 100 + 1e-4, 10))
-ax.grid(True, linewidth=0.4, color='lightgray', alpha=0.5, linestyle=':')
+ax.grid(True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 fig.subplots_adjust(left=0.18, right=0.95, bottom=0.15, top=0.97)
 fig.savefig(output_png)
 
@@ -620,7 +623,7 @@ for isite in stations_sites.Site:
     ax.set_xlabel('Percentiles [$\%$]')
     ax.set_xlim(0, 100)
     ax.set_xticks(np.arange(0, 100 + 1e-4, 20))
-    ax.grid(True, linewidth=0.4, color='lightgray', alpha=0.5, linestyle=':')
+    ax.grid(True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
     fig.subplots_adjust(left=0.25, right=0.95, bottom=0.25, top=0.95)
     fig.savefig(output_png)
 

@@ -145,6 +145,9 @@ sam_posneg_ind['pos'] = sam_mon.sam > sam_mon.sam.std(ddof = 1)
 sam_posneg_ind['neg'] = sam_mon.sam < (-1 * sam_mon.sam.std(ddof = 1))
 
 
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+
 
 '''
 np.min(sam_mon.sam[sam_posneg_ind['pos']])
@@ -173,8 +176,8 @@ sam_posneg_var[ivar]['neg_mean'] = sam_posneg_var[ivar]['neg'].mean(dim='time')
 output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' sam_posneg_' + ivar + ' Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-6, cm_max=3, cm_interval1=1, cm_interval2=1, cmap='PiYG',
-    asymmetric=True,)
+    cm_min=-6, cm_max=6, cm_interval1=1, cm_interval2=1, cmap='PiYG',
+    asymmetric=False,)
 
 fig, ax = hemisphere_plot(northextent=-60,)
 
@@ -320,8 +323,11 @@ sam_posneg_var[ivar]['neg_mean'] = sam_posneg_var[ivar]['neg'].mean(dim='time')
 output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' sam_posneg_' + ivar + '_rmm Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-6, cm_max=3, cm_interval1=1, cm_interval2=1, cmap='PiYG',
-    asymmetric=True,)
+    cm_min=-6, cm_max=6, cm_interval1=1, cm_interval2=1, cmap='PiYG',
+    asymmetric=False,)
+
+plt_data = sam_posneg_var[ivar]['pos_mean'] - sam_posneg_var[ivar]['neg_mean']
+plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
 
 fig, ax = hemisphere_plot(northextent=-60,)
 
@@ -330,13 +336,14 @@ cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 plt1 = ax.pcolormesh(
     lon,
     lat,
-    sam_posneg_var[ivar]['pos_mean'] - sam_posneg_var[ivar]['neg_mean'],
+    plt_data,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 ttest_fdr_res = ttest_fdr_control(
     sam_posneg_var[ivar]['pos'],
     sam_posneg_var[ivar]['neg'],)
 ax.scatter(
-    x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
+    x=lon_2d[ttest_fdr_res & echam6_t63_ais_mask['mask']['AIS']],
+    y=lat_2d[ttest_fdr_res & echam6_t63_ais_mask['mask']['AIS']],
     s=0.5, c='k', marker='.', edgecolors='none',
     transform=ccrs.PlateCarree(),
     )
@@ -398,6 +405,11 @@ output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=-60, cm_max=60, cm_interval1=10, cm_interval2=20, cmap='PRGn',)
 
+plt_data = calc_lon_diff_np(
+    sam_posneg_var[ivar]['pos_mean'],
+    sam_posneg_var[ivar]['neg_mean'],)
+plt_data[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+
 fig, ax = hemisphere_plot(northextent=-60,)
 
 cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
@@ -405,9 +417,7 @@ cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 plt1 = ax.pcolormesh(
     lon,
     lat,
-    calc_lon_diff_np(
-        sam_posneg_var[ivar]['pos_mean'],
-        sam_posneg_var[ivar]['neg_mean'],),
+    plt_data,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
 wwtest_res = circ.watson_williams(
@@ -416,7 +426,8 @@ wwtest_res = circ.watson_williams(
     axis=0,
     )[0] < 0.05
 ax.scatter(
-    x=lon_2d[wwtest_res], y=lat_2d[wwtest_res],
+    x=lon_2d[wwtest_res & echam6_t63_ais_mask['mask']['AIS']],
+    y=lat_2d[wwtest_res & echam6_t63_ais_mask['mask']['AIS']],
     s=0.5, c='k', marker='.', edgecolors='none',
     transform=ccrs.PlateCarree(),
     )
@@ -443,8 +454,80 @@ fig.savefig(output_png)
 
 
 # -----------------------------------------------------------------------------
+# region sam_posneg source-sink distance - removed mm
+
+ivar = 'distance'
+
+clim = pre_weighted_var[expid[i]][ivar]['mon'].groupby(
+    'time.month').mean().compute()
+anom = (pre_weighted_var[expid[i]][ivar]['mon'].groupby(
+    'time.month') - clim).compute()
+
+sam_posneg_var = {}
+sam_posneg_var[ivar] = {}
+sam_posneg_var[ivar]['pos'] = anom[sam_posneg_ind['pos']]
+sam_posneg_var[ivar]['pos_mean'] = sam_posneg_var[ivar]['pos'].mean(dim='time')
+
+sam_posneg_var[ivar]['neg'] = anom[sam_posneg_ind['neg']]
+sam_posneg_var[ivar]['neg_mean'] = sam_posneg_var[ivar]['neg'].mean(dim='time')
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' sam_posneg_' + ivar + '_rmm Antarctica.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-8, cm_max=8, cm_interval1=2, cm_interval2=2, cmap='BrBG',
+    reversed=True)
+
+plt_data = (sam_posneg_var[ivar]['pos_mean'] - \
+    sam_posneg_var[ivar]['neg_mean']) / 100
+plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+
+fig, ax = hemisphere_plot(northextent=-60,)
+
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
+
+plt1 = ax.pcolormesh(
+    lon,
+    lat,
+    plt_data,
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+ttest_fdr_res = ttest_fdr_control(
+    sam_posneg_var[ivar]['pos'],
+    sam_posneg_var[ivar]['neg'],)
+ax.scatter(
+    x=lon_2d[ttest_fdr_res & echam6_t63_ais_mask['mask']['AIS']],
+    y=lat_2d[ttest_fdr_res & echam6_t63_ais_mask['mask']['AIS']],
+    s=0.5, c='k', marker='.', edgecolors='none',
+    transform=ccrs.PlateCarree(),
+    )
+
+cbar = fig.colorbar(
+    plt1, ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+    pad=0.02, fraction=0.2,
+    )
+cbar.ax.tick_params(labelsize=8)
+cbar.ax.set_xlabel(
+    'Source-sink distance differences between\nSAM+ and SAM- months [$10^{2} \; km$]',
+    linespacing=1.5, fontsize=8)
+fig.savefig(output_png)
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+
+
+# -----------------------------------------------------------------------------
 # region statistics
 
+echam6_t63_cellarea = xr.open_dataset('scratch/others/land_sea_masks/echam6_t63_cellarea.nc')
+
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+
+#-------------------------------- lat
 ivar = 'lat'
 
 clim = pre_weighted_var[expid[i]][ivar]['mon'].groupby(
@@ -463,7 +546,7 @@ sam_posneg_var[ivar]['neg_mean'] = sam_posneg_var[ivar]['neg'].mean(dim='time')
 var_diff = sam_posneg_var[ivar]['pos_mean'] - sam_posneg_var[ivar]['neg_mean']
 
 
-'''
+#-------------------------------- lon
 ivar = 'lon'
 
 clim = pre_weighted_var[expid[i]][ivar]['mm']
@@ -486,12 +569,57 @@ sam_posneg_var[ivar]['neg_mean'] = \
 
 var_diff = calc_lon_diff_np(
     sam_posneg_var[ivar]['pos_mean'], sam_posneg_var[ivar]['neg_mean'],)
-'''
 
-echam6_t63_cellarea = xr.open_dataset('scratch/others/land_sea_masks/echam6_t63_cellarea.nc')
 
-with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
-    echam6_t63_ais_mask = pickle.load(f)
+
+#-------------------------------- distance
+ivar = 'distance'
+
+clim = pre_weighted_var[expid[i]][ivar]['mon'].groupby(
+    'time.month').mean().compute()
+anom = (pre_weighted_var[expid[i]][ivar]['mon'].groupby(
+    'time.month') - clim).compute()
+
+sam_posneg_var = {}
+sam_posneg_var[ivar] = {}
+sam_posneg_var[ivar]['pos'] = anom[sam_posneg_ind['pos']]
+sam_posneg_var[ivar]['pos_mean'] = sam_posneg_var[ivar]['pos'].mean(dim='time')
+
+sam_posneg_var[ivar]['neg'] = anom[sam_posneg_ind['neg']]
+sam_posneg_var[ivar]['neg_mean'] = sam_posneg_var[ivar]['neg'].mean(dim='time')
+
+var_diff = (sam_posneg_var[ivar]['pos_mean'] - sam_posneg_var[ivar]['neg_mean']).values
+
+
+
+#-------------------------------- statistics
+
+imask = 'AIS'
+mask = echam6_t63_ais_mask['mask'][imask]
+var_diff[mask]
+np.min(var_diff[mask])
+np.max(var_diff[mask])
+
+
+
+
+np.average(
+    var_diff[mask & (var_diff < 0)],
+    weights = echam6_t63_cellarea.cell_area.values[mask & (var_diff < 0)]
+)
+# -17
+# -230
+
+np.average(
+    var_diff[mask & (var_diff > 0)],
+    weights = echam6_t63_cellarea.cell_area.values[mask & (var_diff > 0)]
+)
+# 8
+# 268
+
+# np.mean(var_diff[mask][var_diff[mask] < 0])
+# np.mean(var_diff[mask][var_diff[mask] > 0])
+
 
 for imask in ['AIS', 'EAIS', 'WAIS', 'AP']:
     # imask = 'AIS'

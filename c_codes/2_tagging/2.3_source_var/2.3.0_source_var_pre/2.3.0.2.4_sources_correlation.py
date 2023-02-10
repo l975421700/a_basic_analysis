@@ -45,7 +45,7 @@ from matplotlib import cm
 import cartopy.crs as ccrs
 plt.rcParams['pcolor.shading'] = 'auto'
 mpl.rcParams['figure.dpi'] = 600
-mpl.rc('font', family='Times New Roman', size=8)
+mpl.rc('font', family='Times New Roman', size=10)
 mpl.rcParams['axes.linewidth'] = 0.2
 plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
@@ -139,7 +139,7 @@ with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
 
 
 # -----------------------------------------------------------------------------
-# region source lat and sst
+# region source lat and var
 
 imask = 'AIS'
 mask = echam6_t63_ais_mask['mask'][imask]
@@ -163,14 +163,58 @@ pearsonr(
 # PearsonRResult(statistic=-0.8164258799993254, pvalue=0.0)
 
 
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot annual source lat vs. wind10
+
+imask = 'AIS'
+mask = echam6_t63_ais_mask['mask'][imask]
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.6_var_correlation/6.1.3.6.0_wind10/6.1.3.6.0 ' + expid[i] + ' correlation lat_wind10 am_AIS.png'
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
+
 sns.scatterplot(
     pre_weighted_var[expid[i]]['lat']['am'].values[mask],
-    pre_weighted_var[expid[i]]['rh2m']['am'].values[mask],
+    pre_weighted_var[expid[i]]['wind10']['am'].values[mask],
 )
-plt.savefig('figures/test/trial.png')
+
+linearfit = linregress(
+    x = pre_weighted_var[expid[i]]['lat']['am'].values[mask],
+    y = pre_weighted_var[expid[i]]['wind10']['am'].values[mask],
+    )
+ax.axline((0, linearfit.intercept), slope = linearfit.slope, lw=0.5,
+          c='r')
+plt.text(
+    0.05, 0.05,
+    '$y = $' + str(np.round(linearfit.slope, 1)) + '$x + $' + \
+        str(np.round(linearfit.intercept, 1)) + \
+            '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 2)),
+        transform=ax.transAxes, linespacing=1.5)
+
+ax.set_xlim(-46, -34)
+ax.set_xlabel('Source latitude [$°\;S$]')
+ax.xaxis.set_major_formatter(remove_trailing_zero_pos_abs)
+ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+
+ax.set_ylim(10, 11.4)
+ax.set_ylabel('Source wind10 [$m\;s^{-1}$]')
+
+ax.grid(
+    True, which='both',
+    linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+
+fig.subplots_adjust(left=0.16, right=0.98, bottom=0.15, top=0.98)
+plt.savefig(output_png)
 plt.close()
 
 
 # endregion
 # -----------------------------------------------------------------------------
+
 

@@ -6,6 +6,7 @@ expid = [
     ]
 i = 0
 
+
 # -----------------------------------------------------------------------------
 # region import packages
 
@@ -17,8 +18,6 @@ warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
 sys.path.append('/work/ollie/qigao001')
-import datetime
-import psutil
 
 # data analysis
 import numpy as np
@@ -34,8 +33,6 @@ import pandas as pd
 from metpy.interpolate import cross_section
 from statsmodels.stats import multitest
 import pycircstat as circ
-from geopy.distance import geodesic, great_circle
-from haversine import haversine, haversine_vector
 
 # plot
 import matplotlib as mpl
@@ -91,54 +88,54 @@ from a_basic_analysis.b_module.statistics import (
     check_normality_3d,
     check_equal_variance_3d,
     ttest_fdr_control,
+    find_cumulative_threshold,
 )
 
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
+    plt_mesh_pars,
 )
 
 # endregion
 # -----------------------------------------------------------------------------
 
 
-#-------------------------------- check
-transport_distance_epe_st = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance_epe_st_binned.pkl', 'rb') as f:
-    transport_distance_epe_st[expid[i]] = pickle.load(f)
+# -----------------------------------------------------------------------------
+# region import data
 
-epe_st_weighted_lon = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_st_weighted_lon_binned.pkl', 'rb') as f:
-    epe_st_weighted_lon[expid[i]] = pickle.load(f)
+wisoaprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
+    wisoaprt_alltime[expid[i]] = pickle.load(f)
 
-epe_st_weighted_lat = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.epe_st_weighted_lat_binned.pkl', 'rb') as f:
-    epe_st_weighted_lat[expid[i]] = pickle.load(f)
+quantile_interval  = np.arange(1, 99 + 1e-4, 1, dtype=np.int64)
+quantiles = dict(zip(
+    [str(x) + '%' for x in quantile_interval],
+    [x/100 for x in quantile_interval],
+    ))
 
-lon = epe_st_weighted_lon[expid[i]]['90.5%']['am'].lon
-lat = epe_st_weighted_lon[expid[i]]['90.5%']['am'].lat
-lon_2d, lat_2d = np.meshgrid(lon, lat,)
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
 
-iqtl = '90.5%'
-ilat = 40
+
+wisoaprt_cum_qtl = {}
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_cum_qtl.pkl',
+    'rb') as f:
+    wisoaprt_cum_qtl[expid[i]] = pickle.load(f)
+
+ilat = 70
 ilon = 90
 
-for ialltime in ['ann']:
-    # ialltime = 'mm'
-    itime = -4
-    
-    local = [lat_2d[ilat, ilon], lon_2d[ilat, ilon]]
-    source = [
-        epe_st_weighted_lat[expid[i]][iqtl][ialltime][itime, ilat, ilon].values,
-        epe_st_weighted_lon[expid[i]][iqtl][ialltime][itime, ilat, ilon].values,]
-    
-    print(haversine(local, source, normalize=True))
-    print(transport_distance_epe_st[expid[i]][iqtl][ialltime][itime, ilat, ilon].values)
+iqtl = '30%'
+aprt_data = wisoaprt_alltime[expid[i]]['daily'][:, 0, ilat, ilon].values
+res1 = find_cumulative_threshold(aprt_data, threshold=quantiles[iqtl])
+res2 = wisoaprt_cum_qtl[expid[i]]['quantiles'][iqtl][ilat, ilon].values
+print(res1 == res2)
 
-ialltime = 'am'
-local = [lat_2d[ilat, ilon], lon_2d[ilat, ilon]]
-source = [
-    epe_st_weighted_lat[expid[i]][iqtl][ialltime][ilat, ilon].values,
-    epe_st_weighted_lon[expid[i]][iqtl][ialltime][ilat, ilon].values,]
+res3 = (aprt_data <= res1)
+res4 = wisoaprt_cum_qtl[expid[i]]['mask'][iqtl][:, ilat, ilon].values
+print((res3 == res4).all())
 
-print(haversine(local, source, normalize=True))
-print(transport_distance_epe_st[expid[i]][iqtl][ialltime][ilat, ilon].values)
+

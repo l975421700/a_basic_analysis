@@ -222,12 +222,15 @@ cor_sam_var = xr.corr(
 cor_sam_var_p = xs.pearson_r_eff_p_value(
     b_sam_mon, mon_epe_days['original'], dim='time').values
 
+cor_sam_var.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+cor_sam_var_p[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+
 #---------------- plot
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.4, cm_max=0.3, cm_interval1=0.1, cm_interval2=0.1,
-    cmap='PuOr', reversed=False, asymmetric=True,)
-pltticks[-4] = 0
+    cm_min=-0.4, cm_max=0.4, cm_interval1=0.1, cm_interval2=0.1,
+    cmap='PuOr', reversed=False, asymmetric=False,)
+pltticks[-5] = 0
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_epe/6.1.9.0 ' + expid[i] + ' correlation sam_epe mon.png'
 
@@ -254,7 +257,7 @@ cbar = fig.colorbar(
     )
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel(
-    'Correlation coefficient between SAM\nand EPE frequency [$-$]',
+    'Correlation: SAM & EPE frequency',
     linespacing=1.5, fontsize=8)
 fig.savefig(output_png)
 
@@ -280,6 +283,7 @@ sam_posneg_epe['neg'] = \
 sam_posneg_epe['neg_mean'] = sam_posneg_epe['neg'].mean(dim='time')
 
 posneg_epe_diff = sam_posneg_epe['pos_mean'] - sam_posneg_epe['neg_mean']
+posneg_epe_diff.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_epe/6.1.9.0 ' + expid[i] + ' sam_posneg_epe mon.png'
 
@@ -301,7 +305,8 @@ ttest_fdr_res = ttest_fdr_control(
     sam_posneg_epe['pos'],
     sam_posneg_epe['neg'],)
 ax.scatter(
-    x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
+    x=lon_2d[ttest_fdr_res & echam6_t63_ais_mask['mask']['AIS']],
+    y=lat_2d[ttest_fdr_res & echam6_t63_ais_mask['mask']['AIS']],
     s=0.5, c='k', marker='.', edgecolors='none',
     transform=ccrs.PlateCarree(),
     )

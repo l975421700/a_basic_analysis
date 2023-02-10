@@ -132,12 +132,15 @@ with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
 # region plot (transport_distance_epe_st - transport_distance_dc_st) am Antarctica
 
 iqtl = '90%'
+plt_data = (transport_distance_epe_st[expid[i]][iqtl]['am'] - \
+    transport_distance_dc_st[expid[i]][iqtl]['am']) / 100
+plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.5_travel_distance/6.1.7.0.5 ' + expid[i] + ' transport_distance_epe_st - transport_distance_dc_st am Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-2, cm_max=18, cm_interval1=2, cm_interval2=2, cmap='BrBG',
-    reversed=False)
+    cm_min=-10, cm_max=10, cm_interval1=2, cm_interval2=2, cmap='BrBG',
+    reversed=True)
 
 fig, ax = hemisphere_plot(northextent=-60, figsize=np.array([5.8, 7]) / 2.54)
 
@@ -146,15 +149,15 @@ cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 plt1 = ax.pcolormesh(
     lon,
     lat,
-    (transport_distance_epe_st[expid[i]][iqtl]['am'] - \
-        transport_distance_dc_st[expid[i]][iqtl]['am']) / 100,
+    plt_data,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 ttest_fdr_res = ttest_fdr_control(
     transport_distance_epe_st[expid[i]][iqtl]['ann'],
     transport_distance_dc_st[expid[i]][iqtl]['ann'],
     )
 ax.scatter(
-    x=lon_2d[ttest_fdr_res], y=lat_2d[ttest_fdr_res],
+    x=lon_2d[ttest_fdr_res & echam6_t63_ais_mask['mask']['AIS']],
+    y=lat_2d[ttest_fdr_res & echam6_t63_ais_mask['mask']['AIS']],
     s=0.5, c='k', marker='.', edgecolors='none',
     transform=ccrs.PlateCarree(),
     )

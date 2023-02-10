@@ -204,32 +204,36 @@ for irow in range(nrow):
         
         if (irow == 0):
             plt_ctr = axs[irow, jcol].contour(
-                lon, lat, aprt_frc[iregion]['am'], [30],
+                lon, lat.sel(lat=slice(-60, -90)),
+                aprt_frc[iregion]['am'].sel(lat=slice(-60, -90)), [30],
                 colors = 'red', linewidths=0.5, transform=ccrs.PlateCarree(),)
             axs[irow, jcol].clabel(
                 plt_ctr, inline=1, colors='red', fmt=remove_trailing_zero,
-                levels=[30], inline_spacing=10, fontsize=8,)
+                levels=[30], inline_spacing=10, fontsize=10,)
         if ((irow == 1) & (jcol == 0)):
             plt_ctr = axs[irow, jcol].contour(
-                lon, lat, aprt_frc[iregion]['am'], [5],
+                lon, lat.sel(lat=slice(-60, -90)),
+                aprt_frc[iregion]['am'].sel(lat=slice(-60, -90)), [5],
                 colors = 'red', linewidths=0.5, transform=ccrs.PlateCarree(),)
             axs[irow, jcol].clabel(
                 plt_ctr, inline=1, colors='red', fmt=remove_trailing_zero,
-                levels=[5], inline_spacing=10, fontsize=8,)
+                levels=[5], inline_spacing=10, fontsize=10,)
         if ((irow == 1) & (jcol == 2)):
             plt_ctr = axs[irow, jcol].contour(
-                lon, lat, aprt_frc[iregion]['am'], [10],
+                lon, lat.sel(lat=slice(-60, -90)),
+                aprt_frc[iregion]['am'].sel(lat=slice(-60, -90)), [10],
                 colors = 'red', linewidths=0.5, transform=ccrs.PlateCarree(),)
             axs[irow, jcol].clabel(
                 plt_ctr, inline=1, colors='red', fmt=remove_trailing_zero,
-                levels=[10], inline_spacing=10, fontsize=8,)
+                levels=[10], inline_spacing=10, fontsize=10,)
         
         cbar = fig.colorbar(
             plt_cmp, ax=axs[irow, jcol], aspect=30,
             orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
             pad=0.05,
             )
-        cbar.ax.set_xlabel('Fraction of annual mean precipitation from\n' + region_labels[count] + ' [$\%$]', linespacing=1.5, fontsize=8,)
+        cbar.ax.set_xlabel(region_labels[count] + ' [$\%$]', linespacing=1.5,)
+# 'Fraction of total precipitation from\n' +
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     80, 100, 2, 4, cmap='Greens', reversed=False)
@@ -241,13 +245,14 @@ plt_cmp = axs[1, 3].pcolormesh(
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
 plt_ctr = axs[1, 3].contour(
-    lon, lat,
-    aprt_frc['Atlantic Ocean']['am'] + aprt_frc['Indian Ocean']['am'] + \
-        aprt_frc['Pacific Ocean']['am'] + aprt_frc['Southern Ocean']['am'],
+    lon, lat.sel(lat=slice(-60, -90)),
+    (aprt_frc['Atlantic Ocean']['am'] + aprt_frc['Indian Ocean']['am'] + \
+        aprt_frc['Pacific Ocean']['am'] + aprt_frc['Southern Ocean']['am']
+        ).sel(lat=slice(-60, -90)),
     [90], colors = 'red', linewidths=0.5, transform=ccrs.PlateCarree(),)
 axs[1, 3].clabel(
     plt_ctr, inline=1, colors='red', fmt=remove_trailing_zero,
-    levels=[90], inline_spacing=10, fontsize=8,)
+    levels=[90], inline_spacing=10, fontsize=10,)
 
 # Atlantic: [-70, 20] => [70, 160], 90
 atlantic_arc = patches.Arc(
@@ -276,8 +281,8 @@ cbar = fig.colorbar(
     pad=0.05,
     )
 cbar.ax.set_xlabel(
-    'Fraction of annual mean precipitation from\nOpen ocean [$\%$]',
-    linespacing=1.5, fontsize=8,)
+    'Open ocean [$\%$]',
+    linespacing=1.5,)
 
 fig.subplots_adjust(
     left=fm_left, right = fm_right, bottom = fm_bottom, top = fm_top,

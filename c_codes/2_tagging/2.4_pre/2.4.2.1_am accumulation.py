@@ -153,13 +153,13 @@ echam6_t63_cellarea = xr.open_dataset('scratch/others/land_sea_masks/echam6_t63_
 
 #-------- plot configuration
 output_png = 'figures/6_awi/6.1_echam6/6.1.4_precipitation/6.1.4.2_pe/6.1.4.2 ' + expid[i] + ' Medley_rec accumulation am Antarctica.png'
-cbar_label1 = 'Annual mean accumulation [$mm \; day^{-1}$]'
-cbar_label2 = 'Differences in annual mean accumulation [$\%$]'
+cbar_label1 = 'Accumulation [$mm \; day^{-1}$]'
+cbar_label2 = 'Differences: (a)/(b) - 1 [$\%$]'
 
 pltlevel = np.array([0, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 6, 8, 10,])
 pltticks = np.array([0, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 6, 8, 10,])
 pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
-pltcmp = cm.get_cmap('BrBG', len(pltlevel)-1)
+pltcmp = cm.get_cmap('Blues', len(pltlevel)-1)
 
 pltlevel2 = np.arange(-100, 100 + 1e-4, 20)
 pltticks2 = np.arange(-100, 100 + 1e-4, 20)
@@ -168,10 +168,10 @@ pltcmp2 = cm.get_cmap('PiYG', len(pltlevel2)-1)
 
 plt_data1 = (wisoaprt_alltime[expid[i]]['am'][0] + \
     wisoevap_alltime[expid[i]]['am'][0]).compute() * seconds_per_d
-plt_data1.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
 plt_data2 = acc_recon.recon_acc_bc.sel(
     years=slice(100, 200)).mean(dim='years') / 365
 plt_data3 = (regrid(plt_data1) / regrid(plt_data2) - 1).compute() * 100
+plt_data1.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
 
 plt_std1 = ((wisoaprt_alltime[expid[i]]['ann'][:, 0] + \
     wisoevap_alltime[expid[i]]['ann'][:, 0]).std(
@@ -183,6 +183,7 @@ plt_std2 = (acc_recon.recon_acc_bc.sel(
 # stats.describe(plt_std2, axis=None, nan_policy='omit')
 
 ctr_level = np.arange(0, 40 + 1e-4, 10)
+ctr_color = 'r'
 
 nrow = 1
 ncol = 3
@@ -226,32 +227,32 @@ plt_ctr1 = axs[0].contour(
     plt_std1.lon,
     plt_std1.lat,
     plt_std1,
-    levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+    levels=ctr_level, colors = ctr_color, transform=ccrs.PlateCarree(),
     linewidths=0.5, linestyles='solid',
 )
 axs[0].clabel(
-    plt_ctr1, inline=1, colors='b', fmt=remove_trailing_zero,
-    levels=ctr_level, inline_spacing=10, fontsize=5,)
+    plt_ctr1, inline=1, colors=ctr_color, fmt=remove_trailing_zero,
+    levels=ctr_level, inline_spacing=10, fontsize=8,)
 
 plt_ctr2 = axs[1].contour(
     plt_std2.lon,
     plt_std2.lat,
     plt_std2,
-    levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+    levels=ctr_level, colors = ctr_color, transform=ccrs.PlateCarree(),
     linewidths=0.5, linestyles='solid',
 )
 axs[1].clabel(
-    plt_ctr2, inline=1, colors='b', fmt=remove_trailing_zero,
-    levels=ctr_level, inline_spacing=10, fontsize=5,)
+    plt_ctr2, inline=1, colors=ctr_color, fmt=remove_trailing_zero,
+    levels=ctr_level, inline_spacing=10, fontsize=8,)
 
 plt.text(
-    0.5, 1.05, 'ECHAM6 PI', transform=axs[0].transAxes,
+    0.5, 1.05, 'Simulation', transform=axs[0].transAxes,
     ha='center', va='center', rotation='horizontal')
 plt.text(
-    0.5, 1.05, 'Reconstruction_Medley (1800-1900)', transform=axs[1].transAxes,
+    0.5, 1.05, 'Reconstruction', transform=axs[1].transAxes,
     ha='center', va='center', rotation='horizontal')
 plt.text(
-    0.5, 1.05, 'ECHAM6/Reconstruction_Medley - 1', transform=axs[2].transAxes,
+    0.5, 1.05, '(a)/(b) - 1', transform=axs[2].transAxes,
     ha='center', va='center', rotation='horizontal')
 
 cbar1 = fig.colorbar(
@@ -268,7 +269,7 @@ cbar2.ax.set_xlabel(cbar_label2, linespacing=2)
 
 h1, _ = plt_ctr1.legend_elements()
 plt.legend(
-    [h1[0]], ['Percentage [$\%$] of annual standard deviation to annual mean accumulation'],
+    [h1[0]], ['Percentage [$\%$] of one standard deviation to the mean'],
     bbox_to_anchor = (0.5, -0.25), frameon=False)
 
 fig.subplots_adjust(

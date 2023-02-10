@@ -5,49 +5,17 @@ expid = [
     'pi_m_502_5.0',
     ]
 i = 0
-ifile_start = 120
-ifile_end   = 720
 
-ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
 
-# var_name  = 'sst'
-# itag      = 7
-# min_sf    = 268.15
-# max_sf    = 318.15
-
-# var_name  = 'lat'
-# itag      = 5
-# min_sf    = -90
-# max_sf    = 90
-
-# var_name  = 'rh2m'
-# itag      = 8
-# min_sf    = 0
-# max_sf    = 1.6
-
-# var_name  = 'wind10'
-# itag      = 9
-# min_sf    = 0
-# max_sf    = 28
-
-# var_name  = 'sinlon'
-# itag      = 11
-# min_sf    = -1
-# max_sf    = 1
-
-var_name  = 'coslon'
-itag      = 12
-min_sf    = -1
-max_sf    = 1
-
-print(var_name)
 # -----------------------------------------------------------------------------
 # region import packages
 
 # management
 import glob
+import pickle
 import warnings
 warnings.filterwarnings('ignore')
+import os
 import sys  # print(sys.path)
 sys.path.append('/work/ollie/qigao001')
 
@@ -56,19 +24,77 @@ import numpy as np
 import xarray as xr
 import dask
 dask.config.set({"array.slicing.split_large_chunks": True})
-import pickle
+from dask.diagnostics import ProgressBar
+pbar = ProgressBar()
+pbar.register()
+from scipy import stats
+import xesmf as xe
+import pandas as pd
+from metpy.interpolate import cross_section
+from statsmodels.stats import multitest
+import pycircstat as circ
 
-from a_basic_analysis.b_module.source_properties import (
-    source_properties,
+# plot
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from matplotlib.colors import BoundaryNorm
+from matplotlib import cm
+import cartopy.crs as ccrs
+plt.rcParams['pcolor.shading'] = 'auto'
+mpl.rcParams['figure.dpi'] = 600
+mpl.rc('font', family='Times New Roman', size=10)
+mpl.rcParams['axes.linewidth'] = 0.2
+plt.rcParams.update({"mathtext.fontset": "stix"})
+import matplotlib.animation as animation
+import seaborn as sns
+
+# self defined
+from a_basic_analysis.b_module.mapplot import (
+    globe_plot,
+    hemisphere_plot,
+    quick_var_plot,
+    mesh2plot,
+    framework_plot1,
+    remove_trailing_zero,
+    remove_trailing_zero_pos,
 )
 
 from a_basic_analysis.b_module.basic_calculations import (
     mon_sea_ann,
 )
 
-from dask.diagnostics import ProgressBar
-pbar = ProgressBar()
-pbar.register()
+from a_basic_analysis.b_module.namelist import (
+    month,
+    month_num,
+    month_dec,
+    month_dec_num,
+    seasons,
+    seasons_last_num,
+    hours,
+    months,
+    month_days,
+    zerok,
+    panel_labels,
+    seconds_per_d,
+)
+
+from a_basic_analysis.b_module.source_properties import (
+    source_properties,
+    calc_lon_diff,
+)
+
+from a_basic_analysis.b_module.statistics import (
+    fdr_control_bh,
+    check_normality_3d,
+    check_equal_variance_3d,
+    ttest_fdr_control,
+    find_cumulative_threshold,
+)
+
+from a_basic_analysis.b_module.component_plot import (
+    cplot_ice_cores,
+    plt_mesh_pars,
+)
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -77,23 +103,10 @@ pbar.register()
 # -----------------------------------------------------------------------------
 # region import data
 
-fl_wiso_daily = sorted(glob.glob(
-    exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'
-        ))
+wisoaprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
+    wisoaprt_alltime[expid[i]] = pickle.load(f)
 
-exp_out_wiso_daily = xr.open_mfdataset(
-    fl_wiso_daily[ifile_start:ifile_end],
-    data_vars='minimal', coords='minimal', parallel=True)
-
-wisoaprt_epe_st = {}
-with open(
-    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe_st.pkl',
-    'rb') as f:
-    wisoaprt_epe_st[expid[i]] = pickle.load(f)
-
-quantiles = {'90%': 0.9, '10%': 0.1,}
-
-'''
 quantile_interval  = np.arange(1, 99 + 1e-4, 1, dtype=np.int64)
 quantiles = dict(zip(
     [str(x) + '%' for x in quantile_interval],
@@ -101,107 +114,26 @@ quantiles = dict(zip(
     ))
 
 '''
+'''
 # endregion
 # -----------------------------------------------------------------------------
 
+wisoaprt_cum_qtl = {}
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_cum_qtl.pkl',
+    'rb') as f:
+    wisoaprt_cum_qtl[expid[i]] = pickle.load(f)
 
-# -----------------------------------------------------------------------------
-# region set indices
+ilat = 70
+ilon = 90
 
-kwiso2 = 3
+iqtl = '30%'
+aprt_data = wisoaprt_alltime[expid[i]]['daily'][:, 0, ilat, ilon].values
+res1 = find_cumulative_threshold(aprt_data, threshold=quantiles[iqtl])
+res2 = wisoaprt_cum_qtl[expid[i]]['quantiles'][iqtl][ilat, ilon].values
+print(res1 == res2)
 
-kstart = kwiso2 + sum(ntags[:itag])
-kend   = kwiso2 + sum(ntags[:(itag+1)])
-
-print(kstart); print(kend)
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-#-------------------------------- check
-
-var_names = ['sst', 'lat', 'rh2m', 'wind10', 'sinlon', 'coslon']
-itags     = [7, 5, 8, 9, 11, 12]
-min_sfs   = [268.15, -90, 0, 0, -1, -1]
-max_sfs   = [318.15, 90, 1.6, 28, 1, 1]
-
-
-for ivar in range(6):
-    # ivar = 0
-    print(var_names[ivar] + ': ' + str(itags[ivar]) + ': ' + \
-        str(min_sfs[ivar]) + ': ' + str(max_sfs[ivar]))
-    
-    kwiso2 = 3
-    
-    kstart = kwiso2 + sum(ntags[:itags[ivar]])
-    kend   = kwiso2 + sum(ntags[:(itags[ivar]+1)])
-    
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dc_st_weighted_' + var_names[ivar] + '.pkl',
-          'rb') as f:
-        dc_st_weighted_var = pickle.load(f)
-    
-    ocean_pre = (
-        exp_out_wiso_daily.wisoaprl.sel(wisotype=slice(kstart+2, kstart+3)) + \
-            exp_out_wiso_daily.wisoaprc.sel(wisotype=slice(kstart+2, kstart+3))
-            ).sum(dim='wisotype').compute()
-    var_scaled_pre = (
-        exp_out_wiso_daily.wisoaprl.sel(wisotype=kstart+2) + \
-            exp_out_wiso_daily.wisoaprc.sel(wisotype=kstart+2)).compute()
-    
-    var_scaled_pre.values[ocean_pre.values < 2e-8] = 0
-    ocean_pre.values[ocean_pre.values < 2e-8] = 0
-    
-    dc_st_var_scaled_pre = {}
-    dc_st_ocean_pre = {}
-    dc_st_var_scaled_pre_alltime = {}
-    dc_st_ocean_pre_alltime = {}
-    
-    for iqtl in ['90%', '10%']: # quantiles.keys():
-        # iqtl = '90%'
-        print(iqtl)
-        
-        dc_st_var_scaled_pre[iqtl] = var_scaled_pre.copy().where(
-            wisoaprt_epe_st[expid[i]]['mask'][iqtl] == False,
-            other=0,
-        )
-        dc_st_ocean_pre[iqtl] = ocean_pre.copy().where(
-            wisoaprt_epe_st[expid[i]]['mask'][iqtl] == False,
-            other=0,
-        )
-        
-        #---- check
-        print((dc_st_var_scaled_pre[iqtl].values[wisoaprt_epe_st[expid[i]]['mask'][iqtl] == False] == var_scaled_pre.values[wisoaprt_epe_st[expid[i]]['mask'][iqtl] == False]).all())
-        print((dc_st_var_scaled_pre[iqtl].values[wisoaprt_epe_st[expid[i]]['mask'][iqtl]] == 0).all())
-        print((dc_st_ocean_pre[iqtl].values[wisoaprt_epe_st[expid[i]]['mask'][iqtl] == False] == ocean_pre.values[wisoaprt_epe_st[expid[i]]['mask'][iqtl] == False]).all())
-        print((dc_st_ocean_pre[iqtl].values[wisoaprt_epe_st[expid[i]]['mask'][iqtl]] == 0).all())
-        
-        #-------- mon_sea_ann values
-        dc_st_var_scaled_pre_alltime[iqtl] = mon_sea_ann(dc_st_var_scaled_pre[iqtl])
-        dc_st_ocean_pre_alltime[iqtl]      = mon_sea_ann(dc_st_ocean_pre[iqtl])
-        
-        #---- check
-        print((dc_st_var_scaled_pre_alltime[iqtl]['daily'] == dc_st_var_scaled_pre[iqtl]).all().values)
-        print((dc_st_ocean_pre_alltime[iqtl]['daily'] == dc_st_ocean_pre[iqtl]).all().values)
-        
-        for ialltime in ['mon', 'sea', 'ann', 'mm', 'sm', 'am']:
-            # ialltime = 'am'
-            print(ialltime)
-            res01 = source_properties(
-                dc_st_var_scaled_pre_alltime[iqtl][ialltime],
-                dc_st_ocean_pre_alltime[iqtl][ialltime],
-                min_sfs[ivar], max_sfs[ivar],
-                var_names[ivar], prefix = 'dc_st_weighted_', threshold = 0,
-            ).values
-            
-            res02 = dc_st_weighted_var[iqtl][ialltime].values
-            
-            print((res01[np.isfinite(res01)] == res02[np.isfinite(res02)]).all())
-            print(np.nanmax(abs((res01 - res02) / res01)))
-            print(np.nanmax(abs(res01 - res02)))
-            
-    del dc_st_weighted_var
-
-
-
+res3 = (aprt_data <= res1)
+res4 = wisoaprt_cum_qtl[expid[i]]['mask'][iqtl][:, ilat, ilon].values
+print((res3 == res4).all())
 
