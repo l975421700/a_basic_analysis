@@ -122,6 +122,9 @@ wisoaprt_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
     wisoaprt_alltime[expid[i]] = pickle.load(f)
 
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -142,16 +145,19 @@ fig, ax = hemisphere_plot(
 
 cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
+plt_data = wisoaprt_masked_st[expid[i]]['frc']['90%']['am'] * 100
+plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+
 plt1 = ax.pcolormesh(
     lon,
     lat,
-    wisoaprt_masked_st[expid[i]]['frc']['90%']['am'] * 100,
+    plt_data,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
 plt_ctr = ax.contour(
     lon,
     lat.sel(lat=slice(-60, -90)),
-    wisoaprt_masked_st[expid[i]]['frc']['90%']['am'].sel(lat=slice(-60, -90))*100,
+    plt_data.sel(lat=slice(-60, -90)),
     [50],
     colors = 'b', linewidths=0.3, transform=ccrs.PlateCarree(),)
 ax.clabel(

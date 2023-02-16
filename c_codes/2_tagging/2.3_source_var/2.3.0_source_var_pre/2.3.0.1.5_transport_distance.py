@@ -124,6 +124,9 @@ wisoaprt_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
     wisoaprt_alltime[expid[i]] = pickle.load(f)
 
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -193,8 +196,8 @@ transport_distance[expid[i]]['am'].to_netcdf('scratch/test/test.nc')
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.5_transport_distance/6.1.3.5 ' + expid[i] + ' transport_distance am_sm_5 Antarctica.png'
 cbar_label1 = 'Source-sink distance [$10^{2} \; km$]'
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=10, cm_max=70, cm_interval1=5, cm_interval2=10, cmap='BrBG',)
-ctr_level = np.array([5, 10, 20, 30, ])
+    cm_min=30, cm_max=70, cm_interval1=4, cm_interval2=8, cmap='BrBG',)
+ctr_level = np.array([5, 10, 15, 20, ])
 
 nrow = 1
 ncol = 5
@@ -213,42 +216,55 @@ for jcol in range(ncol):
         ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
 
 #-------- Am
+plt_data = transport_distance[expid[i]]['am'] / 100
+plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+
 plt_mesh1 = axs[0].pcolormesh(
     lon, lat,
-    transport_distance[expid[i]]['am'] / 100,
+    plt_data,
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+plt_data = transport_distance[expid[i]]['ann'].std(
+        dim='time', skipna=True, ddof=1) / 100
+plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+
 plt_ctr1 = axs[0].contour(
     lon, lat.sel(lat=slice(-60, -90)),
-    transport_distance[expid[i]]['ann'].std(
-        dim='time', skipna=True, ddof=1).sel(lat=slice(-60, -90)) / 100,
-    levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+    plt_data.sel(lat=slice(-60, -90)),
+    levels=ctr_level, colors = 'r', transform=ccrs.PlateCarree(),
     linewidths=0.5, linestyles='solid',)
 axs[0].clabel(
-    plt_ctr1, inline=1, colors='b', fmt=remove_trailing_zero,
-    levels=ctr_level, inline_spacing=10, fontsize=6,)
+    plt_ctr1, inline=1, colors='r', fmt=remove_trailing_zero,
+    levels=ctr_level, inline_spacing=10,)
 plt.text(
     0.5, 1.04, 'Annual mean', transform=axs[0].transAxes,
     ha='center', va='center', rotation='horizontal')
 
 #-------- sm
 for iseason in range(len(seasons)):
+    plt_data = transport_distance[expid[i]]['sm'].sel(season=seasons[iseason]) / 100
+    plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+    
     axs[1 + iseason].pcolormesh(
         lon, lat,
-        transport_distance[expid[i]]['sm'].sel(season=seasons[iseason]) / 100,
+        plt_data,
         norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+    
+    plt_data = transport_distance[expid[i]]['sea'].sel(
+        time=(transport_distance[expid[i]]['sea'].time.dt.month == \
+            seasons_last_num[iseason])
+        ).std(dim='time', skipna=True, ddof=1) / 100
+    plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+    
     plt_ctr = axs[1 + iseason].contour(
         lon, lat.sel(lat=slice(-60, -90)),
-        transport_distance[expid[i]]['sea'].sel(
-            time=(transport_distance[expid[i]]['sea'].time.dt.month == \
-                seasons_last_num[iseason])
-            ).std(dim='time', skipna=True, ddof=1
-                  ).sel(lat=slice(-60, -90)) / 100,
-        levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+        plt_data.sel(lat=slice(-60, -90)),
+        levels=ctr_level, colors = 'r', transform=ccrs.PlateCarree(),
         linewidths=0.5, linestyles='solid',
     )
     axs[1 + iseason].clabel(
-        plt_ctr, inline=1, colors='b', fmt=remove_trailing_zero,
-        levels=ctr_level, inline_spacing=10, fontsize=6,)
+        plt_ctr, inline=1, colors='r', fmt=remove_trailing_zero,
+        levels=ctr_level, inline_spacing=10,)
     plt.text(
         0.5, 1.04, seasons[iseason], transform=axs[1 + iseason].transAxes,
         ha='center', va='center', rotation='horizontal')

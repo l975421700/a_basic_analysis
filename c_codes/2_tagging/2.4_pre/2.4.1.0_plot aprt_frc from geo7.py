@@ -123,6 +123,9 @@ major_ice_core_site = major_ice_core_site.loc[
     major_ice_core_site['age (kyr)'] > 120, ]
 ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+
 '''
 '''
 # endregion
@@ -143,11 +146,11 @@ region_labels = ['Ocean south of 50$°\;S$',
                  'Land excl. AIS', 'AIS', 'SH sea ice']
 
 cm_mins = [0, 0, 0, 0, 0, 0, 0]
-cm_maxs = [60, 60, 60, 60, 10, 10, 20]
-cm_interval1s = [5, 5, 5, 5, 1, 1, 2]
-cm_interval2s = [10, 10, 10, 10, 2, 2, 4]
+cm_maxs = [50, 50, 50, 50, 10, 10, 10]
+cm_interval1s = [5, 5, 5, 5, 1, 1, 1]
+cm_interval2s = [10, 10, 10, 10, 2, 2, 2]
 
-cmaps = ['Blues', 'Blues', 'Blues', 'Blues', 'Purples', 'Purples', 'Greens']
+cmaps = ['Blues', 'Blues', 'Blues', 'Blues', 'Purples', 'Purples', 'Purples']
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     0, 100, 10, 20, cmap='Blues', reversed=False)
@@ -197,15 +200,18 @@ for irow in range(nrow):
             cmap=cmaps[count],
             reversed=False)
         
+        plt_data = aprt_frc[iregion]['am']
+        plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+        
         plt_cmp = axs[irow, jcol].pcolormesh(
             lon, lat,
-            aprt_frc[iregion]['am'],
+            plt_data,
             norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
         
         if (irow == 0):
             plt_ctr = axs[irow, jcol].contour(
                 lon, lat.sel(lat=slice(-60, -90)),
-                aprt_frc[iregion]['am'].sel(lat=slice(-60, -90)), [30],
+                plt_data.sel(lat=slice(-60, -90)), [30],
                 colors = 'red', linewidths=0.5, transform=ccrs.PlateCarree(),)
             axs[irow, jcol].clabel(
                 plt_ctr, inline=1, colors='red', fmt=remove_trailing_zero,
@@ -213,7 +219,7 @@ for irow in range(nrow):
         if ((irow == 1) & (jcol == 0)):
             plt_ctr = axs[irow, jcol].contour(
                 lon, lat.sel(lat=slice(-60, -90)),
-                aprt_frc[iregion]['am'].sel(lat=slice(-60, -90)), [5],
+                plt_data.sel(lat=slice(-60, -90)), [5],
                 colors = 'red', linewidths=0.5, transform=ccrs.PlateCarree(),)
             axs[irow, jcol].clabel(
                 plt_ctr, inline=1, colors='red', fmt=remove_trailing_zero,
@@ -221,11 +227,11 @@ for irow in range(nrow):
         if ((irow == 1) & (jcol == 2)):
             plt_ctr = axs[irow, jcol].contour(
                 lon, lat.sel(lat=slice(-60, -90)),
-                aprt_frc[iregion]['am'].sel(lat=slice(-60, -90)), [10],
+                plt_data.sel(lat=slice(-60, -90)), [5],
                 colors = 'red', linewidths=0.5, transform=ccrs.PlateCarree(),)
             axs[irow, jcol].clabel(
                 plt_ctr, inline=1, colors='red', fmt=remove_trailing_zero,
-                levels=[10], inline_spacing=10, fontsize=10,)
+                levels=[5], inline_spacing=10, fontsize=10,)
         
         cbar = fig.colorbar(
             plt_cmp, ax=axs[irow, jcol], aspect=30,
@@ -238,17 +244,18 @@ for irow in range(nrow):
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     80, 100, 2, 4, cmap='Greens', reversed=False)
 
+plt_data = aprt_frc['Atlantic Ocean']['am'] + aprt_frc['Indian Ocean']['am'] + \
+    aprt_frc['Pacific Ocean']['am'] + aprt_frc['Southern Ocean']['am']
+plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+
 plt_cmp = axs[1, 3].pcolormesh(
     lon, lat,
-    aprt_frc['Atlantic Ocean']['am'] + aprt_frc['Indian Ocean']['am'] + \
-        aprt_frc['Pacific Ocean']['am'] + aprt_frc['Southern Ocean']['am'],
+    plt_data,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
 plt_ctr = axs[1, 3].contour(
     lon, lat.sel(lat=slice(-60, -90)),
-    (aprt_frc['Atlantic Ocean']['am'] + aprt_frc['Indian Ocean']['am'] + \
-        aprt_frc['Pacific Ocean']['am'] + aprt_frc['Southern Ocean']['am']
-        ).sel(lat=slice(-60, -90)),
+    plt_data.sel(lat=slice(-60, -90)),
     [90], colors = 'red', linewidths=0.5, transform=ccrs.PlateCarree(),)
 axs[1, 3].clabel(
     plt_ctr, inline=1, colors='red', fmt=remove_trailing_zero,

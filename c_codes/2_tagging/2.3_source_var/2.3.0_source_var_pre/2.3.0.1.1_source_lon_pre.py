@@ -120,6 +120,9 @@ wisoaprt_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
     wisoaprt_alltime[expid[i]] = pickle.load(f)
 
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+
 '''
 pre_weighted_sinlon = {}
 pre_weighted_coslon = {}
@@ -259,9 +262,9 @@ fig.savefig(output_png, dpi=1200)
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/6.1.3.1 ' + expid[i] + ' pre_weighted_lon am_sm_5 Antarctica.png'
 cbar_label1 = 'Relative source longitude [$°$]'
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-180, cm_max=180, cm_interval1=30, cm_interval2=60,
+    cm_min=-180, cm_max=180, cm_interval1=30, cm_interval2=30,
     cmap='twilight_shifted',)
-ctr_level = np.array([4, 8, 12, 16, ])
+ctr_level = np.arange(0, 100+1e-4, 20)
 
 nrow = 1
 ncol = 5
@@ -280,46 +283,59 @@ for jcol in range(ncol):
         ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
 
 #-------- Am
+plt_data = calc_lon_diff(pre_weighted_lon[expid[i]]['am'], lon_2d)
+plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+
 plt_mesh1 = axs[0].pcolormesh(
     lon, lat,
-    calc_lon_diff(pre_weighted_lon[expid[i]]['am'], lon_2d),
+    plt_data,
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+plt_data = circstd(pre_weighted_lon[expid[i]]['ann'],
+            high=360, low=0, axis=0, nan_policy='omit')
+plt_data[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+
 plt_ctr1 = axs[0].contour(
-    lon, lat.sel(lat=slice(-60, -90)),
-    circstd(pre_weighted_lon[expid[i]]['ann'].sel(lat=slice(-60, -90)),
-            high=360, low=0, axis=0, nan_policy='omit'),
-    levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+    lon, lat,
+    plt_data,
+    levels=ctr_level, colors = 'r', transform=ccrs.PlateCarree(),
     linewidths=0.5, linestyles='solid',)
 axs[0].clabel(
-    plt_ctr1, inline=1, colors='b', fmt=remove_trailing_zero,
-    levels=ctr_level, inline_spacing=10, fontsize=6,)
+    plt_ctr1, inline=1, colors='r', fmt=remove_trailing_zero,
+    levels=ctr_level, inline_spacing=10,)
 plt.text(
     0.5, 1.04, 'Annual mean', transform=axs[0].transAxes,
     ha='center', va='center', rotation='horizontal')
 
 #-------- sm
 for iseason in range(len(seasons)):
+    plt_data = calc_lon_diff(
+        pre_weighted_lon[expid[i]]['sm'].sel(season=seasons[iseason]),
+        lon_2d)
+    plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+    
     axs[1 + iseason].pcolormesh(
         lon, lat,
-        calc_lon_diff(
-            pre_weighted_lon[expid[i]]['sm'].sel(season=seasons[iseason]),
-            lon_2d),
+        plt_data,
         norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
     
-    plt_ctr = axs[1 + iseason].contour(
-        lon, lat.sel(lat=slice(-60, -90)),
-        circstd(
-            pre_weighted_lon[expid[i]]['sea'].sel(
+    plt_data = circstd(
+        pre_weighted_lon[expid[i]]['sea'].sel(
             time=(pre_weighted_lon[expid[i]]['sea'].time.dt.month == \
                 seasons_last_num[iseason])
-            ).sel(lat=slice(-60, -90)),
-            high=360, low=0, axis=0, nan_policy='omit'),
-        levels=ctr_level, colors = 'b', transform=ccrs.PlateCarree(),
+            ),
+        high=360, low=0, axis=0, nan_policy='omit')
+    plt_data[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+    
+    plt_ctr = axs[1 + iseason].contour(
+        lon, lat,
+        plt_data,
+        levels=ctr_level, colors = 'r', transform=ccrs.PlateCarree(),
         linewidths=0.5, linestyles='solid',
     )
     axs[1 + iseason].clabel(
-        plt_ctr, inline=1, colors='b', fmt=remove_trailing_zero,
-        levels=ctr_level, inline_spacing=10, fontsize=6,)
+        plt_ctr, inline=1, colors='r', fmt=remove_trailing_zero,
+        levels=ctr_level, inline_spacing=10,)
     
     plt.text(
         0.5, 1.04, seasons[iseason], transform=axs[1 + iseason].transAxes,
