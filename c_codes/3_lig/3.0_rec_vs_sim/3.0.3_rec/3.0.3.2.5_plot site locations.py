@@ -1,5 +1,11 @@
 
 
+symbol_size = 80
+linewidth = 1
+fontsize = 12
+import matplotlib as mpl
+mpl.rc('font', family='Times New Roman', size=12)
+
 # -----------------------------------------------------------------------------
 # region import packages
 
@@ -32,14 +38,12 @@ from scipy.stats import circstd
 import cmip6_preprocessing.preprocessing as cpp
 
 # plot
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm, ListedColormap
 from matplotlib import cm
 import cartopy.crs as ccrs
 plt.rcParams['pcolor.shading'] = 'auto'
 mpl.rcParams['figure.dpi'] = 600
-mpl.rc('font', family='Times New Roman', size=10)
 mpl.rcParams['axes.linewidth'] = 0.2
 plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
@@ -141,6 +145,487 @@ lat = sst_regrid_alltime_ens_stats['lig_pi']['am']['mean'].lat
 
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot site locations - Antarctica ccrs.PlateCarree
+
+
+#-------------------------------- annual SST
+
+extent=[-180, 180, -90, -30]
+fig, ax = regional_plot(
+    extent=extent,
+    xmajortick_int = 60, ymajortick_int = 20,
+    figsize = np.array([30, 6.4]) / 2.54,
+    central_longitude = 180, fontsize=fontsize,)
+
+# JH
+ax.scatter(
+    x = lig_recs['JH']['SO_ann'].Longitude,
+    y = lig_recs['JH']['SO_ann'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='s', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+# EC SST
+ax.scatter(
+    x = lig_recs['EC']['SO_ann'].Longitude,
+    y = lig_recs['EC']['SO_ann'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='o', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+# EC SAT
+ax.scatter(
+    x = lig_recs['EC']['AIS_am'].Longitude,
+    y = lig_recs['EC']['AIS_am'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='o', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+# DC
+plt_scatter = ax.scatter(
+    x = lig_recs['DC']['annual_128'].Longitude,
+    y = lig_recs['DC']['annual_128'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='v', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+plt.text(
+    0.5, -0.2, 'Annual SST and SAT',
+    horizontalalignment='center', verticalalignment='center',
+    transform=ax.transAxes, size=fontsize,)
+
+for itext in range(len(lig_datasubsets['annual_sst']['No.'])):
+    ax.text(
+        lig_datasubsets['annual_sst']['Longitude'].iloc[itext],
+        lig_datasubsets['annual_sst']['Latitude'].iloc[itext],
+        lig_datasubsets['annual_sst']['No.'].iloc[itext],
+        horizontalalignment='center', verticalalignment='center',
+        transform=ccrs.PlateCarree(), size=fontsize, clip_on=True,
+    )
+
+for itext in range(len(lig_datasubsets['annual_sat']['No.'])):
+    ax.text(
+        lig_datasubsets['annual_sat']['Longitude'].iloc[itext],
+        lig_datasubsets['annual_sat']['Latitude'].iloc[itext],
+        lig_datasubsets['annual_sat']['No.'].iloc[itext],
+        horizontalalignment='center', verticalalignment='center',
+        transform=ccrs.PlateCarree(), size=fontsize,
+    )
+
+fig.subplots_adjust(left=0.04, right=0.999, bottom=0.16, top=0.999)
+
+output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.1_rec_site_locations/7.0.3.1 locations of annual sst_sat reconstructions_SO.pdf'
+fig.savefig(output_png)
+
+
+
+
+#-------------------------------- Summer SST
+
+
+extent=[-180, 180, -90, -30]
+fig, ax = regional_plot(
+    extent=extent,
+    xmajortick_int = 60, ymajortick_int = 20,
+    figsize = np.array([30, 6.4]) / 2.54,
+    central_longitude = 180, fontsize=fontsize,)
+
+# JH
+ax.scatter(
+    x = lig_recs['JH']['SO_jfm'].Longitude,
+    y = lig_recs['JH']['SO_jfm'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='s', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+# EC
+ax.scatter(
+    x = lig_recs['EC']['SO_jfm'].Longitude,
+    y = lig_recs['EC']['SO_jfm'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='o', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+# MC
+ax.scatter(
+    x = lig_recs['MC']['interpolated'].Longitude,
+    y = lig_recs['MC']['interpolated'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='^', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+# DC
+ax.scatter(
+    x = lig_recs['DC']['JFM_128'].Longitude,
+    y = lig_recs['DC']['JFM_128'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='v', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+plt.text(
+    0.5, -0.2, 'Summer SST',
+    horizontalalignment='center', verticalalignment='center',
+    transform=ax.transAxes, size=fontsize,)
+
+for itext in range(len(lig_datasubsets['summer_sst']['No.'])):
+    ax.text(
+        lig_datasubsets['summer_sst']['Longitude'].iloc[itext],
+        lig_datasubsets['summer_sst']['Latitude'].iloc[itext],
+        lig_datasubsets['summer_sst']['No.'].iloc[itext],
+        horizontalalignment='center', verticalalignment='center',
+        transform=ccrs.PlateCarree(), size=fontsize, clip_on=True,
+    )
+
+fig.subplots_adjust(left=0.04, right=0.999, bottom=0.16, top=0.999)
+
+output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.1_rec_site_locations/7.0.3.1 locations of summer sst reconstructions_SO.pdf'
+fig.savefig(output_png)
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot site locations - zoomin
+
+#-------------------------------- annual SST - NZ
+
+extent=[140, 190, -55, -30]
+fig, ax = regional_plot(
+    extent=extent,
+    xmajortick_int = 10, ymajortick_int = 10,
+    figsize = np.array([11.5, 6.4]) / 2.54,
+    central_longitude = 180, fontsize=fontsize,)
+
+# JH
+ax.scatter(
+    x = lig_recs['JH']['SO_ann'].Longitude,
+    y = lig_recs['JH']['SO_ann'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='s', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+# EC SST
+ax.scatter(
+    x = lig_recs['EC']['SO_ann'].Longitude,
+    y = lig_recs['EC']['SO_ann'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='o', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+# EC SAT
+ax.scatter(
+    x = lig_recs['EC']['AIS_am'].Longitude,
+    y = lig_recs['EC']['AIS_am'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='o', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+# DC
+plt_scatter = ax.scatter(
+    x = lig_recs['DC']['annual_128'].Longitude,
+    y = lig_recs['DC']['annual_128'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='v', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+plt.text(
+    0.5, -0.2, 'Annual SST and SAT',
+    horizontalalignment='center', verticalalignment='center',
+    transform=ax.transAxes, size=fontsize,)
+
+for itext in range(len(lig_datasubsets['annual_sst']['No.'])):
+    ax.text(
+        lig_datasubsets['annual_sst']['Longitude'].iloc[itext],
+        lig_datasubsets['annual_sst']['Latitude'].iloc[itext],
+        lig_datasubsets['annual_sst']['No.'].iloc[itext],
+        horizontalalignment='center', verticalalignment='center',
+        transform=ccrs.PlateCarree(), size=fontsize, clip_on=True,
+    )
+
+for itext in range(len(lig_datasubsets['annual_sat']['No.'])):
+    ax.text(
+        lig_datasubsets['annual_sat']['Longitude'].iloc[itext],
+        lig_datasubsets['annual_sat']['Latitude'].iloc[itext],
+        lig_datasubsets['annual_sat']['No.'].iloc[itext],
+        horizontalalignment='center', verticalalignment='center',
+        transform=ccrs.PlateCarree(), size=fontsize,
+    )
+
+fig.subplots_adjust(left=0.1, right=0.94, bottom=0.2, top=0.96)
+
+output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.1_rec_site_locations/7.0.3.1 locations of annual sst_sat reconstructions_NZ.pdf'
+fig.savefig(output_png)
+
+
+#-------------------------------- annual SST - zoomIndian
+
+extent=[75, 100, -50, -40]
+fig, ax = regional_plot(
+    extent=extent,
+    xmajortick_int = 5, ymajortick_int = 5,
+    xminortick_int = 2.5, yminortick_int = 2.5,
+    figsize = np.array([11.5, 5.6]) / 2.54, fontsize=fontsize,)
+
+# JH
+ax.scatter(
+    x = lig_recs['JH']['SO_ann'].Longitude,
+    y = lig_recs['JH']['SO_ann'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='s', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+# EC SST
+ax.scatter(
+    x = lig_recs['EC']['SO_ann'].Longitude,
+    y = lig_recs['EC']['SO_ann'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='o', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+# EC SAT
+ax.scatter(
+    x = lig_recs['EC']['AIS_am'].Longitude,
+    y = lig_recs['EC']['AIS_am'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='o', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+# DC
+plt_scatter = ax.scatter(
+    x = lig_recs['DC']['annual_128'].Longitude,
+    y = lig_recs['DC']['annual_128'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='v', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+plt.text(
+    0.5, -0.24, 'Annual SST and SAT',
+    horizontalalignment='center', verticalalignment='center',
+    transform=ax.transAxes, size=fontsize,)
+
+for itext in range(len(lig_datasubsets['annual_sst']['No.'])):
+    ax.text(
+        lig_datasubsets['annual_sst']['Longitude'].iloc[itext],
+        lig_datasubsets['annual_sst']['Latitude'].iloc[itext],
+        lig_datasubsets['annual_sst']['No.'].iloc[itext],
+        horizontalalignment='center', verticalalignment='center',
+        transform=ccrs.PlateCarree(), size=fontsize, clip_on=True,
+    )
+
+for itext in range(len(lig_datasubsets['annual_sat']['No.'])):
+    ax.text(
+        lig_datasubsets['annual_sat']['Longitude'].iloc[itext],
+        lig_datasubsets['annual_sat']['Latitude'].iloc[itext],
+        lig_datasubsets['annual_sat']['No.'].iloc[itext],
+        horizontalalignment='center', verticalalignment='center',
+        transform=ccrs.PlateCarree(), size=fontsize,
+    )
+
+fig.subplots_adjust(left=0.12, right=0.94, bottom=0.2, top=0.98)
+
+output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.1_rec_site_locations/7.0.3.1 locations of annual sst_sat reconstructions_zoomIndian.pdf'
+fig.savefig(output_png)
+
+
+
+#-------------------------------- summer SST - zoom_indian
+
+extent=[0, 15, -60, -35]
+fig, ax = regional_plot(
+    extent=extent,
+    xmajortick_int = 5, ymajortick_int = 10,
+    figsize = np.array([5, 6.4]) / 2.54,
+    central_longitude = 0, fontsize=fontsize,)
+
+# JH
+ax.scatter(
+    x = lig_recs['JH']['SO_jfm'].Longitude,
+    y = lig_recs['JH']['SO_jfm'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='s', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+# EC
+ax.scatter(
+    x = lig_recs['EC']['SO_jfm'].Longitude,
+    y = lig_recs['EC']['SO_jfm'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='o', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+# MC
+ax.scatter(
+    x = lig_recs['MC']['interpolated'].Longitude,
+    y = lig_recs['MC']['interpolated'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='^', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+# DC
+ax.scatter(
+    x = lig_recs['DC']['JFM_128'].Longitude,
+    y = lig_recs['DC']['JFM_128'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='v', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+plt.text(
+    0.4, -0.22, 'Summer SST',
+    horizontalalignment='center', verticalalignment='center',
+    transform=ax.transAxes,)
+
+for itext in range(len(lig_datasubsets['summer_sst']['No.'])):
+    ax.text(
+        lig_datasubsets['summer_sst']['Longitude'].iloc[itext],
+        lig_datasubsets['summer_sst']['Latitude'].iloc[itext],
+        lig_datasubsets['summer_sst']['No.'].iloc[itext],
+        horizontalalignment='center', verticalalignment='center',
+        transform=ccrs.PlateCarree(), size=fontsize, clip_on=True,
+    )
+
+fig.subplots_adjust(left=0.24, right=0.9, bottom=0.2, top=0.98)
+
+output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.1_rec_site_locations/7.0.3.1 locations of summer sst reconstructions_zoomIndian.pdf'
+fig.savefig(output_png)
+
+
+
+
+#-------------------------------- summer SST - zoom_indian2
+
+extent=[70, 100, -60, -40]
+fig, ax = regional_plot(
+    extent=extent,
+    xmajortick_int = 10, ymajortick_int = 10,
+    figsize = np.array([8.4, 6.4]) / 2.54, fontsize=fontsize,)
+
+# JH
+ax.scatter(
+    x = lig_recs['JH']['SO_jfm'].Longitude,
+    y = lig_recs['JH']['SO_jfm'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='s', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+# EC
+ax.scatter(
+    x = lig_recs['EC']['SO_jfm'].Longitude,
+    y = lig_recs['EC']['SO_jfm'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='o', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+# MC
+ax.scatter(
+    x = lig_recs['MC']['interpolated'].Longitude,
+    y = lig_recs['MC']['interpolated'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='^', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+# DC
+ax.scatter(
+    x = lig_recs['DC']['JFM_128'].Longitude,
+    y = lig_recs['DC']['JFM_128'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='v', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+plt.text(
+    0.5, -0.2, 'Summer SST',
+    horizontalalignment='center', verticalalignment='center',
+    transform=ax.transAxes,)
+
+for itext in range(len(lig_datasubsets['summer_sst']['No.'])):
+    ax.text(
+        lig_datasubsets['summer_sst']['Longitude'].iloc[itext],
+        lig_datasubsets['summer_sst']['Latitude'].iloc[itext],
+        lig_datasubsets['summer_sst']['No.'].iloc[itext],
+        horizontalalignment='center', verticalalignment='center',
+        transform=ccrs.PlateCarree(), size=fontsize, clip_on=True,
+    )
+
+fig.subplots_adjust(left=0.14, right=0.92, bottom=0.14, top=0.98)
+
+output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.1_rec_site_locations/7.0.3.1 locations of summer sst reconstructions_zoomIndian2.pdf'
+fig.savefig(output_png)
+
+
+
+
+#-------------------------------- summer SST - zoom_NZ
+
+extent=[165, 180, -50, -35]
+fig, ax = regional_plot(
+    extent=extent,
+    xmajortick_int = 5, ymajortick_int = 5,
+    xminortick_int = 5, yminortick_int = 5,
+    figsize = np.array([6, 6.4]) / 2.54, fontsize=fontsize,)
+
+# JH
+ax.scatter(
+    x = lig_recs['JH']['SO_jfm'].Longitude,
+    y = lig_recs['JH']['SO_jfm'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='s', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+# EC
+ax.scatter(
+    x = lig_recs['EC']['SO_jfm'].Longitude,
+    y = lig_recs['EC']['SO_jfm'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='o', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+# MC
+ax.scatter(
+    x = lig_recs['MC']['interpolated'].Longitude,
+    y = lig_recs['MC']['interpolated'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='^', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+# DC
+ax.scatter(
+    x = lig_recs['DC']['JFM_128'].Longitude,
+    y = lig_recs['DC']['JFM_128'].Latitude,
+    c = 'white', s = symbol_size,
+    lw=linewidth, marker='v', edgecolors = 'blue', zorder=2, alpha=0.75,
+    transform=ccrs.PlateCarree(),)
+
+plt.text(
+    0.5, -0.22, 'Summer SST',
+    horizontalalignment='center', verticalalignment='center',
+    transform=ax.transAxes,)
+
+for itext in range(len(lig_datasubsets['summer_sst']['No.'])):
+    ax.text(
+        lig_datasubsets['summer_sst']['Longitude'].iloc[itext],
+        lig_datasubsets['summer_sst']['Latitude'].iloc[itext],
+        lig_datasubsets['summer_sst']['No.'].iloc[itext],
+        horizontalalignment='center', verticalalignment='center',
+        transform=ccrs.PlateCarree(), size=fontsize, clip_on=True,
+    )
+
+fig.subplots_adjust(left=0.2, right=0.92, bottom=0.18, top=0.98)
+
+output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.1_rec_site_locations/7.0.3.1 locations of summer sst reconstructions_zoomNZ.pdf'
+fig.savefig(output_png)
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+
+
 
 
 # -----------------------------------------------------------------------------
@@ -276,12 +761,11 @@ fig.savefig(output_png)
 # -----------------------------------------------------------------------------
 # region plot site locations - Atlantic sector
 
-symbol_size = 25
-
 #-------------------------------- annual SST
 
 extent=[-70, 20, -90, -38]
-fig, ax = regional_plot(extent=extent, figsize = np.array([8.8, 5.6]) / 2.54)
+fig, ax = regional_plot(
+    extent=extent, figsize = np.array([8.8, 5.6]) / 2.54, fontsize=fontsize,)
 
 # JH
 ax.scatter(
@@ -346,7 +830,8 @@ fig.savefig(output_png)
 
 
 extent=[-70, 20, -90, -38]
-fig, ax = regional_plot(extent=extent, figsize = np.array([8.8, 5.6]) / 2.54)
+fig, ax = regional_plot(
+    extent=extent, figsize = np.array([8.8, 5.6]) / 2.54, fontsize=fontsize,)
 
 # JH
 ax.scatter(
@@ -405,11 +890,10 @@ fig.savefig(output_png)
 # -----------------------------------------------------------------------------
 # region plot site locations - Indian sector
 
-symbol_size = 25
-
 #-------------------------------- annual SST
 extent=[20, 140, -90, -38]
-fig, ax = regional_plot(extent=extent, figsize = np.array([11.4, 5.8]) / 2.54)
+fig, ax = regional_plot(
+    extent=extent, figsize = np.array([11.4, 5.8]) / 2.54, fontsize=fontsize,)
 
 # JH
 ax.scatter(
@@ -476,7 +960,8 @@ fig.savefig(output_png)
 
 
 extent=[20, 140, -90, -38]
-fig, ax = regional_plot(extent=extent, figsize = np.array([11.4, 5.8]) / 2.54)
+fig, ax = regional_plot(
+    extent=extent, figsize = np.array([11.4, 5.8]) / 2.54, fontsize=fontsize,)
 
 # JH
 ax.scatter(
@@ -536,15 +1021,12 @@ fig.savefig(output_png)
 # -----------------------------------------------------------------------------
 # region plot site locations - Pacific sector
 
-symbol_size = 25
-
-
 #-------------------------------- annual SST
 
 extent=[140, 290, -90, -38]
 fig, ax = regional_plot(
     extent=extent, figsize = np.array([13, 5.6]) / 2.54,
-    central_longitude = 180)
+    central_longitude = 180, fontsize=fontsize,)
 
 # JH
 ax.scatter(
@@ -612,7 +1094,7 @@ fig.savefig(output_png)
 extent=[140, 290, -90, -38]
 fig, ax = regional_plot(
     extent=extent, figsize = np.array([13, 5.6]) / 2.54,
-    central_longitude = 180)
+    central_longitude = 180, fontsize=fontsize,)
 
 # JH
 ax.scatter(
@@ -663,490 +1145,6 @@ fig.subplots_adjust(left=0.08, right=0.99, bottom=0.1, top=0.99)
 
 output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.1_rec_site_locations/7.0.3.1 locations of summer sst reconstructions_pacific.pdf'
 fig.savefig(output_png)
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot site locations - Antarctica ccrs.PlateCarree
-
-symbol_size = 30
-linewidth = 1
-fontsize = 12
-
-#-------------------------------- annual SST
-
-extent=[-180, 180, -90, -30]
-fig, ax = regional_plot(
-    extent=extent,
-    xmajortick_int = 30,
-    figsize = np.array([30, 6.2]) / 2.54,
-    central_longitude = 180,)
-
-# JH
-ax.scatter(
-    x = lig_recs['JH']['SO_ann'].Longitude,
-    y = lig_recs['JH']['SO_ann'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='s', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-# EC SST
-ax.scatter(
-    x = lig_recs['EC']['SO_ann'].Longitude,
-    y = lig_recs['EC']['SO_ann'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='o', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-# EC SAT
-ax.scatter(
-    x = lig_recs['EC']['AIS_am'].Longitude,
-    y = lig_recs['EC']['AIS_am'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='o', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-# DC
-plt_scatter = ax.scatter(
-    x = lig_recs['DC']['annual_128'].Longitude,
-    y = lig_recs['DC']['annual_128'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='v', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-plt.text(
-    0.5, -0.15, 'Site locations of LIG annual SST/SAT reconstructions',
-    horizontalalignment='center', verticalalignment='center',
-    transform=ax.transAxes, size=fontsize,)
-
-for itext in range(len(lig_datasubsets['annual_sst']['No.'])):
-    ax.text(
-        lig_datasubsets['annual_sst']['Longitude'].iloc[itext],
-        lig_datasubsets['annual_sst']['Latitude'].iloc[itext],
-        lig_datasubsets['annual_sst']['No.'].iloc[itext],
-        horizontalalignment='center', verticalalignment='center',
-        transform=ccrs.PlateCarree(), size=fontsize, clip_on=True,
-    )
-
-for itext in range(len(lig_datasubsets['annual_sat']['No.'])):
-    ax.text(
-        lig_datasubsets['annual_sat']['Longitude'].iloc[itext],
-        lig_datasubsets['annual_sat']['Latitude'].iloc[itext],
-        lig_datasubsets['annual_sat']['No.'].iloc[itext],
-        horizontalalignment='center', verticalalignment='center',
-        transform=ccrs.PlateCarree(), size=fontsize,
-    )
-
-fig.subplots_adjust(left=0.03, right=0.999, bottom=0.12, top=0.999)
-
-output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.1_rec_site_locations/7.0.3.1 locations of annual sst_sat reconstructions_SO.pdf'
-fig.savefig(output_png)
-
-
-
-
-#-------------------------------- Summer SST
-
-
-extent=[-180, 180, -90, -30]
-fig, ax = regional_plot(
-    extent=extent,
-    xmajortick_int = 30,
-    figsize = np.array([30, 6.2]) / 2.54,
-    central_longitude = 180,)
-
-# JH
-ax.scatter(
-    x = lig_recs['JH']['SO_jfm'].Longitude,
-    y = lig_recs['JH']['SO_jfm'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='s', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-# EC
-ax.scatter(
-    x = lig_recs['EC']['SO_jfm'].Longitude,
-    y = lig_recs['EC']['SO_jfm'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='o', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-# MC
-ax.scatter(
-    x = lig_recs['MC']['interpolated'].Longitude,
-    y = lig_recs['MC']['interpolated'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='^', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-# DC
-ax.scatter(
-    x = lig_recs['DC']['JFM_128'].Longitude,
-    y = lig_recs['DC']['JFM_128'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='v', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-plt.text(
-    0.5, -0.15, 'Site locations of LIG summer SST reconstructions',
-    horizontalalignment='center', verticalalignment='center',
-    transform=ax.transAxes, size=fontsize,)
-
-for itext in range(len(lig_datasubsets['summer_sst']['No.'])):
-    ax.text(
-        lig_datasubsets['summer_sst']['Longitude'].iloc[itext],
-        lig_datasubsets['summer_sst']['Latitude'].iloc[itext],
-        lig_datasubsets['summer_sst']['No.'].iloc[itext],
-        horizontalalignment='center', verticalalignment='center',
-        transform=ccrs.PlateCarree(), size=fontsize, clip_on=True,
-    )
-
-fig.subplots_adjust(left=0.03, right=0.999, bottom=0.12, top=0.999)
-
-output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.1_rec_site_locations/7.0.3.1 locations of summer sst reconstructions_SO.pdf'
-fig.savefig(output_png)
-
-
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot site locations - zoomin
-
-symbol_size = 30
-linewidth = 1
-fontsize = 12
-
-#-------------------------------- annual SST - NZ
-
-extent=[140, 190, -55, -30]
-fig, ax = regional_plot(
-    extent=extent,
-    xmajortick_int = 10, ymajortick_int = 5,
-    figsize = np.array([11.5, 6.2]) / 2.54,
-    central_longitude = 180,)
-
-# JH
-ax.scatter(
-    x = lig_recs['JH']['SO_ann'].Longitude,
-    y = lig_recs['JH']['SO_ann'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='s', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-# EC SST
-ax.scatter(
-    x = lig_recs['EC']['SO_ann'].Longitude,
-    y = lig_recs['EC']['SO_ann'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='o', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-# EC SAT
-ax.scatter(
-    x = lig_recs['EC']['AIS_am'].Longitude,
-    y = lig_recs['EC']['AIS_am'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='o', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-# DC
-plt_scatter = ax.scatter(
-    x = lig_recs['DC']['annual_128'].Longitude,
-    y = lig_recs['DC']['annual_128'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='v', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-plt.text(
-    0.5, -0.15, 'Site locations of LIG annual SST/SAT reconstructions',
-    horizontalalignment='center', verticalalignment='center',
-    transform=ax.transAxes, size=fontsize,)
-
-for itext in range(len(lig_datasubsets['annual_sst']['No.'])):
-    ax.text(
-        lig_datasubsets['annual_sst']['Longitude'].iloc[itext],
-        lig_datasubsets['annual_sst']['Latitude'].iloc[itext],
-        lig_datasubsets['annual_sst']['No.'].iloc[itext],
-        horizontalalignment='center', verticalalignment='center',
-        transform=ccrs.PlateCarree(), size=fontsize, clip_on=True,
-    )
-
-for itext in range(len(lig_datasubsets['annual_sat']['No.'])):
-    ax.text(
-        lig_datasubsets['annual_sat']['Longitude'].iloc[itext],
-        lig_datasubsets['annual_sat']['Latitude'].iloc[itext],
-        lig_datasubsets['annual_sat']['No.'].iloc[itext],
-        horizontalalignment='center', verticalalignment='center',
-        transform=ccrs.PlateCarree(), size=fontsize,
-    )
-
-fig.subplots_adjust(left=0.05, right=0.98, bottom=0.18, top=0.98)
-
-output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.1_rec_site_locations/7.0.3.1 locations of annual sst_sat reconstructions_NZ.pdf'
-fig.savefig(output_png)
-
-
-#-------------------------------- annual SST - zoomIndian
-
-extent=[75, 100, -50, -40]
-fig, ax = regional_plot(
-    extent=extent,
-    xmajortick_int = 5, ymajortick_int = 5,
-    xminortick_int = 2.5, yminortick_int = 2.5,
-    figsize = np.array([11.5, 5.4]) / 2.54,)
-
-# JH
-ax.scatter(
-    x = lig_recs['JH']['SO_ann'].Longitude,
-    y = lig_recs['JH']['SO_ann'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='s', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-# EC SST
-ax.scatter(
-    x = lig_recs['EC']['SO_ann'].Longitude,
-    y = lig_recs['EC']['SO_ann'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='o', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-# EC SAT
-ax.scatter(
-    x = lig_recs['EC']['AIS_am'].Longitude,
-    y = lig_recs['EC']['AIS_am'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='o', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-# DC
-plt_scatter = ax.scatter(
-    x = lig_recs['DC']['annual_128'].Longitude,
-    y = lig_recs['DC']['annual_128'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='v', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-plt.text(
-    0.5, -0.18, 'Site locations of LIG annual SST/SAT reconstructions',
-    horizontalalignment='center', verticalalignment='center',
-    transform=ax.transAxes, size=fontsize,)
-
-for itext in range(len(lig_datasubsets['annual_sst']['No.'])):
-    ax.text(
-        lig_datasubsets['annual_sst']['Longitude'].iloc[itext],
-        lig_datasubsets['annual_sst']['Latitude'].iloc[itext],
-        lig_datasubsets['annual_sst']['No.'].iloc[itext],
-        horizontalalignment='center', verticalalignment='center',
-        transform=ccrs.PlateCarree(), size=fontsize, clip_on=True,
-    )
-
-for itext in range(len(lig_datasubsets['annual_sat']['No.'])):
-    ax.text(
-        lig_datasubsets['annual_sat']['Longitude'].iloc[itext],
-        lig_datasubsets['annual_sat']['Latitude'].iloc[itext],
-        lig_datasubsets['annual_sat']['No.'].iloc[itext],
-        horizontalalignment='center', verticalalignment='center',
-        transform=ccrs.PlateCarree(), size=fontsize,
-    )
-
-fig.subplots_adjust(left=0.08, right=0.96, bottom=0.18, top=0.98)
-
-output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.1_rec_site_locations/7.0.3.1 locations of annual sst_sat reconstructions_zoomIndian.pdf'
-fig.savefig(output_png)
-
-
-
-#-------------------------------- summer SST - zoom_indian
-
-extent=[0, 15, -60, -35]
-fig, ax = regional_plot(
-    extent=extent,
-    xmajortick_int = 5, ymajortick_int = 5,
-    figsize = np.array([4, 6.2]) / 2.54,
-    central_longitude = 0,)
-
-# JH
-ax.scatter(
-    x = lig_recs['JH']['SO_jfm'].Longitude,
-    y = lig_recs['JH']['SO_jfm'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='s', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-# EC
-ax.scatter(
-    x = lig_recs['EC']['SO_jfm'].Longitude,
-    y = lig_recs['EC']['SO_jfm'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='o', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-# MC
-ax.scatter(
-    x = lig_recs['MC']['interpolated'].Longitude,
-    y = lig_recs['MC']['interpolated'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='^', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-# DC
-ax.scatter(
-    x = lig_recs['DC']['JFM_128'].Longitude,
-    y = lig_recs['DC']['JFM_128'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='v', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-plt.text(
-    0.4, -0.2, 'Site locations of\nLIG summer SST reconstructions',
-    horizontalalignment='center', verticalalignment='center',
-    transform=ax.transAxes, size=8,)
-
-for itext in range(len(lig_datasubsets['summer_sst']['No.'])):
-    ax.text(
-        lig_datasubsets['summer_sst']['Longitude'].iloc[itext],
-        lig_datasubsets['summer_sst']['Latitude'].iloc[itext],
-        lig_datasubsets['summer_sst']['No.'].iloc[itext],
-        horizontalalignment='center', verticalalignment='center',
-        transform=ccrs.PlateCarree(), size=fontsize, clip_on=True,
-    )
-
-fig.subplots_adjust(left=0.22, right=0.9, bottom=0.18, top=0.98)
-
-output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.1_rec_site_locations/7.0.3.1 locations of summer sst reconstructions_zoomIndian.pdf'
-fig.savefig(output_png)
-
-
-
-
-#-------------------------------- summer SST - zoom_indian2
-
-extent=[70, 100, -60, -40]
-fig, ax = regional_plot(
-    extent=extent,
-    xmajortick_int = 5, ymajortick_int = 5,
-    figsize = np.array([8.4, 6.2]) / 2.54,)
-
-# JH
-ax.scatter(
-    x = lig_recs['JH']['SO_jfm'].Longitude,
-    y = lig_recs['JH']['SO_jfm'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='s', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-# EC
-ax.scatter(
-    x = lig_recs['EC']['SO_jfm'].Longitude,
-    y = lig_recs['EC']['SO_jfm'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='o', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-# MC
-ax.scatter(
-    x = lig_recs['MC']['interpolated'].Longitude,
-    y = lig_recs['MC']['interpolated'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='^', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-# DC
-ax.scatter(
-    x = lig_recs['DC']['JFM_128'].Longitude,
-    y = lig_recs['DC']['JFM_128'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='v', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-plt.text(
-    0.5, -0.18, 'Site locations of LIG summer SST reconstructions',
-    horizontalalignment='center', verticalalignment='center',
-    transform=ax.transAxes, size=10,)
-
-for itext in range(len(lig_datasubsets['summer_sst']['No.'])):
-    ax.text(
-        lig_datasubsets['summer_sst']['Longitude'].iloc[itext],
-        lig_datasubsets['summer_sst']['Latitude'].iloc[itext],
-        lig_datasubsets['summer_sst']['No.'].iloc[itext],
-        horizontalalignment='center', verticalalignment='center',
-        transform=ccrs.PlateCarree(), size=fontsize, clip_on=True,
-    )
-
-fig.subplots_adjust(left=0.12, right=0.95, bottom=0.12, top=0.98)
-
-output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.1_rec_site_locations/7.0.3.1 locations of summer sst reconstructions_zoomIndian2.pdf'
-fig.savefig(output_png)
-
-
-
-
-#-------------------------------- summer SST - zoom_NZ
-
-extent=[165, 180, -50, -35]
-fig, ax = regional_plot(
-    extent=extent,
-    xmajortick_int = 5, ymajortick_int = 5,
-    xminortick_int = 5, yminortick_int = 5,
-    figsize = np.array([5.4, 6.2]) / 2.54,)
-
-# JH
-ax.scatter(
-    x = lig_recs['JH']['SO_jfm'].Longitude,
-    y = lig_recs['JH']['SO_jfm'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='s', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-# EC
-ax.scatter(
-    x = lig_recs['EC']['SO_jfm'].Longitude,
-    y = lig_recs['EC']['SO_jfm'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='o', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-# MC
-ax.scatter(
-    x = lig_recs['MC']['interpolated'].Longitude,
-    y = lig_recs['MC']['interpolated'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='^', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-# DC
-ax.scatter(
-    x = lig_recs['DC']['JFM_128'].Longitude,
-    y = lig_recs['DC']['JFM_128'].Latitude,
-    c = 'white', s = symbol_size,
-    lw=linewidth, marker='v', edgecolors = 'blue', zorder=2, alpha=0.75,
-    transform=ccrs.PlateCarree(),)
-
-plt.text(
-    0.5, -0.2, 'Site locations of\nLIG summer SST reconstructions',
-    horizontalalignment='center', verticalalignment='center',
-    transform=ax.transAxes, size=10,)
-
-for itext in range(len(lig_datasubsets['summer_sst']['No.'])):
-    ax.text(
-        lig_datasubsets['summer_sst']['Longitude'].iloc[itext],
-        lig_datasubsets['summer_sst']['Latitude'].iloc[itext],
-        lig_datasubsets['summer_sst']['No.'].iloc[itext],
-        horizontalalignment='center', verticalalignment='center',
-        transform=ccrs.PlateCarree(), size=fontsize, clip_on=True,
-    )
-
-fig.subplots_adjust(left=0.16, right=0.95, bottom=0.16, top=0.98)
-
-output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.1_rec_site_locations/7.0.3.1 locations of summer sst reconstructions_zoomNZ.pdf'
-fig.savefig(output_png)
-
 
 # endregion
 # -----------------------------------------------------------------------------

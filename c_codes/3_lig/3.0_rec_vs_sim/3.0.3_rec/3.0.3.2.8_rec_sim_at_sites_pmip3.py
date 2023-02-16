@@ -112,6 +112,11 @@ with open('scratch/cmip6/lig/sst/pmip3_anomalies_site_values.pkl', 'rb') as f:
 # -----------------------------------------------------------------------------
 
 
+symbol_size = 60
+linewidth = 1
+alpha = 0.75
+
+
 # -----------------------------------------------------------------------------
 # region compare sim_rec ann_sst
 
@@ -133,7 +138,7 @@ for irec in ['EC', 'JH', 'DC']:
         pmip3_anomalies_site_values['annual_sst'][irec]['rec_lig_pi'],
         pmip3_anomalies_site_values['annual_sst'][irec]['sim_lig_pi'],
         marker=marker_recs[irec],
-        s=25, c='white', edgecolors='k', lw=0.8, alpha=0.75,
+        s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,
         )
     
     mean_err[irec] = np.round(
@@ -148,7 +153,7 @@ ax.scatter(
     pmip3_anomalies_site_values['annual_sat']['EC']['rec_lig_pi'],
     pmip3_anomalies_site_values['annual_sat']['EC']['sim_lig_pi'],
     marker=marker_recs['EC'],
-    s=25, c='white', edgecolors='b', lw=0.8, alpha=0.75,
+    s=symbol_size, c='white', edgecolors='b', lw=linewidth, alpha=alpha,
     )
 mean_err['EC_tas'] = np.round(
     pmip3_anomalies_site_values[
@@ -161,29 +166,31 @@ rms_err['EC_tas'] = np.round(
 
 ax.plot([0, 1], [0, 1], transform=ax.transAxes,
         c='k', lw=0.5, ls='--')
+ax.hlines(0, axis_min, axis_max, colors='k', lw=0.5, linestyles='--')
+ax.vlines(0, axis_min, axis_max, colors='k', lw=0.5, linestyles='--')
 
-ax.set_ylabel('Simulated annual SST/SAT anomalies [$°C$]')
+ax.set_ylabel('Simulated annual SST and SAT [$°C$]')
 ax.set_ylim(axis_min, axis_max)
 ax.set_yticks(np.arange(axis_min, axis_max + 1e-4, 2))
 ax.yaxis.set_minor_locator(AutoMinorLocator(2))
 
-ax.set_xlabel('Reconstructed annual SST/SAT anomalies [$°C$]')
+ax.set_xlabel('Reconstructed annual SST and SAT [$°C$]')
 ax.set_xlim(axis_min, axis_max)
 ax.set_xticks(np.arange(axis_min, axis_max + 1e-4, 2))
 ax.xaxis.set_minor_locator(AutoMinorLocator(2))
 
 l1 = plt.scatter(
     [],[], marker=marker_recs['EC'],
-    s=25, c='white', edgecolors='k', lw=0.8, alpha=0.75,)
+    s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,)
 l1_1 = plt.scatter(
     [],[], marker=marker_recs['EC'],
-    s=25, c='white', edgecolors='b', lw=0.8, alpha=0.75,)
+    s=symbol_size, c='white', edgecolors='b', lw=linewidth, alpha=alpha,)
 l2 = plt.scatter(
     [],[], marker=marker_recs['JH'],
-    s=25, c='white', edgecolors='k', lw=0.8, alpha=0.75,)
+    s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,)
 l3 = plt.scatter(
     [],[], marker=marker_recs['DC'],
-    s=25, c='white', edgecolors='k', lw=0.8, alpha=0.75,)
+    s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,)
 plt.legend(
     [l1, l1_1, l2, l3,],
     ['Capron et al. (2017), SST: ' + \
@@ -198,11 +205,12 @@ plt.legend(
     loc = 'upper left', handletextpad=0.05,)
 
 plt.text(
-    0.95, 0.05, 'PMIP3 model ensembles',
+    0.95, 0.05, 'PMIP3',
     horizontalalignment='right', verticalalignment='bottom',
     transform=ax.transAxes, backgroundcolor='white',)
 
-ax.grid(True, which='both', linewidth=0.4, color='lightgray', linestyle=':')
+ax.grid(True, which='both',
+        linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 fig.subplots_adjust(left=0.14, right=0.95, bottom=0.15, top=0.97)
 fig.savefig(output_png)
 
@@ -235,7 +243,7 @@ for irec in ['EC', 'JH', 'DC', 'MC']:
         pmip3_anomalies_site_values['summer_sst'][irec]['rec_lig_pi'],
         pmip3_anomalies_site_values['summer_sst'][irec]['sim_lig_pi'],
         marker=marker_recs[irec],
-        s=25, c='white', edgecolors='k', lw=0.8, alpha=0.75,
+        s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,
         )
     
     mean_err[irec] = np.round(
@@ -248,29 +256,29 @@ for irec in ['EC', 'JH', 'DC', 'MC']:
 
 ax.plot([0, 1], [0, 1], transform=ax.transAxes,
         c='k', lw=0.5, ls='--')
+ax.hlines(0, axis_min, axis_max, colors='k', lw=0.5, linestyles='--')
+ax.vlines(0, axis_min, axis_max, colors='k', lw=0.5, linestyles='--')
 
-ax.set_ylabel('Simulated summer SST anomalies [$°C$]')
+ax.set_ylabel('Simulated summer SST [$°C$]')
 ax.set_ylim(axis_min, axis_max)
 ax.set_yticks(np.arange(axis_min, axis_max + 1e-4, 1))
-ax.yaxis.set_minor_locator(AutoMinorLocator(1))
 
-ax.set_xlabel('Reconstructed summer SST anomalies [$°C$]')
+ax.set_xlabel('Reconstructed summer SST [$°C$]')
 ax.set_xlim(axis_min, axis_max)
 ax.set_xticks(np.arange(axis_min, axis_max + 1e-4, 1))
-ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 
 l1 = plt.scatter(
     [],[], marker=marker_recs['EC'],
-    s=25, c='white', edgecolors='k', lw=0.8, alpha=0.75,)
+    s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,)
 l2 = plt.scatter(
     [],[], marker=marker_recs['JH'],
-    s=25, c='white', edgecolors='k', lw=0.8, alpha=0.75,)
+    s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,)
 l3 = plt.scatter(
     [],[], marker=marker_recs['DC'],
-    s=25, c='white', edgecolors='k', lw=0.8, alpha=0.75,)
+    s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,)
 l4 = plt.scatter(
     [],[], marker=marker_recs['MC'],
-    s=25, c='white', edgecolors='k', lw=0.8, alpha=0.75,)
+    s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,)
 plt.legend(
     [l1, l2, l3, l4,],
     ['Capron et al. (2017)    : ' + \
@@ -285,11 +293,12 @@ plt.legend(
     loc = 'upper left', handletextpad=0.05,)
 
 plt.text(
-    0.95, 0.05, 'PMIP3 model ensembles',
+    0.95, 0.05, 'PMIP3',
     horizontalalignment='right', verticalalignment='bottom',
     transform=ax.transAxes, backgroundcolor='white',)
 
-ax.grid(True, which='both', linewidth=0.4, color='lightgray', linestyle=':')
+ax.grid(True, which='both',
+        linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 fig.subplots_adjust(left=0.14, right=0.95, bottom=0.15, top=0.97)
 fig.savefig(output_png)
 

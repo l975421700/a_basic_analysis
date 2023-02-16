@@ -163,7 +163,7 @@ with open('scratch/cmip6/lig/lig_sic_regrid_alltime.pkl', 'rb') as f:
 # region plot lig Sep sic
 
 output_png = 'figures/7_lig/7.0_boundary_conditions/7.0.1_sic/7.0.1.0 lig sic sep multiple models.png'
-cbar_label = 'LIG September SIC [$\%$]'
+cbar_label = 'September SIC [$\%$]'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=0, cm_max=100, cm_interval1=10, cm_interval2=20, cmap='Blues',

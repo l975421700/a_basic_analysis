@@ -148,17 +148,17 @@ with open('scratch/cmip6/lig/sst/SO_jfm_sst_site_values.pkl', 'rb') as f:
 # region plot lig-pi am sst
 
 output_png = 'figures/7_lig/7.0_sim_rec/7.0.0_sst/7.0.0.1 lig-pi am sst multiple models 1deg.png'
-cbar_label = 'LIG annual SST anomalies [$°C$]'
+cbar_label = 'Annual SST [$°C$]'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='BrBG',)
+    cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='RdBu',)
 
 nrow = 3
 ncol = 4
 fm_bottom = 2 / (5.8*nrow + 2)
 
-max_size = 20
-scale_size = 4
+max_size = 80
+scale_size = 16
 
 fig, axs = plt.subplots(
     nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
@@ -265,17 +265,17 @@ fig.savefig(output_png)
 # region plot lig-pi summer sst
 
 output_png = 'figures/7_lig/7.0_sim_rec/7.0.0_sst/7.0.0.1 lig-pi summer sst multiple models 1deg.png'
-cbar_label = 'LIG summer SST anomalies [$°C$]'
+cbar_label = 'Summer SST [$°C$]'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='BrBG',)
+    cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='RdBu',)
 
 nrow = 3
 ncol = 4
 fm_bottom = 2 / (5.8*nrow + 2)
 
-max_size = 20
-scale_size = 4
+max_size = 80
+scale_size = 16
 
 fig, axs = plt.subplots(
     nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,

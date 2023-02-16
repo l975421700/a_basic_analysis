@@ -212,13 +212,13 @@ lig_datasets = pd.read_excel(
 
 
 output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.0 rec am sst lig-pi.png'
-cbar_label = 'LIG annual SST/SAT anomalies [$°C$]\nPMIP4 model ensembles'
+cbar_label = 'Annual SST and SAT [$°C$]\nPMIP4'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='BrBG',)
+    cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='RdBu',)
 
-max_size = 20
-scale_size = 4
+max_size = 80
+scale_size = 16
 
 fig, ax = hemisphere_plot(northextent=-38,)
 
@@ -299,13 +299,13 @@ sns.scatterplot(
 
 
 output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.0 rec jfm sst lig-pi.png'
-cbar_label = 'LIG summer SST anomalies [$°C$]\nPMIP4 model ensembles'
+cbar_label = 'Summer SST [$°C$]\nPMIP4'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='BrBG',)
+    cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='RdBu',)
 
-max_size = 20
-scale_size = 4
+max_size = 80
+scale_size = 16
 
 fig, ax = hemisphere_plot(northextent=-38,)
 
@@ -338,7 +338,7 @@ ax.scatter(
     x = lig_recs['MC']['interpolated'].Longitude,
     y = lig_recs['MC']['interpolated'].Latitude,
     c = lig_recs['MC']['interpolated']['sst_anom_hadisst_jfm'],
-    s = max_size - scale_size * 1.09,
+    s = max_size - scale_size * 1,
     lw=0.5, marker='^', edgecolors = 'black', zorder=2,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
@@ -399,7 +399,7 @@ with open('scratch/cmip6/lig/sst/sst_regrid_alltime_ens_stats.pkl', 'rb') as f:
 plt_data[np.isnan(sst_regrid_alltime_ens_stats['lig_pi']['sm']['mean'][0].values)] = np.nan
 
 output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.0 rec sep sic lig-pi.png'
-cbar_label = 'LIG Sep SIC anomalies [$\%$]\nPMIP4 model ensembles'
+cbar_label = 'Sep SIC [$\%$]\nPMIP4'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=-70, cm_max=20, cm_interval1=10, cm_interval2=10, cmap='PuOr',
@@ -417,7 +417,7 @@ plt_scatter = ax.scatter(
     x = lig_recs['MC']['interpolated'].Longitude,
     y = lig_recs['MC']['interpolated'].Latitude,
     c = lig_recs['MC']['interpolated']['sic_anom_hadisst_sep'],
-    s=16, lw=0.5, marker='^', edgecolors = 'black', zorder=2,
+    s=60, lw=0.5, marker='^', edgecolors = 'black', zorder=2,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
 cbar = fig.colorbar(

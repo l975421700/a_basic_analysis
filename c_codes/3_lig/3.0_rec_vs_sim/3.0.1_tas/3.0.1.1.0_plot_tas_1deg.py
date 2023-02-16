@@ -144,20 +144,20 @@ with open('scratch/cmip6/lig/tas/AIS_ann_tas_site_values.pkl', 'rb') as f:
 
 
 # -----------------------------------------------------------------------------
-# region plot lig-pi am sst
+# region plot lig-pi am sat
 
 output_png = 'figures/7_lig/7.0_sim_rec/7.0.2_tas/7.0.2.1 lig-pi am tas multiple models 1deg.png'
-cbar_label = 'LIG annual SAT anomalies [$°C$]'
+cbar_label = 'Annual SAT [$°C$]'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='BrBG',)
+    cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='RdBu',)
 
 nrow = 3
 ncol = 4
 fm_bottom = 2 / (5.8*nrow + 2)
 
-max_size = 20
-scale_size = 4
+max_size = 80
+scale_size = 16
 
 fig, axs = plt.subplots(
     nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,

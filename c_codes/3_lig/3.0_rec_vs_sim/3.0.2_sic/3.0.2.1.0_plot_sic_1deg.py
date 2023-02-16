@@ -147,7 +147,7 @@ with open('scratch/cmip6/lig/sic/SO_sep_sic_site_values.pkl', 'rb') as f:
 # region plot lig-pi sep sic
 
 output_png = 'figures/7_lig/7.0_sim_rec/7.0.1_sic/7.0.1.1 lig-pi sep sic multiple models 1deg.png'
-cbar_label = 'LIG Sep SIC anomalies [$\%$]'
+cbar_label = 'Sep SIC [$\%$]'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=-70, cm_max=20, cm_interval1=10, cm_interval2=10, cmap='PuOr',
@@ -178,7 +178,7 @@ for irow in range(nrow):
             x = lig_recs['MC']['interpolated'].Longitude,
             y = lig_recs['MC']['interpolated'].Latitude,
             c = lig_recs['MC']['interpolated']['sic_anom_hadisst_sep'],
-            s=16, lw=0.5, marker='^', edgecolors = 'black', zorder=2,
+            s=64, lw=0.5, marker='^', edgecolors = 'black', zorder=2,
             norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
 

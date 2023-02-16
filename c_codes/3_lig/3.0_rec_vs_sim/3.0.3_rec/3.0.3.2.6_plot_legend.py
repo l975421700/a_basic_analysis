@@ -105,36 +105,37 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region plot legend of symbols - blue
 
-mpl.rc('font', family='Times New Roman', size=8)
 
-fig, ax = plt.subplots(1, 1, figsize=np.array([3.2, 1.6]) / 2.54)
+fig, ax = plt.subplots(1, 1, figsize=np.array([4, 2.4]) / 2.54)
 
-symbol_size = 30
+symbol_size = 48
 linewidth = 1
-fontsize = 12
+alpha = 1
 
 l1 = plt.scatter(
     [],[], marker=marker_recs['EC'],
-    s=symbol_size, c='white', edgecolors='blue',
-    lw=linewidth, alpha=0.75,)
+    s=symbol_size, c='white', edgecolors='b',
+    lw=linewidth, alpha=alpha,)
 l2 = plt.scatter(
     [],[], marker=marker_recs['JH'],
-    s=symbol_size, c='white', edgecolors='blue',
-    lw=linewidth, alpha=0.75,)
+    s=symbol_size, c='white', edgecolors='b',
+    lw=linewidth, alpha=alpha,)
 l3 = plt.scatter(
     [],[], marker=marker_recs['DC'],
-    s=symbol_size, c='white', edgecolors='blue',
-    lw=linewidth, alpha=0.75,)
+    s=symbol_size, c='white', edgecolors='b',
+    lw=linewidth, alpha=alpha,)
 l4 = plt.scatter(
     [],[], marker=marker_recs['MC'],
-    s=symbol_size, c='white', edgecolors='blue',
-    lw=linewidth, alpha=0.75,)
+    s=symbol_size, c='white', edgecolors='b',
+    lw=linewidth, alpha=alpha,)
 plt.legend(
     [l1, l2, l3, l4,],
     ['Capron et al. (2017)',
      'Hoffman et al. (2017)',
      'Chandler et al. (2021)',
      'Chadwick et al. (2021)',],
+    title = 'Datasets',
+    title_fontsize = 10,
     ncol=1, frameon=False,
     loc = 'center', handletextpad=0.05,)
 
@@ -145,8 +146,6 @@ fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
 output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.3_rec_site_values/7.0.3.3 legend of symbols_blue.png'
 fig.savefig(output_png)
 
-
-
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -155,12 +154,10 @@ fig.savefig(output_png)
 # region plot legend of symbols - black
 
 
-mpl.rc('font', family='Times New Roman', size=8)
+fig, ax = plt.subplots(1, 1, figsize=np.array([4, 2.4]) / 2.54)
 
-fig, ax = plt.subplots(1, 1, figsize=np.array([3.2, 2]) / 2.54)
-
-symbol_size = 30
-linewidth = 0.5
+symbol_size = 48
+linewidth = 1
 alpha = 1
 
 l1 = plt.scatter(
@@ -204,13 +201,10 @@ fig.savefig(output_png)
 # -----------------------------------------------------------------------------
 # region plot legend of uncertainties - size
 
-mpl.rc('font', family='Times New Roman', size=8)
+fig, ax = plt.subplots(1, 1, figsize=np.array([4, 1.6]) / 2.54)
 
-fig, ax = plt.subplots(1, 1, figsize=np.array([3.6, 1.5]) / 2.54)
-
-
-max_size = 20
-scale_size = 4
+max_size = 80
+scale_size = 16
 linewidth = 0.5
 
 l1 = plt.scatter(
@@ -248,7 +242,6 @@ plt.legend(
      '3', '3',
      '4', '4'],
     title = 'Two-sigma errors [$°C$]',
-    title_fontsize = 10,
     ncol=4, frameon=False,
     loc = 'center', handletextpad=0.05, columnspacing=0.3,)
 
