@@ -50,6 +50,7 @@ plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
 from matplotlib.ticker import AutoMinorLocator
+import cartopy.feature as cfeature
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -96,6 +97,7 @@ from a_basic_analysis.b_module.statistics import (
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
     plt_mesh_pars,
+    plot_t63_contourf,
 )
 
 # endregion
@@ -135,7 +137,7 @@ iqtl = '90%'
 plt_data = calc_lon_diff(
     epe_st_weighted_lon[expid[i]][iqtl]['am'],
     dc_st_weighted_lon[expid[i]][iqtl]['am'])
-plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+# plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.1_source_lon/6.1.7.0.1 ' + expid[i] + ' epe_st_weighted_lon - dc_st_weighted_lon am Antarctica.png'
 
@@ -148,11 +150,16 @@ fig, ax = hemisphere_plot(
 
 cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
-plt1 = ax.pcolormesh(
-    lon,
-    lat,
-    plt_data,
-    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+# plt1 = ax.pcolormesh(
+#     lon,
+#     lat,
+#     plt_data,
+#     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+plt1 = plot_t63_contourf(
+    lon, lat, plt_data, ax,
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+ax.add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
 
 wwtest_res = circ.watson_williams(
     epe_st_weighted_lon[expid[i]][iqtl]['ann'] * np.pi / 180,
@@ -173,7 +180,7 @@ cbar = fig.colorbar(
     )
 cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel('EPE source longitude anomalies [$°$]', linespacing=2)
+cbar.ax.set_xlabel('HP source longitude anomalies [$°$]', linespacing=2)
 fig.savefig(output_png, dpi=600)
 
 

@@ -48,6 +48,7 @@ plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
 from matplotlib.ticker import AutoMinorLocator
+import cartopy.feature as cfeature
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -94,6 +95,7 @@ from a_basic_analysis.b_module.statistics import (
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
     plt_mesh_pars,
+    plot_t63_contourf,
 )
 
 # endregion
@@ -146,13 +148,20 @@ fig, ax = hemisphere_plot(
 cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
 plt_data = wisoaprt_masked_st[expid[i]]['frc']['90%']['am'] * 100
-plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+# plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
 
-plt1 = ax.pcolormesh(
-    lon,
-    lat,
-    plt_data,
-    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+plt1 = plot_t63_contourf(
+    lon, lat, plt_data, ax,
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+
+ax.add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
+
+# plt1 = ax.pcolormesh(
+#     lon,
+#     lat,
+#     plt_data,
+#     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
 plt_ctr = ax.contour(
     lon,
@@ -172,7 +181,7 @@ cbar = fig.colorbar(
 cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel(
-    'Contribution of EPE to total precipitation [$\%$]', linespacing=1.5,
+    'Contribution of HP to total precipitation [$\%$]', linespacing=1.5,
     fontsize=8)
 fig.savefig(output_png, dpi=600)
 

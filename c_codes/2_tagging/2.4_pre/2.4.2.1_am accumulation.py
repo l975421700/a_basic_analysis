@@ -41,6 +41,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm
 from matplotlib import cm
 import cartopy.crs as ccrs
+import cartopy.feature as cfeature
 plt.rcParams['pcolor.shading'] = 'auto'
 mpl.rcParams['figure.dpi'] = 600
 mpl.rc('font', family='Times New Roman', size=10)
@@ -97,6 +98,7 @@ from a_basic_analysis.b_module.statistics import (
 
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
+    plot_t63_contourf,
 )
 
 # endregion
@@ -150,6 +152,21 @@ echam6_t63_cellarea = xr.open_dataset('scratch/others/land_sea_masks/echam6_t63_
 # -----------------------------------------------------------------------------
 # region plot am accumulation
 
+#-------- get data
+plt_data1 = (wisoaprt_alltime[expid[i]]['am'][0] + \
+    wisoevap_alltime[expid[i]]['am'][0]).compute() * seconds_per_d
+plt_data2 = acc_recon.recon_acc_bc.sel(
+    years=slice(100, 200)).mean(dim='years') / 365
+plt_data3 = (regrid(plt_data1) / regrid(plt_data2) - 1).compute() * 100
+# plt_data1.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+
+plt_std1 = ((wisoaprt_alltime[expid[i]]['ann'][:, 0] + \
+    wisoevap_alltime[expid[i]]['ann'][:, 0]).std(
+        dim = 'time', ddof=1) * seconds_per_d / plt_data1 * 100).compute()
+plt_std1.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+plt_std2 = (acc_recon.recon_acc_bc.sel(
+    years=slice(100, 200)).std(
+        dim='years', ddof=1) / 365 / plt_data2 * 100).compute()
 
 #-------- plot configuration
 output_png = 'figures/6_awi/6.1_echam6/6.1.4_precipitation/6.1.4.2_pe/6.1.4.2 ' + expid[i] + ' Medley_rec accumulation am Antarctica.png'
@@ -159,28 +176,12 @@ cbar_label2 = 'Differences: (a)/(b) - 1 [$\%$]'
 pltlevel = np.array([0, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 6, 8, 10,])
 pltticks = np.array([0, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 6, 8, 10,])
 pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
-pltcmp = cm.get_cmap('Blues', len(pltlevel)-1)
+pltcmp = cm.get_cmap('viridis', len(pltlevel)-1).reversed()
 
 pltlevel2 = np.arange(-100, 100 + 1e-4, 20)
-pltticks2 = np.arange(-100, 100 + 1e-4, 20)
+pltticks2 = np.arange(-100, 100 + 1e-4, 40)
 pltnorm2 = BoundaryNorm(pltlevel2, ncolors=len(pltlevel2)-1, clip=True)
-pltcmp2 = cm.get_cmap('PiYG', len(pltlevel2)-1)
-
-plt_data1 = (wisoaprt_alltime[expid[i]]['am'][0] + \
-    wisoevap_alltime[expid[i]]['am'][0]).compute() * seconds_per_d
-plt_data2 = acc_recon.recon_acc_bc.sel(
-    years=slice(100, 200)).mean(dim='years') / 365
-plt_data3 = (regrid(plt_data1) / regrid(plt_data2) - 1).compute() * 100
-plt_data1.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
-
-plt_std1 = ((wisoaprt_alltime[expid[i]]['ann'][:, 0] + \
-    wisoevap_alltime[expid[i]]['ann'][:, 0]).std(
-        dim = 'time', ddof=1) * seconds_per_d / plt_data1 * 100).compute()
-plt_std2 = (acc_recon.recon_acc_bc.sel(
-    years=slice(100, 200)).std(
-        dim='years', ddof=1) / 365 / plt_data2 * 100).compute()
-# stats.describe(plt_std1, axis=None, nan_policy='omit')
-# stats.describe(plt_std2, axis=None, nan_policy='omit')
+pltcmp2 = cm.get_cmap('BrBG', len(pltlevel2)-1)
 
 ctr_level = np.arange(0, 40 + 1e-4, 10)
 ctr_color = 'r'
@@ -204,23 +205,26 @@ for jcol in range(ncol):
         ha='center', va='center', rotation='horizontal')
     ipanel += 1
 
-# ECHAM6
-plt1 = axs[0].pcolormesh(
-    plt_data1.lon,
-    plt_data1.lat,
-    plt_data1,
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-axs[1].pcolormesh(
+plt1 = plot_t63_contourf(
+    plt_data1.lon, plt_data1.lat, plt_data1, axs[0],
+    pltlevel, 'max', pltnorm, pltcmp, ccrs.PlateCarree(),)
+
+axs[0].add_feature(
+    cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
+
+axs[1].contourf(
     plt_data2.lon,
     plt_data2.lat,
     plt_data2,
+    levels = pltlevel,extend='max',
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 
 #-------- differences
-plt2 = axs[2].pcolormesh(
+plt2 = axs[2].contourf(
     plt_data3.lon,
     plt_data3.lat,
     plt_data3,
+    levels = pltlevel2,extend='both',
     norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
 
 plt_ctr1 = axs[0].contour(
@@ -257,13 +261,13 @@ plt.text(
 
 cbar1 = fig.colorbar(
     plt1, ax=axs,
-    orientation="horizontal",shrink=0.5,aspect=40,extend='max',
+    orientation="horizontal",shrink=0.5,aspect=40,
     anchor=(-0.2, 1), ticks=pltticks, format=remove_trailing_zero_pos, )
 cbar1.ax.set_xlabel(cbar_label1, linespacing=2)
 
 cbar2 = fig.colorbar(
     plt2, ax=axs,
-    orientation="horizontal",shrink=0.5,aspect=40,extend='max',
+    orientation="horizontal",shrink=0.5,aspect=40,
     anchor=(1.1,-2.2),ticks=pltticks2)
 cbar2.ax.set_xlabel(cbar_label2, linespacing=2)
 
@@ -276,16 +280,9 @@ fig.subplots_adjust(
     left=0.01, right = 0.99, bottom = fm_bottom * 0.8, top = 0.94)
 fig.savefig(output_png)
 
+
+
 '''
-plt.text(
-    0.05, 0.975, '(a)', transform=axs[0].transAxes,
-    ha='center', va='center', rotation='horizontal')
-plt.text(
-    0.05, 0.975, '(b)', transform=axs[1].transAxes,
-    ha='center', va='center', rotation='horizontal')
-plt.text(
-    0.05, 0.975, '(c)', transform=axs[2].transAxes,
-    ha='center', va='center', rotation='horizontal')
 '''
 # endregion
 # -----------------------------------------------------------------------------

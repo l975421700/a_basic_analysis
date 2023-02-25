@@ -52,6 +52,7 @@ plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
 from matplotlib.ticker import AutoMinorLocator
+import cartopy.feature as cfeature
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -98,6 +99,7 @@ from a_basic_analysis.b_module.statistics import (
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
     plt_mesh_pars,
+    plot_t63_contourf,
 )
 
 # endregion
@@ -196,7 +198,7 @@ transport_distance[expid[i]]['am'].to_netcdf('scratch/test/test.nc')
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.5_transport_distance/6.1.3.5 ' + expid[i] + ' transport_distance am_sm_5 Antarctica.png'
 cbar_label1 = 'Source-sink distance [$10^{2} \; km$]'
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=30, cm_max=70, cm_interval1=4, cm_interval2=8, cmap='BrBG',)
+    cm_min=30, cm_max=70, cm_interval1=4, cm_interval2=8, cmap='viridis_r',)
 ctr_level = np.array([5, 10, 15, 20, ])
 
 nrow = 1
@@ -216,13 +218,18 @@ for jcol in range(ncol):
         ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
 
 #-------- Am
-plt_data = transport_distance[expid[i]]['am'] / 100
-plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+plt_data = transport_distance[expid[i]]['am'].copy() / 100
+# plt_data.values[echam6_t63_ais_mask['mask']['AIS'].copy() == False] = np.nan
 
-plt_mesh1 = axs[0].pcolormesh(
-    lon, lat,
-    plt_data,
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_mesh1 = axs[0].pcolormesh(
+#     lon, lat,
+#     plt_data,
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_mesh1 = plot_t63_contourf(
+    lon, lat, plt_data, axs[0],
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+axs[0].add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
 
 plt_data = transport_distance[expid[i]]['ann'].std(
         dim='time', skipna=True, ddof=1) / 100
@@ -242,13 +249,18 @@ plt.text(
 
 #-------- sm
 for iseason in range(len(seasons)):
-    plt_data = transport_distance[expid[i]]['sm'].sel(season=seasons[iseason]) / 100
-    plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+    plt_data = transport_distance[expid[i]]['sm'].sel(season=seasons[iseason]).copy() / 100
+    # plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
     
-    axs[1 + iseason].pcolormesh(
-        lon, lat,
-        plt_data,
-        norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+    # axs[1 + iseason].pcolormesh(
+    #     lon, lat,
+    #     plt_data,
+    #     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+    plot_t63_contourf(
+        lon, lat, plt_data, axs[1 + iseason],
+        pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+    axs[1 + iseason].add_feature(
+	    cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
     
     plt_data = transport_distance[expid[i]]['sea'].sel(
         time=(transport_distance[expid[i]]['sea'].time.dt.month == \

@@ -50,6 +50,7 @@ plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
 from matplotlib.ticker import AutoMinorLocator
+import cartopy.feature as cfeature
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -99,6 +100,7 @@ from a_basic_analysis.b_module.statistics import (
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
     plt_mesh_pars,
+    plot_t63_contourf,
 )
 
 # endregion
@@ -323,21 +325,28 @@ sam_posneg_var[ivar]['neg_mean'] = sam_posneg_var[ivar]['neg'].mean(dim='time')
 output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' sam_posneg_' + ivar + '_rmm Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-6, cm_max=6, cm_interval1=1, cm_interval2=1, cmap='PiYG',
+    cm_min=-6, cm_max=6, cm_interval1=1, cm_interval2=1, cmap='BrBG',
     asymmetric=False,)
 
-plt_data = sam_posneg_var[ivar]['pos_mean'] - sam_posneg_var[ivar]['neg_mean']
-plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+plt_data = (sam_posneg_var[ivar]['pos_mean'] - \
+    sam_posneg_var[ivar]['neg_mean']).compute()
+# plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
 
 fig, ax = hemisphere_plot(northextent=-60,)
 
 cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
-plt1 = ax.pcolormesh(
-    lon,
-    lat,
-    plt_data,
-    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+plt1 = plot_t63_contourf(
+    lon, lat, plt_data, ax,
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+ax.add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
+
+# plt1 = ax.pcolormesh(
+#     lon,
+#     lat,
+#     plt_data,
+#     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 ttest_fdr_res = ttest_fdr_control(
     sam_posneg_var[ivar]['pos'],
     sam_posneg_var[ivar]['neg'],)
@@ -355,7 +364,7 @@ cbar = fig.colorbar(
     )
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel(
-    'Source latitude differences between\nSAM+ and SAM- months [$°$]',
+    'Source latitude differences [$°$]\nSAM+ vs. SAM-',
     linespacing=1.5, fontsize=8)
 fig.savefig(output_png)
 
@@ -408,17 +417,22 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
 plt_data = calc_lon_diff_np(
     sam_posneg_var[ivar]['pos_mean'],
     sam_posneg_var[ivar]['neg_mean'],)
-plt_data[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+# plt_data[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
 
 fig, ax = hemisphere_plot(northextent=-60,)
 
 cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
-plt1 = ax.pcolormesh(
-    lon,
-    lat,
-    plt_data,
-    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+# plt1 = ax.pcolormesh(
+#     lon,
+#     lat,
+#     plt_data,
+#     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+plt1 = plot_t63_contourf(
+    lon, lat, plt_data, ax,
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+ax.add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
 
 wwtest_res = circ.watson_williams(
     sam_posneg_var[ivar]['pos'].values * np.pi / 180,
@@ -439,7 +453,7 @@ cbar = fig.colorbar(
     )
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel(
-    'Source longitude differences between\nSAM+ and SAM- months [$°$]',
+    'Source longitude differences [$°$]\nSAM+ vs. SAM-',
     linespacing=1.5, fontsize=8)
 fig.savefig(output_png)
 
@@ -474,22 +488,28 @@ sam_posneg_var[ivar]['neg_mean'] = sam_posneg_var[ivar]['neg'].mean(dim='time')
 output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' sam_posneg_' + ivar + '_rmm Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-8, cm_max=8, cm_interval1=2, cm_interval2=2, cmap='BrBG',
+    cm_min=-10, cm_max=10, cm_interval1=2, cm_interval2=2, cmap='BrBG',
     reversed=True)
 
 plt_data = (sam_posneg_var[ivar]['pos_mean'] - \
     sam_posneg_var[ivar]['neg_mean']) / 100
-plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+# plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
 
 fig, ax = hemisphere_plot(northextent=-60,)
 
 cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
-plt1 = ax.pcolormesh(
-    lon,
-    lat,
-    plt_data,
-    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+# plt1 = ax.pcolormesh(
+#     lon,
+#     lat,
+#     plt_data,
+#     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+plt1 = plot_t63_contourf(
+    lon, lat, plt_data, ax,
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+ax.add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
+
 ttest_fdr_res = ttest_fdr_control(
     sam_posneg_var[ivar]['pos'],
     sam_posneg_var[ivar]['neg'],)
@@ -507,7 +527,7 @@ cbar = fig.colorbar(
     )
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel(
-    'Source-sink distance differences between\nSAM+ and SAM- months [$10^{2} \; km$]',
+    'Source-sink distance differences [$10^{2} \; km$]\nSAM+ vs. SAM-',
     linespacing=1.5, fontsize=8)
 fig.savefig(output_png)
 

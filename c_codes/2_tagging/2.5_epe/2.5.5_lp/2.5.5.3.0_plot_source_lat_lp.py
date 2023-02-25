@@ -51,6 +51,7 @@ plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
 from matplotlib.ticker import AutoMinorLocator
+import cartopy.feature as cfeature
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -97,6 +98,7 @@ from a_basic_analysis.b_module.statistics import (
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
     plt_mesh_pars,
+    plot_t63_contourf,
 )
 
 # endregion
@@ -135,14 +137,12 @@ with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
 
 plt_data = lp_weighted_lat[expid[i]]['10%']['am'] - \
     lpr_weighted_lat[expid[i]]['10%']['am']
-
-plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
-
+# plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.0_source_lat/6.1.7.0.0 ' + expid[i] + ' lp_weighted_lat_10 - lpr_weighted_lat_10 am Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-6, cm_max=6, cm_interval1=1, cm_interval2=1, cmap='PiYG',
+    cm_min=-6, cm_max=6, cm_interval1=1, cm_interval2=1, cmap='BrBG',
     reversed=True,)
 
 fig, ax = hemisphere_plot(
@@ -150,11 +150,18 @@ fig, ax = hemisphere_plot(
 
 cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
-plt1 = ax.pcolormesh(
-    lon,
-    lat,
-    plt_data,
-    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+plt1 = plot_t63_contourf(
+    lon, lat, plt_data, ax,
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+
+ax.add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
+
+# plt1 = ax.pcolormesh(
+#     lon,
+#     lat,
+#     plt_data,
+#     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 ttest_fdr_res = ttest_fdr_control(
     lp_weighted_lat[expid[i]]['10%']['ann'],
     lpr_weighted_lat[expid[i]]['10%']['ann'],

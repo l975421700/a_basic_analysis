@@ -49,6 +49,7 @@ import matplotlib.animation as animation
 import seaborn as sns
 import matplotlib.patches as mpatches
 from matplotlib import patches
+import cartopy.feature as cfeature
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -94,6 +95,8 @@ from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
     change_snsbar_width,
     plt_mesh_pars,
+    plot_t63_contourf,
+    plot_ocean_mask,
 )
 
 # endregion
@@ -145,25 +148,28 @@ region_labels = ['Ocean south of 50$°\;S$',
                  'Atlantic Ocean', 'Indian Ocean', 'Pacific Ocean',
                  'Land excl. AIS', 'AIS', 'SH sea ice']
 
+contour_color = 'b'
+
 cm_mins = [0, 0, 0, 0, 0, 0, 0]
-cm_maxs = [50, 50, 50, 50, 10, 10, 10]
+cm_maxs = [60, 60, 60, 60, 12, 12, 12]
 cm_interval1s = [5, 5, 5, 5, 1, 1, 1]
 cm_interval2s = [10, 10, 10, 10, 2, 2, 2]
 
-cmaps = ['Blues', 'Blues', 'Blues', 'Blues', 'Purples', 'Purples', 'Purples']
+cmaps = ['cividis_r', 'cividis_r', 'cividis_r', 'cividis_r',
+         'magma_r', 'magma_r', 'magma_r']
 
-pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    0, 100, 10, 20, cmap='Blues', reversed=False)
+# pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+#     0, 100, 10, 20, cmap='Blues', reversed=False)
 
 nrow = 2
 ncol = 4
 
-wspace = 0.02
-hspace = 0.12
-fm_left = 0.02
+wspace = 0.05
+hspace = 0.15
+fm_left = 0.01
 fm_bottom = hspace / nrow
-fm_right = 0.98
-fm_top = 0.98
+fm_right = 0.99
+fm_top = 0.99
 
 fig, axs = plt.subplots(
     nrow, ncol, figsize=np.array([5.8*ncol, 7.8*nrow]) / 2.54,
@@ -178,7 +184,7 @@ for irow in range(nrow):
         cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, axs[irow, jcol])
         
         plt.text(
-            0.05, 1, panel_labels[ipanel],
+            0.05, 0.95, panel_labels[ipanel],
             transform=axs[irow, jcol].transAxes,
             ha='center', va='center', rotation='horizontal')
         ipanel += 1
@@ -200,37 +206,40 @@ for irow in range(nrow):
             cmap=cmaps[count],
             reversed=False)
         
-        plt_data = aprt_frc[iregion]['am']
+        plt_data = aprt_frc[iregion]['am'].copy()
+        
+        plt_cmp = plot_t63_contourf(
+            lon, lat, plt_data, axs[irow, jcol],
+            pltlevel, 'max', pltnorm, pltcmp, ccrs.PlateCarree(),)
+        # plt_cmp = axs[irow, jcol].pcolormesh(
+        #     lon, lat,
+        #     plt_data,
+        #     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+        
         plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
-        
-        plt_cmp = axs[irow, jcol].pcolormesh(
-            lon, lat,
-            plt_data,
-            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
-        
         if (irow == 0):
             plt_ctr = axs[irow, jcol].contour(
                 lon, lat.sel(lat=slice(-60, -90)),
                 plt_data.sel(lat=slice(-60, -90)), [30],
-                colors = 'red', linewidths=0.5, transform=ccrs.PlateCarree(),)
+                colors = contour_color, linewidths=0.5, transform=ccrs.PlateCarree(),)
             axs[irow, jcol].clabel(
-                plt_ctr, inline=1, colors='red', fmt=remove_trailing_zero,
+                plt_ctr, inline=1, colors=contour_color, fmt=remove_trailing_zero,
                 levels=[30], inline_spacing=10, fontsize=10,)
         if ((irow == 1) & (jcol == 0)):
             plt_ctr = axs[irow, jcol].contour(
                 lon, lat.sel(lat=slice(-60, -90)),
                 plt_data.sel(lat=slice(-60, -90)), [5],
-                colors = 'red', linewidths=0.5, transform=ccrs.PlateCarree(),)
+                colors = contour_color, linewidths=0.5, transform=ccrs.PlateCarree(),)
             axs[irow, jcol].clabel(
-                plt_ctr, inline=1, colors='red', fmt=remove_trailing_zero,
+                plt_ctr, inline=1, colors=contour_color, fmt=remove_trailing_zero,
                 levels=[5], inline_spacing=10, fontsize=10,)
         if ((irow == 1) & (jcol == 2)):
             plt_ctr = axs[irow, jcol].contour(
                 lon, lat.sel(lat=slice(-60, -90)),
                 plt_data.sel(lat=slice(-60, -90)), [5],
-                colors = 'red', linewidths=0.5, transform=ccrs.PlateCarree(),)
+                colors = contour_color, linewidths=0.5, transform=ccrs.PlateCarree(),)
             axs[irow, jcol].clabel(
-                plt_ctr, inline=1, colors='red', fmt=remove_trailing_zero,
+                plt_ctr, inline=1, colors=contour_color, fmt=remove_trailing_zero,
                 levels=[5], inline_spacing=10, fontsize=10,)
         
         cbar = fig.colorbar(
@@ -238,28 +247,37 @@ for irow in range(nrow):
             orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
             pad=0.05,
             )
-        cbar.ax.set_xlabel(region_labels[count] + ' [$\%$]', linespacing=1.5,)
-# 'Fraction of total precipitation from\n' +
+        cbar.ax.set_xlabel(
+            region_labels[count] + ' [$\%$]', linespacing=1.5, labelpad=8)
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    80, 100, 2, 4, cmap='Greens', reversed=False)
+    80, 94, 1, 2, cmap='viridis', reversed=True)
 
 plt_data = aprt_frc['Atlantic Ocean']['am'] + aprt_frc['Indian Ocean']['am'] + \
     aprt_frc['Pacific Ocean']['am'] + aprt_frc['Southern Ocean']['am']
+
+plt_cmp = plot_t63_contourf(
+    lon, lat, plt_data, axs[1, 3],
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree()
+    )
+# plt_cmp = axs[1, 3].pcolormesh(
+#     lon, lat,
+#     plt_data,
+#     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
 plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
-
-plt_cmp = axs[1, 3].pcolormesh(
-    lon, lat,
-    plt_data,
-    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
-
 plt_ctr = axs[1, 3].contour(
     lon, lat.sel(lat=slice(-60, -90)),
     plt_data.sel(lat=slice(-60, -90)),
-    [90], colors = 'red', linewidths=0.5, transform=ccrs.PlateCarree(),)
+    [90], colors = contour_color, linewidths=0.5, transform=ccrs.PlateCarree(),)
 axs[1, 3].clabel(
-    plt_ctr, inline=1, colors='red', fmt=remove_trailing_zero,
+    plt_ctr, inline=1, colors=contour_color, fmt=remove_trailing_zero,
     levels=[90], inline_spacing=10, fontsize=10,)
+
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol].add_feature(
+            cfeature.OCEAN, color='white', zorder=2, lw=0)
 
 # Atlantic: [-70, 20] => [70, 160], 90
 atlantic_arc = patches.Arc(
@@ -285,16 +303,12 @@ axs[0, 3].add_patch(pacific_arc)
 cbar = fig.colorbar(
     plt_cmp, ax=axs[irow, jcol], aspect=30,
     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='min',
-    pad=0.05,
-    )
-cbar.ax.set_xlabel(
-    'Open ocean [$\%$]',
-    linespacing=1.5,)
+    pad=0.05,)
+cbar.ax.set_xlabel('Open ocean [$\%$]', linespacing=1.5, labelpad=8)
 
 fig.subplots_adjust(
     left=fm_left, right = fm_right, bottom = fm_bottom, top = fm_top,
-    wspace=wspace, hspace=hspace,
-    )
+    wspace=wspace, hspace=hspace,)
 
 fig.savefig(output_png)
 

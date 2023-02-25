@@ -139,6 +139,10 @@ with open(
     'rb') as f:
     tpot_plev[expid[i]] = pickle.load(f)
 
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.theta_e_alltime.pkl',
+    'rb') as f:
+    theta_e_alltime = pickle.load(f)
 
 
 '''
@@ -410,21 +414,27 @@ am_zm_source_lat = q_weighted_lat[expid[i]]['am'].weighted(
 
 am_zm_q = q_plev[expid[i]]['am'].mean(dim='lon') * 1000
 
-am_zm_tpot = tpot_plev[expid[i]]['am'].mean(dim='lon') - zerok
-
+# am_zm_tpot = tpot_plev[expid[i]]['am'].mean(dim='lon') - zerok
+am_zm_tpot = theta_e_alltime['am'].mean(dim='lon') - zerok
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.5_source_var_q/6.1.5.0_lat/6.1.5.0 ' + expid[i] + ' q_weighted_lat am zm_SH.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-60, cm_max=0, cm_interval1=2.5, cm_interval2=5, cmap='PuOr',)
+    cm_min=-60, cm_max=0, cm_interval1=2.5, cm_interval2=5, cmap='viridis',
+    reversed=False)
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([13.2, 8.8]) / 2.54)
 
 # mesh
-plt_mesh = ax.pcolormesh(
-    lat.sel(lat=slice(0, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
-    am_zm_source_lat.sel(lat=slice(0, -90), plev=slice(1e+5, 2e+4)),
-    norm=pltnorm, cmap=pltcmp,
+# plt_mesh = ax.pcolormesh(
+#     lat.sel(lat=slice(0, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
+#     am_zm_source_lat.sel(lat=slice(0, -90), plev=slice(1e+5, 2e+4)),
+#     norm=pltnorm, cmap=pltcmp,
+# )
+plt_mesh = ax.contourf(
+    lat.sel(lat=slice(3, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
+    am_zm_source_lat.sel(lat=slice(3, -90), plev=slice(1e+5, 2e+4)),
+    norm=pltnorm, cmap=pltcmp, levels=pltlevel, extend='both'
 )
 
 # # q contours
@@ -441,8 +451,8 @@ plt_mesh = ax.pcolormesh(
 # tpot contours
 tpot_intervals = np.arange(-20, 80 + 1e-4, 5)
 plt_ctr_tpot = ax.contour(
-    lat.sel(lat=slice(0, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
-    am_zm_tpot.sel(lat=slice(0, -90), plev=slice(1e+5, 2e+4)),
+    lat.sel(lat=slice(3, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
+    am_zm_tpot.sel(lat=slice(3, -90), plev=slice(1e+5, 2e+4)),
     colors='k', levels=tpot_intervals, linewidths=0.4, linestyles='solid',
     clip_on=True, zorder=2)
 ax_clabel = ax.clabel(
@@ -472,6 +482,7 @@ cbar = fig.colorbar(
     )
 # cbar.ax.set_xticklabels([remove_trailing_zero(x) for x in abs(pltticks)])
 cbar.ax.set_xlabel('Source latitude [$°\;S$]',)
+cbar.ax.invert_xaxis()
 
 # # 2nd y-axis
 # height = np.round(
@@ -494,7 +505,7 @@ ax_legend = ax.legend(
         ],
     [
         # 'Specific humidity [$g \; kg^{-1}$]',
-        'Potential temperature [$°C$]',
+        'Equivalent\npotential temperature [$°C$]',
         ],
     loc='lower left', frameon=False,
     bbox_to_anchor=(-0.13, -0.3), labelspacing=1.2,
@@ -531,23 +542,28 @@ am_zm_tpot = tpot_plev[expid[i]]['am'].mean(dim='lon') - zerok
 output_png = 'figures/6_awi/6.1_echam6/6.1.5_source_var_q/6.1.5.0_lat/6.1.5.0 ' + expid[i] + ' relative q_weighted_lat am zm_SH.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-5, cm_max=60, cm_interval1=5, cm_interval2=5, cmap='PiYG',
+    cm_min=-5, cm_max=60, cm_interval1=5, cm_interval2=5, cmap='BrBG',
     asymmetric=True)
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([13.2, 8.8]) / 2.54)
 
 # mesh
-plt_mesh = ax.pcolormesh(
-    lat.sel(lat=slice(0, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
-    am_zm_rel_source_lat.sel(lat=slice(0, -90), plev=slice(1e+5, 2e+4)),
-    norm=pltnorm, cmap=pltcmp,
+# plt_mesh = ax.pcolormesh(
+#     lat.sel(lat=slice(0, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
+#     am_zm_rel_source_lat.sel(lat=slice(0, -90), plev=slice(1e+5, 2e+4)),
+#     norm=pltnorm, cmap=pltcmp,
+# )
+plt_mesh = ax.contourf(
+    lat.sel(lat=slice(2, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
+    am_zm_rel_source_lat.sel(lat=slice(2, -90), plev=slice(1e+5, 2e+4)),
+    norm=pltnorm, cmap=pltcmp, levels=pltlevel, extend='both'
 )
 
 # q contours
 q_intervals = np.array([0.01, 0.05, 0.1, 0.5, 1, 2, 4, 6, 8, 10, 12, 14])
 plt_ctr = ax.contour(
-    lat.sel(lat=slice(0, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
-    am_zm_q.sel(lat=slice(0, -90), plev=slice(1e+5, 2e+4)),
+    lat.sel(lat=slice(2, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
+    am_zm_q.sel(lat=slice(2, -90), plev=slice(1e+5, 2e+4)),
     colors='b', levels=q_intervals, linewidths=0.4,
     clip_on=True, zorder=2)
 ax_clabel = ax.clabel(
@@ -587,6 +603,7 @@ cbar = fig.colorbar(
     anchor=(1.1, -1),
     )
 cbar.ax.set_xlabel('Relative source latitude [$°$]',)
+cbar.ax.invert_xaxis()
 
 # # 2nd y-axis
 # height = np.round(
@@ -629,6 +646,65 @@ fig.savefig(output_png)
 # -----------------------------------------------------------------------------
 
 
+
+
+# -----------------------------------------------------------------------------
+# region plot q_weighted_lat am zm SH
+
+djf_zm_tpot = theta_e_alltime['sm'].sel(season='DJF').mean(dim='lon') - zerok
+jja_zm_tpot = theta_e_alltime['sm'].sel(season='JJA').mean(dim='lon') - zerok
+
+
+output_png = 'figures/test/trial.png'
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([13.2, 8.8]) / 2.54)
+
+# tpot contours
+tpot_intervals = np.arange(-30, 100 + 1e-4, 5)
+plt_ctr_tpot = ax.contour(
+    lat.sel(lat=slice(3, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
+    djf_zm_tpot.sel(lat=slice(3, -90), plev=slice(1e+5, 2e+4)),
+    colors='k', levels=tpot_intervals, linewidths=0.4, linestyles='solid',
+    clip_on=True, zorder=2)
+ax_clabel = ax.clabel(
+    plt_ctr_tpot, inline=1, colors='k', fmt=remove_trailing_zero,
+    levels=tpot_intervals, inline_spacing=1, fontsize=10,)
+
+# tpot contours
+plt_ctr_tpot = ax.contour(
+    lat.sel(lat=slice(3, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
+    jja_zm_tpot.sel(lat=slice(3, -90), plev=slice(1e+5, 2e+4)),
+    colors='r', levels=tpot_intervals, linewidths=0.4, linestyles='solid',
+    clip_on=True, zorder=2)
+ax_clabel = ax.clabel(
+    plt_ctr_tpot, inline=1, colors='r', fmt=remove_trailing_zero,
+    levels=tpot_intervals, inline_spacing=1, fontsize=10,)
+
+# x-axis
+ax.set_xticks(np.arange(0, -90 - 1e-4, -10))
+ax.set_xlim(0, -90)
+ax.xaxis.set_major_formatter(LatitudeFormatter(degree_symbol='° '))
+
+# y-axis
+ax.invert_yaxis()
+ax.set_ylim(1000, 200)
+ax.set_yticks(np.arange(1000, 200 - 1e-4, -100))
+ax.set_ylabel('Pressure [$hPa$]')
+
+# grid
+ax.grid(True, lw=0.5, c='gray', alpha=0.5, linestyle='--',)
+
+fig.subplots_adjust(left=0.12, right=0.96, bottom=0.14, top=0.98)
+fig.savefig(output_png)
+
+
+
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
 
 
 

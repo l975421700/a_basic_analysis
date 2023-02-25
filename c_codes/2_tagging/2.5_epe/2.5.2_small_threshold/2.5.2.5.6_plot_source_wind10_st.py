@@ -50,6 +50,7 @@ plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
 from matplotlib.ticker import AutoMinorLocator
+import cartopy.feature as cfeature
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -96,6 +97,7 @@ from a_basic_analysis.b_module.statistics import (
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
     plt_mesh_pars,
+    plot_t63_contourf,
 )
 
 # endregion
@@ -132,9 +134,9 @@ with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
 # region plot (epe_st_weighted_wind10 - dc_st_weighted_wind10) am Antarctica
 
 iqtl = '90%'
-plt_data = epe_st_weighted_wind10[expid[i]][iqtl]['am'] - \
-    dc_st_weighted_wind10[expid[i]][iqtl]['am']
-plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+plt_data = (epe_st_weighted_wind10[expid[i]][iqtl]['am'] - \
+    dc_st_weighted_wind10[expid[i]][iqtl]['am']).compute()
+# plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.4_source_wind10/6.1.7.0.4 ' + expid[i] + ' epe_st_weighted_wind10 - dc_st_weighted_wind10 am Antarctica.png'
 
@@ -148,11 +150,17 @@ fig, ax = hemisphere_plot(
 
 cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
-plt1 = ax.pcolormesh(
-    lon,
-    lat,
-    plt_data,
-    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+# plt1 = ax.pcolormesh(
+#     lon,
+#     lat,
+#     plt_data,
+#     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+plt1 = plot_t63_contourf(
+    lon, lat, plt_data, ax,
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+ax.add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
+
 ttest_fdr_res = ttest_fdr_control(
     epe_st_weighted_wind10[expid[i]][iqtl]['ann'],
     dc_st_weighted_wind10[expid[i]][iqtl]['ann'],
@@ -171,7 +179,7 @@ cbar = fig.colorbar(
     )
 cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel('EPE source wind10 anomalies [$m \; s^{-1}$]', linespacing=2)
+cbar.ax.set_xlabel('HP source wind10 anomalies [$m \; s^{-1}$]', linespacing=2)
 fig.savefig(output_png)
 
 

@@ -50,6 +50,7 @@ plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
 from matplotlib.ticker import AutoMinorLocator
+import cartopy.feature as cfeature
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -98,6 +99,7 @@ from a_basic_analysis.b_module.statistics import (
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
     plt_mesh_pars,
+    plot_t63_contourf,
 )
 
 # endregion
@@ -254,16 +256,21 @@ for irow in range(nrow):
 # source wind10
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=7, cm_max=12, cm_interval1=0.5, cm_interval2=0.5, cmap='PiYG',)
+    cm_min=7, cm_max=12, cm_interval1=0.5, cm_interval2=0.5, cmap='magma_r',)
 
 plt_data = pre_weighted_wind10[expid[i]]['am']
-plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+# plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
 
-plt_mesh = axs[0].pcolormesh(
-    lon,
-    lat,
-    plt_data,
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_mesh = axs[0].pcolormesh(
+#     lon,
+#     lat,
+#     plt_data,
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_mesh = plot_t63_contourf(
+    lon, lat, plt_data, axs[0],
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+axs[0].add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
 
 cbar = fig.colorbar(
     plt_mesh, ax=axs[0], aspect=30, format=remove_trailing_zero_pos,
@@ -281,13 +288,18 @@ cbar.ax.set_xlabel('Source wind10 [$m \; s^{-1}$]', linespacing=1.5,)
 #     cmap='PiYG',)
 
 plt_data = wind10_sources[expid[i]]['am']
-plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+# plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
 
-plt_mesh = axs[1].pcolormesh(
-    lon,
-    lat,
-    plt_data,
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_mesh = axs[1].pcolormesh(
+#     lon,
+#     lat,
+#     plt_data,
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_mesh = plot_t63_contourf(
+    lon, lat, plt_data, axs[1],
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+axs[1].add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
 
 cbar = fig.colorbar(
     plt_mesh, ax=axs[1], aspect=30, format=remove_trailing_zero_pos,
@@ -301,17 +313,22 @@ cbar.ax.set_xlabel('wind10 at source lat & lon [$m \; s^{-1}$]', linespacing=1.5
 # source wind10 - wind10 at sources
 
 plt_data = pre_weighted_wind10[expid[i]]['am'] - wind10_sources[expid[i]]['am']
-plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+# plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=0, cm_max=4, cm_interval1=0.5, cm_interval2=0.5, cmap='Purples',
-    reversed=False, asymmetric=False,)
+    cm_min=-1, cm_max=4, cm_interval1=0.5, cm_interval2=0.5, cmap='PuOr_r',
+    reversed=False, asymmetric=True,)
 
-plt_mesh = axs[2].pcolormesh(
-    lon,
-    lat,
-    plt_data,
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_mesh = axs[2].pcolormesh(
+#     lon,
+#     lat,
+#     plt_data,
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_mesh = plot_t63_contourf(
+    lon, lat, plt_data, axs[2],
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+axs[2].add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
 
 cbar = fig.colorbar(
     plt_mesh, ax=axs[2], aspect=30, format=remove_trailing_zero_pos,

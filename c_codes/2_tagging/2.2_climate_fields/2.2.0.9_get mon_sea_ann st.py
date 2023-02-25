@@ -6,7 +6,7 @@ expid = [
     ]
 i = 0
 ifile_start = 120
-ifile_end =   132
+ifile_end =   720
 
 
 # -----------------------------------------------------------------------------
@@ -89,15 +89,11 @@ exp_org_o[expid[i]] = {}
 
 filenames_st_plev = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_st_plev.nc'))
 
-# failed
 exp_org_o[expid[i]]['st_plev'] = xr.open_mfdataset(
-    filenames_st_plev[ifile_start:ifile_end], concat_dim=None,
-    preprocess=None, engine=None, lock=None)
-
+    filenames_st_plev[ifile_start:ifile_end])
 
 '''
-
-    data_vars='minimal', coords='minimal', parallel=True
+data_vars='minimal', coords='minimal', parallel=True
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -107,18 +103,30 @@ exp_org_o[expid[i]]['st_plev'] = xr.open_mfdataset(
 # region calculate mon_sea_ann st_plev
 
 
-# st_plev = {}
+st_plev = {}
 
-# st_plev[expid[i]] = mon_sea_ann(
-#     var_monthly=exp_org_o[expid[i]]['st_plev'].st)
+st_plev[expid[i]] = mon_sea_ann(
+    var_monthly=exp_org_o[expid[i]]['st_plev'].st)
 
-# with open(
-#     exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.st_plev.pkl',
-#     'wb') as f:
-#     pickle.dump(st_plev[expid[i]], f)
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.st_plev.pkl',
+    'wb') as f:
+    pickle.dump(st_plev[expid[i]], f)
 
 
 '''
+
+#-------------------------------- check
+st_plev = {}
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.st_plev.pkl',
+    'rb') as f:
+    st_plev[expid[i]] = pickle.load(f)
+
+data1 = st_plev[expid[i]]['mon'].values
+data2 = exp_org_o[expid[i]]['st_plev'].st.values
+(data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all()
+
 '''
 # endregion
 # -----------------------------------------------------------------------------

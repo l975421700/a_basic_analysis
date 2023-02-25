@@ -47,6 +47,7 @@ plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
 from matplotlib.ticker import AutoMinorLocator
+import cartopy.feature as cfeature
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -93,6 +94,7 @@ from a_basic_analysis.b_module.statistics import (
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
     plt_mesh_pars,
+    plot_t63_contourf,
 )
 
 # endregion
@@ -137,19 +139,19 @@ pre_weighted_lat[expid[i]]['am'].to_netcdf('output/echam-6.3.05p2-wiso/pi/pi_m_5
 
 
 # output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.0_lat/6.1.3.0 ' + expid[i] + ' pre_weighted_lat am Antarctica.png'
-output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.0_lat/6.1.3.0 ' + expid[i] + ' pre_weighted_lat am Antarctica + am aprt.png'
+# output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.0_lat/6.1.3.0 ' + expid[i] + ' pre_weighted_lat am Antarctica + am aprt.png'
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.0_lat/6.1.3.0 ' + expid[i] + ' pre_weighted_lat am Antarctica_contour.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-46, cm_max=-34, cm_interval1=1, cm_interval2=2, cmap='PuOr',)
+    cm_min=-46, cm_max=-34, cm_interval1=1, cm_interval2=2, cmap='viridis',)
 
 fig, ax = hemisphere_plot(northextent=-60, figsize=np.array([5.8, 7]) / 2.54,)
 
 cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
-plt_data = pre_weighted_lat[expid[i]]['am']
-plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+plt_data = pre_weighted_lat[expid[i]]['am'].copy()
+# plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
 
 # plt1 = ax.pcolormesh(
 #     lon,
@@ -157,12 +159,18 @@ plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
 #     plt_data,
 #     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
 
-plt1 = ax.contourf(
-    lon,
-    lat,
-    plt_data,
-    levels = pltlevel,
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt1 = ax.contourf(
+#     lon,
+#     lat,
+#     plt_data,
+#     levels = pltlevel,
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+plt_data.sel(lat=slice(90, -60)).values[:] = np.nan
+
+plt1 = plot_t63_contourf(
+    lon, lat, plt_data, ax,
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
 
 # # plot am aprt
 # pltctr1 = np.array([0.05, 0.1, 0.5, ])
@@ -270,7 +278,7 @@ fig.savefig(output_png)
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.0_lat/6.1.3.0 ' + expid[i] + ' pre_weighted_lat am_sm_5 Antarctica.png'
 cbar_label1 = 'Source latitude [$° \; S$]'
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-50, cm_max=-30, cm_interval1=2, cm_interval2=4, cmap='PuOr',)
+    cm_min=-50, cm_max=-30, cm_interval1=2, cm_interval2=4, cmap='viridis_r',)
 ctr_level = np.array([2, 4, 6, ])
 
 nrow = 1
@@ -290,13 +298,18 @@ for jcol in range(ncol):
         ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
 
 #-------- Am
-plt_data = pre_weighted_lat[expid[i]]['am']
-plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
-
-plt_mesh1 = axs[0].pcolormesh(
-    lon, lat,
-    plt_data,
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_data = pre_weighted_lat[expid[i]]['am'].copy()
+# plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+plt_data.sel(lat=slice(90, -60)).values[:] = np.nan
+# plt_mesh1 = axs[0].pcolormesh(
+#     lon, lat,
+#     plt_data,
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_mesh1 = plot_t63_contourf(
+    lon, lat, plt_data, axs[0],
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+axs[0].add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
 
 plt_data = pre_weighted_lat[expid[i]]['ann'].std(
     dim='time', skipna=True, ddof=1)
@@ -316,13 +329,18 @@ plt.text(
 
 #-------- sm
 for iseason in range(len(seasons)):
-    plt_data = pre_weighted_lat[expid[i]]['sm'].sel(season=seasons[iseason])
-    plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
-    
-    axs[1 + iseason].pcolormesh(
-        lon, lat,
-        plt_data,
-        norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+    plt_data = pre_weighted_lat[expid[i]]['sm'].sel(season=seasons[iseason]).copy()
+    # plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+    plt_data.sel(lat=slice(90, -60)).values[:] = np.nan
+    # axs[1 + iseason].pcolormesh(
+    #     lon, lat,
+    #     plt_data,
+    #     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+    plot_t63_contourf(
+        lon, lat, plt_data, axs[1 + iseason],
+        pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+    axs[1 + iseason].add_feature(
+	    cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
     
     plt_data = pre_weighted_lat[expid[i]]['sea'].sel(
         time=(pre_weighted_lat[expid[i]]['sea'].time.dt.month == \
@@ -481,9 +499,13 @@ for jcol in range(ncol):
     axs[jcol] = globe_plot(ax_org = axs[jcol], add_grid_labels=False)
 
 # plot am values
-plt_mesh1 = axs[0].pcolormesh(
-    lon, lat, pre_weighted_lat[expid[i]]['am'],
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_mesh1 = axs[0].pcolormesh(
+#     lon, lat, pre_weighted_lat[expid[i]]['am'],
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_mesh1 = plot_t63_contourf(
+    lon, lat, pre_weighted_lat[expid[i]]['am'], axs[0],
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+
 # plot am norm - lowres
 # plt_mesh2 = axs[1].pcolormesh(
 #     lon, lat, pre_weighted_var['am_lowres'].pre_weighted_lat_am - \
@@ -496,21 +518,28 @@ plt_mesh1 = axs[0].pcolormesh(
 #     norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
 
 # plot lowres
-plt_mesh2 = axs[1].pcolormesh(
-    lon, lat, pre_weighted_var['am_lowres'].pre_weighted_lat_am,
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-# plot am norm - lowres
-plt_mesh3 = axs[2].pcolormesh(
-    lon, lat, pre_weighted_lat[expid[i]]['am'] - \
-        pre_weighted_var['am_lowres'].pre_weighted_lat_am,
-    norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
+# plt_mesh2 = axs[1].pcolormesh(
+#     lon, lat, pre_weighted_var['am_lowres'].pre_weighted_lat_am,
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_mesh2 = plot_t63_contourf(
+    lon, lat, pre_weighted_var['am_lowres'].pre_weighted_lat_am, axs[1],
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
 
+# plot am norm - lowres
+# plt_mesh3 = axs[2].pcolormesh(
+#     lon, lat, pre_weighted_lat[expid[i]]['am'] - \
+#         pre_weighted_var['am_lowres'].pre_weighted_lat_am,
+#     norm=pltnorm2, cmap=pltcmp2,transform=ccrs.PlateCarree(),)
+plt_mesh3 = plot_t63_contourf(
+    lon, lat, pre_weighted_lat[expid[i]]['am'] - \
+        pre_weighted_var['am_lowres'].pre_weighted_lat_am, axs[2],
+    pltlevel2, 'both', pltnorm2, pltcmp2, ccrs.PlateCarree(),)
 
 plt.text(
     0.5, 1.05, '(a) Scaled-flux water tracing',
     transform=axs[0].transAxes, ha='center', va='center', rotation='horizontal')
 plt.text(
-    0.5, 1.05, '(b) Predefined-region water tracing (10$°$ latitude bins)',
+    0.5, 1.05, '(b) Prescribed-region water tracing (10$°$ latitude bins)',
     transform=axs[1].transAxes, ha='center', va='center', rotation='horizontal')
 plt.text(
     0.5, 1.05, '(c) Differences: (a) - (b)',
@@ -628,11 +657,13 @@ for ivar, ifile in zip(source_var, source_var_files):
     with open(ifile, 'rb') as f:
         pre_weighted_var[expid[i]][ivar] = pickle.load(f)
 
+#-------- plot
 cm_mins = [-46, 0, -180, 11, 75, 10.1, ]
-cm_maxs = [-34, 360, 180, 17, 81, 11.3, ]
+cm_maxs = [-34, 360, 180, 17, 80, 11.3, ]
 cm_interval1s = [1, 30, 30, 0.5, 0.5, 0.1, ]
 cm_interval2s = [2, 60, 60, 1, 1, 0.2, ]
-cmaps = ['PuOr', 'BrBG', 'twilight_shifted', 'RdBu', 'PRGn', 'PiYG', ]
+cmaps = ['viridis_r', 'BrBG', 'twilight_shifted',
+         'viridis_r', 'cividis', 'magma_r', ]
 cbar_labels = [
     'Source latitude [$°\;S$]', 'Source longitude [$°$]',
     'Relative source longitude [$°$]',
@@ -689,19 +720,34 @@ for irow in range(nrow):
         if (ivar == 'rh2m'):
             pltcmp = pltcmp.reversed()
         
-        plt_meshdata = pre_weighted_var[expid[i]][ivar]['am']
+        plt_meshdata = pre_weighted_var[expid[i]][ivar]['am'].copy()
         if(ivar == 'rellon'):
             plt_meshdata = calc_lon_diff(
                 pre_weighted_var[expid[i]][ivar]['am'], lon_2d)
         
-        plt_meshdata.values[
-            echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+        extend = 'both'
+        if ((ivar == 'lon') | (ivar == 'rellon')):
+            extend = 'neither'
         
-        plt1 = axs[irow, jcol].pcolormesh(
-            lon,
-            lat,
-            plt_meshdata,
-            norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+        # plt_meshdata.values[
+        #     echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+        
+        if ((ivar == 'lon') | (ivar == 'rellon')):
+            plt1 = axs[irow, jcol].pcolormesh(
+                lon,
+                lat,
+                plt_meshdata,
+                norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+        else:
+            if(ivar == 'lat'):
+                plt_meshdata.sel(lat=slice(90, -60)).values[:] = np.nan
+            
+            plt1 = plot_t63_contourf(
+                lon, lat, plt_meshdata, axs[irow, jcol],
+                pltlevel, extend, pltnorm, pltcmp, ccrs.PlateCarree(),)
+        
+        axs[irow, jcol].add_feature(
+            cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
         
         # plt2 = axs[irow, jcol].contour(
         #     lon, lat.sel(lat=slice(-50, -90)),
@@ -721,21 +767,18 @@ for irow in range(nrow):
         #     plt3, inline=1, colors='blue', fmt=remove_trailing_zero,
         #     levels=pltctr2, inline_spacing=5, fontsize=6,)
         
-        extend = 'both'
-        if ((ivar == 'lon') | (ivar == 'rellon')):
-            extend = 'neither'
-        
         cbar = fig.colorbar(
             plt1, ax=axs[irow, jcol], aspect=30,
             format=remove_trailing_zero_pos,
             orientation="horizontal", shrink=0.9, ticks=pltticks, extend=extend,
-            pad=0.05,
-            )
+            pad=0.05,)
         if ((irow == 0) & (jcol == 0)):
             cbar.ax.set_xticklabels(
                 [remove_trailing_zero(x) for x in np.negative(pltticks)])
         cbar.ax.tick_params(labelsize=8)
         cbar.ax.set_xlabel(cbar_labels[icount])
+        
+        print(ivar)
 
 fig.subplots_adjust(
     left=fm_left, right = fm_right, bottom = fm_bottom, top = fm_top,

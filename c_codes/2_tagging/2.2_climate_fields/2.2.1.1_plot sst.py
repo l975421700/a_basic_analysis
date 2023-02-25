@@ -85,6 +85,7 @@ from a_basic_analysis.b_module.statistics import (
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
     plt_mesh_pars,
+    plot_t63_contourf,
 )
 
 # endregion
@@ -544,13 +545,16 @@ for irow in range(nrow):
 
 # am sic
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=0, cm_max=100, cm_interval1=10, cm_interval2=10, cmap='Blues',
+    cm_min=0, cm_max=100, cm_interval1=10, cm_interval2=20, cmap='Blues',
     reversed=False)
 
-plt_mesh1 = axs[0].pcolormesh(
-    lon, lat,
-    boundary_conditions['am_sic']['pi'],
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_mesh1 = axs[0].pcolormesh(
+#     lon, lat,
+#     boundary_conditions['am_sic']['pi'],
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_mesh1 = plot_t63_contourf(
+    lon, lat, boundary_conditions['am_sic']['pi'], axs[0],
+    pltlevel, 'neither', pltnorm, pltcmp, ccrs.PlateCarree(),)
 
 cbar = fig.colorbar(
     plt_mesh1, ax=axs[0], aspect=30,
@@ -561,12 +565,15 @@ cbar.ax.set_xlabel('SIC [$\%$]', linespacing=1.5,)
 
 # am sst
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-2, cm_max=26, cm_interval1=2, cm_interval2=4, cmap='RdBu',)
+    cm_min=-2, cm_max=26, cm_interval1=2, cm_interval2=4, cmap='viridis_r',)
 
-plt_mesh1 = axs[1].pcolormesh(
-    lon, lat,
-    boundary_conditions['am_sst']['pi'] - zerok,
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_mesh1 = axs[1].pcolormesh(
+#     lon, lat,
+#     boundary_conditions['am_sst']['pi'] - zerok,
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_mesh1 = plot_t63_contourf(
+    lon, lat, boundary_conditions['am_sst']['pi'] - zerok, axs[1],
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
 
 cbar = fig.colorbar(
     plt_mesh1, ax=axs[1], aspect=30,
@@ -577,13 +584,16 @@ cbar.ax.set_xlabel('SST [$°C$]', linespacing=1.5,)
 
 # am rh2m
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=60, cm_max=110, cm_interval1=5, cm_interval2=10, cmap='PRGn',
+    cm_min=60, cm_max=110, cm_interval1=5, cm_interval2=10, cmap='cividis',
     reversed=False)
 
-plt_mesh1 = axs[2].pcolormesh(
-    lon, lat,
-    rh2m_alltime[expid[i]]['am'] * 100,
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_mesh1 = axs[2].pcolormesh(
+#     lon, lat,
+#     rh2m_alltime[expid[i]]['am'] * 100,
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_mesh1 = plot_t63_contourf(
+    lon, lat, rh2m_alltime[expid[i]]['am'] * 100, axs[2],
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
 
 cbar = fig.colorbar(
     plt_mesh1, ax=axs[2], aspect=30,
@@ -595,12 +605,15 @@ cbar.ax.set_xlabel('rh2m [$\%$]', linespacing=1.5,)
 
 # am wind10
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=1, cm_max=13, cm_interval1=1, cm_interval2=1, cmap='PiYG')
+    cm_min=1, cm_max=13, cm_interval1=1, cm_interval2=2, cmap='magma_r')
 
-plt_mesh1 = axs[3].pcolormesh(
-    lon, lat,
-    wind10_alltime[expid[i]]['am'],
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_mesh1 = axs[3].pcolormesh(
+#     lon, lat,
+#     wind10_alltime[expid[i]]['am'],
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_mesh1 = plot_t63_contourf(
+    lon, lat, wind10_alltime[expid[i]]['am'], axs[3],
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
 
 cbar = fig.colorbar(
     plt_mesh1, ax=axs[3], aspect=30,

@@ -50,6 +50,7 @@ plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
 from matplotlib.ticker import AutoMinorLocator
+import cartopy.feature as cfeature
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -96,6 +97,7 @@ from a_basic_analysis.b_module.statistics import (
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
     plt_mesh_pars,
+    plot_t63_contourf,
 )
 
 # endregion
@@ -134,7 +136,7 @@ with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
 iqtl = '90%'
 plt_data = (transport_distance_epe_st[expid[i]][iqtl]['am'] - \
     transport_distance_dc_st[expid[i]][iqtl]['am']) / 100
-plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+# plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.0_pre_source/6.1.7.0.5_travel_distance/6.1.7.0.5 ' + expid[i] + ' transport_distance_epe_st - transport_distance_dc_st am Antarctica.png'
 
@@ -146,11 +148,17 @@ fig, ax = hemisphere_plot(northextent=-60, figsize=np.array([5.8, 7]) / 2.54)
 
 cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
-plt1 = ax.pcolormesh(
-    lon,
-    lat,
-    plt_data,
-    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+# plt1 = ax.pcolormesh(
+#     lon,
+#     lat,
+#     plt_data,
+#     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+plt1 = plot_t63_contourf(
+    lon, lat, plt_data, ax,
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+ax.add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
+
 ttest_fdr_res = ttest_fdr_control(
     transport_distance_epe_st[expid[i]][iqtl]['ann'],
     transport_distance_dc_st[expid[i]][iqtl]['ann'],
@@ -169,7 +177,7 @@ cbar = fig.colorbar(
     )
 cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel('EPE source-sink distance anomalies [$10^{2} \; km$]',
+cbar.ax.set_xlabel('HP source-sink distance anomalies [$10^{2} \; km$]',
                    linespacing=2, fontsize=8)
 fig.savefig(output_png)
 

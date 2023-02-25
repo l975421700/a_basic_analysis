@@ -47,6 +47,7 @@ from matplotlib.ticker import AutoMinorLocator
 import geopandas as gpd
 import matplotlib.patches as mpatches
 from matplotlib.lines import Line2D
+import cartopy.feature as cfeature
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -97,6 +98,7 @@ from a_basic_analysis.b_module.component_plot import (
     cplot_lon180_quiver,
     cplot_lon180_ctr,
     plt_mesh_pars,
+    plot_t63_contourf,
 )
 
 # endregion
@@ -123,7 +125,7 @@ bedmap_transform = ccrs.epsg(3031)
 echam6_t63_geosp = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/pi_m_416_4.9/input/echam/unit.24')
 echam6_t63_surface_height = geopotential_to_height(
     echam6_t63_geosp.GEOSP * (units.m / units.s)**2)
-echam6_t63_surface_height.values[echam6_t63_geosp.SLM.values == 0] = np.nan
+# echam6_t63_surface_height.values[echam6_t63_geosp.SLM.values == 0] = np.nan
 
 
 
@@ -144,7 +146,7 @@ geopotential_to_height(echam6_t63_geosp.GEOSP)
 output_png = 'figures/1_study_area/1.0_AIS_height_icecores_division.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=0, cm_max=4500, cm_interval1=250, cm_interval2=500, cmap='PuOr',
+    cm_min=0, cm_max=4500, cm_interval1=250, cm_interval2=500, cmap='viridis',
     reversed=False)
 
 nrow = 1
@@ -175,27 +177,40 @@ for jcol in range(ncol):
     # plot AIS divisions
     plt_wais = ais_imbie2.loc[ais_imbie2.Regions == 'West'].plot(
         ax=axs[jcol], transform=ccrs.epsg(3031),
-        edgecolor='red', facecolor='none', linewidths=1, zorder=2)
+        edgecolor='red', facecolor='none', linewidths=1, zorder=10)
     plt_eais = ais_imbie2.loc[ais_imbie2.Regions == 'East'].plot(
         ax=axs[jcol], transform=ccrs.epsg(3031),
-        edgecolor='blue', facecolor='none', linewidths=1, zorder=2)
+        edgecolor='blue', facecolor='none', linewidths=1, zorder=10)
     plt_ap = ais_imbie2.loc[ais_imbie2.Regions == 'Peninsula'].plot(
         ax=axs[jcol], transform=ccrs.epsg(3031),
-        edgecolor='m', facecolor='none', linewidths=1, zorder=2)
+        edgecolor='m', facecolor='none', linewidths=1, zorder=10)
     
     ipanel += 1
 
-axs[0].pcolormesh(
+axs[0].contourf(
     bedmap_tif.x.values,
     bedmap_tif.y.values,
-    bedmap_height,
+    bedmap_height, levels=pltlevel, extend='max',
     norm=pltnorm, cmap=pltcmp,transform=bedmap_transform,)
+# plt1 = plot_t63_contourf(
+#     lon, lat, plt_data, ax,
+#     pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+axs[0].add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
 
-plt_mesh = axs[1].pcolormesh(
+# plt_mesh = axs[1].pcolormesh(
+#     echam6_t63_surface_height.lon,
+#     echam6_t63_surface_height.lat,
+#     echam6_t63_surface_height.values,
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_mesh = plot_t63_contourf(
     echam6_t63_surface_height.lon,
     echam6_t63_surface_height.lat,
-    echam6_t63_surface_height.values,
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+    echam6_t63_surface_height.values, axs[1],
+    pltlevel, 'max', pltnorm, pltcmp, ccrs.PlateCarree(),)
+axs[1].add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
+
 
 plt.text(
     0.5, 1.12, 'Bedmap2', transform=axs[0].transAxes,

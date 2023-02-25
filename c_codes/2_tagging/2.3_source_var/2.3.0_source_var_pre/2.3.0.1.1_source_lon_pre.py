@@ -49,6 +49,7 @@ plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
 from matplotlib.ticker import AutoMinorLocator
+import cartopy.feature as cfeature
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -262,7 +263,7 @@ fig.savefig(output_png, dpi=1200)
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.1_lon/6.1.3.1 ' + expid[i] + ' pre_weighted_lon am_sm_5 Antarctica.png'
 cbar_label1 = 'Relative source longitude [$°$]'
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-180, cm_max=180, cm_interval1=30, cm_interval2=30,
+    cm_min=-180, cm_max=180, cm_interval1=30, cm_interval2=60,
     cmap='twilight_shifted',)
 ctr_level = np.arange(0, 100+1e-4, 20)
 
@@ -283,13 +284,15 @@ for jcol in range(ncol):
         ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
 
 #-------- Am
-plt_data = calc_lon_diff(pre_weighted_lon[expid[i]]['am'], lon_2d)
-plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+plt_data = calc_lon_diff(pre_weighted_lon[expid[i]]['am'].copy(), lon_2d)
+# plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
 
 plt_mesh1 = axs[0].pcolormesh(
     lon, lat,
     plt_data,
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+axs[0].add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
 
 plt_data = circstd(pre_weighted_lon[expid[i]]['ann'],
             high=360, low=0, axis=0, nan_policy='omit')
@@ -310,14 +313,16 @@ plt.text(
 #-------- sm
 for iseason in range(len(seasons)):
     plt_data = calc_lon_diff(
-        pre_weighted_lon[expid[i]]['sm'].sel(season=seasons[iseason]),
+        pre_weighted_lon[expid[i]]['sm'].sel(season=seasons[iseason]).copy(),
         lon_2d)
-    plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+    # plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
     
     axs[1 + iseason].pcolormesh(
         lon, lat,
         plt_data,
         norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+    axs[1 + iseason].add_feature(
+	    cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
     
     plt_data = circstd(
         pre_weighted_lon[expid[i]]['sea'].sel(

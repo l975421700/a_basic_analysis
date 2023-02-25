@@ -1,6 +1,54 @@
 
 
 # -----------------------------------------------------------------------------
+# region plot ocean mask
+
+import cartopy.crs as ccrs
+def plot_ocean_mask(
+    lon, lat, ax, maskdata, transform=ccrs.PlateCarree(),
+    ):
+    
+    maskdata = maskdata.copy()
+    maskdata[maskdata == 1] = np.nan
+    
+    plt_mask = ax.pcolormesh(
+        lon,
+        lat,
+        maskdata,
+        cmap='binary',transform=transform,)
+    
+    return(plt_mask)
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot contourf for ECHAM T63
+
+
+def plot_t63_contourf(
+    lon, lat, data, ax,
+    level, extend, norm, cmap, transform):
+    
+    from cartopy.util import add_cyclic_point
+    
+    data, lon = add_cyclic_point(data, coord=lon)
+    
+    plt_contourf = ax.contourf(
+        lon, lat, data, levels=level, extend=extend,
+        norm=norm, cmap=cmap, transform=transform
+    )
+    
+    return (plt_contourf)
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
 # region Function to plot ice core sites
 
 def cplot_ice_cores(

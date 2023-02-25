@@ -170,7 +170,7 @@ sam_posneg_lat_q['neg_mean'] = sam_posneg_lat_q['neg'].mean(
 output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_lat/6.1.9.0 ' + expid[i] + ' sam_posneg_lat_q SH.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-6, cm_max=6, cm_interval1=1, cm_interval2=1, cmap='PiYG',
+    cm_min=-6, cm_max=6, cm_interval1=1, cm_interval2=1, cmap='BrBG',
     asymmetric=True)
 plat_2d, plevs_2d = np.meshgrid(
     lat.sel(lat=slice(0, -90)),
@@ -179,13 +179,12 @@ plat_2d, plevs_2d = np.meshgrid(
 fig, ax = plt.subplots(1, 1, figsize=np.array([13.2, 8.8]) / 2.54)
 
 # mesh
-plt_mesh = ax.pcolormesh(
+plt_mesh = ax.contourf(
     lat.sel(lat=slice(0, -90)),
     plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
     (sam_posneg_lat_q['pos_mean'] - sam_posneg_lat_q['neg_mean']
      ).sel(lat=slice(0, -90), plev=slice(1e+5, 2e+4)),
-    norm=pltnorm, cmap=pltcmp,
-)
+    norm=pltnorm, cmap=pltcmp, levels=pltlevel, extend='both',)
 ttest_fdr_res = ttest_fdr_control(
     sam_posneg_lat_q['pos'].sel(
         lat=slice(0, -90), plev=slice(1e+5, 2e+4)).values,
@@ -218,7 +217,7 @@ cbar = fig.colorbar(
     pad=0.1, fraction=0.04,
     # anchor=(1.1, -1),
     )
-cbar.ax.set_xlabel('Source latitude differences between SAM+ and SAM- months[$°$]',)
+cbar.ax.set_xlabel('Source latitude differences [$°$] SAM+ vs. SAM-',)
 
 fig.subplots_adjust(left=0.12, right=0.96, bottom=0.14, top=0.98)
 fig.savefig(output_png)

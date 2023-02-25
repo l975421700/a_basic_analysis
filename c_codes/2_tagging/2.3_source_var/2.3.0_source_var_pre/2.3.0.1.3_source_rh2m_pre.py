@@ -50,6 +50,7 @@ plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
 from matplotlib.ticker import AutoMinorLocator
+import cartopy.feature as cfeature
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -96,6 +97,7 @@ from a_basic_analysis.b_module.statistics import (
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
     plt_mesh_pars,
+    plot_t63_contourf,
 )
 
 # endregion
@@ -198,7 +200,7 @@ fig.savefig(output_png, dpi=1200)
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.3_rh2m/6.1.3.3 ' + expid[i] + ' pre_weighted_rh2m am_sm_5 Antarctica.png'
 cbar_label1 = 'Source rh2m [$\%$]'
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=74, cm_max=82, cm_interval1=1, cm_interval2=1, cmap='PRGn',
+    cm_min=74, cm_max=82, cm_interval1=1, cm_interval2=1, cmap='cividis',
     reversed=False)
 ctr_level = np.array([1, 2, 3, ])
 
@@ -219,13 +221,18 @@ for jcol in range(ncol):
         ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
 
 #-------- Am
-plt_data = pre_weighted_rh2m[expid[i]]['am']
-plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+plt_data = pre_weighted_rh2m[expid[i]]['am'].copy()
+# plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
 
-plt_mesh1 = axs[0].pcolormesh(
-    lon, lat,
-    plt_data,
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_mesh1 = axs[0].pcolormesh(
+#     lon, lat,
+#     plt_data,
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_mesh1 = plot_t63_contourf(
+    lon, lat, plt_data, axs[0],
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+axs[0].add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
 
 plt_data = pre_weighted_rh2m[expid[i]]['ann'].std(
     dim='time', skipna=True, ddof=1)
@@ -245,13 +252,18 @@ plt.text(
 
 #-------- sm
 for iseason in range(len(seasons)):
-    plt_data = pre_weighted_rh2m[expid[i]]['sm'].sel(season=seasons[iseason])
-    plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+    plt_data = pre_weighted_rh2m[expid[i]]['sm'].sel(season=seasons[iseason]).copy()
+    # plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
     
-    axs[1 + iseason].pcolormesh(
-        lon, lat,
-        plt_data,
-        norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+    # axs[1 + iseason].pcolormesh(
+    #     lon, lat,
+    #     plt_data,
+    #     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+    plot_t63_contourf(
+        lon, lat, plt_data, axs[1 + iseason],
+        pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+    axs[1 + iseason].add_feature(
+    	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
     
     plt_data = pre_weighted_rh2m[expid[i]]['sea'].sel(
         time=(pre_weighted_rh2m[expid[i]]['sea'].time.dt.month == \
