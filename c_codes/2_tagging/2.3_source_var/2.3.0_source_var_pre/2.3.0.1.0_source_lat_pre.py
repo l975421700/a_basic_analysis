@@ -732,7 +732,7 @@ for irow in range(nrow):
         # plt_meshdata.values[
         #     echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
         
-        if ((ivar == 'lon') | (ivar == 'rellon')):
+        if False: # ((ivar == 'lon') | (ivar == 'rellon')):
             plt1 = axs[irow, jcol].pcolormesh(
                 lon,
                 lat,

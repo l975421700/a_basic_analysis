@@ -1,11 +1,12 @@
 
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_502_5.0',]
+expid = [
+    'pi_m_502_5.0',
+    ]
 i = 0
-
 ifile_start = 120
-ifile_end   = 720 # 1080
+ifile_end   = 720
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -86,55 +87,58 @@ from a_basic_analysis.b_module.source_properties import (
 # -----------------------------------------------------------------------------
 # region import output
 
+
 exp_org_o = {}
 exp_org_o[expid[i]] = {}
 
-filenames_g3b_1m = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_g3b_1m.nc'))
+filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_echam.nc'))
 
-exp_org_o[expid[i]]['g3b_1m'] = xr.open_mfdataset(
-    filenames_g3b_1m[ifile_start:ifile_end],
+exp_org_o[expid[i]]['echam'] = xr.open_mfdataset(
+    filenames_echam[ifile_start:ifile_end],
+    # preprocess=lambda ds: ds['aprs'],
     # data_vars='minimal', coords='minimal', parallel=True,
     )
-
 
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region get mon_sea_ann q2m
+# region calculate mon_sea_ann evapwac
 
-q2m_alltime = {}
-q2m_alltime[expid[i]] = mon_sea_ann(
-    var_monthly=exp_org_o[expid[i]]['g3b_1m'].q2m)
+evapwac_alltime = {}
+evapwac_alltime[expid[i]] = mon_sea_ann(
+    var_monthly=exp_org_o[expid[i]]['echam'].evapwac)
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q2m_alltime.pkl', 'wb') as f:
-    pickle.dump(q2m_alltime[expid[i]], f)
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.evapwac_alltime.pkl', 'wb') as f:
+    pickle.dump(evapwac_alltime[expid[i]], f)
 
 
 '''
 #-------------------------------- check
+evapwac_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.evapwac_alltime.pkl', 'rb') as f:
+    evapwac_alltime[expid[i]] = pickle.load(f)
 
-q2m_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q2m_alltime.pkl', 'rb') as f:
-    q2m_alltime[expid[i]] = pickle.load(f)
+test = {}
+test['mon'] = (exp_org_o[expid[i]]['echam'].evapwac).compute().copy()
+test['sea'] = (exp_org_o[expid[i]]['echam'].evapwac).resample({'time': 'Q-FEB'}).map(time_weighted_mean)[1:-1].compute()
+test['ann'] = (exp_org_o[expid[i]]['echam'].evapwac).resample({'time': '1Y'}).map(time_weighted_mean).compute()
+test['mm'] = test['mon'].groupby('time.month').mean(skipna=True).compute()
+test['sm'] = test['sea'].groupby('time.season').mean(skipna=True).compute()
+test['am'] = test['ann'].mean(dim='time', skipna=True).compute()
 
-# q2m_alltime[expid[i]]['am'].to_netcdf('scratch/test/test.nc')
-
-filenames_g3b_1m = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_g3b_1m.nc'))
-
-ifile = -10
-ncfile = xr.open_dataset(filenames_g3b_1m[ifile_start:ifile_end][ifile])
-
-(ncfile.q2m.squeeze() == q2m_alltime[expid[i]]['mon'][ifile]).all().values
-
+(evapwac_alltime[expid[i]]['mon'].values[np.isfinite(evapwac_alltime[expid[i]]['mon'].values)] == test['mon'].values[np.isfinite(test['mon'].values)]).all()
+(evapwac_alltime[expid[i]]['sea'].values[np.isfinite(evapwac_alltime[expid[i]]['sea'].values)] == test['sea'].values[np.isfinite(test['sea'].values)]).all()
+(evapwac_alltime[expid[i]]['ann'].values[np.isfinite(evapwac_alltime[expid[i]]['ann'].values)] == test['ann'].values[np.isfinite(test['ann'].values)]).all()
+(evapwac_alltime[expid[i]]['mm'].values[np.isfinite(evapwac_alltime[expid[i]]['mm'].values)] == test['mm'].values[np.isfinite(test['mm'].values)]).all()
+(evapwac_alltime[expid[i]]['sm'].values[np.isfinite(evapwac_alltime[expid[i]]['sm'].values)] == test['sm'].values[np.isfinite(test['sm'].values)]).all()
+(evapwac_alltime[expid[i]]['am'].values[np.isfinite(evapwac_alltime[expid[i]]['am'].values)] == test['am'].values[np.isfinite(test['am'].values)]).all()
 
 
 '''
 # endregion
 # -----------------------------------------------------------------------------
-
-
 
 
 

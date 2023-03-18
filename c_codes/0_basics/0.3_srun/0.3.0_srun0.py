@@ -1,12 +1,5 @@
 
 
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = [
-    'pi_m_502_5.0',
-    ]
-i = 0
-
-
 # -----------------------------------------------------------------------------
 # region import packages
 
@@ -18,6 +11,7 @@ warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
 sys.path.append('/work/ollie/qigao001')
+os.chdir('/work/ollie/qigao001')
 
 # data analysis
 import numpy as np
@@ -47,6 +41,8 @@ mpl.rcParams['axes.linewidth'] = 0.2
 plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
+from matplotlib.ticker import AutoMinorLocator
+import cartopy.feature as cfeature
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -88,97 +84,100 @@ from a_basic_analysis.b_module.statistics import (
     check_normality_3d,
     check_equal_variance_3d,
     ttest_fdr_control,
-    find_cumulative_threshold,
 )
 
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
     plt_mesh_pars,
+    plot_t63_contourf,
 )
 
 # endregion
 # -----------------------------------------------------------------------------
 
 
+
 # -----------------------------------------------------------------------------
-# region import data
+# -----------------------------------------------------------------------------
+# region fractioin of EPE, with a threshold of 0.002 mm/day
 
-wisoaprt_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
-    wisoaprt_alltime[expid[i]] = pickle.load(f)
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
+tp_era5_daily = xr.open_mfdataset(
+    'scratch/cmip6/hist/pre/tp_ERA5_daily_sl_??_??_Antarctica.nc',
+    ).chunk({'time': 15706, 'longitude': 20, 'latitude': 1})
 
-quantile_interval  = np.arange(1, 99 + 1e-4, 1, dtype=np.int64)
-quantiles = dict(zip(
-    [str(x) + '%' for x in quantile_interval],
-    [x/100 for x in quantile_interval],
-    ))
+lon = tp_era5_daily.longitude
+lat = tp_era5_daily.latitude
 
-wisoaprt_cum_qtl = {}
-with open(
-    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_cum_qtl.pkl',
-    'rb') as f:
-    wisoaprt_cum_qtl[expid[i]] = pickle.load(f)
+tp_era5 = {}
+tp_era5['original'] = tp_era5_daily.tp.copy().where(
+    tp_era5_daily.tp >= 0.002,
+    other=np.nan,).compute()
+
+tp_era5['quantiles_90'] = \
+    tp_era5['original'].quantile(0.9, dim='time', skipna=True).compute()
+
+tp_era5['mask_90'] = (tp_era5_daily.tp.copy() >= tp_era5['quantiles_90']).compute()
+
+tp_era5['masked_90'] = tp_era5_daily.tp.copy().where(
+    tp_era5['mask_90'],
+    other=0,).compute()
+
+tp_era5['frc'] = (tp_era5['masked_90'].mean(dim='time') / tp_era5_daily.tp.copy().mean(dim='time'))
+
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.1_pre/6.1.7.1 ear5 st_daily precipitation percentile_90_frc Antarctica.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=30, cm_max=70, cm_interval1=2.5, cm_interval2=5, cmap='Oranges',
+    reversed=False)
+
+fig, ax = hemisphere_plot(
+    northextent=-60, figsize=np.array([5.8, 6.8]) / 2.54)
+
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
+
+plt_data = tp_era5['frc'] * 100
+
+plt1 = ax.contourf(
+    lon,
+    lat,
+    plt_data,
+    levels=pltlevel, extend='both',
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+ax.add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
+
+plt_ctr = ax.contour(
+    lon,
+    lat.sel(latitude=slice(-60, -90)),
+    plt_data.sel(latitude=slice(-60, -90)),
+    [50],
+    colors = 'b', linewidths=0.3, transform=ccrs.PlateCarree(),)
+ax.clabel(
+    plt_ctr, inline=1, colors='b', fmt=remove_trailing_zero,
+    levels=[50], inline_spacing=10, fontsize=8,)
+
+cbar = fig.colorbar(
+    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.95, ticks=pltticks, extend='both',
+    pad=0.04, fraction=0.15,
+    )
+cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
+cbar.ax.tick_params(labelsize=8)
+cbar.ax.set_xlabel(
+    'Contribution of HP to total precipitation [$\%$]', linespacing=1.5,
+    fontsize=8)
+fig.savefig(output_png, dpi=600)
+
 
 '''
+# plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+
+# plt1 = plot_t63_contourf(
+#     lon, lat, plt_data, ax,
+#     pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
 '''
 # endregion
 # -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region get mon_sea_ann masked wisoaprt
-
-wisoaprt_masked_lp = {}
-wisoaprt_masked_lp[expid[i]] = {}
-wisoaprt_masked_lp[expid[i]]['mean'] = {}
-wisoaprt_masked_lp[expid[i]]['frc']  = {}
-wisoaprt_masked_lp[expid[i]]['meannan'] = {}
-
-for iqtl in quantiles.keys():
-    # iqtl = '90%'
-    print(iqtl + ': ' + str(quantiles[iqtl]))
-    
-    masked_data = \
-        wisoaprt_alltime[expid[i]]['daily'].sel(wisotype=1).copy().where(
-            wisoaprt_cum_qtl[expid[i]]['mask'][iqtl],
-            other=0,
-        ).compute()
-    
-    wisoaprt_masked_lp[expid[i]]['mean'][iqtl] = mon_sea_ann(masked_data)
-    wisoaprt_masked_lp[expid[i]]['mean'][iqtl].pop('daily')
-    
-    wisoaprt_masked_lp[expid[i]]['frc'][iqtl] = {}
-    
-    for ialltime in wisoaprt_masked_lp[expid[i]]['mean'][iqtl].keys():
-        wisoaprt_masked_lp[expid[i]]['frc'][iqtl][ialltime] = \
-            (wisoaprt_masked_lp[expid[i]]['mean'][iqtl][ialltime] / \
-                wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1)).compute()
-    
-    masked_data_nan = \
-        wisoaprt_alltime[expid[i]]['daily'].sel(wisotype=1).copy().where(
-            wisoaprt_cum_qtl[expid[i]]['mask'][iqtl],
-            other=np.nan,
-        ).compute()
-    
-    wisoaprt_masked_lp[expid[i]]['meannan'][iqtl] = {}
-    # am
-    wisoaprt_masked_lp[expid[i]]['meannan'][iqtl]['am'] = masked_data_nan.mean(
-        dim='time', skipna=True).compute()
-    # sm
-    wisoaprt_masked_lp[expid[i]]['meannan'][iqtl]['sm'] = masked_data_nan.groupby(
-        'time.season').mean(skipna=True).compute()
-    # mm
-    wisoaprt_masked_lp[expid[i]]['meannan'][iqtl]['mm'] = masked_data_nan.groupby(
-        'time.month').mean(skipna=True).compute()
-    # ann
-    wisoaprt_masked_lp[expid[i]]['meannan'][iqtl]['ann'] = masked_data_nan.resample({'time': '1Y'}).mean(skipna=True).compute()
-    # sea
-    wisoaprt_masked_lp[expid[i]]['meannan'][iqtl]['sea'] = masked_data_nan.resample({'time': 'Q-FEB'}).mean(skipna=True)[1:-1].compute()
-    # mon
-    wisoaprt_masked_lp[expid[i]]['meannan'][iqtl]['mon'] = masked_data_nan.resample({'time': '1M'}).mean(skipna=True).compute()
-
-with open(
-    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_masked_lp.pkl',
-    'wb') as f:
-    pickle.dump(wisoaprt_masked_lp[expid[i]], f)
-

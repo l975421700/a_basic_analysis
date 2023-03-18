@@ -1,11 +1,12 @@
 
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_502_5.0',]
+expid = [
+    'pi_m_502_5.0',
+    ]
 i = 0
-
 ifile_start = 120
-ifile_end   = 720 # 1080
+ifile_end   = 720
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -96,45 +97,46 @@ exp_org_o[expid[i]]['g3b_1m'] = xr.open_mfdataset(
     # data_vars='minimal', coords='minimal', parallel=True,
     )
 
-
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region get mon_sea_ann q2m
+# region calculate mon_sea_ann tsw
 
-q2m_alltime = {}
-q2m_alltime[expid[i]] = mon_sea_ann(
-    var_monthly=exp_org_o[expid[i]]['g3b_1m'].q2m)
+tsw_alltime = {}
+tsw_alltime[expid[i]] = mon_sea_ann(var_monthly=(
+    exp_org_o[expid[i]]['g3b_1m'].tsw - zerok).compute())
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q2m_alltime.pkl', 'wb') as f:
-    pickle.dump(q2m_alltime[expid[i]], f)
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.tsw_alltime.pkl', 'wb') as f:
+    pickle.dump(tsw_alltime[expid[i]], f)
 
 
 '''
 #-------------------------------- check
+tsw_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.tsw_alltime.pkl', 'rb') as f:
+    tsw_alltime[expid[i]] = pickle.load(f)
 
-q2m_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q2m_alltime.pkl', 'rb') as f:
-    q2m_alltime[expid[i]] = pickle.load(f)
+test = {}
+test['mon'] = (exp_org_o[expid[i]]['g3b_1m'].tsw - zerok).compute().copy()
+test['sea'] = (exp_org_o[expid[i]]['g3b_1m'].tsw - zerok).resample({'time': 'Q-FEB'}).map(time_weighted_mean)[1:-1].compute()
+test['ann'] = (exp_org_o[expid[i]]['g3b_1m'].tsw - zerok).resample({'time': '1Y'}).map(time_weighted_mean).compute()
+test['mm'] = test['mon'].groupby('time.month').mean(skipna=True).compute()
+test['sm'] = test['sea'].groupby('time.season').mean(skipna=True).compute()
+test['am'] = test['ann'].mean(dim='time', skipna=True).compute()
 
-# q2m_alltime[expid[i]]['am'].to_netcdf('scratch/test/test.nc')
-
-filenames_g3b_1m = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_g3b_1m.nc'))
-
-ifile = -10
-ncfile = xr.open_dataset(filenames_g3b_1m[ifile_start:ifile_end][ifile])
-
-(ncfile.q2m.squeeze() == q2m_alltime[expid[i]]['mon'][ifile]).all().values
-
+(tsw_alltime[expid[i]]['mon'].values[np.isfinite(tsw_alltime[expid[i]]['mon'].values)] == test['mon'].values[np.isfinite(test['mon'].values)]).all()
+(tsw_alltime[expid[i]]['sea'].values[np.isfinite(tsw_alltime[expid[i]]['sea'].values)] == test['sea'].values[np.isfinite(test['sea'].values)]).all()
+(tsw_alltime[expid[i]]['ann'].values[np.isfinite(tsw_alltime[expid[i]]['ann'].values)] == test['ann'].values[np.isfinite(test['ann'].values)]).all()
+(tsw_alltime[expid[i]]['mm'].values[np.isfinite(tsw_alltime[expid[i]]['mm'].values)] == test['mm'].values[np.isfinite(test['mm'].values)]).all()
+(tsw_alltime[expid[i]]['sm'].values[np.isfinite(tsw_alltime[expid[i]]['sm'].values)] == test['sm'].values[np.isfinite(test['sm'].values)]).all()
+(tsw_alltime[expid[i]]['am'].values[np.isfinite(tsw_alltime[expid[i]]['am'].values)] == test['am'].values[np.isfinite(test['am'].values)]).all()
 
 
 '''
 # endregion
 # -----------------------------------------------------------------------------
-
-
 
 
 

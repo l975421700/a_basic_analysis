@@ -135,7 +135,7 @@ with open(
 
 ivar = 'sst'
 
-for isite in stations_sites.Site:
+for isite in ['EDC', 'Halley']: # stations_sites.Site:
     # isite = 'EDC'
     print(isite)
     
@@ -169,7 +169,7 @@ for isite in stations_sites.Site:
     
     ax.axline((0, linearfit.intercept), slope = linearfit.slope, lw=0.5)
     
-    plt.text(0.05, 0.9, isite, transform=ax.transAxes, color='gray',)
+    plt.text(0.05, 0.9, isite, transform=ax.transAxes, color='black',)
     plt.text(
         0.55, 0.05,
         '$y = $' + str(np.round(linearfit.slope, 1)) + '$x + $' + \
@@ -186,7 +186,7 @@ for isite in stations_sites.Site:
     ax.set_xticks(np.arange(xtickmin, xtickmax + 1e-4, 1))
     ax.set_xlim(xlimmin, xlimmax)
     
-    ax.grid(True, linewidth=0.4, color='lightgray', alpha=0.5, linestyle=':')
+    ax.grid(True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
     fig.subplots_adjust(left=0.24, right=0.95, bottom=0.25, top=0.97)
     fig.savefig(output_png)
 
@@ -234,7 +234,7 @@ pearsonr(
 
 ivar = 'rh2m'
 
-for isite in stations_sites.Site:
+for isite in ['EDC', 'Halley']: # stations_sites.Site:
     # isite = 'EDC'
     print(isite)
     
@@ -268,7 +268,7 @@ for isite in stations_sites.Site:
     
     ax.axline((0, linearfit.intercept), slope = linearfit.slope, lw=0.5)
     
-    plt.text(0.05, 0.9, isite, transform=ax.transAxes, color='gray',)
+    plt.text(0.05, 0.9, isite, transform=ax.transAxes, color='black',)
     plt.text(
         0.55, 0.05,
         '$y = $' + str(np.round(linearfit.slope, 1)) + '$x + $' + \
@@ -278,16 +278,16 @@ for isite in stations_sites.Site:
     
     ax.set_ylabel('Source rh2m [$\%$]', labelpad=0.5)
     ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
-    ax.set_yticks(np.arange(ytickmin, ytickmax + 1e-4, 0.5))
+    ax.set_yticks(np.arange(ytickmin, ytickmax + 1e-4, 1))
     ax.set_ylim(ylimmin, ylimmax)
-    ax.invert_yaxis()
+    # ax.invert_yaxis()
     
     ax.set_xlabel('Source latitude [$°\;S$]')
     ax.xaxis.set_major_formatter(remove_trailing_zero_pos_abs)
     ax.set_xticks(np.arange(xtickmin, xtickmax + 1e-4, 1))
     ax.set_xlim(xlimmin, xlimmax)
     
-    ax.grid(True, linewidth=0.4, color='lightgray', alpha=0.5, linestyle=':')
+    ax.grid(True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
     fig.subplots_adjust(left=0.24, right=0.95, bottom=0.25, top=0.97)
     fig.savefig(output_png)
 
@@ -305,7 +305,7 @@ for isite in stations_sites.Site:
 
 ivar = 'wind10'
 
-for isite in stations_sites.Site:
+for isite in ['EDC', 'Halley']: # stations_sites.Site:
     # isite = 'EDC'
     print(isite)
     
@@ -339,7 +339,7 @@ for isite in stations_sites.Site:
     
     ax.axline((0, linearfit.intercept), slope = linearfit.slope, lw=0.5)
     
-    plt.text(0.05, 0.9, isite, transform=ax.transAxes, color='gray',)
+    plt.text(0.05, 0.9, isite, transform=ax.transAxes, color='black',)
     plt.text(
         0.55, 0.05,
         '$y = $' + str(np.round(linearfit.slope, 1)) + '$x + $' + \
@@ -349,16 +349,16 @@ for isite in stations_sites.Site:
     
     ax.set_ylabel('Source wind10 [$m \; s^{-1}$]', labelpad=0)
     ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
-    ax.set_yticks(np.arange(ytickmin, ytickmax + 1e-4, 0.2))
+    ax.set_yticks(np.arange(ytickmin, ytickmax + 1e-4, 0.4))
     ax.set_ylim(ylimmin, ylimmax)
-    ax.invert_yaxis()
+    # ax.invert_yaxis()
     
     ax.set_xlabel('Source latitude [$°\;S$]')
     ax.xaxis.set_major_formatter(remove_trailing_zero_pos_abs)
     ax.set_xticks(np.arange(xtickmin, xtickmax + 1e-4, 1))
     ax.set_xlim(xlimmin, xlimmax)
     
-    ax.grid(True, linewidth=0.4, color='lightgray', alpha=0.5, linestyle=':')
+    ax.grid(True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
     fig.subplots_adjust(left=0.24, right=0.95, bottom=0.25, top=0.97)
     fig.savefig(output_png)
 

@@ -34,6 +34,7 @@ from metpy.interpolate import cross_section
 from statsmodels.stats import multitest
 import pycircstat as circ
 from scipy.stats import pearsonr
+from scipy.interpolate import UnivariateSpline
 
 # plot
 import matplotlib as mpl
@@ -158,47 +159,61 @@ with open(
 # -----------------------------------------------------------------------------
 # region subset source properties against precipitation rates
 
-mpl.rc('font', family='Times New Roman', size=8)
-
-# stations_sites.Site
+mpl.rc('font', family='Times New Roman', size=10)
 
 Sites = ['EDC', 'Halley']
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.2_pre_source_sites/6.1.7.2 binned_prerate epe_st_source_anomalies_subset at EDC and Halley.png'
 
-# Sites = ['DOME F', 'Vostok', 'EDML', 'WDC']
-# output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.2_pre_source_sites/6.1.7.2 binned_prerate epe_st_source_anomalies_subset at DOME F, Vostok, EDML, and WDC.png'
-
-
-# Sites = ['Rothera', 'Neumayer', "Law Dome", "Dumont d'Urville"]
-# output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.2_pre_source_sites/6.1.7.2 binned_prerate epe_st_source_anomalies_subset at Rothera, Neumayer, Law Dome, and Dumont.png'
-
 ncol = 3
 nrow = len(Sites)
 
-wspace = 0.4
+wspace = 0.3
 hspace = 0.4
-fm_left = wspace / ncol * 0.7
+fm_left = wspace / ncol * 0.8
 fm_bottom = hspace / nrow * 0.6
 fm_right = 1 - fm_left / 3
-fm_top = 1 - fm_bottom / 2
+fm_top = 1 - fm_bottom
 
 fig, axs = plt.subplots(
-    nrow, ncol, figsize=np.array([4.4 * ncol, 4.2 * nrow]) / 2.54,
-    )
+    nrow, ncol, figsize=np.array([5.8 * ncol, 5.8 * nrow]) / 2.54,)
 
 # plot panel labels
-for jcol in range(ncol):
-    for irow in range(nrow):
+ipanel=0
+for irow in range(nrow):
+    for jcol in range(ncol):
         plt.text(
-            -0.2, 1.09, panel_labels[irow][:2] + str(jcol + 1) + ')',
+            -0.2, 1.1, panel_labels[ipanel],
             transform=axs[irow, jcol].transAxes)
+        ipanel += 1
 
+# plot y labels
+for irow, isite in enumerate(Sites):
+    axs[irow, 0].set_ylabel(isite, labelpad=8, weight='bold')
+
+# plot title
+titles = ['Source latitude [$°\;S$]',
+          'Relative source longitude [$°$]',
+          'Source wind10 [$m \; s^{-1}$]']
+
+for jcol in range(ncol):
+    plt.text(0.5, 1.25, titles[jcol], transform=axs[0, jcol].transAxes,
+             ha='center', va='center', weight='bold')
+
+# specify xaxis
+xmin = 10**-3
+xmax = 20
+
+# plot configurations
+markersize=0
+alpha = 0.8
 
 #---------------- source latitude
 
 ivar = 'lat'
 print('#-------- ' + ivar)
 jcol = 0
+# specify yaxis interval
+yinterval = 5
 
 for irow, isite in enumerate(Sites):
     print('#---- ' + str(irow) + ': ' + isite)
@@ -206,55 +221,39 @@ for irow, isite in enumerate(Sites):
     # yaxis
     max_value = np.nanmax(epe_st_sources_sites_binned[expid[i]][ivar][isite]['am'].am)
     min_value = np.nanmin(epe_st_sources_sites_binned[expid[i]][ivar][isite]['am'].am)
-    ymax = max_value + 0.25
-    ymin = min_value - 0.25
-    
-    # xaxis
-    max_value = np.nanmax(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
-    min_value = 10**-3
-    xmax = max_value * 1.1
-    xmin = min_value
+    ymax = max_value + 1
+    ymin = min_value - 1
     
     axs[irow, jcol].plot(
         wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
         epe_st_sources_sites_binned[expid[i]][ivar][isite]['am'].am,
-        '.-', lw=0.5, markersize=1.5,
+        '.-', lw=0.75, markersize=markersize, alpha=alpha,
         )
-    plt_text = plt.text(
-        0.05, 0.9, isite,
-        transform=axs[irow, jcol].transAxes, color='black',)
+    
+    # fit a spline
+    spl = UnivariateSpline(
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
+        epe_st_sources_sites_binned[expid[i]][ivar][isite]['am'].am)
+    xspl = np.linspace(
+        np.min(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d),
+        np.max(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d), 1000)
+    axs[irow, jcol].plot(xspl, spl(xspl), '-', lw=1, alpha=alpha, color='k')
+    
     axs[irow, jcol].hlines(
         pre_weighted_var_icores[expid[i]][isite][ivar]['am'],
-        xmin = 0, xmax = 100, lw=0.5, linestyles='--')
-    axs[irow, jcol].vlines(
-        wisoaprt_alltime_icores[expid[i]][isite]['am'].sel(wisotype=1) * seconds_per_d,
-        ymin = ymin, ymax = ymax, lw=0.5, linestyles='--', colors='black')
+        xmin = 0, xmax = 100, lw=1, linestyles='--')
     
-    if True: # (irow==0):
-        axs[irow, jcol].set_ylabel('Source latitude [$°\;S$]', labelpad=0)
     axs[irow, jcol].yaxis.set_major_formatter(remove_trailing_zero_pos_abs)
+    axs[irow, jcol].set_yticks(np.arange(-180, 180, yinterval))
     axs[irow, jcol].set_ylim(ymin, ymax)
-    axs[irow, jcol].yaxis.set_minor_locator(AutoMinorLocator(2))
-    
-    if True: # (irow==(nrow-1)):
-        axs[irow, jcol].set_xlabel(
-            'Precipitation [$mm \; day^{-1}$]', labelpad=0)
-    axs[irow, jcol].set_xscale('log')
-    axs[irow, jcol].set_xticks(
-        np.array([10**-3, 10**-2, 10**-1, 10**0, 10**1, 10**2, ]))
-    axs[irow, jcol].set_xticklabels([0.001, 0.01, 0.1, 1, 10, 100,])
-    axs[irow, jcol].set_xlim(xmin, xmax)
-    axs[irow, jcol].xaxis.set_minor_locator(AutoMinorLocator(2))
-    
-    axs[irow, jcol].grid(
-        True, which='both',
-        linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 
 #---------------- relative source longitude
 
 ivar = 'lon'
 print('#-------- ' + ivar)
 jcol = 1
+# specify yaxis interval
+yinterval = 10
 
 for irow, isite in enumerate(Sites):
     print('#---- ' + str(irow) + ': ' + isite)
@@ -267,59 +266,46 @@ for irow, isite in enumerate(Sites):
     # yaxis
     max_value = np.nanmax(rel_lon)
     min_value = np.nanmin(rel_lon)
-    ymax = max_value + 0.25
-    ymin = min_value - 0.25
-    
-    # xaxis
-    max_value = np.nanmax(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
-    min_value = 10**-3
-    xmax = max_value * 1.1
-    xmin = min_value
+    ymax = max_value + 1
+    ymin = min_value - 1
     
     axs[irow, jcol].plot(
         wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
         rel_lon,
-        '.-', lw=0.5, markersize=1.5,
+        '.-', lw=0.75, markersize=markersize, alpha=alpha,
         )
-    plt_text = plt.text(
-        0.05, 0.9, isite,
-        transform=axs[irow, jcol].transAxes, color='black',)
+    
+    if (isite == 'EDC'):
+        smooth_factor = 6000
+    elif (isite == 'Halley'):
+        smooth_factor = 1000
+    
+    # fit a spline
+    spl = UnivariateSpline(
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d,
+        rel_lon, s=smooth_factor)
+    xspl = np.linspace(
+        np.min(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d),
+        np.max(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d), 1000)
+    axs[irow, jcol].plot(xspl, spl(xspl), '-', lw=1, alpha=alpha, color='k')
+    
     axs[irow, jcol].hlines(
         calc_lon_diff_np(
             pre_weighted_var_icores[expid[i]][isite][ivar]['am'].values,
             local_lon,),
-        xmin = 0, xmax = 100, lw=0.5, linestyles='--')
-    axs[irow, jcol].vlines(
-        wisoaprt_alltime_icores[expid[i]][isite]['am'].sel(wisotype=1) * seconds_per_d,
-        ymin = ymin, ymax = ymax, lw=0.5, linestyles='--', colors='black')
+        xmin = 0, xmax = 100, lw=1, linestyles='--')
     
-    if True: # (irow==0):
-        axs[irow, jcol].set_ylabel(
-            'Relative source longitude [$°$]', y = 0.4, labelpad=0,)
     axs[irow, jcol].yaxis.set_major_formatter(remove_trailing_zero_pos)
+    axs[irow, jcol].set_yticks(np.arange(-180, 180, yinterval))
     axs[irow, jcol].set_ylim(ymin, ymax)
-    axs[irow, jcol].yaxis.set_minor_locator(AutoMinorLocator(2))
-    
-    if True: # (irow==(nrow-1)):
-        axs[irow, jcol].set_xlabel(
-            'Precipitation [$mm \; day^{-1}$]', labelpad=0)
-    axs[irow, jcol].set_xscale('log')
-    axs[irow, jcol].set_xticks(
-        np.array([10**-3, 10**-2, 10**-1, 10**0, 10**1, 10**2, ]))
-    axs[irow, jcol].set_xticklabels([0.001, 0.01, 0.1, 1, 10, 100,])
-    axs[irow, jcol].set_xlim(xmin, xmax)
-    axs[irow, jcol].xaxis.set_minor_locator(AutoMinorLocator(2))
-    
-    axs[irow, jcol].grid(
-        True, which='both',
-        linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
-
 
 #---------------- source wind10
 
 ivar = 'wind10'
 print('#-------- ' + ivar)
 jcol = 2
+# specify yaxis interval
+yinterval = 1
 
 for irow, isite in enumerate(Sites):
     print('#---- ' + str(irow) + ': ' + isite)
@@ -327,50 +313,50 @@ for irow, isite in enumerate(Sites):
     # yaxis
     max_value = np.nanmax(epe_st_sources_sites_binned[expid[i]][ivar][isite]['am'].am)
     min_value = np.nanmin(epe_st_sources_sites_binned[expid[i]][ivar][isite]['am'].am)
-    ymax = max_value + 0.05
-    ymin = min_value - 0.05
-    
-    # xaxis
-    max_value = np.nanmax(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
-    min_value = 10**-3
-    xmax = max_value * 1.1
-    xmin = min_value
+    ymax = max_value + 0.5
+    ymin = min_value - 0.5
     
     axs[irow, jcol].plot(
         wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
         epe_st_sources_sites_binned[expid[i]][ivar][isite]['am'].am,
-        '.-', lw=0.5, markersize=1.5,
+        '.-', lw=0.75, markersize=markersize, alpha=alpha,
         )
-    plt_text = plt.text(
-        0.05, 0.9, isite,
-        transform=axs[irow, jcol].transAxes, color='black',)
+    
+    # fit a spline
+    spl = UnivariateSpline(
+        wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d,
+        epe_st_sources_sites_binned[expid[i]][ivar][isite]['am'].am, s=5)
+    xspl = np.linspace(
+        np.min(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d),
+        np.max(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am * seconds_per_d), 1000)
+    axs[irow, jcol].plot(xspl, spl(xspl), '-', lw=1, alpha=alpha, color='k')
+    
     axs[irow, jcol].hlines(
         pre_weighted_var_icores[expid[i]][isite][ivar]['am'],
-        xmin = 0, xmax = 100, lw=0.5, linestyles='--')
-    axs[irow, jcol].vlines(
-        wisoaprt_alltime_icores[expid[i]][isite]['am'].sel(wisotype=1) * seconds_per_d,
-        ymin = ymin, ymax = ymax, lw=0.5, linestyles='--', colors='black')
+        xmin = 0, xmax = 100, lw=1, linestyles='--')
     
-    if True: # (irow==0):
-        axs[irow, jcol].set_ylabel('Source wind10 [$m \; s^{-1}$]', labelpad=0)
     axs[irow, jcol].yaxis.set_major_formatter(remove_trailing_zero_pos)
+    axs[irow, jcol].set_yticks(np.arange(-180, 180, yinterval))
     axs[irow, jcol].set_ylim(ymin, ymax)
-    # axs[irow, jcol].invert_yaxis()
-    axs[irow, jcol].yaxis.set_minor_locator(AutoMinorLocator(2))
-    
-    if True: # (irow==(nrow-1)):
-        axs[irow, jcol].set_xlabel(
-            'Precipitation [$mm \; day^{-1}$]', labelpad=0)
-    axs[irow, jcol].set_xscale('log')
-    axs[irow, jcol].set_xticks(
-        np.array([10**-3, 10**-2, 10**-1, 10**0, 10**1, 10**2, ]))
-    axs[irow, jcol].set_xticklabels([0.001, 0.01, 0.1, 1, 10, 100,])
-    axs[irow, jcol].set_xlim(xmin, xmax)
-    axs[irow, jcol].xaxis.set_minor_locator(AutoMinorLocator(2))
-    
-    axs[irow, jcol].grid(
-        True, which='both',
-        linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+
+for irow, isite in enumerate(Sites):
+    for jcol in range(ncol):
+        axs[irow, jcol].vlines(
+            wisoaprt_alltime_icores[expid[i]][isite]['am'].sel(wisotype=1) * seconds_per_d,
+            ymin = -180, ymax = 180, lw=1, linestyles='--', colors='black')
+        
+        if (irow==(nrow-1)): # True: #
+            axs[irow, jcol].set_xlabel(
+                'Precipitation [$mm \; day^{-1}$]', labelpad=5)
+        
+        axs[irow, jcol].set_xscale('log')
+        axs[irow, jcol].set_xticks(
+            np.array([10**-3, 10**-2, 10**-1, 10**0, 10**1, 10**2, ]))
+        axs[irow, jcol].set_xticklabels([0.001, 0.01, 0.1, 1, 10, 100,])
+        axs[irow, jcol].set_xlim(xmin, xmax)
+        
+        axs[irow, jcol].grid(
+            True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
 
 fig.subplots_adjust(
     left=fm_left, right=fm_right, bottom=fm_bottom, top=fm_top,
@@ -381,6 +367,56 @@ fig.savefig(output_png)
 
 
 '''
+    
+    
+    
+
+axs[irow, jcol].yaxis.set_minor_locator(AutoMinorLocator(1))
+yrange=30
+yrange=65
+yrange=5.5
+    mid_value = (max_value + min_value) / 2
+    ymax = mid_value + yrange / 2
+    ymin = mid_value - yrange / 2
+
+
+
+            # panel_labels[irow][:2] + str(jcol + 1) + ')',
+
+Sites = ['DOME F', 'Vostok', 'EDML', 'WDC']
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.2_pre_source_sites/6.1.7.2 binned_prerate epe_st_source_anomalies_subset at DOME F, Vostok, EDML, and WDC.png'
+
+Sites = ['Rothera', 'Neumayer', "Law Dome", "Dumont d'Urville"]
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.2_pre_source_sites/6.1.7.2 binned_prerate epe_st_source_anomalies_subset at Rothera, Neumayer, Law Dome, and Dumont.png'
+
+
+    # plt_text = plt.text(
+    #     0.05, 0.9, isite,
+    #     transform=axs[irow, jcol].transAxes, color='black',)
+
+    # plt_text = plt.text(
+    #     0.05, 0.9, isite,
+    #     transform=axs[irow, jcol].transAxes, color='black',)
+
+    # if (jcol==0): # True: #
+    #     axs[irow, jcol].set_ylabel(
+    #         'Relative source longitude [$°$]', y = 0.4, labelpad=0,)
+
+    # plt_text = plt.text(
+    #     0.05, 0.9, isite,
+    #     transform=axs[irow, jcol].transAxes, color='black',)
+
+    # if (jcol==0): # True: #
+    #     axs[irow, jcol].set_ylabel('Source wind10 [$m \; s^{-1}$]', labelpad=0)
+
+    # axs[irow, jcol].invert_yaxis()
+
+    # xaxis
+    max_value = np.nanmax(wisoaprt_masked_bin_st_icores[expid[i]][isite]['meannan']['am'].am.values * seconds_per_d)
+    min_value = 10**-3
+    xmax = max_value * 1.1
+    xmin = min_value
+
 '''
 # endregion
 # -----------------------------------------------------------------------------

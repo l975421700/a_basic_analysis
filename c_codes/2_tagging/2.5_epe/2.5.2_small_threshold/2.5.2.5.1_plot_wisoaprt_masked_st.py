@@ -176,7 +176,7 @@ ax.clabel(
 cbar = fig.colorbar(
     plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
     orientation="horizontal", shrink=0.95, ticks=pltticks, extend='both',
-    pad=0.02, fraction=0.15,
+    pad=0.04, fraction=0.15,
     )
 cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)

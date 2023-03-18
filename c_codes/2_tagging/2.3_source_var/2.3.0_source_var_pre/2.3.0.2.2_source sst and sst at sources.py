@@ -48,6 +48,7 @@ plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
 from matplotlib.ticker import AutoMinorLocator
+import cartopy.feature as cfeature
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -96,6 +97,7 @@ from a_basic_analysis.b_module.statistics import (
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
     plt_mesh_pars,
+    plot_t63_contourf,
 )
 
 # endregion
@@ -232,11 +234,16 @@ for irow in range(nrow):
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=8, cm_max=20, cm_interval1=1, cm_interval2=1, cmap='RdBu',)
 
-plt_mesh = axs[0].pcolormesh(
-    lon,
-    lat,
-    pre_weighted_sst[expid[i]]['am'],
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_mesh = axs[0].pcolormesh(
+#     lon,
+#     lat,
+#     pre_weighted_sst[expid[i]]['am'],
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_mesh = plot_t63_contourf(
+    lon, lat, pre_weighted_sst[expid[i]]['am'], axs[0],
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+axs[0].add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
 
 cbar = fig.colorbar(
     plt_mesh, ax=axs[0], aspect=30, format=remove_trailing_zero_pos,
@@ -250,11 +257,16 @@ cbar.ax.set_xlabel('Source SST [$°C$]', linespacing=1.5,)
 # sst at sources
 
 
-plt_mesh = axs[1].pcolormesh(
-    lon,
-    lat,
-    sst_sources[expid[i]]['am'],
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_mesh = axs[1].pcolormesh(
+#     lon,
+#     lat,
+#     sst_sources[expid[i]]['am'],
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_mesh = plot_t63_contourf(
+    lon, lat, sst_sources[expid[i]]['am'], axs[1],
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+axs[1].add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
 
 cbar = fig.colorbar(
     plt_mesh, ax=axs[1], aspect=30, format=remove_trailing_zero_pos,
@@ -262,20 +274,25 @@ cbar = fig.colorbar(
     pad=0.05,
     )
 cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel('SST at source lat/lon [$°C$]', linespacing=1.5,)
+cbar.ax.set_xlabel('SST at source lat & lon [$°C$]', linespacing=1.5,)
 
 
 # source sst - sst at sources
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-3, cm_max=3, cm_interval1=0.5, cm_interval2=0.5, cmap='PRGn',
-    reversed=False, asymmetric=True,)
+    cm_min=-3, cm_max=3, cm_interval1=0.5, cm_interval2=0.5, cmap='PuOr',
+    reversed=True, asymmetric=True,)
 
-plt_mesh = axs[2].pcolormesh(
-    lon,
-    lat,
-    pre_weighted_sst[expid[i]]['am'] - sst_sources[expid[i]]['am'],
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_mesh = axs[2].pcolormesh(
+#     lon,
+#     lat,
+#     pre_weighted_sst[expid[i]]['am'] - sst_sources[expid[i]]['am'],
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_mesh = plot_t63_contourf(
+    lon, lat, pre_weighted_sst[expid[i]]['am'] - sst_sources[expid[i]]['am'], axs[2],
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+axs[2].add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
 
 cbar = fig.colorbar(
     plt_mesh, ax=axs[2], aspect=30, format=remove_trailing_zero_pos,
@@ -283,7 +300,7 @@ cbar = fig.colorbar(
     pad=0.05,
     )
 cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel('Differences (a - b) [$°C$]', linespacing=1.5,)
+cbar.ax.set_xlabel('Differences: (a) - (b) [$°C$]', linespacing=1.5,)
 
 fig.subplots_adjust(
     left=fm_left, right = fm_right, bottom = fm_bottom, top = fm_top,

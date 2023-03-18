@@ -48,6 +48,7 @@ plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
 from matplotlib.ticker import AutoMinorLocator
+import cartopy.feature as cfeature
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -96,6 +97,7 @@ from a_basic_analysis.b_module.statistics import (
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
     plt_mesh_pars,
+    plot_t63_contourf,
 )
 
 # endregion
@@ -220,11 +222,16 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=75, cm_max=83, cm_interval1=1, cm_interval2=1, cmap='PRGn',
     reversed=False)
 
-plt_mesh = axs[0].pcolormesh(
-    lon,
-    lat,
-    pre_weighted_rh2m[expid[i]]['am'],
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_mesh = axs[0].pcolormesh(
+#     lon,
+#     lat,
+#     pre_weighted_rh2m[expid[i]]['am'],
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_mesh = plot_t63_contourf(
+    lon, lat, pre_weighted_rh2m[expid[i]]['am'], axs[0],
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+axs[0].add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
 
 cbar = fig.colorbar(
     plt_mesh, ax=axs[0], aspect=30, format=remove_trailing_zero_pos,
@@ -241,11 +248,16 @@ cbar.ax.set_xlabel('Source rh2m [$\%$]', linespacing=1.5,)
 #     cm_min=10-2, cm_max=11.5-2, cm_interval1=0.25, cm_interval2=0.25,
 #     cmap='PiYG',)
 
-plt_mesh = axs[1].pcolormesh(
-    lon,
-    lat,
-    rh2m_sources[expid[i]]['am'] * 100,
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_mesh = axs[1].pcolormesh(
+#     lon,
+#     lat,
+#     rh2m_sources[expid[i]]['am'] * 100,
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_mesh = plot_t63_contourf(
+    lon, lat, rh2m_sources[expid[i]]['am'] * 100, axs[1],
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+axs[1].add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
 
 cbar = fig.colorbar(
     plt_mesh, ax=axs[1], aspect=30, format=remove_trailing_zero_pos,
@@ -253,7 +265,7 @@ cbar = fig.colorbar(
     pad=0.05,
     )
 cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel('rh2m at source lat/lon [$\%$]', linespacing=1.5,)
+cbar.ax.set_xlabel('rh2m at source lat & lon [$\%$]', linespacing=1.5,)
 
 
 # source rh2m - rh2m at sources
@@ -262,11 +274,16 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=-4, cm_max=4, cm_interval1=1, cm_interval2=1, cmap='BrBG',
     reversed=False, asymmetric=True,)
 
-plt_mesh = axs[2].pcolormesh(
-    lon,
-    lat,
-    pre_weighted_rh2m[expid[i]]['am'] - rh2m_sources[expid[i]]['am'] * 100,
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# plt_mesh = axs[2].pcolormesh(
+#     lon,
+#     lat,
+#     pre_weighted_rh2m[expid[i]]['am'] - rh2m_sources[expid[i]]['am'] * 100,
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+plt_mesh = plot_t63_contourf(
+    lon, lat, pre_weighted_rh2m[expid[i]]['am'] - rh2m_sources[expid[i]]['am'] * 100, axs[2],
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+axs[2].add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
 
 cbar = fig.colorbar(
     plt_mesh, ax=axs[2], aspect=30, format=remove_trailing_zero_pos,
@@ -274,7 +291,7 @@ cbar = fig.colorbar(
     pad=0.05,
     )
 cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel('Differences (a - b) [$\%$]', linespacing=1.5,)
+cbar.ax.set_xlabel('Differences: (a) - (b) [$\%$]', linespacing=1.5,)
 
 fig.subplots_adjust(
     left=fm_left, right = fm_right, bottom = fm_bottom, top = fm_top,

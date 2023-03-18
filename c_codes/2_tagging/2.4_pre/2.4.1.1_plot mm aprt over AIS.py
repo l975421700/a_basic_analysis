@@ -151,25 +151,26 @@ output_png = 'figures/6_awi/6.1_echam6/6.1.4_precipitation/6.1.4.0_aprt/6.1.4.0.
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
 
-plt_bar = sns.barplot(
-    data = pre_mm_over_ais,
-    x = 'Month',
-    y = 'pre_mon',
+plt_box = sns.boxplot(
+    data=pre_mm_over_ais,
+    x='Month',
+    y='pre_mon',
     hue = 'Data', hue_order = ['ERA5', 'ECHAM6'],
     palette=['tab:blue', 'tab:orange',],
-    ci = 'sd', errwidth=0.75, capsize=0.1,
-)
+    linewidth=0.8, width = 0.8,
+    fliersize=1, flierprops={"marker": "o"},)
+
 lgd_handles = [mpatches.Patch(color=x, label=y) for x, y in \
-    zip(['tab:blue', 'tab:orange',], ['ERA5', 'ECHAM6 PI'])]
+    zip(['tab:blue', 'tab:orange',], ['ERA5', 'ECHAM6'])]
 
 plt.legend(
     handles=lgd_handles,
-    labels=['ERA5', 'ECHAM6 PI'],
-    loc='upper right', handlelength=1, framealpha = 0.5, )
+    title=None,
+    loc='lower right', handlelength=1, framealpha = 0.5, )
 
 ax.set_xlabel('Monthly precipitation over AIS [$mm \; mon^{-1}$]')
 ax.set_ylabel(None)
-# ax.set_ylim(0, 20)
+ax.set_ylim(0, 27)
 ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
 
 ax.grid(True, linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
@@ -178,10 +179,38 @@ fig.savefig(output_png)
 
 
 
-pre_mm_over_ais.loc[pre_mm_over_ais.Data == 'ECHAM6'].pre_mon.mean()
-pre_mm_over_ais.loc[pre_mm_over_ais.Data == 'ERA5'].pre_mon.mean()
 
 '''
+# # boxplot
+# plt_bar = sns.barplot(
+#     data = pre_mm_over_ais,
+#     x = 'Month',
+#     y = 'pre_mon',
+#     hue = 'Data', hue_order = ['ERA5', 'ECHAM6'],
+#     palette=['tab:blue', 'tab:orange',],
+#     ci = 'sd', errwidth=0.75, capsize=0.1,
+# )
+
+# plt_legend = ax.legend(
+#     title=None, labelspacing=0.2, fontsize=8, handletextpad=0.2,
+#     markerscale=0.3,)
+
+# plt_swarm = sns.swarmplot(
+#     data=pre_mm_over_ais,
+#     x='Month',
+#     y='pre_mon',
+#     hue = 'Data', hue_order = ['ERA5', 'ECHAM6'],
+#     # ax=ax, hue='year', order=np.arange(1, 13, 1), hue_order=np.arange(2006, 2016, 1), 
+#     size=2, dodge=True,
+#     # palette=sns.color_palette(
+#     #     'viridis_r', len(np.unique(pre_mm_over_ais['year']))),
+#     )
+
+# for i in range(len(plt_box.artists)):
+#     plt_box.artists[i].set_facecolor('white')
+
+pre_mm_over_ais.loc[pre_mm_over_ais.Data == 'ECHAM6'].pre_mon.mean()
+pre_mm_over_ais.loc[pre_mm_over_ais.Data == 'ERA5'].pre_mon.mean()
 np.max(abs(
     wisoaprt_mean_over_ais[expid[i]]['mm'] - \
         wisoaprt_mean_over_ais[expid[i]]['mon'].groupby('time.month').mean(skipna=True).compute()))

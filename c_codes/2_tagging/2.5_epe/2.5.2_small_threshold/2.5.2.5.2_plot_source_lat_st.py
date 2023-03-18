@@ -452,3 +452,19 @@ fig.savefig(output_png, dpi=600)
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region epe 90% and dc 10% at EDC
+
+
+print(np.round(epe_st_weighted_lat[expid[i]]['90%']['am'].sel(
+    lat=-75.10, lon=123.35, method='nearest').values, 1))
+
+print(np.round(dc_st_weighted_lat[expid[i]]['10%']['am'].sel(
+    lat=-75.10, lon=123.35, method='nearest').values, 1))
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+

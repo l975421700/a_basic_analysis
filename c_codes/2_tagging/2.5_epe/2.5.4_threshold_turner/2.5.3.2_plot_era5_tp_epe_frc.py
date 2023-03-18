@@ -41,6 +41,7 @@ plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
 from matplotlib.ticker import AutoMinorLocator
+import cartopy.feature as cfeature
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -87,12 +88,14 @@ from a_basic_analysis.b_module.statistics import (
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
     plt_mesh_pars,
+    plot_t63_contourf,
 )
 
 # endregion
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 # region resample hourly era5 tp to daily tp
 
@@ -166,6 +169,7 @@ np.max(abs(data1 - data2) / data2)
 
 
 # -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # region get fraction of precipitation amount below 0.02 mm/day
 
 #-------------------------------- 0.02 mm/day
@@ -228,3 +232,88 @@ print(np.min(tp_era5_frc_st))
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# region fractioin of EPE, with a threshold of 0.002 mm/day
+
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
+tp_era5_daily = xr.open_mfdataset(
+    'scratch/cmip6/hist/pre/tp_ERA5_daily_sl_??_??_Antarctica.nc',
+    ).chunk({'time': 15706, 'longitude': 20, 'latitude': 1})
+
+lon = tp_era5_daily.longitude
+lat = tp_era5_daily.latitude
+
+tp_era5 = {}
+tp_era5['original'] = tp_era5_daily.tp.copy().where(
+    tp_era5_daily.tp >= 0.002,
+    other=np.nan,).compute()
+
+tp_era5['quantiles_90'] = \
+    tp_era5['original'].quantile(0.9, dim='time', skipna=True).compute()
+
+tp_era5['mask_90'] = (tp_era5_daily.tp.copy() >= tp_era5['quantiles_90']).compute()
+
+tp_era5['masked_90'] = tp_era5_daily.tp.copy().where(
+    tp_era5['mask_90'],
+    other=0,).compute()
+
+tp_era5['frc'] = (tp_era5['masked_90'].mean(dim='time') / tp_era5_daily.tp.copy().mean(dim='time'))
+
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.1_pre/6.1.7.1 ear5 st_daily precipitation percentile_90_frc Antarctica.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=30, cm_max=70, cm_interval1=2.5, cm_interval2=5, cmap='Oranges',
+    reversed=False)
+
+fig, ax = hemisphere_plot(
+    northextent=-60, figsize=np.array([5.8, 6.8]) / 2.54)
+
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
+
+plt_data = tp_era5['frc'] * 100
+
+plt1 = ax.contourf(
+    lon,
+    lat,
+    plt_data,
+    levels=pltlevel, extend='both',
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+ax.add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
+
+plt_ctr = ax.contour(
+    lon,
+    lat.sel(latitude=slice(-60, -90)),
+    plt_data.sel(latitude=slice(-60, -90)),
+    [50],
+    colors = 'b', linewidths=0.3, transform=ccrs.PlateCarree(),)
+ax.clabel(
+    plt_ctr, inline=1, colors='b', fmt=remove_trailing_zero,
+    levels=[50], inline_spacing=10, fontsize=8,)
+
+cbar = fig.colorbar(
+    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.95, ticks=pltticks, extend='both',
+    pad=0.04, fraction=0.15,
+    )
+cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
+cbar.ax.tick_params(labelsize=8)
+cbar.ax.set_xlabel(
+    'Contribution of HP to total precipitation [$\%$]', linespacing=1.5,
+    fontsize=8)
+fig.savefig(output_png, dpi=600)
+
+
+'''
+# plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+
+# plt1 = plot_t63_contourf(
+#     lon, lat, plt_data, ax,
+#     pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+'''
+# endregion
+# -----------------------------------------------------------------------------

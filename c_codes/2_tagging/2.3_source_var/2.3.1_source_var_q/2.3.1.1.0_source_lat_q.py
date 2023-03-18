@@ -461,7 +461,7 @@ ax_clabel = ax.clabel(
 
 # x-axis
 ax.set_xticks(np.arange(0, -90 - 1e-4, -10))
-ax.set_xlim(0, -90)
+ax.set_xlim(0, -88.57)
 ax.xaxis.set_major_formatter(LatitudeFormatter(degree_symbol='° '))
 
 # y-axis
@@ -583,7 +583,7 @@ ax_clabel = ax.clabel(
 
 # x-axis
 ax.set_xticks(np.arange(0, -90 - 1e-4, -10))
-ax.set_xlim(0, -90)
+ax.set_xlim(0, -88.57)
 ax.xaxis.set_major_formatter(LatitudeFormatter(degree_symbol='° '))
 
 # y-axis
