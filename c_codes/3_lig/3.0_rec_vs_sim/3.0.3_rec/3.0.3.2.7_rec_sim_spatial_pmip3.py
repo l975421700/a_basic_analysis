@@ -140,7 +140,7 @@ latitude = pmip3_lig_sim['annual_sst'].latitude
 
 
 output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.0 rec am sst lig-pi_pmip3.png'
-cbar_label = 'Annual SST and SAT [$°C$]\nPMIP3'
+cbar_label = 'Annual SST and SAT [$°C$]\nPMIP3 model ensemble'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='RdBu',)
@@ -204,7 +204,7 @@ cbar = fig.colorbar(
     orientation="horizontal", shrink=1, ticks=pltticks, extend='both',
     pad=0.02, fraction=0.2, format=remove_trailing_zero_pos,
     )
-cbar.ax.tick_params(labelsize=8)
+# cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
 fig.savefig(output_png)
 
@@ -220,7 +220,7 @@ fig.savefig(output_png)
 
 
 output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.0 rec jfm sst lig-pi_pmip3.png'
-cbar_label = 'Summer SST [$°C$]\nPMIP3'
+cbar_label = 'Summer SST [$°C$]\nPMIP3 model ensemble'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='RdBu',)
@@ -278,7 +278,7 @@ cbar = fig.colorbar(
     orientation="horizontal", shrink=1, ticks=pltticks, extend='both',
     pad=0.02, fraction=0.2, format=remove_trailing_zero_pos,
     )
-cbar.ax.tick_params(labelsize=8)
+# cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
 fig.savefig(output_png)
 

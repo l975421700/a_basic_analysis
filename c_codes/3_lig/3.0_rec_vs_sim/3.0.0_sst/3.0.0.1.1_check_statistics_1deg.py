@@ -125,22 +125,11 @@ models=[
 # -----------------------------------------------------------------------------
 # region SO annual SST
 
-with open('scratch/cmip6/lig/sst/lig_pi_sst_regrid_alltime.pkl', 'rb') as f:
-    lig_pi_sst_regrid_alltime = pickle.load(f)
-
-with open('scratch/cmip6/lig/sst/lig_pi_sst_regrid_alltime_ens.pkl', 'rb') as f:
-    lig_pi_sst_regrid_alltime_ens = pickle.load(f)
-
+#-------------------------------- model ensembles
 with open('scratch/cmip6/lig/sst/sst_regrid_alltime_ens_stats.pkl', 'rb') as f:
     sst_regrid_alltime_ens_stats = pickle.load(f)
 
-#-------------------------------- model ensembles
-
 data = sst_regrid_alltime_ens_stats['lig_pi']['am']['mean'][0].values[mask_so]
-
-# data = lig_pi_sst_regrid_alltime_ens['am'].mean(
-#     dim='ensemble', skipna = True)[0].values[mask_so]
-
 
 mean_value = np.ma.average(
     np.ma.MaskedArray(data, mask = np.isnan(data)),
@@ -153,6 +142,9 @@ print(str(np.round(mean_value, 1)) + ' ± ' + str(np.round(std_values, 1)))
 
 
 #-------------------------------- each model
+with open('scratch/cmip6/lig/sst/lig_pi_sst_regrid_alltime_ens.pkl', 'rb') as f:
+    lig_pi_sst_regrid_alltime_ens = pickle.load(f)
+
 for imodel in models:
     # imodel = 'ACCESS-ESM1-5'
     print('#-------- ' + imodel)
@@ -169,6 +161,24 @@ for imodel in models:
     print(str(np.round(mean_value, 1)) + ' ± ' + str(np.round(std_values, 1)))
 
 
+#-------------------------------- PMIP3
+
+pmip3_lig_sim = {}
+pmip3_lig_sim['annual_sst'] = xr.open_dataset('data_sources/LIG/Supp_Info_PMIP3/netcdf_data_for_ensemble/LIG_ensemble_sst_c.nc')
+
+pmip3_gridarea = xr.open_dataset('data_sources/LIG/Supp_Info_PMIP3/netcdf_data_for_ensemble/pmip3_gridarea.nc')
+
+latitude = pmip3_lig_sim['annual_sst'].latitude.values
+
+data = pmip3_lig_sim['annual_sst'].sst.values[latitude < -40]
+mean_value = np.ma.average(
+    np.ma.MaskedArray(data, mask = np.isnan(data)),
+    weights=pmip3_gridarea.cell_area.values[latitude < -40])
+std_values = np.ma.std(
+    np.ma.MaskedArray(data, mask = np.isnan(data)),)
+
+print(str(np.round(mean_value, 1)) + ' ± ' + str(np.round(std_values, 1)))
+
 
 
 
@@ -178,6 +188,13 @@ data1 = sst_regrid_alltime_ens_stats['lig_pi']['am']['mean'][0].values[mask_so]
 data2 = lig_pi_sst_regrid_alltime_ens['am'].mean(
     dim='ensemble', skipna = True)[0].values[mask_so]
 print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
+
+with open('scratch/cmip6/lig/sst/lig_pi_sst_regrid_alltime.pkl', 'rb') as f:
+    lig_pi_sst_regrid_alltime = pickle.load(f)
+
+# data = lig_pi_sst_regrid_alltime_ens['am'].mean(
+#     dim='ensemble', skipna = True)[0].values[mask_so]
+
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -186,22 +203,11 @@ print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
 # -----------------------------------------------------------------------------
 # region SO summer SST
 
-with open('scratch/cmip6/lig/sst/lig_pi_sst_regrid_alltime.pkl', 'rb') as f:
-    lig_pi_sst_regrid_alltime = pickle.load(f)
-
-with open('scratch/cmip6/lig/sst/lig_pi_sst_regrid_alltime_ens.pkl', 'rb') as f:
-    lig_pi_sst_regrid_alltime_ens = pickle.load(f)
-
+#-------------------------------- model ensembles
 with open('scratch/cmip6/lig/sst/sst_regrid_alltime_ens_stats.pkl', 'rb') as f:
     sst_regrid_alltime_ens_stats = pickle.load(f)
 
-
-#-------------------------------- model ensembles
-
 data = sst_regrid_alltime_ens_stats['lig_pi']['sm']['mean'][0].values[mask_so]
-
-# data = lig_pi_sst_regrid_alltime_ens['sm'].mean(
-#     dim='ensemble', skipna = True)[0].values[mask_so]
 
 mean_value = np.ma.average(
     np.ma.MaskedArray(data, mask = np.isnan(data)),
@@ -213,6 +219,9 @@ std_values = np.ma.std(
 print(str(np.round(mean_value, 1)) + ' ± ' + str(np.round(std_values, 1)))
 
 #-------------------------------- each model
+with open('scratch/cmip6/lig/sst/lig_pi_sst_regrid_alltime_ens.pkl', 'rb') as f:
+    lig_pi_sst_regrid_alltime_ens = pickle.load(f)
+
 for imodel in models:
     # imodel = 'ACCESS-ESM1-5'
     print('#-------- ' + imodel)
@@ -229,6 +238,36 @@ for imodel in models:
     print(str(np.round(mean_value, 1)) + ' ± ' + str(np.round(std_values, 1)))
 
 
+#-------------------------------- PMIP3
+
+pmip3_lig_sim = {}
+pmip3_lig_sim['summer_sst'] = xr.open_dataset('data_sources/LIG/Supp_Info_PMIP3/netcdf_data_for_ensemble/LIG_ensemble_sstdjf_c.nc')
+
+
+pmip3_gridarea = xr.open_dataset('data_sources/LIG/Supp_Info_PMIP3/netcdf_data_for_ensemble/pmip3_gridarea.nc')
+
+latitude = pmip3_lig_sim['summer_sst'].latitude.values
+
+data = pmip3_lig_sim['summer_sst'].sstdjf.values[latitude < -40]
+mean_value = np.ma.average(
+    np.ma.MaskedArray(data, mask = np.isnan(data)),
+    weights=pmip3_gridarea.cell_area.values[latitude < -40])
+std_values = np.ma.std(
+    np.ma.MaskedArray(data, mask = np.isnan(data)),)
+
+print(str(np.round(mean_value, 1)) + ' ± ' + str(np.round(std_values, 1)))
+
+
+
+'''
+with open('scratch/cmip6/lig/sst/lig_pi_sst_regrid_alltime.pkl', 'rb') as f:
+    lig_pi_sst_regrid_alltime = pickle.load(f)
+
+# data = lig_pi_sst_regrid_alltime_ens['sm'].mean(
+#     dim='ensemble', skipna = True)[0].values[mask_so]
+
+
+'''
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -236,21 +275,11 @@ for imodel in models:
 # -----------------------------------------------------------------------------
 # region SO Sep SIC
 
-with open('scratch/cmip6/lig/sic/lig_pi_sic_regrid_alltime.pkl', 'rb') as f:
-    lig_pi_sic_regrid_alltime = pickle.load(f)
-
-with open('scratch/cmip6/lig/sic/lig_pi_sic_regrid_alltime_ens.pkl', 'rb') as f:
-    lig_pi_sic_regrid_alltime_ens = pickle.load(f)
-
+#-------------------------------- model ensembles
 with open('scratch/cmip6/lig/sic/sic_regrid_alltime_ens_stats.pkl', 'rb') as f:
     sic_regrid_alltime_ens_stats = pickle.load(f)
 
-#-------------------------------- model ensembles
-
 data = sic_regrid_alltime_ens_stats['lig_pi']['mm']['mean'][8].values[mask_so]
-
-# data = lig_pi_sic_regrid_alltime_ens['mm'].mean(
-#     dim='ensemble', skipna = True)[8].values[mask_so]
 
 mean_value = np.ma.average(
     np.ma.MaskedArray(data, mask = np.isnan(data)),
@@ -261,8 +290,10 @@ std_values = np.ma.std(
 
 print(str(np.round(mean_value, 1)) + ' ± ' + str(np.round(std_values, 1)))
 
-
 #-------------------------------- each model
+with open('scratch/cmip6/lig/sic/lig_pi_sic_regrid_alltime_ens.pkl', 'rb') as f:
+    lig_pi_sic_regrid_alltime_ens = pickle.load(f)
+
 for imodel in models:
     # imodel = 'ACCESS-ESM1-5'
     print('#-------- ' + imodel)
@@ -278,7 +309,14 @@ for imodel in models:
     
     print(str(np.round(mean_value, 1)) + ' ± ' + str(np.round(std_values, 1)))
 
+'''
+with open('scratch/cmip6/lig/sic/lig_pi_sic_regrid_alltime.pkl', 'rb') as f:
+    lig_pi_sic_regrid_alltime = pickle.load(f)
 
+# data = lig_pi_sic_regrid_alltime_ens['mm'].mean(
+#     dim='ensemble', skipna = True)[8].values[mask_so]
+
+'''
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -286,21 +324,11 @@ for imodel in models:
 # -----------------------------------------------------------------------------
 # region AIS annual SAT
 
-with open('scratch/cmip6/lig/tas/lig_pi_tas_regrid_alltime.pkl', 'rb') as f:
-    lig_pi_tas_regrid_alltime = pickle.load(f)
-
-with open('scratch/cmip6/lig/tas/lig_pi_tas_regrid_alltime_ens.pkl', 'rb') as f:
-    lig_pi_tas_regrid_alltime_ens = pickle.load(f)
-
+#-------------------------------- model ensembles
 with open('scratch/cmip6/lig/tas/tas_regrid_alltime_ens_stats.pkl', 'rb') as f:
     tas_regrid_alltime_ens_stats = pickle.load(f)
 
-#-------------------------------- model ensembles
-
 data = tas_regrid_alltime_ens_stats['lig_pi']['am']['mean'][0].values[mask_ais]
-
-# data = lig_pi_tas_regrid_alltime_ens['am'].mean(
-#     dim='ensemble', skipna = True)[0].values[mask_ais]
 
 mean_value = np.ma.average(
     np.ma.MaskedArray(data, mask = np.isnan(data)),
@@ -311,6 +339,9 @@ std_values = np.ma.std(np.ma.MaskedArray(data, mask = np.isnan(data)),)
 print(str(np.round(mean_value, 1)) + ' ± ' + str(np.round(std_values, 1)))
 
 #-------------------------------- each model
+with open('scratch/cmip6/lig/tas/lig_pi_tas_regrid_alltime_ens.pkl', 'rb') as f:
+    lig_pi_tas_regrid_alltime_ens = pickle.load(f)
+
 for imodel in models:
     # imodel = 'ACCESS-ESM1-5'
     print('#-------- ' + imodel)
@@ -327,7 +358,87 @@ for imodel in models:
     print(str(np.round(mean_value, 1)) + ' ± ' + str(np.round(std_values, 1)))
 
 
+#-------------------------------- PMIP3
 
+pmip3_lig_sim = {}
+pmip3_lig_sim['annual_sat'] = xr.open_dataset('data_sources/LIG/Supp_Info_PMIP3/netcdf_data_for_ensemble/LIG_ensemble_sfc_c.nc')
+
+pmip3_gridarea = xr.open_dataset('data_sources/LIG/Supp_Info_PMIP3/netcdf_data_for_ensemble/pmip3_gridarea.nc')
+with open('scratch/others/land_sea_masks/pmip3_ais_mask.pkl', 'rb') as f:
+    pmip3_ais_mask = pickle.load(f)
+
+latitude = pmip3_lig_sim['annual_sat'].latitude.values
+mask_ais = pmip3_ais_mask['mask']['AIS']
+
+data = pmip3_lig_sim['annual_sat'].sfc.values[mask_ais]
+mean_value = np.ma.average(
+    np.ma.MaskedArray(data, mask = np.isnan(data)),
+    weights=pmip3_gridarea.cell_area.values[mask_ais])
+std_values = np.ma.std(
+    np.ma.MaskedArray(data, mask = np.isnan(data)),)
+
+print(str(np.round(mean_value, 1)) + ' ± ' + str(np.round(std_values, 1)))
+
+
+'''
+with open('scratch/cmip6/lig/tas/lig_pi_tas_regrid_alltime.pkl', 'rb') as f:
+    lig_pi_tas_regrid_alltime = pickle.load(f)
+
+# data = lig_pi_tas_regrid_alltime_ens['am'].mean(
+#     dim='ensemble', skipna = True)[0].values[mask_ais]
+
+'''
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region SO Sep SIA
+
+#-------------------------------- model ensembles
+with open('scratch/cmip6/lig/sic/sic_regrid_alltime_ens_stats.pkl', 'rb') as f:
+    sic_regrid_alltime_ens_stats = pickle.load(f)
+
+lig_data = sic_regrid_alltime_ens_stats['lig']['mm']['mean'][8].values[mask_so]
+pi_data  = sic_regrid_alltime_ens_stats['pi']['mm']['mean'][8].values[mask_so]
+sia_lig = np.nansum(lig_data / 100 * cdo_area1deg.cell_area.values[mask_so]) / 1e+12
+sia_pi = np.nansum(pi_data / 100 * cdo_area1deg.cell_area.values[mask_so]) / 1e+12
+sia_lig_pi = int(np.round((sia_lig - sia_pi) / sia_pi * 100, 0))
+
+print(sia_lig_pi)
+
+#-------------------------------- each model
+
+with open('scratch/cmip6/lig/sic/lig_sic_regrid_alltime_ens.pkl', 'rb') as f:
+    lig_sic_regrid_alltime_ens = pickle.load(f)
+with open('scratch/cmip6/lig/sic/pi_sic_regrid_alltime_ens.pkl', 'rb') as f:
+    pi_sic_regrid_alltime_ens = pickle.load(f)
+
+for imodel in models:
+    # imodel = 'ACCESS-ESM1-5'
+    print('#-------- ' + imodel)
+    
+    lig_data = lig_sic_regrid_alltime_ens['mm'].sel(ensemble=imodel)[8].values[mask_so]
+    pi_data  = pi_sic_regrid_alltime_ens['mm'].sel(ensemble=imodel)[8].values[mask_so]
+    sia_lig = np.nansum(lig_data / 100 * cdo_area1deg.cell_area.values[mask_so]) / 1e+12
+    sia_pi = np.nansum(pi_data / 100 * cdo_area1deg.cell_area.values[mask_so]) / 1e+12
+    sia_lig_pi = int(np.round((sia_lig - sia_pi) / sia_pi * 100, 0))
+    
+    print(sia_lig_pi)
+
+
+
+
+'''
+with open('scratch/cmip6/lig/sic/lig_pi_sic_regrid_alltime.pkl', 'rb') as f:
+    lig_pi_sic_regrid_alltime = pickle.load(f)
+
+# data = lig_pi_sic_regrid_alltime_ens['mm'].mean(
+#     dim='ensemble', skipna = True)[8].values[mask_so]
+
+with open('scratch/cmip6/lig/sic/lig_pi_sic_regrid_alltime_ens.pkl', 'rb') as f:
+    lig_pi_sic_regrid_alltime_ens = pickle.load(f)
+
+'''
+# endregion
+# -----------------------------------------------------------------------------

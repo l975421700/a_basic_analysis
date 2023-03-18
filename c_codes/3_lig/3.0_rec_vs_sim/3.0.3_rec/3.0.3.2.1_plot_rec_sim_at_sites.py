@@ -190,12 +190,12 @@ ax.plot([0, 1], [0, 1], transform=ax.transAxes, c='k', lw=0.5, ls='--')
 ax.hlines(0, axis_min, axis_max, colors='k', lw=0.5, linestyles='--')
 ax.vlines(0, axis_min, axis_max, colors='k', lw=0.5, linestyles='--')
 
-ax.set_ylabel('Simulated annual SST and SAT [$°C$]')
+ax.set_ylabel('Simulated Annual SST and SAT [$°C$]')
 ax.set_ylim(axis_min, axis_max)
 ax.set_yticks(np.arange(axis_min, axis_max + 1e-4, 2))
 ax.yaxis.set_minor_locator(AutoMinorLocator(2))
 
-ax.set_xlabel('Reconstructed annual SST and SAT [$°C$]')
+ax.set_xlabel('Reconstructed Annual SST and SAT [$°C$]')
 ax.set_xlim(axis_min, axis_max)
 ax.set_xticks(np.arange(axis_min, axis_max + 1e-4, 2))
 ax.xaxis.set_minor_locator(AutoMinorLocator(2))
@@ -226,7 +226,7 @@ plt.legend(
     loc = 'upper left', handletextpad=0.05,)
 
 plt.text(
-    0.95, 0.05, 'PMIP4',
+    0.95, 0.05, 'PMIP4 model ensemble',
     horizontalalignment='right', verticalalignment='bottom',
     transform=ax.transAxes, backgroundcolor='white',)
 
@@ -318,11 +318,11 @@ ax.plot([0, 1], [0, 1], transform=ax.transAxes,
 ax.hlines(0, axis_min, axis_max, colors='k', lw=0.5, linestyles='--')
 ax.vlines(0, axis_min, axis_max, colors='k', lw=0.5, linestyles='--')
 
-ax.set_ylabel('Simulated summer SST [$°C$]')
+ax.set_ylabel('Simulated Summer SST [$°C$]')
 ax.set_ylim(axis_min, axis_max)
 ax.set_yticks(np.arange(axis_min, axis_max + 1e-4, 1))
 
-ax.set_xlabel('Reconstructed summer SST [$°C$]')
+ax.set_xlabel('Reconstructed Summer SST [$°C$]')
 ax.set_xlim(axis_min, axis_max)
 ax.set_xticks(np.arange(axis_min, axis_max + 1e-4, 1))
 
@@ -352,7 +352,7 @@ plt.legend(
     loc = 'upper left', handletextpad=0.05,)
 
 plt.text(
-    0.95, 0.05, 'PMIP4',
+    0.95, 0.05, 'PMIP4 model ensemble',
     horizontalalignment='right', verticalalignment='bottom',
     transform=ax.transAxes, backgroundcolor='white',)
 
@@ -445,7 +445,7 @@ plt.legend(
     loc = 'upper left', handletextpad=0.05,)
 
 plt.text(
-    0.95, 0.05, 'PMIP4',
+    0.95, 0.05, 'PMIP4 model ensemble',
     horizontalalignment='right', verticalalignment='bottom',
     transform=ax.transAxes, backgroundcolor='white',)
 

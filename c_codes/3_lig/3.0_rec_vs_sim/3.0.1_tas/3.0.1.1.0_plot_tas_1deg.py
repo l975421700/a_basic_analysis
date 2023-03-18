@@ -136,6 +136,10 @@ models=[
 with open('scratch/cmip6/lig/tas/AIS_ann_tas_site_values.pkl', 'rb') as f:
     AIS_ann_tas_site_values = pickle.load(f)
 
+with open('scratch/others/land_sea_masks/cdo_1deg_ais_mask.pkl', 'rb') as f:
+    cdo_1deg_ais_mask = pickle.load(f)
+
+cdo_area1deg = xr.open_dataset('scratch/others/one_degree_grids_cdo_area.nc')
 
 '''
 '''
@@ -227,4 +231,87 @@ fig.savefig(output_png)
 # -----------------------------------------------------------------------------
 
 
+
+
+# -----------------------------------------------------------------------------
+# region plot lig-pi am sat _no_rec
+
+output_png = 'figures/7_lig/7.0_sim_rec/7.0.2_tas/7.0.2.1 lig-pi am tas multiple models 1deg_no_rec.png'
+cbar_label = r'$\mathit{lig127k}$' + ' vs. ' + r'$\mathit{piControl}$' + ' Annual SAT [$°C$]'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-3, cm_max=3, cm_interval1=0.5, cm_interval2=0.5, cmap='RdBu',)
+
+nrow = 3
+ncol = 4
+fm_bottom = 2 / (5.8*nrow + 2)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.12, 'wspace': 0.02},)
+
+ipanel=0
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(
+            northextent=-38, ax_org = axs[irow, jcol])
+        plt.text(
+            0, 0.95, panel_labels[ipanel],
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        ipanel += 1
+
+for irow in range(nrow):
+    for jcol in range(ncol):
+        # irow = 0
+        # jcol = 0
+        model = models[jcol + ncol * irow]
+        print(model)
+        
+        # plot insignificant diff
+        ann_lig = lig_tas_regrid_alltime[model]['ann'].values
+        ann_pi = pi_tas_regrid_alltime[model]['ann'].values
+        ttest_fdr_res = ttest_fdr_control(ann_lig, ann_pi,)
+        
+        # plot diff
+        am_lig_pi = lig_pi_tas_regrid_alltime[model]['am'].values[0].copy()
+        am_lig_pi[ttest_fdr_res == False] = np.nan
+        
+        plt_mesh = axs[irow, jcol].contourf(
+            lon, lat, am_lig_pi, levels=pltlevel, extend='both',
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+        
+        # axs[irow, jcol].scatter(
+        #     x=lon[(ttest_fdr_res == False) & np.isfinite(am_lig_pi)],
+        #     y=lat[(ttest_fdr_res == False) & np.isfinite(am_lig_pi)],
+        #     s=0.5, c='k', marker='.', edgecolors='none',
+        #     transform=ccrs.PlateCarree(),)
+        
+        # calculate mean response
+        am_lig_pi = lig_pi_tas_regrid_alltime[model]['am'].values[0].copy()
+        mean_diff = np.average(
+            am_lig_pi[cdo_1deg_ais_mask['mask']['AIS']],
+            weights= cdo_area1deg.cell_area.values[cdo_1deg_ais_mask['mask']['AIS']]
+        )
+        
+        plt.text(
+            0.5, 1.05, model + ' (' + str(np.round(mean_diff, 1)) + ')',
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+
+cbar = fig.colorbar(
+    plt_mesh, ax=axs, aspect=40, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.75, ticks=pltticks, extend='both',
+    anchor=(0.5, -0.4),)
+cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom, top = 0.97)
+fig.savefig(output_png)
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
 

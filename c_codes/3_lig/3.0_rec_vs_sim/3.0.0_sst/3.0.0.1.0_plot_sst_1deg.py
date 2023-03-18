@@ -138,6 +138,18 @@ with open('scratch/cmip6/lig/sst/SO_ann_sst_site_values.pkl', 'rb') as f:
 with open('scratch/cmip6/lig/sst/SO_jfm_sst_site_values.pkl', 'rb') as f:
     SO_jfm_sst_site_values = pickle.load(f)
 
+HadISST = {}
+with open('data_sources/LIG/HadISST1.1/HadISST_sst.pkl', 'rb') as f:
+    HadISST['sst'] = pickle.load(f)
+
+mask = {}
+mask['SO'] = lat <= -40
+mask['Atlantic'] = ((lat <= -40) & (lon >= -70) & (lon < 20))
+mask['Indian'] = ((lat <= -40) & (lon >= 20) & (lon < 140))
+mask['Pacific'] = ((lat <= -40) & ((lon >= 140) | (lon < -70)))
+
+cdo_area1deg = xr.open_dataset('scratch/others/one_degree_grids_cdo_area.nc')
+
 '''
 '''
 # endregion
@@ -212,8 +224,8 @@ for irow in range(nrow):
         print(model)
         
         am_lig_pi = lig_pi_sst_regrid_alltime[model]['am'].values[0]
-        ann_lig = lig_sst_regrid_alltime[model]['ann'].values
-        ann_pi = pi_sst_regrid_alltime[model]['ann'].values
+        # ann_lig = lig_sst_regrid_alltime[model]['ann'].values
+        # ann_pi = pi_sst_regrid_alltime[model]['ann'].values
         
         # ttest_fdr_res = ttest_fdr_control(ann_lig, ann_pi,)
         
@@ -337,8 +349,8 @@ for irow in range(nrow):
         print(model)
         
         sm_lig_pi = lig_pi_sst_regrid_alltime[model]['sm'][0].values
-        sea_lig = lig_sst_regrid_alltime[model]['sea'][0::4].values
-        sea_pi = pi_sst_regrid_alltime[model]['sea'][0::4].values
+        # sea_lig = lig_sst_regrid_alltime[model]['sea'][0::4].values
+        # sea_pi = pi_sst_regrid_alltime[model]['sea'][0::4].values
         
         # ttest_fdr_res = ttest_fdr_control(sea_lig, sea_pi,)
         
@@ -388,5 +400,430 @@ fig.savefig(output_png)
 
 
 
+
+# -----------------------------------------------------------------------------
+# region plot pi-hadisst am sst
+
+output_png = 'figures/7_lig/7.0_sim_rec/7.0.0_sst/7.0.0.1 pi-hadisst am sst multiple models 1deg.png'
+cbar_label = r'$\mathit{piControl}$' + ' vs. HadISST1 Annual SST [$°C$]'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-5, cm_max=5, cm_interval1=1, cm_interval2=1, cmap='RdBu',)
+
+nrow = 3
+ncol = 4
+fm_bottom = 2 / (5.8*nrow + 2)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.12, 'wspace': 0.02},)
+
+ipanel=0
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(
+            northextent=-38, ax_org = axs[irow, jcol])
+        plt.text(
+            0, 0.95, panel_labels[ipanel],
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        ipanel += 1
+
+for irow in range(nrow):
+    for jcol in range(ncol):
+        # irow = 0
+        # jcol = 0
+        model = models[jcol + ncol * irow]
+        print(model)
+        
+        # plot insignificant diff
+        ann_pi = pi_sst_regrid_alltime[model]['ann'].values
+        ann_hadisst = HadISST['sst']['1deg_alltime']['ann'].values
+        ttest_fdr_res = ttest_fdr_control(ann_pi, ann_hadisst,)
+        
+        # plot diff
+        am_data = pi_sst_regrid_alltime[model]['am'].values[0] - \
+            HadISST['sst']['1deg_alltime']['am'].values
+        
+        am_data[ttest_fdr_res == False] = np.nan
+        
+        plt_mesh = axs[irow, jcol].contourf(
+            lon, lat, am_data, levels=pltlevel, extend='both',
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+        
+        # axs[irow, jcol].scatter(
+        #     x=lon[(ttest_fdr_res == False) & np.isfinite(am_data)],
+        #     y=lat[(ttest_fdr_res == False) & np.isfinite(am_data)],
+        #     s=0.5, c='k', marker='.', edgecolors='none',
+        #     transform=ccrs.PlateCarree(),)
+        
+        # calculate RMSE
+        am_data = pi_sst_regrid_alltime[model]['am'].values[0] - \
+            HadISST['sst']['1deg_alltime']['am'].values
+        diff = {}
+        diff['SO'] = am_data[mask['SO']]
+        diff['Atlantic'] = am_data[mask['Atlantic']]
+        diff['Indian'] = am_data[mask['Indian']]
+        diff['Pacific'] = am_data[mask['Pacific']]
+        
+        area = {}
+        area['SO'] = cdo_area1deg.cell_area.values[mask['SO']]
+        area['Atlantic'] = cdo_area1deg.cell_area.values[mask['Atlantic']]
+        area['Indian'] = cdo_area1deg.cell_area.values[mask['Indian']]
+        area['Pacific'] = cdo_area1deg.cell_area.values[mask['Pacific']]
+        
+        rmse = {}
+        rmse['SO'] = np.sqrt(np.ma.average(
+            np.ma.MaskedArray(
+                np.square(diff['SO']), mask=np.isnan(diff['SO'])),
+            weights=area['SO']))
+        rmse['Atlantic'] = np.sqrt(np.ma.average(
+            np.ma.MaskedArray(
+                np.square(diff['Atlantic']), mask=np.isnan(diff['Atlantic'])),
+            weights=area['Atlantic']))
+        rmse['Indian'] = np.sqrt(np.ma.average(
+            np.ma.MaskedArray(
+                np.square(diff['Indian']), mask=np.isnan(diff['Indian'])),
+            weights=area['Indian']))
+        rmse['Pacific'] = np.sqrt(np.ma.average(
+            np.ma.MaskedArray(
+                np.square(diff['Pacific']), mask=np.isnan(diff['Pacific'])),
+            weights=area['Pacific']))
+        
+        plt.text(
+            0.5, 1.05,
+            model + ' (' + \
+                str(np.round(rmse['SO'], 1)) + ', ' + \
+                    str(np.round(rmse['Atlantic'], 1)) + ', ' + \
+                        str(np.round(rmse['Indian'], 1)) + ', ' + \
+                            str(np.round(rmse['Pacific'], 1)) + ')',
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+
+cbar = fig.colorbar(
+    plt_mesh, ax=axs, aspect=40, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.75, ticks=pltticks, extend='both',
+    anchor=(0.5, -0.4),)
+cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom, top = 0.97)
+fig.savefig(output_png)
+
+
+'''
+#-------------------------------- check
+
+mask
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot pi-hadisst summer sst
+
+output_png = 'figures/7_lig/7.0_sim_rec/7.0.0_sst/7.0.0.1 pi-hadisst summer sst multiple models 1deg.png'
+cbar_label = r'$\mathit{piControl}$' + ' vs. HadISST1 Summer SST [$°C$]'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-5, cm_max=5, cm_interval1=1, cm_interval2=1, cmap='RdBu',)
+
+nrow = 3
+ncol = 4
+fm_bottom = 2 / (5.8*nrow + 2)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.12, 'wspace': 0.02},)
+
+ipanel=0
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(
+            northextent=-38, ax_org = axs[irow, jcol])
+        plt.text(
+            0, 0.95, panel_labels[ipanel],
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        ipanel += 1
+
+for irow in range(nrow):
+    for jcol in range(ncol):
+        # irow = 0
+        # jcol = 0
+        model = models[jcol + ncol * irow]
+        print(model)
+        
+        # plot insignificant diff
+        sea_pi = pi_sst_regrid_alltime[model]['sea'][::4].values
+        sea_hadisst = HadISST['sst']['1deg_alltime']['sea'][::4].values
+        ttest_fdr_res = ttest_fdr_control(sea_pi, sea_hadisst,)
+        
+        # plot diff
+        sm_data = pi_sst_regrid_alltime[model]['sm'][0].values - \
+            HadISST['sst']['1deg_alltime']['sm'][0].values
+        sm_data[ttest_fdr_res == False] = np.nan
+        
+        plt_mesh = axs[irow, jcol].contourf(
+            lon, lat, sm_data, levels=pltlevel, extend='both',
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+        
+        # axs[irow, jcol].scatter(
+        #     x=lon[(ttest_fdr_res == False) & np.isfinite(sm_data)],
+        #     y=lat[(ttest_fdr_res == False) & np.isfinite(sm_data)],
+        #     s=0.5, c='k', marker='.', edgecolors='none',
+        #     transform=ccrs.PlateCarree(),)
+        
+        # calculate RMSE
+        sm_data = pi_sst_regrid_alltime[model]['sm'][0].values - \
+            HadISST['sst']['1deg_alltime']['sm'][0].values
+        diff = {}
+        diff['SO'] = sm_data[mask['SO']]
+        diff['Atlantic'] = sm_data[mask['Atlantic']]
+        diff['Indian'] = sm_data[mask['Indian']]
+        diff['Pacific'] = sm_data[mask['Pacific']]
+        
+        area = {}
+        area['SO'] = cdo_area1deg.cell_area.values[mask['SO']]
+        area['Atlantic'] = cdo_area1deg.cell_area.values[mask['Atlantic']]
+        area['Indian'] = cdo_area1deg.cell_area.values[mask['Indian']]
+        area['Pacific'] = cdo_area1deg.cell_area.values[mask['Pacific']]
+        
+        rmse = {}
+        rmse['SO'] = np.sqrt(np.ma.average(
+            np.ma.MaskedArray(
+                np.square(diff['SO']), mask=np.isnan(diff['SO'])),
+            weights=area['SO']))
+        rmse['Atlantic'] = np.sqrt(np.ma.average(
+            np.ma.MaskedArray(
+                np.square(diff['Atlantic']), mask=np.isnan(diff['Atlantic'])),
+            weights=area['Atlantic']))
+        rmse['Indian'] = np.sqrt(np.ma.average(
+            np.ma.MaskedArray(
+                np.square(diff['Indian']), mask=np.isnan(diff['Indian'])),
+            weights=area['Indian']))
+        rmse['Pacific'] = np.sqrt(np.ma.average(
+            np.ma.MaskedArray(
+                np.square(diff['Pacific']), mask=np.isnan(diff['Pacific'])),
+            weights=area['Pacific']))
+        
+        plt.text(
+            0.5, 1.05,
+            model + ' (' + \
+                str(np.round(rmse['SO'], 1)) + ', ' + \
+                    str(np.round(rmse['Atlantic'], 1)) + ', ' + \
+                        str(np.round(rmse['Indian'], 1)) + ', ' + \
+                            str(np.round(rmse['Pacific'], 1)) + ')',
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+
+cbar = fig.colorbar(
+    plt_mesh, ax=axs, aspect=40, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.75, ticks=pltticks, extend='both',
+    anchor=(0.5, -0.4),)
+cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom, top = 0.97)
+fig.savefig(output_png)
+
+
+'''
+#-------------------------------- check
+
+mask
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+
+
+# -----------------------------------------------------------------------------
+# region plot lig-pi am sst _no_rec
+
+output_png = 'figures/7_lig/7.0_sim_rec/7.0.0_sst/7.0.0.1 lig-pi am sst multiple models 1deg_no_rec.png'
+cbar_label = r'$\mathit{lig127k}$' + ' vs. ' + r'$\mathit{piControl}$' + ' Annual SST [$°C$]'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-3, cm_max=3, cm_interval1=0.5, cm_interval2=0.5, cmap='RdBu',)
+
+nrow = 3
+ncol = 4
+fm_bottom = 2 / (5.8*nrow + 2)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.12, 'wspace': 0.02},)
+
+ipanel=0
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(
+            northextent=-38, ax_org = axs[irow, jcol])
+        plt.text(
+            0, 0.95, panel_labels[ipanel],
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        ipanel += 1
+
+for irow in range(nrow):
+    for jcol in range(ncol):
+        # irow = 0
+        # jcol = 0
+        model = models[jcol + ncol * irow]
+        print(model)
+        
+        # plot insignificant diff
+        ann_lig = lig_sst_regrid_alltime[model]['ann'].values
+        ann_pi = pi_sst_regrid_alltime[model]['ann'].values
+        ttest_fdr_res = ttest_fdr_control(ann_lig, ann_pi,)
+        
+        # plot diff
+        am_lig_pi = lig_pi_sst_regrid_alltime[model]['am'][0].values.copy()
+        am_lig_pi[ttest_fdr_res == False] = np.nan
+        plt_mesh = axs[irow, jcol].contourf(
+            lon, lat, am_lig_pi, levels=pltlevel, extend='both',
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+        
+        # axs[irow, jcol].scatter(
+        #     x=lon[(ttest_fdr_res == False) & np.isfinite(am_lig_pi)],
+        #     y=lat[(ttest_fdr_res == False) & np.isfinite(am_lig_pi)],
+        #     s=0.5, c='k', marker='.', edgecolors='none',
+        #     transform=ccrs.PlateCarree(),)
+        
+        # calculate mean error
+        am_lig_pi = lig_pi_sst_regrid_alltime[model]['am'][0].values.copy()
+        diff = {}
+        area = {}
+        mean_diff = {}
+        
+        for iregion in ['SO', 'Atlantic', 'Indian', 'Pacific']:
+            diff[iregion] = am_lig_pi[mask[iregion]]
+            area[iregion] = cdo_area1deg.cell_area.values[mask[iregion]]
+            mean_diff[iregion] = np.ma.average(
+                np.ma.MaskedArray(diff[iregion], mask=np.isnan(diff[iregion])),
+                weights=area[iregion],)
+        
+        plt.text(
+            0.5, 1.05,
+            model + ' (' + \
+                str(np.round(mean_diff['SO'], 1)) + ', ' + \
+                    str(np.round(mean_diff['Atlantic'], 1)) + ', ' + \
+                        str(np.round(mean_diff['Indian'], 1)) + ', ' + \
+                            str(np.round(mean_diff['Pacific'], 1)) + ')',
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+
+cbar = fig.colorbar(
+    plt_mesh, ax=axs, aspect=40, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.75, ticks=pltticks, extend='both',
+    anchor=(0.5, -0.4),)
+cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom, top = 0.97)
+fig.savefig(output_png)
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot lig-pi summer sst _no_rec
+
+output_png = 'figures/7_lig/7.0_sim_rec/7.0.0_sst/7.0.0.1 lig-pi summer sst multiple models 1deg_no_rec.png'
+cbar_label = r'$\mathit{lig127k}$' + ' vs. ' + r'$\mathit{piControl}$' + ' Summer SST [$°C$]'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-3, cm_max=3, cm_interval1=0.5, cm_interval2=0.5, cmap='RdBu',)
+
+nrow = 3
+ncol = 4
+fm_bottom = 2 / (5.8*nrow + 2)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.12, 'wspace': 0.02},)
+
+ipanel=0
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(
+            northextent=-38, ax_org = axs[irow, jcol])
+        plt.text(
+            0, 0.95, panel_labels[ipanel],
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        ipanel += 1
+
+for irow in range(nrow):
+    for jcol in range(ncol):
+        # irow = 0
+        # jcol = 0
+        model = models[jcol + ncol * irow]
+        print(model)
+        
+        # plot insignificant diff
+        sea_lig = lig_sst_regrid_alltime[model]['sea'][0::4].values
+        sea_pi = pi_sst_regrid_alltime[model]['sea'][0::4].values
+        ttest_fdr_res = ttest_fdr_control(sea_lig, sea_pi,)
+        
+        # plot diff
+        sm_lig_pi = lig_pi_sst_regrid_alltime[model]['sm'][0].values.copy()
+        sm_lig_pi[ttest_fdr_res == False] = np.nan
+        
+        plt_mesh = axs[irow, jcol].contourf(
+            lon, lat, sm_lig_pi, levels=pltlevel, extend='both',
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+        
+        # axs[irow, jcol].scatter(
+        #     x=lon[(ttest_fdr_res == False) & np.isfinite(sm_lig_pi)],
+        #     y=lat[(ttest_fdr_res == False) & np.isfinite(sm_lig_pi)],
+        #     s=0.5, c='k', marker='.', edgecolors='none',
+        #     transform=ccrs.PlateCarree(),)
+        
+        # calculate mean error
+        sm_lig_pi = lig_pi_sst_regrid_alltime[model]['sm'][0].values.copy()
+        diff = {}
+        area = {}
+        mean_diff = {}
+        
+        for iregion in ['SO', 'Atlantic', 'Indian', 'Pacific']:
+            diff[iregion] = sm_lig_pi[mask[iregion]]
+            area[iregion] = cdo_area1deg.cell_area.values[mask[iregion]]
+            mean_diff[iregion] = np.ma.average(
+                np.ma.MaskedArray(diff[iregion], mask=np.isnan(diff[iregion])),
+                weights=area[iregion],)
+        
+        plt.text(
+            0.5, 1.05,
+            model + ' (' + \
+                str(np.round(mean_diff['SO'], 1)) + ', ' + \
+                    str(np.round(mean_diff['Atlantic'], 1)) + ', ' + \
+                        str(np.round(mean_diff['Indian'], 1)) + ', ' + \
+                            str(np.round(mean_diff['Pacific'], 1)) + ')',
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+
+cbar = fig.colorbar(
+    plt_mesh, ax=axs, aspect=40, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.75, ticks=pltticks, extend='both',
+    anchor=(0.5, -0.4),)
+cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom, top = 0.97)
+fig.savefig(output_png)
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
 
 
