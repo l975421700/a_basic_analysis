@@ -1253,3 +1253,25 @@ fig.savefig(output_png)
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region
+
+echam6_t63_geosp = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/pi_m_416_4.9/input/echam/unit.24')
+echam6_t63_surface_height = geopotential_to_height(
+    echam6_t63_geosp.GEOSP * (units.m / units.s)**2)
+
+am_height = echam6_t63_surface_height.values[echam6_t63_ais_mask['mask']['AIS']]
+
+am_source_lat = pre_weighted_lat[expid[i]]['am'].values[echam6_t63_ais_mask['mask']['AIS']]
+
+output_png = 'figures/test/trial.png'
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
+
+ax.scatter(
+    am_height, am_source_lat, s=3,
+)
+fig.savefig(output_png)
+
+# region
+# -----------------------------------------------------------------------------

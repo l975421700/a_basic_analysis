@@ -777,7 +777,7 @@ def hemisphere_plot(
             yformatter=LatitudeFormatter(degree_symbol='° '),
         )
         gl2.xlabel_style = {'size': 0, 'alpha': 0}
-        gl2.ylabel_style = {'size': 5}
+        # gl2.ylabel_style = {'size': 5}
     
     if (ax_org is None):
         return fig, ax

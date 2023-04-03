@@ -148,13 +148,13 @@ cdo_area1deg = xr.open_dataset('scratch/others/one_degree_grids_cdo_area.nc')
 
 
 # -----------------------------------------------------------------------------
-# region plot lig-pi am sat
+# region plot lig-pi am sat _no_rec
 
-output_png = 'figures/7_lig/7.0_sim_rec/7.0.2_tas/7.0.2.1 lig-pi am tas multiple models 1deg.png'
-cbar_label = 'Annual SAT [$°C$]'
+output_png = 'figures/7_lig/7.0_sim_rec/7.0.2_tas/7.0.2.1 lig-pi am tas multiple models 1deg_no_rec.png'
+cbar_label = r'$\mathit{lig127k}$' + ' vs. ' + r'$\mathit{piControl}$' + ' Annual SAT [$°C$]'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='RdBu',)
+    cm_min=-3, cm_max=3, cm_interval1=0.5, cm_interval2=0.5, cmap='RdBu',)
 
 nrow = 3
 ncol = 4
@@ -187,81 +187,6 @@ for irow in range(nrow):
             lw=0.5, marker='o', edgecolors = 'black', zorder=2,
             norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
-
-for irow in range(nrow):
-    for jcol in range(ncol):
-        # irow = 0
-        # jcol = 0
-        model = models[jcol + ncol * irow]
-        print(model)
-        
-        am_lig_pi = lig_pi_tas_regrid_alltime[model]['am'].values[0]
-        
-        plt_mesh = axs[irow, jcol].pcolormesh(
-            lon, lat, am_lig_pi,
-            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
-        
-        rmse = {}
-        for irec in ['EC']:
-            # irec = 'EC'
-            print(irec)
-            
-            rmse[irec] = np.round(AIS_ann_tas_site_values[irec].loc[
-                AIS_ann_tas_site_values[irec].Model == model
-                ]['sim_rec_ann_tas_lig_pi'].mean(), 1)
-        
-        plt.text(
-            0.5, 1.05, model + ': ' + str(rmse['EC']),
-            transform=axs[irow, jcol].transAxes,
-            ha='center', va='center', rotation='horizontal')
-
-cbar = fig.colorbar(
-    plt_scatter, ax=axs, aspect=40, format=remove_trailing_zero_pos,
-    orientation="horizontal", shrink=0.75, ticks=pltticks, extend='both',
-    anchor=(0.5, -0.4),)
-cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
-
-fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom, top = 0.97)
-fig.savefig(output_png)
-
-
-'''
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-
-
-# -----------------------------------------------------------------------------
-# region plot lig-pi am sat _no_rec
-
-output_png = 'figures/7_lig/7.0_sim_rec/7.0.2_tas/7.0.2.1 lig-pi am tas multiple models 1deg_no_rec.png'
-cbar_label = r'$\mathit{lig127k}$' + ' vs. ' + r'$\mathit{piControl}$' + ' Annual SAT [$°C$]'
-
-pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-3, cm_max=3, cm_interval1=0.5, cm_interval2=0.5, cmap='RdBu',)
-
-nrow = 3
-ncol = 4
-fm_bottom = 2 / (5.8*nrow + 2)
-
-fig, axs = plt.subplots(
-    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
-    subplot_kw={'projection': ccrs.SouthPolarStereo()},
-    gridspec_kw={'hspace': 0.12, 'wspace': 0.02},)
-
-ipanel=0
-for irow in range(nrow):
-    for jcol in range(ncol):
-        axs[irow, jcol] = hemisphere_plot(
-            northextent=-38, ax_org = axs[irow, jcol])
-        plt.text(
-            0, 0.95, panel_labels[ipanel],
-            transform=axs[irow, jcol].transAxes,
-            ha='center', va='center', rotation='horizontal')
-        ipanel += 1
-
 for irow in range(nrow):
     for jcol in range(ncol):
         # irow = 0
@@ -282,21 +207,26 @@ for irow in range(nrow):
             lon, lat, am_lig_pi, levels=pltlevel, extend='both',
             norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
         
+        axs[irow, jcol].add_feature(
+            cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
+        
         # axs[irow, jcol].scatter(
         #     x=lon[(ttest_fdr_res == False) & np.isfinite(am_lig_pi)],
         #     y=lat[(ttest_fdr_res == False) & np.isfinite(am_lig_pi)],
         #     s=0.5, c='k', marker='.', edgecolors='none',
         #     transform=ccrs.PlateCarree(),)
         
-        # calculate mean response
-        am_lig_pi = lig_pi_tas_regrid_alltime[model]['am'].values[0].copy()
-        mean_diff = np.average(
-            am_lig_pi[cdo_1deg_ais_mask['mask']['AIS']],
-            weights= cdo_area1deg.cell_area.values[cdo_1deg_ais_mask['mask']['AIS']]
-        )
+        # # calculate mean response
+        # am_lig_pi = lig_pi_tas_regrid_alltime[model]['am'].values[0].copy()
+        # mean_diff = np.average(
+        #     am_lig_pi[cdo_1deg_ais_mask['mask']['AIS']],
+        #     weights= cdo_area1deg.cell_area.values[cdo_1deg_ais_mask['mask']['AIS']]
+        # )
         
         plt.text(
-            0.5, 1.05, model + ' (' + str(np.round(mean_diff, 1)) + ')',
+            0.5, 1.05,
+            model,
+            # model + ' (' + str(np.round(mean_diff, 1)) + ')',
             transform=axs[irow, jcol].transAxes,
             ha='center', va='center', rotation='horizontal')
 
@@ -314,4 +244,6 @@ fig.savefig(output_png)
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
 

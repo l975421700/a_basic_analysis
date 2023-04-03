@@ -1,6 +1,418 @@
 
 
 # -----------------------------------------------------------------------------
+# region plot lig-pi sep sic
+
+output_png = 'figures/7_lig/7.0_sim_rec/7.0.1_sic/7.0.1.1 lig-pi sep sic multiple models 1deg.png'
+cbar_label = 'Sep SIC [$\%$]'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-70, cm_max=20, cm_interval1=10, cm_interval2=10, cmap='PuOr',
+    reversed=False, asymmetric=True,)
+
+nrow = 3
+ncol = 4
+fm_bottom = 2 / (5.8*nrow + 2)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.12, 'wspace': 0.02},)
+
+ipanel=0
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(
+            northextent=-38, ax_org = axs[irow, jcol])
+        plt.text(
+            0, 0.95, panel_labels[ipanel],
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        ipanel += 1
+        
+        # MC
+        plt_scatter = axs[irow, jcol].scatter(
+            x = lig_recs['MC']['interpolated'].Longitude,
+            y = lig_recs['MC']['interpolated'].Latitude,
+            c = lig_recs['MC']['interpolated']['sic_anom_hadisst_sep'],
+            s=64, lw=0.5, marker='^', edgecolors = 'black', zorder=2,
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+
+for irow in range(nrow):
+    for jcol in range(ncol):
+        # irow = 0
+        # jcol = 0
+        model = models[jcol + ncol * irow]
+        print(model)
+        
+        sep_lig_pi = lig_pi_sic_regrid_alltime[model]['mm'][8].values
+        
+        plt_mesh = axs[irow, jcol].pcolormesh(
+            lon, lat, sep_lig_pi,
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+        
+        rmse = {}
+        for irec in ['MC']:
+            # irec = 'MC'
+            print(irec)
+            
+            rmse[irec] = int(np.round(SO_sep_sic_site_values[irec].loc[
+                SO_sep_sic_site_values[irec].Model == model
+                ]['sim_rec_sep_sic_lig_pi'].mean(), 0))
+        
+        plt.text(
+            0.5, 1.05,
+            model + ': ' + str(rmse['MC']),
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+
+cbar = fig.colorbar(
+    plt_scatter, ax=axs, aspect=40, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.75, ticks=pltticks, extend='both',
+    anchor=(0.5, -0.4),)
+cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom, top = 0.97)
+fig.savefig(output_png)
+
+
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot lig-pi am sat
+
+output_png = 'figures/7_lig/7.0_sim_rec/7.0.2_tas/7.0.2.1 lig-pi am tas multiple models 1deg.png'
+cbar_label = 'Annual SAT [$°C$]'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='RdBu',)
+
+nrow = 3
+ncol = 4
+fm_bottom = 2 / (5.8*nrow + 2)
+
+max_size = 80
+scale_size = 16
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.12, 'wspace': 0.02},)
+
+ipanel=0
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(
+            northextent=-60, ax_org = axs[irow, jcol])
+        plt.text(
+            0, 0.95, panel_labels[ipanel],
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        ipanel += 1
+        
+        plt_scatter = axs[irow, jcol].scatter(
+            x = lig_recs['EC']['AIS_am'].Longitude,
+            y = lig_recs['EC']['AIS_am'].Latitude,
+            c = lig_recs['EC']['AIS_am']['127 ka Median PIAn [°C]'],
+            s = max_size - scale_size * lig_recs['EC']['AIS_am']['127 ka 2s PIAn [°C]'],
+            lw=0.5, marker='o', edgecolors = 'black', zorder=2,
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+
+for irow in range(nrow):
+    for jcol in range(ncol):
+        # irow = 0
+        # jcol = 0
+        model = models[jcol + ncol * irow]
+        print(model)
+        
+        am_lig_pi = lig_pi_tas_regrid_alltime[model]['am'].values[0]
+        
+        plt_mesh = axs[irow, jcol].pcolormesh(
+            lon, lat, am_lig_pi,
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+        
+        rmse = {}
+        for irec in ['EC']:
+            # irec = 'EC'
+            print(irec)
+            
+            rmse[irec] = np.round(AIS_ann_tas_site_values[irec].loc[
+                AIS_ann_tas_site_values[irec].Model == model
+                ]['sim_rec_ann_tas_lig_pi'].mean(), 1)
+        
+        plt.text(
+            0.5, 1.05, model + ': ' + str(rmse['EC']),
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+
+cbar = fig.colorbar(
+    plt_scatter, ax=axs, aspect=40, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.75, ticks=pltticks, extend='both',
+    anchor=(0.5, -0.4),)
+cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom, top = 0.97)
+fig.savefig(output_png)
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot lig-pi am sst
+
+output_png = 'figures/7_lig/7.0_sim_rec/7.0.0_sst/7.0.0.1 lig-pi am sst multiple models 1deg.png'
+cbar_label = r'$\mathit{lig127k}$' + ' vs. ' + r'$\mathit{piControl}$' + ' Annual SST [$°C$]'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='RdBu',)
+
+nrow = 3
+ncol = 4
+fm_bottom = 2 / (5.8*nrow + 2)
+
+max_size = 80
+scale_size = 16
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.12, 'wspace': 0.02},)
+
+ipanel=0
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(
+            northextent=-38, ax_org = axs[irow, jcol])
+        plt.text(
+            0, 0.95, panel_labels[ipanel],
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        ipanel += 1
+        
+        # JH
+        axs[irow, jcol].scatter(
+            x = lig_recs['JH']['SO_ann'].Longitude,
+            y = lig_recs['JH']['SO_ann'].Latitude,
+            c = lig_recs['JH']['SO_ann']['127 ka SST anomaly (°C)'],
+            s = max_size - scale_size * lig_recs['JH']['SO_ann']['127 ka 2σ (°C)'],
+            lw=0.5, marker='s', edgecolors = 'black', zorder=2,
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+        # EC SST
+        axs[irow, jcol].scatter(
+            x = lig_recs['EC']['SO_ann'].Longitude,
+            y = lig_recs['EC']['SO_ann'].Latitude,
+            c = lig_recs['EC']['SO_ann']['127 ka Median PIAn [°C]'],
+            s = max_size - scale_size * lig_recs['EC']['SO_ann']['127 ka 2s PIAn [°C]'],
+            lw=0.5, marker='o', edgecolors = 'black', zorder=2,
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+        # DC
+        plt_scatter = axs[irow, jcol].scatter(
+            x = lig_recs['DC']['annual_128'].Longitude,
+            y = lig_recs['DC']['annual_128'].Latitude,
+            c = lig_recs['DC']['annual_128']['sst_anom_hadisst_ann'],
+            s = max_size - scale_size * 1,
+            lw=0.5, marker='v', edgecolors = 'black', zorder=2,
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+
+for irow in range(nrow):
+    for jcol in range(ncol):
+        # irow = 0
+        # jcol = 0
+        model = models[jcol + ncol * irow]
+        print(model)
+        
+        am_lig_pi = lig_pi_sst_regrid_alltime[model]['am'].values[0]
+        # ann_lig = lig_sst_regrid_alltime[model]['ann'].values
+        # ann_pi = pi_sst_regrid_alltime[model]['ann'].values
+        
+        # ttest_fdr_res = ttest_fdr_control(ann_lig, ann_pi,)
+        
+        plt_mesh = axs[irow, jcol].pcolormesh(
+            lon, lat, am_lig_pi,
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+        # axs[irow, jcol].scatter(
+        #     x=lon[(ttest_fdr_res == False) & np.isfinite(am_lig_pi)],
+        #     y=lat[(ttest_fdr_res == False) & np.isfinite(am_lig_pi)],
+        #     s=0.3, c='k', marker='.', edgecolors='none',
+        #     transform=ccrs.PlateCarree(),
+        #     )
+        
+        rmse = {}
+        for irec in ['EC', 'JH', 'DC']:
+            # irec = 'EC'
+            print(irec)
+            
+            rmse[irec] = np.round(SO_ann_sst_site_values[irec].loc[
+                SO_ann_sst_site_values[irec].Model == model
+                ]['sim_rec_ann_sst_lig_pi'].mean(), 1)
+        
+        plt.text(
+            0.5, 1.05,
+            model + ': ' + \
+                str(rmse['EC']) + ', ' + \
+                    str(rmse['JH']) + ', ' + \
+                        str(rmse['DC']),
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+
+cbar = fig.colorbar(
+    plt_scatter, ax=axs, aspect=40, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.75, ticks=pltticks, extend='both',
+    anchor=(0.5, -0.4),)
+cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom, top = 0.97)
+fig.savefig(output_png)
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot lig-pi summer sst
+
+output_png = 'figures/7_lig/7.0_sim_rec/7.0.0_sst/7.0.0.1 lig-pi summer sst multiple models 1deg.png'
+cbar_label = 'Summer SST [$°C$]'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='RdBu',)
+
+nrow = 3
+ncol = 4
+fm_bottom = 2 / (5.8*nrow + 2)
+
+max_size = 80
+scale_size = 16
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.12, 'wspace': 0.02},)
+
+ipanel=0
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(
+            northextent=-38, ax_org = axs[irow, jcol])
+        plt.text(
+            0, 0.95, panel_labels[ipanel],
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        ipanel += 1
+        
+        # JH
+        axs[irow, jcol].scatter(
+            x = lig_recs['JH']['SO_jfm'].Longitude,
+            y = lig_recs['JH']['SO_jfm'].Latitude,
+            c = lig_recs['JH']['SO_jfm']['127 ka SST anomaly (°C)'],
+            s = max_size - scale_size * lig_recs['JH']['SO_jfm']['127 ka 2σ (°C)'],
+            lw=0.5, marker='s', edgecolors = 'black', zorder=2,
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+        
+        # EC SST
+        axs[irow, jcol].scatter(
+            x = lig_recs['EC']['SO_jfm'].Longitude,
+            y = lig_recs['EC']['SO_jfm'].Latitude,
+            c = lig_recs['EC']['SO_jfm']['127 ka Median PIAn [°C]'],
+            s = max_size - scale_size * lig_recs['EC']['SO_jfm']['127 ka 2s PIAn [°C]'],
+            lw=0.5, marker='o', edgecolors = 'black', zorder=2,
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+        
+        # MC
+        axs[irow, jcol].scatter(
+            x = lig_recs['MC']['interpolated'].Longitude,
+            y = lig_recs['MC']['interpolated'].Latitude,
+            c = lig_recs['MC']['interpolated']['sst_anom_hadisst_jfm'],
+            s = max_size - scale_size * 1.09,
+            lw=0.5, marker='^', edgecolors = 'black', zorder=2,
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+        
+        # DC
+        plt_scatter = axs[irow, jcol].scatter(
+            x = lig_recs['DC']['JFM_128'].Longitude,
+            y = lig_recs['DC']['JFM_128'].Latitude,
+            c = lig_recs['DC']['JFM_128']['sst_anom_hadisst_jfm'],
+            s = max_size - scale_size * 1,
+            lw=0.5, marker='v', edgecolors = 'black', zorder=2,
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+for irow in range(nrow):
+    for jcol in range(ncol):
+        # irow = 0
+        # jcol = 0
+        model = models[jcol + ncol * irow]
+        print(model)
+        
+        sm_lig_pi = lig_pi_sst_regrid_alltime[model]['sm'][0].values
+        # sea_lig = lig_sst_regrid_alltime[model]['sea'][0::4].values
+        # sea_pi = pi_sst_regrid_alltime[model]['sea'][0::4].values
+        
+        # ttest_fdr_res = ttest_fdr_control(sea_lig, sea_pi,)
+        
+        plt_mesh = axs[irow, jcol].pcolormesh(
+            lon, lat, sm_lig_pi,
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+        # axs[irow, jcol].scatter(
+        #     x=lon[(ttest_fdr_res == False) & np.isfinite(sm_lig_pi)],
+        #     y=lat[(ttest_fdr_res == False) & np.isfinite(sm_lig_pi)],
+        #     s=0.3, c='k', marker='.', edgecolors='none',
+        #     transform=ccrs.PlateCarree(),
+        #     )
+        
+        rmse = {}
+        for irec in ['EC', 'JH', 'DC', 'MC']:
+            # irec = 'EC'
+            print(irec)
+            
+            rmse[irec] = np.round(SO_jfm_sst_site_values[irec].loc[
+                SO_jfm_sst_site_values[irec].Model == model
+                ]['sim_rec_jfm_sst_lig_pi'].mean(), 1)
+        
+        plt.text(
+            0.5, 1.05,
+            model + ': ' + \
+                str(rmse['EC']) + ', ' + \
+                    str(rmse['JH']) + ', ' + \
+                        str(rmse['DC']) + ', ' + \
+                            str(rmse['MC']),
+            transform=axs[irow, jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+
+cbar = fig.colorbar(
+    plt_scatter, ax=axs, aspect=40, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.75, ticks=pltticks, extend='both',
+    anchor=(0.5, -0.4),)
+cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom, top = 0.97)
+fig.savefig(output_png)
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
 # region 1979-2014 ERA5 monthly averaged data on single levels from 1979 to present
 
 # retrieval time: 2022-02-24

@@ -228,15 +228,17 @@ with open('scratch/cmip6/lig/sst/pi_sst.pkl', 'rb') as f:
 
 #---------------- check time length
 
+print('#---- LIG')
 for imodel in lig_sst.keys():
     print('#-------- ' + imodel)
-    print('#---- LIG')
     
     print(len(lig_sst[imodel].time))
     # print(lig_sst[imodel].lon)
     # print(lig_sst[imodel].lat)
-    
-    print('#---- PI')
+
+print('#---- PI')
+for imodel in pi_sst.keys():
+    print('#-------- ' + imodel)
     
     print(len(pi_sst[imodel].time))
     # print(pi_sst[imodel].lon)

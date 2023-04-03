@@ -169,45 +169,36 @@ ax.plot([0, 1], [0, 1], transform=ax.transAxes,
 ax.hlines(0, axis_min, axis_max, colors='k', lw=0.5, linestyles='--')
 ax.vlines(0, axis_min, axis_max, colors='k', lw=0.5, linestyles='--')
 
-ax.set_ylabel('Simulated Annual SST and SAT [$°C$]')
+ax.set_ylabel('Simulations [$°C$]')
 ax.set_ylim(axis_min, axis_max)
 ax.set_yticks(np.arange(axis_min, axis_max + 1e-4, 2))
 ax.yaxis.set_minor_locator(AutoMinorLocator(2))
 
-ax.set_xlabel('Reconstructed Annual SST and SAT [$°C$]')
+ax.set_xlabel('Reconstructions [$°C$]')
 ax.set_xlim(axis_min, axis_max)
 ax.set_xticks(np.arange(axis_min, axis_max + 1e-4, 2))
 ax.xaxis.set_minor_locator(AutoMinorLocator(2))
 
-l1 = plt.scatter(
-    [],[], marker=marker_recs['EC'],
-    s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,)
-l1_1 = plt.scatter(
-    [],[], marker=marker_recs['EC'],
-    s=symbol_size, c='white', edgecolors='b', lw=linewidth, alpha=alpha,)
-l2 = plt.scatter(
-    [],[], marker=marker_recs['JH'],
-    s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,)
-l3 = plt.scatter(
-    [],[], marker=marker_recs['DC'],
-    s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,)
-plt.legend(
-    [l1, l1_1, l2, l3,],
-    ['Capron et al. (2017), SST: ' + \
-        str(mean_err['EC']) + ', ' + str(rms_err['EC']),
-     'Capron et al. (2017), SAT: ' + \
-        str(mean_err['EC_tas']) + ', ' + str(rms_err['EC_tas']),
-     'Hoffman et al. (2017):       ' + \
-        str(mean_err['JH']) + ', ' + str(rms_err['JH']),
-     'Chandler et al. (2021):       ' + \
-        str(mean_err['DC']) + ', ' + str(rms_err['DC']),],
-    ncol=1, frameon=True,
-    loc = 'upper left', handletextpad=0.05,)
-
-plt.text(
-    0.95, 0.05, 'PMIP3 model ensemble',
-    horizontalalignment='right', verticalalignment='bottom',
-    transform=ax.transAxes, backgroundcolor='white',)
+# l1 = plt.scatter(
+#     [],[], marker=marker_recs['EC'],
+#     s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,)
+# l1_1 = plt.scatter(
+#     [],[], marker=marker_recs['EC'],
+#     s=symbol_size, c='white', edgecolors='b', lw=linewidth, alpha=alpha,)
+# l2 = plt.scatter(
+#     [],[], marker=marker_recs['JH'],
+#     s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,)
+# l3 = plt.scatter(
+#     [],[], marker=marker_recs['DC'],
+#     s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,)
+# plt.legend(
+#     [l1, l1_1, l2, l3,],
+#     [str(rms_err['EC']) + ' (SST)',
+#      str(rms_err['EC_tas']) + ' (SAT)',
+#      str(rms_err['JH']),
+#      str(rms_err['DC']),],
+#     ncol=1, frameon=True, title='RMSE',
+#     loc = 'upper right', handletextpad=0.05,)
 
 ax.grid(True, which='both',
         linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
@@ -217,6 +208,11 @@ fig.savefig(output_png)
 
 
 '''
+plt.text(
+    0.95, 0.05, 'PMIP3 model ensemble',
+    horizontalalignment='right', verticalalignment='bottom',
+    transform=ax.transAxes, backgroundcolor='white',)
+
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -230,8 +226,8 @@ rms_err  = {}
 
 output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.0_sim_rec_sst/7.0.3.0.0 sim_rec jfm_sst ens_pmip3.png'
 
-axis_min = -5
-axis_max = 7
+axis_min = -8
+axis_max = 12
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
 
@@ -259,43 +255,36 @@ ax.plot([0, 1], [0, 1], transform=ax.transAxes,
 ax.hlines(0, axis_min, axis_max, colors='k', lw=0.5, linestyles='--')
 ax.vlines(0, axis_min, axis_max, colors='k', lw=0.5, linestyles='--')
 
-ax.set_ylabel('Simulated Summer SST [$°C$]')
+ax.set_ylabel('Simulations [$°C$]')
 ax.set_ylim(axis_min, axis_max)
-ax.set_yticks(np.arange(axis_min, axis_max + 1e-4, 1))
+ax.set_yticks(np.arange(axis_min, axis_max + 1e-4, 2))
+ax.yaxis.set_minor_locator(AutoMinorLocator(2))
 
-ax.set_xlabel('Reconstructed Summer SST [$°C$]')
+ax.set_xlabel('Reconstructions [$°C$]')
 ax.set_xlim(axis_min, axis_max)
-ax.set_xticks(np.arange(axis_min, axis_max + 1e-4, 1))
+ax.set_xticks(np.arange(axis_min, axis_max + 1e-4, 2))
+ax.xaxis.set_minor_locator(AutoMinorLocator(2))
 
-l1 = plt.scatter(
-    [],[], marker=marker_recs['EC'],
-    s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,)
-l2 = plt.scatter(
-    [],[], marker=marker_recs['JH'],
-    s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,)
-l3 = plt.scatter(
-    [],[], marker=marker_recs['DC'],
-    s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,)
-l4 = plt.scatter(
-    [],[], marker=marker_recs['MC'],
-    s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,)
-plt.legend(
-    [l1, l2, l3, l4,],
-    ['Capron et al. (2017)    : ' + \
-        str(mean_err['EC']) + ', ' + str(rms_err['EC']),
-     'Hoffman et al. (2017)  : ' + \
-        str(mean_err['JH']) + ', ' + str(rms_err['JH']),
-     'Chandler et al. (2021)  : ' + \
-        str(mean_err['DC']) + ', ' + str(rms_err['DC']),
-     'Chadwick et al. (2021): ' + \
-        str(mean_err['MC']) + ', ' + str(rms_err['MC']),],
-    ncol=1, frameon=True,
-    loc = 'upper left', handletextpad=0.05,)
-
-plt.text(
-    0.95, 0.05, 'PMIP3 model ensemble',
-    horizontalalignment='right', verticalalignment='bottom',
-    transform=ax.transAxes, backgroundcolor='white',)
+# l1 = plt.scatter(
+#     [],[], marker=marker_recs['EC'],
+#     s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,)
+# l2 = plt.scatter(
+#     [],[], marker=marker_recs['JH'],
+#     s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,)
+# l3 = plt.scatter(
+#     [],[], marker=marker_recs['DC'],
+#     s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,)
+# l4 = plt.scatter(
+#     [],[], marker=marker_recs['MC'],
+#     s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,)
+# plt.legend(
+#     [l1, l2, l3, l4,],
+#     [str(rms_err['EC']),
+#      str(rms_err['JH']),
+#      str(rms_err['DC']),
+#      str(rms_err['MC']),],
+#     ncol=1, frameon=True, title='RMSE',
+#     loc = 'upper right', handletextpad=0.05,)
 
 ax.grid(True, which='both',
         linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
@@ -305,6 +294,11 @@ fig.savefig(output_png)
 
 
 '''
+plt.text(
+    0.95, 0.05, 'PMIP3 model ensemble',
+    horizontalalignment='right', verticalalignment='bottom',
+    transform=ax.transAxes, backgroundcolor='white',)
+
 '''
 # endregion
 # -----------------------------------------------------------------------------

@@ -29,6 +29,7 @@ from statsmodels.stats import multitest
 import pycircstat as circ
 from scipy.stats import circstd
 import cmip6_preprocessing.preprocessing as cpp
+from sklearn.metrics import mean_squared_error
 
 # plot
 import matplotlib as mpl
@@ -110,6 +111,9 @@ cdo_area1deg = xr.open_dataset('scratch/others/one_degree_grids_cdo_area.nc')
 lat = cdo_area1deg.lat.values
 mask_so = (lat < -40)
 
+mask = {}
+mask['SO'] = lat <= -40
+
 mask_ais = cdo_1deg_ais_mask['mask']['AIS']
 
 models=[
@@ -118,14 +122,30 @@ models=[
     'MIROC-ES2L','NESM3','NorESM2-LM',
     ]
 
+with open('scratch/cmip6/lig/sst/SO_ann_sst_site_values.pkl', 'rb') as f:
+    SO_ann_sst_site_values = pickle.load(f)
+
+with open('scratch/cmip6/lig/sst/SO_jfm_sst_site_values.pkl', 'rb') as f:
+    SO_jfm_sst_site_values = pickle.load(f)
+
+with open('scratch/cmip6/lig/tas/AIS_ann_tas_site_values.pkl', 'rb') as f:
+    AIS_ann_tas_site_values = pickle.load(f)
+
+with open('scratch/cmip6/lig/sic/SO_sep_sic_site_values.pkl', 'rb') as f:
+    SO_sep_sic_site_values = pickle.load(f)
+
 # endregion
 # -----------------------------------------------------------------------------
 
 
+
+
+# lig vs. pi: mean±std
+# -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 # region SO annual SST
 
-#-------------------------------- model ensembles
+#-------------------------------- PMIP4 model ensemble
 with open('scratch/cmip6/lig/sst/sst_regrid_alltime_ens_stats.pkl', 'rb') as f:
     sst_regrid_alltime_ens_stats = pickle.load(f)
 
@@ -440,5 +460,338 @@ with open('scratch/cmip6/lig/sic/lig_pi_sic_regrid_alltime_ens.pkl', 'rb') as f:
     lig_pi_sic_regrid_alltime_ens = pickle.load(f)
 
 '''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+
+
+# pi vs hadisst: RMSE
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# region annual sst
+
+with open('scratch/cmip6/lig/sst/pi_sst_regrid_alltime.pkl', 'rb') as f:
+    pi_sst_regrid_alltime = pickle.load(f)
+
+HadISST = {}
+with open('data_sources/LIG/HadISST1.1/HadISST_sst.pkl', 'rb') as f:
+    HadISST['sst'] = pickle.load(f)
+
+for model in models:
+    print(model)
+    if True:
+        # calculate RMSE
+        am_data = pi_sst_regrid_alltime[model]['am'].values[0] - \
+            HadISST['sst']['1deg_alltime']['am'].values
+        diff = {}
+        diff['SO'] = am_data[mask_so]
+        
+        area = {}
+        area['SO'] = cdo_area1deg.cell_area.values[mask_so]
+        
+        rmse = {}
+        rmse['SO'] = np.sqrt(np.ma.average(
+            np.ma.MaskedArray(
+                np.square(diff['SO']), mask=np.isnan(diff['SO'])),
+            weights=area['SO']))
+        
+        print(np.round(rmse['SO'], 1))
+
+
+with open('scratch/cmip6/lig/sst/sst_regrid_alltime_ens_stats.pkl', 'rb') as f:
+    sst_regrid_alltime_ens_stats = pickle.load(f)
+
+am_data = sst_regrid_alltime_ens_stats['pi']['am']['mean'][0].values - \
+    HadISST['sst']['1deg_alltime']['am'].values
+diff = {}
+diff['SO'] = am_data[mask_so]
+
+area = {}
+area['SO'] = cdo_area1deg.cell_area.values[mask_so]
+
+rmse = {}
+rmse['SO'] = np.sqrt(np.ma.average(
+    np.ma.MaskedArray(
+        np.square(diff['SO']), mask=np.isnan(diff['SO'])),
+    weights=area['SO']))
+
+print(np.round(rmse['SO'], 1))
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region summer sst
+
+with open('scratch/cmip6/lig/sst/pi_sst_regrid_alltime.pkl', 'rb') as f:
+    pi_sst_regrid_alltime = pickle.load(f)
+
+HadISST = {}
+with open('data_sources/LIG/HadISST1.1/HadISST_sst.pkl', 'rb') as f:
+    HadISST['sst'] = pickle.load(f)
+
+for model in models:
+    print(model)
+    if True:
+        # calculate RMSE
+        sm_data = pi_sst_regrid_alltime[model]['sm'][0].values - \
+            HadISST['sst']['1deg_alltime']['sm'][0].values
+        diff = {}
+        diff['SO'] = sm_data[mask_so]
+        
+        area = {}
+        area['SO'] = cdo_area1deg.cell_area.values[mask_so]
+        
+        rmse = {}
+        rmse['SO'] = np.sqrt(np.ma.average(
+            np.ma.MaskedArray(
+                np.square(diff['SO']), mask=np.isnan(diff['SO'])),
+            weights=area['SO']))
+        
+        print(np.round(rmse['SO'], 1))
+
+
+with open('scratch/cmip6/lig/sst/sst_regrid_alltime_ens_stats.pkl', 'rb') as f:
+    sst_regrid_alltime_ens_stats = pickle.load(f)
+
+sm_data = sst_regrid_alltime_ens_stats['pi']['sm']['mean'][0].values - \
+    HadISST['sst']['1deg_alltime']['sm'][0].values
+diff = {}
+diff['SO'] = sm_data[mask_so]
+
+area = {}
+area['SO'] = cdo_area1deg.cell_area.values[mask_so]
+
+rmse = {}
+rmse['SO'] = np.sqrt(np.ma.average(
+    np.ma.MaskedArray(
+        np.square(diff['SO']), mask=np.isnan(diff['SO'])),
+    weights=area['SO']))
+
+print(np.round(rmse['SO'], 1))
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region sep sic
+
+with open('scratch/cmip6/lig/sic/pi_sic_regrid_alltime.pkl', 'rb') as f:
+    pi_sic_regrid_alltime = pickle.load(f)
+
+HadISST = {}
+with open('data_sources/LIG/HadISST1.1/HadISST_sic.pkl', 'rb') as f:
+    HadISST['sic'] = pickle.load(f)
+
+for model in models:
+    print(model)
+    if True:
+        
+        # calculate SIA changes
+        sepm_pi = pi_sic_regrid_alltime[model]['mm'][8].values.copy()
+        sepm_hadisst = HadISST['sic']['1deg_alltime']['mm'][8].values.copy()
+        
+        sia_pi = {}
+        sia_hadisst = {}
+        sia_pi_hadisst = {}
+        
+        for iregion in ['SO']: # , 'Atlantic', 'Indian', 'Pacific'
+            # iregion = 'SO'
+            sia_pi[iregion] = np.nansum(sepm_pi[mask[iregion]] / 100 * \
+                cdo_area1deg.cell_area.values[mask[iregion]]) / 1e+12
+            sia_hadisst[iregion] = np.nansum(
+                sepm_hadisst[mask[iregion]] / 100 * \
+                cdo_area1deg.cell_area.values[mask[iregion]]) / 1e+12
+            sia_pi_hadisst[iregion] = int(np.round((sia_pi[iregion] - sia_hadisst[iregion]) / sia_hadisst[iregion] * 100, 0))
+        
+        print(sia_pi_hadisst['SO'])
+
+
+
+with open('scratch/cmip6/lig/sic/sic_regrid_alltime_ens_stats.pkl', 'rb') as f:
+    sic_regrid_alltime_ens_stats = pickle.load(f)
+
+# calculate SIA changes
+sepm_pi = sic_regrid_alltime_ens_stats['pi']['mm']['mean'][8].values.copy()
+sepm_hadisst = HadISST['sic']['1deg_alltime']['mm'][8].values.copy()
+
+sia_pi = {}
+sia_hadisst = {}
+sia_pi_hadisst = {}
+
+for iregion in ['SO']: # , 'Atlantic', 'Indian', 'Pacific'
+    # iregion = 'SO'
+    sia_pi[iregion] = np.nansum(sepm_pi[mask[iregion]] / 100 * \
+        cdo_area1deg.cell_area.values[mask[iregion]]) / 1e+12
+    sia_hadisst[iregion] = np.nansum(
+        sepm_hadisst[mask[iregion]] / 100 * \
+        cdo_area1deg.cell_area.values[mask[iregion]]) / 1e+12
+    sia_pi_hadisst[iregion] = int(np.round((sia_pi[iregion] - sia_hadisst[iregion]) / sia_hadisst[iregion] * 100, 0))
+
+print(sia_pi_hadisst['SO'])
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+
+
+# lig_pi sim vs. rec
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# region annual sst
+
+for model in models:
+    print('#-------- ' + model)
+    data_to_plot = {}
+    data_to_plot['EC'] = SO_ann_sst_site_values['EC'].loc[SO_ann_sst_site_values['EC']['Model'] == model][['rec_ann_sst_lig_pi', 'sim_ann_sst_lig_pi']]
+    data_to_plot['JH'] = SO_ann_sst_site_values['JH'].loc[SO_ann_sst_site_values['JH']['Model'] == model][['rec_ann_sst_lig_pi', 'sim_ann_sst_lig_pi']]
+    data_to_plot['DC'] = SO_ann_sst_site_values['DC'].loc[SO_ann_sst_site_values['DC']['Model'] == model][['rec_ann_sst_lig_pi', 'sim_ann_sst_lig_pi']]
+    
+    rms_err  = {}
+    for irec in ['EC', 'JH', 'DC']:
+        print('#---- ' + irec)
+        # irec = 'EC'
+        rms_err[irec] = np.round(mean_squared_error(
+            data_to_plot[irec]['rec_ann_sst_lig_pi'],
+            data_to_plot[irec]['sim_ann_sst_lig_pi'],
+            squared=False), 1)
+        
+        print(rms_err[irec])
+
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region summer sst
+
+for model in models:
+    print('#-------- ' + model)
+    
+    data_to_plot = {}
+    data_to_plot['EC'] = SO_jfm_sst_site_values['EC'].loc[SO_jfm_sst_site_values['EC']['Model'] == model][['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']]
+    data_to_plot['JH'] = SO_jfm_sst_site_values['JH'].loc[SO_jfm_sst_site_values['JH']['Model'] == model][['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']]
+    data_to_plot['DC'] = SO_jfm_sst_site_values['DC'].loc[SO_jfm_sst_site_values['DC']['Model'] == model][['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']]
+    data_to_plot['MC'] = SO_jfm_sst_site_values['MC'].loc[SO_jfm_sst_site_values['MC']['Model'] == model][['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']]
+    
+    rms_err  = {}
+    for irec in ['EC', 'JH', 'DC', 'MC']:
+        print('#---- ' + irec)
+        # irec = 'EC'
+        rms_err[irec] = np.round(mean_squared_error(
+            data_to_plot[irec]['rec_jfm_sst_lig_pi'],
+            data_to_plot[irec]['sim_jfm_sst_lig_pi'],
+            squared=False), 1)
+        
+        print(rms_err[irec])
+
+
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region annual sat
+
+for model in models:
+    print('#-------- ' + model)
+    data_to_plot = {}
+    
+    data_to_plot['EC_tas'] = AIS_ann_tas_site_values['EC'].loc[AIS_ann_tas_site_values['EC']['Model'] == model][['rec_ann_tas_lig_pi', 'sim_ann_tas_lig_pi']]
+    
+    rms_err['EC_tas'] = np.round(
+        mean_squared_error(
+            data_to_plot['EC_tas']['rec_ann_tas_lig_pi'],
+            data_to_plot['EC_tas']['sim_ann_tas_lig_pi'],
+            squared=False), 1)
+    
+    print(rms_err['EC_tas'])
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region september sic
+
+for model in models:
+    print('#-------- ' + model)
+    data_to_plot = {}
+    
+    data_to_plot['MC'] = SO_sep_sic_site_values['MC'].loc[SO_sep_sic_site_values['MC']['Model'] == model][['rec_sep_sic_lig_pi', 'sim_sep_sic_lig_pi']]
+    
+    rms_err  = {}
+    
+    rms_err['MC'] = np.int(mean_squared_error(
+        data_to_plot['MC']['rec_sep_sic_lig_pi'],
+        data_to_plot['MC']['sim_sep_sic_lig_pi'],
+        squared=False))
+    
+    print(rms_err['MC'])
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region no responses
+
+model = 'NorESM2-LM'
+
+rec_data = SO_ann_sst_site_values['EC'].loc[
+    SO_ann_sst_site_values['EC']['Model'] == model][
+        ['rec_ann_sst_lig_pi']]
+np.round(mean_squared_error(rec_data,np.zeros(len(rec_data)), squared=False), 1)
+
+
+rec_data = SO_ann_sst_site_values['JH'].loc[
+    SO_ann_sst_site_values['JH']['Model'] == model][
+        ['rec_ann_sst_lig_pi']]
+np.round(mean_squared_error(rec_data,np.zeros(len(rec_data)), squared=False), 1)
+
+rec_data = SO_ann_sst_site_values['DC'].loc[
+    SO_ann_sst_site_values['DC']['Model'] == model][
+        ['rec_ann_sst_lig_pi']]
+np.round(mean_squared_error(rec_data,np.zeros(len(rec_data)), squared=False), 1)
+
+
+rec_data = SO_jfm_sst_site_values['EC'].loc[SO_jfm_sst_site_values['EC']['Model'] == model]['rec_jfm_sst_lig_pi']
+np.round(mean_squared_error(rec_data,np.zeros(len(rec_data)), squared=False), 1)
+
+rec_data = SO_jfm_sst_site_values['JH'].loc[SO_jfm_sst_site_values['JH']['Model'] == model]['rec_jfm_sst_lig_pi']
+np.round(mean_squared_error(rec_data,np.zeros(len(rec_data)), squared=False), 1)
+
+rec_data = SO_jfm_sst_site_values['DC'].loc[SO_jfm_sst_site_values['DC']['Model'] == model]['rec_jfm_sst_lig_pi']
+np.round(mean_squared_error(rec_data,np.zeros(len(rec_data)), squared=False), 1)
+
+rec_data = SO_jfm_sst_site_values['MC'].loc[SO_jfm_sst_site_values['MC']['Model'] == model]['rec_jfm_sst_lig_pi']
+np.round(mean_squared_error(rec_data,np.zeros(len(rec_data)), squared=False), 1)
+
+
+rec_data = AIS_ann_tas_site_values['EC'].loc[AIS_ann_tas_site_values['EC']['Model'] == model]['rec_ann_tas_lig_pi']
+np.round(mean_squared_error(rec_data,np.zeros(len(rec_data)), squared=False), 1)
+
+
+rec_data = SO_sep_sic_site_values['MC'].loc[SO_sep_sic_site_values['MC']['Model'] == model]['rec_sep_sic_lig_pi']
+np.round(mean_squared_error(rec_data,np.zeros(len(rec_data)), squared=False), 0)
+
+
 # endregion
 # -----------------------------------------------------------------------------

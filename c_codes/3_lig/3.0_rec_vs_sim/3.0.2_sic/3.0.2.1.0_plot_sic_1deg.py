@@ -149,93 +149,6 @@ cdo_area1deg = xr.open_dataset('scratch/others/one_degree_grids_cdo_area.nc')
 
 
 # -----------------------------------------------------------------------------
-# region plot lig-pi sep sic
-
-output_png = 'figures/7_lig/7.0_sim_rec/7.0.1_sic/7.0.1.1 lig-pi sep sic multiple models 1deg.png'
-cbar_label = 'Sep SIC [$\%$]'
-
-pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-70, cm_max=20, cm_interval1=10, cm_interval2=10, cmap='PuOr',
-    reversed=False, asymmetric=True,)
-
-nrow = 3
-ncol = 4
-fm_bottom = 2 / (5.8*nrow + 2)
-
-fig, axs = plt.subplots(
-    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
-    subplot_kw={'projection': ccrs.SouthPolarStereo()},
-    gridspec_kw={'hspace': 0.12, 'wspace': 0.02},)
-
-ipanel=0
-for irow in range(nrow):
-    for jcol in range(ncol):
-        axs[irow, jcol] = hemisphere_plot(
-            northextent=-38, ax_org = axs[irow, jcol])
-        plt.text(
-            0, 0.95, panel_labels[ipanel],
-            transform=axs[irow, jcol].transAxes,
-            ha='center', va='center', rotation='horizontal')
-        ipanel += 1
-        
-        # MC
-        plt_scatter = axs[irow, jcol].scatter(
-            x = lig_recs['MC']['interpolated'].Longitude,
-            y = lig_recs['MC']['interpolated'].Latitude,
-            c = lig_recs['MC']['interpolated']['sic_anom_hadisst_sep'],
-            s=64, lw=0.5, marker='^', edgecolors = 'black', zorder=2,
-            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
-
-
-for irow in range(nrow):
-    for jcol in range(ncol):
-        # irow = 0
-        # jcol = 0
-        model = models[jcol + ncol * irow]
-        print(model)
-        
-        sep_lig_pi = lig_pi_sic_regrid_alltime[model]['mm'][8].values
-        
-        plt_mesh = axs[irow, jcol].pcolormesh(
-            lon, lat, sep_lig_pi,
-            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
-        
-        rmse = {}
-        for irec in ['MC']:
-            # irec = 'MC'
-            print(irec)
-            
-            rmse[irec] = int(np.round(SO_sep_sic_site_values[irec].loc[
-                SO_sep_sic_site_values[irec].Model == model
-                ]['sim_rec_sep_sic_lig_pi'].mean(), 0))
-        
-        plt.text(
-            0.5, 1.05,
-            model + ': ' + str(rmse['MC']),
-            transform=axs[irow, jcol].transAxes,
-            ha='center', va='center', rotation='horizontal')
-
-cbar = fig.colorbar(
-    plt_scatter, ax=axs, aspect=40, format=remove_trailing_zero_pos,
-    orientation="horizontal", shrink=0.75, ticks=pltticks, extend='both',
-    anchor=(0.5, -0.4),)
-cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
-
-fig.subplots_adjust(left=0.01, right = 0.99, bottom = fm_bottom, top = 0.97)
-fig.savefig(output_png)
-
-
-
-
-'''
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-
-
-# -----------------------------------------------------------------------------
 # region plot pi-hadisst sep sic
 
 output_png = 'figures/7_lig/7.0_sim_rec/7.0.1_sic/7.0.1.1 pi-hadisst sep sic multiple models 1deg.png'
@@ -258,7 +171,7 @@ ipanel=0
 for irow in range(nrow):
     for jcol in range(ncol):
         axs[irow, jcol] = hemisphere_plot(
-            northextent=-38, ax_org = axs[irow, jcol])
+            northextent=-50, ax_org = axs[irow, jcol])
         plt.text(
             0, 0.95, panel_labels[ipanel],
             transform=axs[irow, jcol].transAxes,
@@ -272,7 +185,7 @@ for irow in range(nrow):
         model = models[jcol + ncol * irow]
         print(model)
         
-        # plot insignificant diff
+        # remove insignificant diff
         sep_pi = pi_sic_regrid_alltime[model]['mon'][8::12].values
         sep_hadisst = HadISST['sic']['1deg_alltime']['mon'][8::12].values
         ttest_fdr_res = ttest_fdr_control(sep_pi, sep_hadisst,)
@@ -292,46 +205,69 @@ for irow in range(nrow):
         #     s=0.5, c='k', marker='.', edgecolors='none',
         #     transform=ccrs.PlateCarree(),)
         
-        # calculate RMSE
-        sep_data = pi_sic_regrid_alltime[model]['mm'][8].values - \
-            HadISST['sic']['1deg_alltime']['mm'][8].values
-        diff = {}
-        diff['SO'] = sep_data[mask['SO']]
-        diff['Atlantic'] = sep_data[mask['Atlantic']]
-        diff['Indian'] = sep_data[mask['Indian']]
-        diff['Pacific'] = sep_data[mask['Pacific']]
+        # # calculate RMSE
+        # sep_data = pi_sic_regrid_alltime[model]['mm'][8].values - \
+        #     HadISST['sic']['1deg_alltime']['mm'][8].values
+        # diff = {}
+        # diff['SO'] = sep_data[mask['SO']]
+        # diff['Atlantic'] = sep_data[mask['Atlantic']]
+        # diff['Indian'] = sep_data[mask['Indian']]
+        # diff['Pacific'] = sep_data[mask['Pacific']]
         
-        area = {}
-        area['SO'] = cdo_area1deg.cell_area.values[mask['SO']]
-        area['Atlantic'] = cdo_area1deg.cell_area.values[mask['Atlantic']]
-        area['Indian'] = cdo_area1deg.cell_area.values[mask['Indian']]
-        area['Pacific'] = cdo_area1deg.cell_area.values[mask['Pacific']]
+        # area = {}
+        # area['SO'] = cdo_area1deg.cell_area.values[mask['SO']]
+        # area['Atlantic'] = cdo_area1deg.cell_area.values[mask['Atlantic']]
+        # area['Indian'] = cdo_area1deg.cell_area.values[mask['Indian']]
+        # area['Pacific'] = cdo_area1deg.cell_area.values[mask['Pacific']]
         
-        rmse = {}
-        rmse['SO'] = np.sqrt(np.ma.average(
-            np.ma.MaskedArray(
-                np.square(diff['SO']), mask=np.isnan(diff['SO'])),
-            weights=area['SO']))
-        rmse['Atlantic'] = np.sqrt(np.ma.average(
-            np.ma.MaskedArray(
-                np.square(diff['Atlantic']), mask=np.isnan(diff['Atlantic'])),
-            weights=area['Atlantic']))
-        rmse['Indian'] = np.sqrt(np.ma.average(
-            np.ma.MaskedArray(
-                np.square(diff['Indian']), mask=np.isnan(diff['Indian'])),
-            weights=area['Indian']))
-        rmse['Pacific'] = np.sqrt(np.ma.average(
-            np.ma.MaskedArray(
-                np.square(diff['Pacific']), mask=np.isnan(diff['Pacific'])),
-            weights=area['Pacific']))
+        # rmse = {}
+        # rmse['SO'] = np.sqrt(np.ma.average(
+        #     np.ma.MaskedArray(
+        #         np.square(diff['SO']), mask=np.isnan(diff['SO'])),
+        #     weights=area['SO']))
+        # rmse['Atlantic'] = np.sqrt(np.ma.average(
+        #     np.ma.MaskedArray(
+        #         np.square(diff['Atlantic']), mask=np.isnan(diff['Atlantic'])),
+        #     weights=area['Atlantic']))
+        # rmse['Indian'] = np.sqrt(np.ma.average(
+        #     np.ma.MaskedArray(
+        #         np.square(diff['Indian']), mask=np.isnan(diff['Indian'])),
+        #     weights=area['Indian']))
+        # rmse['Pacific'] = np.sqrt(np.ma.average(
+        #     np.ma.MaskedArray(
+        #         np.square(diff['Pacific']), mask=np.isnan(diff['Pacific'])),
+        #     weights=area['Pacific']))
+        
+        # calculate SIA changes
+        sepm_pi = pi_sic_regrid_alltime[model]['mm'][8].values.copy()
+        sepm_hadisst = HadISST['sic']['1deg_alltime']['mm'][8].values.copy()
+        
+        sia_pi = {}
+        sia_hadisst = {}
+        sia_pi_hadisst = {}
+        
+        for iregion in ['SO', 'Atlantic', 'Indian', 'Pacific']:
+            # iregion = 'SO'
+            sia_pi[iregion] = np.nansum(sepm_pi[mask[iregion]] / 100 * \
+                cdo_area1deg.cell_area.values[mask[iregion]]) / 1e+12
+            sia_hadisst[iregion] = np.nansum(
+                sepm_hadisst[mask[iregion]] / 100 * \
+                cdo_area1deg.cell_area.values[mask[iregion]]) / 1e+12
+            sia_pi_hadisst[iregion] = int(np.round((sia_pi[iregion] - sia_hadisst[iregion]) / sia_hadisst[iregion] * 100, 0))
         
         plt.text(
             0.5, 1.05,
+            # model,
             model + ' (' + \
-                str(int(np.round(rmse['SO'], 0))) + ', ' + \
-                    str(int(np.round(rmse['Atlantic'], 0))) + ', ' + \
-                        str(int(np.round(rmse['Indian'], 0))) + ', ' + \
-                            str(int(np.round(rmse['Pacific'], 0))) + ')',
+                str(sia_pi_hadisst['SO']) + ', ' + \
+                    str(sia_pi_hadisst['Atlantic']) + ', ' + \
+                        str(sia_pi_hadisst['Indian']) + ', ' + \
+                            str(sia_pi_hadisst['Pacific']) + ')',
+            # model + ' (' + \
+            #     str(int(np.round(rmse['SO'], 0))) + ', ' + \
+            #         str(int(np.round(rmse['Atlantic'], 0))) + ', ' + \
+            #             str(int(np.round(rmse['Indian'], 0))) + ', ' + \
+            #                 str(int(np.round(rmse['Pacific'], 0))) + ')',
             transform=axs[irow, jcol].transAxes,
             ha='center', va='center', rotation='horizontal')
 
@@ -362,7 +298,7 @@ output_png = 'figures/7_lig/7.0_sim_rec/7.0.1_sic/7.0.1.1 lig-pi sep sic multipl
 cbar_label = r'$\mathit{lig127k}$' + ' vs. ' + r'$\mathit{piControl}$' + ' Sep SIC [$\%$]'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-50, cm_max=50, cm_interval1=10, cm_interval2=10, cmap='PuOr',
+    cm_min=-70, cm_max=70, cm_interval1=10, cm_interval2=10, cmap='PuOr',
     reversed=False, asymmetric=False,)
 
 nrow = 3
@@ -378,12 +314,20 @@ ipanel=0
 for irow in range(nrow):
     for jcol in range(ncol):
         axs[irow, jcol] = hemisphere_plot(
-            northextent=-38, ax_org = axs[irow, jcol])
+            northextent=-50, ax_org = axs[irow, jcol])
         plt.text(
             0, 0.95, panel_labels[ipanel],
             transform=axs[irow, jcol].transAxes,
             ha='center', va='center', rotation='horizontal')
         ipanel += 1
+        
+        # MC
+        plt_scatter = axs[irow, jcol].scatter(
+            x = lig_recs['MC']['interpolated'].Longitude,
+            y = lig_recs['MC']['interpolated'].Latitude,
+            c = lig_recs['MC']['interpolated']['sic_anom_hadisst_sep'],
+            s=64, lw=0.5, marker='^', edgecolors = 'black', zorder=2,
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
 for irow in range(nrow):
     for jcol in range(ncol):
@@ -403,27 +347,28 @@ for irow in range(nrow):
             lon, lat, sep_lig_pi, levels=pltlevel, extend='both',
             norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
         
-        # calculate SIA changes
-        sepm_lig = lig_sic_regrid_alltime[model]['mm'][8].values.copy()
-        sepm_pi = pi_sic_regrid_alltime[model]['mm'][8].values.copy()
-        sia_lig = {}
-        sia_pi = {}
-        sia_lig_pi = {}
-        for iregion in ['SO', 'Atlantic', 'Indian', 'Pacific']:
-            # iregion = 'SO'
-            sia_lig[iregion] = np.nansum(sepm_lig[mask[iregion]] / 100 * \
-                cdo_area1deg.cell_area.values[mask[iregion]]) / 1e+12
-            sia_pi[iregion] = np.nansum(sepm_pi[mask[iregion]] / 100 * \
-                cdo_area1deg.cell_area.values[mask[iregion]]) / 1e+12
-            sia_lig_pi[iregion] = int(np.round((sia_lig[iregion] - sia_pi[iregion]) / sia_pi[iregion] * 100, 0))
+        # # calculate SIA changes
+        # sepm_lig = lig_sic_regrid_alltime[model]['mm'][8].values.copy()
+        # sepm_pi = pi_sic_regrid_alltime[model]['mm'][8].values.copy()
+        # sia_lig = {}
+        # sia_pi = {}
+        # sia_lig_pi = {}
+        # for iregion in ['SO', 'Atlantic', 'Indian', 'Pacific']:
+        #     # iregion = 'SO'
+        #     sia_lig[iregion] = np.nansum(sepm_lig[mask[iregion]] / 100 * \
+        #         cdo_area1deg.cell_area.values[mask[iregion]]) / 1e+12
+        #     sia_pi[iregion] = np.nansum(sepm_pi[mask[iregion]] / 100 * \
+        #         cdo_area1deg.cell_area.values[mask[iregion]]) / 1e+12
+        #     sia_lig_pi[iregion] = int(np.round((sia_lig[iregion] - sia_pi[iregion]) / sia_pi[iregion] * 100, 0))
         
         plt.text(
             0.5, 1.05,
-            model + ' (' + \
-                str(sia_lig_pi['SO']) + ', ' + \
-                    str(sia_lig_pi['Atlantic']) + ', ' + \
-                        str(sia_lig_pi['Indian']) + ', ' + \
-                            str(sia_lig_pi['Pacific']) + ')',
+            model,
+            # model + ' (' + \
+            #     str(sia_lig_pi['SO']) + ', ' + \
+            #         str(sia_lig_pi['Atlantic']) + ', ' + \
+            #             str(sia_lig_pi['Indian']) + ', ' + \
+            #                 str(sia_lig_pi['Pacific']) + ')',
             transform=axs[irow, jcol].transAxes,
             ha='center', va='center', rotation='horizontal')
 
