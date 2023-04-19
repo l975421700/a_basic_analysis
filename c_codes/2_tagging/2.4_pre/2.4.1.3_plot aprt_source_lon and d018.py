@@ -1,7 +1,7 @@
 
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_416_4.9',]
+expid = ['pi_m_502_5.0',]
 i = 0
 
 # -----------------------------------------------------------------------------
@@ -43,6 +43,7 @@ mpl.rcParams['axes.linewidth'] = 0.2
 plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
+import cartopy.feature as cfeature
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -92,6 +93,8 @@ from a_basic_analysis.b_module.statistics import (
 
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
+    plt_mesh_pars,
+    plot_t63_contourf,
 )
 
 # endregion
@@ -125,6 +128,11 @@ major_ice_core_site = major_ice_core_site.loc[
 pre_weighted_lon = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lon.pkl', 'rb') as f:
     pre_weighted_lon[expid[i]] = pickle.load(f)
+
+temp2_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
+    temp2_alltime[expid[i]] = pickle.load(f)
+
 
 '''
 ocean_pre_alltime = {}
@@ -446,56 +454,37 @@ smow_dD = 0.3288266
 do18 = (((wisoaprt_alltime[expid[i]]['am'][1] / \
     wisoaprt_alltime[expid[i]]['am'][0]) / smow_d018 - 1) * 1000).compute()
 
-
-pltctr1 = np.array([0.05, 0.1, 0.5, ])
-pltctr2 = np.array([1, 2, 4, ])
-
-plt_data = wisoaprt_alltime[expid[i]]['am'][0] * seconds_per_d
-
 output_png = 'figures/6_awi/6.1_echam6/6.1.6_isotopes/6.1.6.0 ' + expid[i] + ' am d_018 Antarctica.png'
 
-pltlevel = np.arange(-55, -5 + 1e-4, 5)
-pltticks = np.arange(-55, -5 + 1e-4, 10)
-pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
-pltcmp = cm.get_cmap('PiYG', len(pltlevel)-1).reversed()
 
-fig, ax = hemisphere_plot(
-    northextent=-60, figsize=np.array([5.8, 7]) / 2.54,
-    llatlabel = True,)
-cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-55, cm_max=-15, cm_interval1=5, cm_interval2=5, cmap='cividis',
+    reversed=False)
 
-plt2 = ax.contour(
-    lon, lat,
-    plt_data,
-    levels=pltctr1, colors = 'blue', transform=ccrs.PlateCarree(),
-    linewidths=0.5, linestyles='dotted',
-)
-ax.clabel(plt2, inline=1, colors='blue', fmt=remove_trailing_zero,
-          levels=pltctr1, inline_spacing=10, fontsize=9,)
+fig, ax = hemisphere_plot(northextent=-60, figsize=np.array([5.8, 7]) / 2.54,)
 
-plt3 = ax.contour(
-    lon, lat,
-    plt_data,
-    levels=pltctr2, colors = 'blue', transform=ccrs.PlateCarree(),
-    linewidths=0.5, linestyles='solid',
-)
-ax.clabel(plt3, inline=1, colors='blue', fmt=remove_trailing_zero,
-          levels=pltctr2, inline_spacing=5, fontsize=9,)
+plt1 = plot_t63_contourf(
+    lon, lat, do18, ax,
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
 
-plt1 = ax.pcolormesh(
-    lon,
-    lat,
-    do18,
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+# temp2_alltime[expid[i]]['am']
+# plot topography
+plt_ctr1 = ax.contour(
+    temp2_alltime[expid[i]]['am'].lon,
+    temp2_alltime[expid[i]]['am'].lat.sel(lat=slice(-59, -90)),
+    temp2_alltime[expid[i]]['am'].sel(lat=slice(-59, -90)),
+    levels=np.arange(-60, -20 + 1e-4, 10), transform=ccrs.PlateCarree(),
+    colors='blue', linewidths=0.3, linestyles='solid',)
+ax.clabel(
+    plt_ctr1, inline=1, colors='blue', fmt=remove_trailing_zero,
+    levels=np.arange(-60, -20 + 1e-4, 10), inline_spacing=1)
 
-turner_obs = pd.read_csv(
-    'finse_school/data/Antarctic_site_records/Turner_obs.csv')
-cplot_ice_cores(np.negative(turner_obs.lon), turner_obs.lat, ax, marker='*',
-                edgecolors = 'red', zorder=3, s=5, c='red')
+
+ax.add_feature(cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
 
 cbar = fig.colorbar(
     plt1, ax=ax, aspect=30,
-    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+    orientation="horizontal", shrink=1, ticks=pltticks, extend='both',
     pad=0.02, fraction=0.15,
     )
 cbar.ax.set_xlabel('Annual mean $\delta^{18}O$ [‰]\n ', linespacing=2)
@@ -504,11 +493,13 @@ fig.savefig(output_png)
 
 
 
-
-
-
-
 '''
+np.max(do18.sel(lat=slice(-60, -90)))
+np.min(do18.sel(lat=slice(-60, -90)))
+
+
+
+
 #-------- SMOW values
 smow_standard = xr.open_dataset('/work/ollie/qigao001/startdump/wiso/calc_wiso_d/SMOW.FAC.T63.nwiso_3.nc')
 
@@ -542,6 +533,34 @@ cbar.ax.set_xlabel(
 
 fig.subplots_adjust(left=0.06, right=0.97, bottom=0.08, top=0.995)
 fig.savefig('figures/trial.png',)
+
+#-------- plot pre
+# pltctr1 = np.array([0.05, 0.1, 0.5, ])
+# pltctr2 = np.array([1, 2, 4, ])
+# plt_data = wisoaprt_alltime[expid[i]]['am'][0] * seconds_per_d
+
+# plt2 = ax.contour(
+#     lon, lat,
+#     plt_data,
+#     levels=pltctr1, colors = 'blue', transform=ccrs.PlateCarree(),
+#     linewidths=0.5, linestyles='dotted',)
+# ax.clabel(plt2, inline=1, colors='blue', fmt=remove_trailing_zero,
+#           levels=pltctr1, inline_spacing=10, fontsize=9,)
+
+# plt3 = ax.contour(
+#     lon, lat,
+#     plt_data,
+#     levels=pltctr2, colors = 'blue', transform=ccrs.PlateCarree(),
+#     linewidths=0.5, linestyles='solid',)
+# ax.clabel(plt3, inline=1, colors='blue', fmt=remove_trailing_zero,
+#           levels=pltctr2, inline_spacing=5, fontsize=9,)
+
+# turner_obs = pd.read_csv(
+#     'finse_school/data/Antarctic_site_records/Turner_obs.csv')
+# cplot_ice_cores(np.negative(turner_obs.lon), turner_obs.lat, ax, marker='*',
+#                 edgecolors = 'red', zorder=3, s=5, c='red')
+
+# cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
 
 '''
 # endregion

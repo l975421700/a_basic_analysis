@@ -237,7 +237,7 @@ print(np.min(tp_era5_frc_st))
 # -----------------------------------------------------------------------------
 # region fractioin of EPE, with a threshold of 0.002 mm/day
 
-ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
+# ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 tp_era5_daily = xr.open_mfdataset(
     'scratch/cmip6/hist/pre/tp_ERA5_daily_sl_??_??_Antarctica.nc',
     ).chunk({'time': 15706, 'longitude': 20, 'latitude': 1})
@@ -271,7 +271,7 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
 fig, ax = hemisphere_plot(
     northextent=-60, figsize=np.array([5.8, 6.8]) / 2.54)
 
-cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
+# cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
 plt_data = tp_era5['frc'] * 100
 

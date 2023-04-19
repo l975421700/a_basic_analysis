@@ -1,6 +1,70 @@
 
 
 # -----------------------------------------------------------------------------
+# region Function to downscaling longitude
+
+def plot_src_lon(
+    lon, range360 = True,
+    weights='bilinear_96x192_1800x3600.nc', grid_spacing=0.1,
+    ):
+    '''
+    #--------
+    
+    #--------
+    
+    '''
+    import xesmf as xe
+    import numpy as np
+    
+    sinlon = np.sin(lon / 180 * np.pi)
+    coslon = np.cos(lon / 180 * np.pi)
+    
+    ds_out = xe.util.grid_global(grid_spacing, grid_spacing)
+    
+    regridder = xe.Regridder(
+        sinlon, ds_out, method='bilinear', weights=weights,
+        periodic=True, ignore_degenerate=True,
+        unmapped_to_nan=True, extrap_method='nearest_s2d'
+        )
+    
+    sinlon_rgd = regridder(sinlon)
+    coslon_rgd = regridder(coslon)
+    
+    lon_rgd = (np.arctan2(sinlon_rgd, coslon_rgd) * 180 / np.pi).compute()
+    
+    if range360:
+        lon_rgd[lon_rgd < 0] += 360
+    
+    return(lon_rgd)
+
+
+'''
+#-------- create weights
+# https://ncar.github.io/esds/posts/2021/regrid-observations-pop-grid/
+
+import xarray as xr
+import pickle
+import xesmf as xe
+
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+expid = ['pi_m_502_5.0',]
+i = 0
+pre_weighted_lon = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lon.pkl', 'rb') as f:
+    pre_weighted_lon[expid[i]] = pickle.load(f)
+
+weights = xe.Regridder(
+    pre_weighted_lon[expid[i]]['am'], xe.util.grid_global(0.1, 0.1), 'bilinear',
+    periodic=True, ignore_degenerate=True,
+    unmapped_to_nan=True, extrap_method='nearest_s2d',)
+weights.to_netcdf('bilinear_96x192_1800x3600.nc')
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
 # region Function to calculate time weighted mean values
 
 def time_weighted_mean(ds):

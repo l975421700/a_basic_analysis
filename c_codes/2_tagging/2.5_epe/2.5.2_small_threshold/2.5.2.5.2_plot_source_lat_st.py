@@ -185,6 +185,32 @@ fig.savefig(output_png, dpi=600)
 
 
 
+
+iqtl = '90%'
+plt_data = (epe_st_weighted_lat[expid[i]][iqtl]['am'] - \
+    dc_st_weighted_lat[expid[i]][iqtl]['am']).compute()
+
+lat_lon_sites = {
+    'EDC': {'lat': -75.10, 'lon': 123.35,},
+    'DOME F': {'lat': -77.32, 'lon': 39.70,}
+}
+
+
+for isite in ['EDC', 'DOME F']:
+    print('#--------' + isite)
+    # print(lat_lon_sites[isite]['lat'])
+    # print(lat_lon_sites[isite]['lon'])
+    
+    print(np.round(
+        plt_data.sel(
+            lat = lat_lon_sites[isite]['lat'],
+            lon = lat_lon_sites[isite]['lon'],
+            method='nearest').values, 1))
+
+
+
+
+
 '''
 (epe_st_weighted_lat[expid[i]][iqtl]['am'] - pre_weighted_lat[expid[i]]['am']).to_netcdf('scratch/test/test.nc')
 '''

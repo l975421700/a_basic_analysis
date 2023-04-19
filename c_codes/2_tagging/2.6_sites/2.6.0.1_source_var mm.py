@@ -88,6 +88,7 @@ from a_basic_analysis.b_module.namelist import (
 from a_basic_analysis.b_module.source_properties import (
     source_properties,
     calc_lon_diff,
+    calc_lon_diff_np,
 )
 
 from a_basic_analysis.b_module.statistics import (
@@ -136,10 +137,13 @@ pre_weighted_var_icores[expid[i]].keys()
 
 ivar = 'lat'
 
-Sites = ['EDC', 'Halley']
-output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.0_source_lat/6.1.8.0 ' + expid[i] + ' pre_weighted_lat mm EDC and Halley.png'
+# Sites = ['EDC', 'Halley']
+# output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.0_source_lat/6.1.8.0 ' + expid[i] + ' pre_weighted_lat mm EDC and Halley.png'
+Sites = ['EDC', 'DOME F']
+output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.0_source_lat/6.1.8.0 ' + expid[i] + ' pre_weighted_lat mm EDC and Dome Fuji.png'
+colors = {'EDC': 'dodgerblue', 'DOME F': 'darkorange'}
 
-fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
+fig, ax = plt.subplots(1, 1, figsize=np.array([6, 6]) / 2.54)
 
 for icores in Sites:
     # icores = 'EDC'
@@ -151,23 +155,50 @@ for icores in Sites:
         pre_weighted_var_icores[expid[i]][icores][ivar]['mm'],
         yerr = monstd, capsize=2,
         fmt='.-', lw=1, markersize=6, alpha=0.75,
-        label=icores,)
+        label=icores, color=colors[icores],)
+    
+    ax.hlines(
+        pre_weighted_var_icores[expid[i]][icores][ivar]['am'].values,
+        -1, 13,
+        linestyles='dashed', colors=colors[icores], lw=1,
+    )
 
-ax.legend(
-    loc='lower center', handlelength=2, framealpha = 1, ncol=1,
-    columnspacing=0.5, handletextpad=0.5)
+# ax.legend(
+#     loc='lower center', handlelength=2, framealpha = 1, ncol=1,
+#     columnspacing=0.5, handletextpad=0.5)
 
-ax.set_xlabel('Monthly source latitude [$°\;S$]')
+# ax.set_xlabel('Source latitude [$°\;S$]')
+ax.set_title('Source latitude [$°\;S$]', fontsize=10,)
+ax.set_xticklabels(monthini)
+ax.set_xlim(-0.55, 11.55)
 
 ax.set_ylabel(None)
+ax.set_yticks(np.arange(-42, -31 + 1e-4, 2))
 ax.yaxis.set_major_formatter(remove_trailing_zero_pos_abs)
 ax.yaxis.set_minor_locator(AutoMinorLocator(2))
 
 ax.grid(
     True, which='both',
     linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
-fig.subplots_adjust(left=0.1, right=0.99, bottom=0.15, top=0.98)
+fig.subplots_adjust(left=0.11, right=0.99, bottom=0.1, top=0.9)
 fig.savefig(output_png)
+
+
+# # annual mean
+# ivar = 'lat'
+# Sites = ['EDC', 'DOME F']
+# for icores in Sites:
+#     print('#--------' + icores)
+#     print(np.round(
+#         pre_weighted_var_icores[expid[i]][icores][ivar]['am'].values, 1))
+
+# ivar = 'sst'
+# Sites = ['EDC', 'DOME F']
+# for icores in Sites:
+#     print('#--------' + icores)
+#     print(np.round(
+#         pre_weighted_var_icores[expid[i]][icores][ivar]['am'].values, 1))
+
 
 
 '''
@@ -196,10 +227,13 @@ for icores in Sites:
 
 ivar = 'sst'
 
-Sites = ['EDC', 'Halley']
-output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.2_source_sst/6.1.8.2 ' + expid[i] + ' pre_weighted_sst mm EDC and Halley.png'
+# Sites = ['EDC', 'Halley']
+# output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.2_source_sst/6.1.8.2 ' + expid[i] + ' pre_weighted_sst mm EDC and Halley.png'
+Sites = ['EDC', 'DOME F']
+output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.2_source_sst/6.1.8.2 ' + expid[i] + ' pre_weighted_sst mm EDC and Dome Fuji.png'
+colors = {'EDC': 'dodgerblue', 'DOME F': 'darkorange'}
 
-fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
+fig, ax = plt.subplots(1, 1, figsize=np.array([6, 6]) / 2.54)
 
 for icores in Sites:
     # icores = 'EDC'
@@ -211,13 +245,22 @@ for icores in Sites:
         pre_weighted_var_icores[expid[i]][icores][ivar]['mm'],
         yerr = monstd, capsize=2,
         fmt='.-', lw=1, markersize=6, alpha=0.75,
-        label=icores,)
+        label=icores, color=colors[icores],)
+    
+    ax.hlines(
+        pre_weighted_var_icores[expid[i]][icores][ivar]['am'].values,
+        -1, 13,
+        linestyles='dashed', colors=colors[icores], lw=1,
+    )
 
-ax.legend(
-    loc='upper center', handlelength=2, framealpha = 1, ncol=1,
-    columnspacing=0.5, handletextpad=0.5)
+# ax.legend(
+#     loc='upper center', handlelength=2, framealpha = 1, ncol=1,
+#     columnspacing=0.5, handletextpad=0.5)
 
-ax.set_xlabel('Monthly source SST [$°C$]')
+# ax.set_xlabel('Source SST [$°C$]')
+ax.set_title('Source SST [$°C$]', fontsize=10,)
+ax.set_xticklabels(monthini)
+ax.set_xlim(-0.55, 11.55)
 
 ax.set_ylabel(None)
 ax.yaxis.set_minor_locator(AutoMinorLocator(2))
@@ -225,7 +268,7 @@ ax.yaxis.set_minor_locator(AutoMinorLocator(2))
 ax.grid(
     True, which='both',
     linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
-fig.subplots_adjust(left=0.08, right=0.99, bottom=0.15, top=0.98)
+fig.subplots_adjust(left=0.11, right=0.99, bottom=0.1, top=0.9)
 fig.savefig(output_png)
 
 
@@ -258,10 +301,13 @@ with open(
 
 ivar = 'lon'
 
-Sites = ['EDC', 'Halley']
-output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.1_source_lon/6.1.8.1 ' + expid[i] + ' pre_weighted_lon mm EDC and Halley.png'
+# Sites = ['EDC', 'Halley']
+# output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.1_source_lon/6.1.8.1 ' + expid[i] + ' pre_weighted_lon mm EDC and Halley.png'
+Sites = ['EDC', 'DOME F']
+output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.1_source_lon/6.1.8.1 ' + expid[i] + ' pre_weighted_lon mm EDC and Dome Fuji.png'
+colors = {'EDC': 'dodgerblue', 'DOME F': 'darkorange'}
 
-fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
+fig, ax = plt.subplots(1, 1, figsize=np.array([6, 6]) / 2.54)
 
 for icores in Sites:
     # icores = 'EDC'
@@ -279,21 +325,34 @@ for icores in Sites:
             ),
         yerr = monstd, capsize=2,
         fmt='.-', lw=1, markersize=6, alpha=0.75,
-        label=icores,)
+        label=icores, color=colors[icores],)
+    
+    ax.hlines(
+        calc_lon_diff(
+            pre_weighted_var_icores[expid[i]][icores][ivar]['am'],
+            t63_sites_indices[icores]['lon'],
+            ),
+        -1, 13,
+        linestyles='dashed', colors=colors[icores], lw=1,
+    )
 
-ax.legend(
-    loc='upper center', handlelength=2, framealpha = 1, ncol=1,
-    columnspacing=0.5, handletextpad=0.5)
+# ax.legend(
+#     loc='upper center', handlelength=2, framealpha = 1, ncol=1,
+#     columnspacing=0.5, handletextpad=0.5)
 
-ax.set_xlabel('Monthly relative source longitude [$°$]')
+# ax.set_xlabel('Relative source longitude [$°$]')
+ax.set_title('Relative source longitude [$°$]', fontsize=10,)
+ax.set_xticklabels(monthini)
+ax.set_xlim(-0.55, 11.55)
 
 ax.set_ylabel(None)
+ax.set_yticks(np.arange(-120, 60 + 1e-4, 30))
 ax.yaxis.set_minor_locator(AutoMinorLocator(2))
 
 ax.grid(
     True, which='both',
     linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
-fig.subplots_adjust(left=0.12, right=0.99, bottom=0.15, top=0.98)
+fig.subplots_adjust(left=0.16, right=0.99, bottom=0.1, top=0.9)
 fig.savefig(output_png)
 
 
@@ -306,6 +365,149 @@ fig.savefig(output_png)
 
 
 '''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot mm precipitation
+
+# Sites = ['EDC', 'Halley']
+# output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.6_pre/6.1.8.6 ' + expid[i] + ' aprt mm EDC and Halley.png'
+Sites = ['EDC', 'DOME F']
+output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.6_pre/6.1.8.6 ' + expid[i] + ' aprt mm EDC and Dome Fuji.png'
+colors = {'EDC': 'dodgerblue', 'DOME F': 'darkorange'}
+labels = {'EDC': 'EDC', 'DOME F': 'Dome Fuji'}
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([6, 6]) / 2.54)
+
+for icores in Sites:
+    # icores = 'EDC'
+    monstd = wisoaprt_alltime_icores[expid[i]][icores]['mon'].sel(wisotype=1).groupby('time.month').std(ddof=1) * seconds_per_d * month_days
+    
+    ax.errorbar(
+        month,
+        wisoaprt_alltime_icores[expid[i]][icores]['mm'].sel(wisotype=1) * seconds_per_d * month_days,
+        yerr = monstd, capsize=2,
+        fmt='.-', lw=1, markersize=6, alpha=0.75,
+        label=labels[icores], color=colors[icores],)
+    
+    ax.hlines(
+        wisoaprt_alltime_icores[expid[i]][icores]['am'].sel(wisotype=1) * seconds_per_d * 30,
+        # pre_weighted_var_icores[expid[i]][icores][ivar]['am'].values,
+        -1, 13,
+        linestyles='dashed', colors=colors[icores], lw=1,)
+
+ax.legend(
+    loc='lower center', handlelength=2, framealpha = 0.5, ncol=1,
+    # labels=['EDC', 'Dome Fuji'],
+    columnspacing=0.5, handletextpad=0.5)
+
+# ax.set_xlabel('Monthly precipitation [$mm \; mon^{-1}$]')
+ax.set_title('Monthly precipitation [$mm \; mon^{-1}$]', fontsize=10,)
+ax.set_xticklabels(monthini)
+ax.set_xlim(-0.55, 11.55)
+
+ax.set_ylabel(None)
+ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
+ax.set_yscale('log')
+ax.set_yticks(np.array([5e-1, 1e0, 5e0]))
+ax.set_yticklabels([0.5, 1, 5])
+
+ax.grid(
+    True, which='both',
+    linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+fig.subplots_adjust(left=0.12, right=0.99, bottom=0.1, top=0.9)
+fig.savefig(output_png)
+
+
+
+'''
+# Sites = eight_sites
+# output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.6_pre/6.1.8.6 ' + expid[i] + ' aprt mm icores.png'
+
+
+(wisoaprt_alltime_icores[expid[i]]['Rothera']['mm'].sel(wisotype=1) * seconds_per_d * month_days).sum()
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+
+
+# -----------------------------------------------------------------------------
+# region plot mm epe days
+
+wisoaprt_epe = {}
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe.pkl',
+    'rb') as f:
+    wisoaprt_epe[expid[i]] = pickle.load(f)
+
+# import sites indices
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.t63_sites_indices.pkl',
+    'rb') as f:
+    t63_sites_indices = pickle.load(f)
+
+epe_days_mon = wisoaprt_epe[expid[i]]['mask']['90%'].resample(
+    {'time': '1M'}).sum().compute()
+epe_days_alltime = mon_sea_ann(var_monthly=epe_days_mon)
+
+
+# Sites = ['EDC', 'Halley']
+# output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.1_pre/6.1.7.1.0_seasonality/6.1.7.1.0 ' + expid[i] + ' monthly epe_days at EDC and Halley.png'
+
+Sites = ['EDC', 'Halley']
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.1_pre/6.1.7.1.0_seasonality/6.1.7.1.0 ' + expid[i] + ' monthly epe_days at EDC and Halley.png'
+
+Sites = ['DOME F', 'Vostok', 'EDML', 'WDC']
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.1_pre/6.1.7.1.0_seasonality/6.1.7.1.0 ' + expid[i] + ' monthly epe_days at DVEW.png'
+
+Sites = ['Rothera', 'Neumayer', 'Law Dome', "Dumont d'Urville"]
+output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.1_pre/6.1.7.1.0_seasonality/6.1.7.1.0 ' + expid[i] + ' monthly epe_days at RNLD.png'
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
+
+for icores in Sites:
+    # icores = 'EDC'
+    
+    epe_days_mm = epe_days_alltime['mm'][
+            :,
+            t63_sites_indices[icores]['ilat'],
+            t63_sites_indices[icores]['ilon']]
+    epe_days_monstd = epe_days_alltime['mon'][
+            :,
+            t63_sites_indices[icores]['ilat'],
+            t63_sites_indices[icores]['ilon']].groupby('time.month').std(ddof=1)
+    
+    ax.errorbar(
+        np.arange(0, 12, 1),
+        epe_days_mm,
+        yerr = epe_days_monstd, capsize=2,
+        fmt='.-', lw=1, markersize=6, alpha=0.75,
+        label=icores,)
+
+ax.legend(
+    loc='upper left', handlelength=2, framealpha = 1, ncol=1,
+    columnspacing=0.5, handletextpad=0.5)
+
+ax.set_xlabel('Monthly EPE days [$\#$]')
+ax.set_xticks(np.arange(0, 12, 1))
+ax.set_xticklabels(month)
+# ax.set_xlim(-0.5, 11.5)
+
+ax.set_ylabel(None)
+ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
+
+ax.grid(
+    True, which='both',
+    linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+fig.subplots_adjust(left=0.1, right=0.99, bottom=0.15, top=0.98)
+fig.savefig(output_png)
+
+
+
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -510,134 +712,8 @@ fig.savefig(output_png)
 
 
 '''
-# Sites = eight_sites
-# output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.6_pre/6.1.8.6 ' + expid[i] + ' aprt mm icores.png'
-
-
-(wisoaprt_alltime_icores[expid[i]]['Rothera']['mm'].sel(wisotype=1) * seconds_per_d * month_days).sum()
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
-
-# -----------------------------------------------------------------------------
-# region plot mm precipitation
-
-Sites = ['EDC', 'Halley']
-output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.6_pre/6.1.8.6 ' + expid[i] + ' aprt mm EDC and Halley.png'
-
-fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
-
-for icores in Sites:
-    # icores = 'EDC'
-    monstd = wisoaprt_alltime_icores[expid[i]][icores]['mon'].sel(wisotype=1).groupby('time.month').std(ddof=1) * seconds_per_d * month_days
-    
-    ax.errorbar(
-        month,
-        wisoaprt_alltime_icores[expid[i]][icores]['mm'].sel(wisotype=1) * seconds_per_d * month_days,
-        yerr = monstd, capsize=2,
-        fmt='.-', lw=1, markersize=6, alpha=0.75,
-        label=icores,)
-
-ax.legend(
-    loc='lower center', handlelength=2, framealpha = 1, ncol=1,
-    columnspacing=0.5, handletextpad=0.5)
-
-ax.set_xlabel('Monthly precipitation [$mm \; mon^{-1}$]')
-
-ax.set_ylabel(None)
-ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
-ax.set_yscale('log')
-ax.set_yticks(np.array([5e-1, 1e0, 5e0, 1e+1, 5e+1, ]))
-ax.set_yticklabels([0.5, 1, 5, 10, 50, ])
-
-ax.grid(
-    True, which='both',
-    linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
-fig.subplots_adjust(left=0.1, right=0.99, bottom=0.15, top=0.98)
-fig.savefig(output_png)
-
-
-
-'''
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot mm epe days
-
-wisoaprt_epe = {}
-with open(
-    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe.pkl',
-    'rb') as f:
-    wisoaprt_epe[expid[i]] = pickle.load(f)
-
-# import sites indices
-with open(
-    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.t63_sites_indices.pkl',
-    'rb') as f:
-    t63_sites_indices = pickle.load(f)
-
-epe_days_mon = wisoaprt_epe[expid[i]]['mask']['90%'].resample(
-    {'time': '1M'}).sum().compute()
-epe_days_alltime = mon_sea_ann(var_monthly=epe_days_mon)
-
-
-# Sites = ['EDC', 'Halley']
-# output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.1_pre/6.1.7.1.0_seasonality/6.1.7.1.0 ' + expid[i] + ' monthly epe_days at EDC and Halley.png'
-
-Sites = ['EDC', 'Halley']
-output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.1_pre/6.1.7.1.0_seasonality/6.1.7.1.0 ' + expid[i] + ' monthly epe_days at EDC and Halley.png'
-
-Sites = ['DOME F', 'Vostok', 'EDML', 'WDC']
-output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.1_pre/6.1.7.1.0_seasonality/6.1.7.1.0 ' + expid[i] + ' monthly epe_days at DVEW.png'
-
-Sites = ['Rothera', 'Neumayer', 'Law Dome', "Dumont d'Urville"]
-output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.1_pre/6.1.7.1.0_seasonality/6.1.7.1.0 ' + expid[i] + ' monthly epe_days at RNLD.png'
-
-fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
-
-for icores in Sites:
-    # icores = 'EDC'
-    
-    epe_days_mm = epe_days_alltime['mm'][
-            :,
-            t63_sites_indices[icores]['ilat'],
-            t63_sites_indices[icores]['ilon']]
-    epe_days_monstd = epe_days_alltime['mon'][
-            :,
-            t63_sites_indices[icores]['ilat'],
-            t63_sites_indices[icores]['ilon']].groupby('time.month').std(ddof=1)
-    
-    ax.errorbar(
-        np.arange(0, 12, 1),
-        epe_days_mm,
-        yerr = epe_days_monstd, capsize=2,
-        fmt='.-', lw=1, markersize=6, alpha=0.75,
-        label=icores,)
-
-ax.legend(
-    loc='upper left', handlelength=2, framealpha = 1, ncol=1,
-    columnspacing=0.5, handletextpad=0.5)
-
-ax.set_xlabel('Monthly EPE days [$\#$]')
-ax.set_xticks(np.arange(0, 12, 1))
-ax.set_xticklabels(month)
-# ax.set_xlim(-0.5, 11.5)
-
-ax.set_ylabel(None)
-ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
-
-ax.grid(
-    True, which='both',
-    linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
-fig.subplots_adjust(left=0.1, right=0.99, bottom=0.15, top=0.98)
-fig.savefig(output_png)
-
-
-
-# endregion
-# -----------------------------------------------------------------------------
 

@@ -28,6 +28,7 @@ from statsmodels.stats import multitest
 import pycircstat as circ
 from metpy.calc import pressure_to_height_std, geopotential_to_height
 from metpy.units import units
+import metpy.calc as mpcalc
 
 # plot
 import matplotlib as mpl
@@ -110,7 +111,7 @@ from a_basic_analysis.b_module.component_plot import (
 
 major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
 major_ice_core_site = major_ice_core_site.loc[
-    major_ice_core_site['age (kyr)'] > 120, ]
+    major_ice_core_site['age (kyr)'] > 600, ]
 ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
 ais_imbie2 = gpd.read_file(
@@ -127,6 +128,10 @@ echam6_t63_surface_height = geopotential_to_height(
     echam6_t63_geosp.GEOSP * (units.m / units.s)**2)
 # echam6_t63_surface_height.values[echam6_t63_geosp.SLM.values == 0] = np.nan
 
+era5_mon_sl_20_gph = xr.open_dataset(
+    'data_sources/reanalysis/ERA5/mon_sl_79_present/era5_mon_sl_20_gph.nc')
+era5_topograph = mpcalc.geopotential_to_height(
+    era5_mon_sl_20_gph.z[0, :, :] * units('meter ** 2 / second ** 2'))
 
 
 '''
@@ -362,7 +367,9 @@ fig, ax = hemisphere_plot(
     northextent=-60, figsize=np.array([6.5, 7.5]) / 2.54,
     add_grid_labels=True, plot_scalebar=True,
     fm_left=0.14, fm_right=0.86, fm_bottom=0.1, fm_top=0.95,
-    sb_location=(-0.14, -0.12), sb_barheight=150, llatlabel = True)
+    sb_location=(-0.14, -0.12), sb_barheight=150, llatlabel = False)
+
+cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
 
 pltlevel = np.array([0, 20, 50, 100, 200, 400, 600, 800, 1000, 1200, 1400])
 pltticks = np.array([0, 20, 50, 100, 200, 400, 600, 800, 1000, 1200, 1400])
@@ -371,10 +378,21 @@ pltcmp = cm.get_cmap('viridis', len(pltlevel)-1).reversed()
 
 plt_ctr = ax.contourf(
     era5_mon_tp_1979_2021_alltime['am'].longitude,
-    era5_mon_tp_1979_2021_alltime['am'].latitude.sel(latitude=slice(-50, -90)),
-    era5_mon_tp_1979_2021_alltime['am'].sel(latitude=slice(-50, -90)) * 365,
+    era5_mon_tp_1979_2021_alltime['am'].latitude.sel(latitude=slice(-59, -90)),
+    era5_mon_tp_1979_2021_alltime['am'].sel(latitude=slice(-59, -90)) * 365,
     levels=pltlevel,extend='max',
     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+# # plot topography
+# plt_ctr1 = ax.contour(
+#     era5_topograph.longitude,
+#     era5_topograph.latitude.sel(latitude=slice(-59, -90)),
+#     era5_topograph.sel(latitude=slice(-59, -90)) / 1000,
+#     levels=[1, 2, 3, 4], transform=ccrs.PlateCarree(),
+#     colors='blue', linewidths=0.3,)
+# ax.clabel(
+#     plt_ctr1, inline=1, colors='blue', fmt=remove_trailing_zero,
+#     levels=[2, 3, 4], inline_spacing=1,)
 
 ax.add_feature(
 	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)

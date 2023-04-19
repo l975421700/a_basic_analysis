@@ -329,15 +329,15 @@ for irow in range(nrow):
             s=64, lw=0.5, marker='^', edgecolors = 'black', zorder=2,
             norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
-for irow in range(nrow):
-    for jcol in range(ncol):
+for irow in range(nrow): # [1]: #
+    for jcol in range(ncol): # [2]: #
         # irow = 0; jcol = 0
         model = models[jcol + ncol * irow]
         print(model)
         
         # plot insignificant diff
-        sep_lig = lig_sic_regrid_alltime[model]['mon'][8::12].values
-        sep_pi = pi_sic_regrid_alltime[model]['mon'][8::12].values
+        sep_lig = lig_sic_regrid_alltime[model]['mon'][8::12].values.copy()
+        sep_pi = pi_sic_regrid_alltime[model]['mon'][8::12].values.copy()
         ttest_fdr_res = ttest_fdr_control(sep_lig, sep_pi, )
         
         # plot diff
@@ -347,28 +347,26 @@ for irow in range(nrow):
             lon, lat, sep_lig_pi, levels=pltlevel, extend='both',
             norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
         
-        # # calculate SIA changes
-        # sepm_lig = lig_sic_regrid_alltime[model]['mm'][8].values.copy()
-        # sepm_pi = pi_sic_regrid_alltime[model]['mm'][8].values.copy()
-        # sia_lig = {}
-        # sia_pi = {}
-        # sia_lig_pi = {}
-        # for iregion in ['SO', 'Atlantic', 'Indian', 'Pacific']:
-        #     # iregion = 'SO'
-        #     sia_lig[iregion] = np.nansum(sepm_lig[mask[iregion]] / 100 * \
-        #         cdo_area1deg.cell_area.values[mask[iregion]]) / 1e+12
-        #     sia_pi[iregion] = np.nansum(sepm_pi[mask[iregion]] / 100 * \
-        #         cdo_area1deg.cell_area.values[mask[iregion]]) / 1e+12
-        #     sia_lig_pi[iregion] = int(np.round((sia_lig[iregion] - sia_pi[iregion]) / sia_pi[iregion] * 100, 0))
+        # plot sea ice extent
+        for dataset in ['pi', 'lig']:
+            if (dataset == 'pi'):
+                sep_sic = pi_sic_regrid_alltime[model]['mm'][8].values.copy()
+                linestyle = 'solid'
+            elif (dataset == 'lig'):
+                sep_sic = lig_sic_regrid_alltime[model]['mm'][8].values.copy()
+                linestyle = 'dashed'
+            
+            if (model == 'GISS-E2-1-G'):
+                sep_sic[np.isnan(HadISST['sic']['1deg_alltime']['am'].values)] = np.nan
+            
+            axs[irow, jcol].contour(
+                lon, lat, sep_sic, levels=[15],
+                linestyles=linestyle, linewidths=0.6, colors='k',
+                transform=ccrs.PlateCarree(),)
         
         plt.text(
             0.5, 1.05,
             model,
-            # model + ' (' + \
-            #     str(sia_lig_pi['SO']) + ', ' + \
-            #         str(sia_lig_pi['Atlantic']) + ', ' + \
-            #             str(sia_lig_pi['Indian']) + ', ' + \
-            #                 str(sia_lig_pi['Pacific']) + ')',
             transform=axs[irow, jcol].transAxes,
             ha='center', va='center', rotation='horizontal')
 
@@ -385,7 +383,30 @@ fig.savefig(output_png)
 
 
 '''
+        # # calculate SIA changes
+        # sepm_lig = lig_sic_regrid_alltime[model]['mm'][8].values.copy()
+        # sepm_pi = pi_sic_regrid_alltime[model]['mm'][8].values.copy()
+        # sia_lig = {}
+        # sia_pi = {}
+        # sia_lig_pi = {}
+        # for iregion in ['SO', 'Atlantic', 'Indian', 'Pacific']:
+        #     # iregion = 'SO'
+        #     sia_lig[iregion] = np.nansum(sepm_lig[mask[iregion]] / 100 * \
+        #         cdo_area1deg.cell_area.values[mask[iregion]]) / 1e+12
+        #     sia_pi[iregion] = np.nansum(sepm_pi[mask[iregion]] / 100 * \
+        #         cdo_area1deg.cell_area.values[mask[iregion]]) / 1e+12
+        #     sia_lig_pi[iregion] = int(np.round((sia_lig[iregion] - sia_pi[iregion]) / sia_pi[iregion] * 100, 0))
+
+            # model + ' (' + \
+            #     str(sia_lig_pi['SO']) + ', ' + \
+            #         str(sia_lig_pi['Atlantic']) + ', ' + \
+            #             str(sia_lig_pi['Indian']) + ', ' + \
+            #                 str(sia_lig_pi['Pacific']) + ')',
+
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+
 

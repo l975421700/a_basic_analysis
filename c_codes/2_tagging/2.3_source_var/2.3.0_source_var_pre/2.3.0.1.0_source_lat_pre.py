@@ -138,19 +138,45 @@ pre_weighted_lat[expid[i]]['am'].to_netcdf('output/echam-6.3.05p2-wiso/pi/pi_m_5
 # region plot pre_weighted_lat am + am aprt
 
 
-# output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.0_lat/6.1.3.0 ' + expid[i] + ' pre_weighted_lat am Antarctica.png'
-# output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.0_lat/6.1.3.0 ' + expid[i] + ' pre_weighted_lat am Antarctica + am aprt.png'
-
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.0_lat/6.1.3.0 ' + expid[i] + ' pre_weighted_lat am Antarctica_contour.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-46, cm_max=-34, cm_interval1=1, cm_interval2=2, cmap='viridis',)
+    cm_min=-46, cm_max=-34, cm_interval1=1, cm_interval2=2, cmap='viridis',
+    reversed=False)
 
 fig, ax = hemisphere_plot(northextent=-60, figsize=np.array([5.8, 7]) / 2.54,)
 
 cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
 plt_data = pre_weighted_lat[expid[i]]['am'].copy()
+
+plt_data.sel(lat=slice(90, -60)).values[:] = np.nan
+
+plt1 = plot_t63_contourf(
+    lon, lat, plt_data, ax,
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+
+ax.add_feature(
+    cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
+
+cbar = fig.colorbar(
+    plt1, ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+    pad=0.02, fraction=0.15,
+    )
+cbar.ax.set_xticklabels(
+    [remove_trailing_zero(x) for x in np.negative(pltticks)])
+cbar.ax.tick_params(labelsize=8)
+cbar.ax.set_xlabel('Source latitude [$°\;S$]', linespacing=2)
+fig.savefig(output_png)
+
+
+
+'''
+
+# output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.0_lat/6.1.3.0 ' + expid[i] + ' pre_weighted_lat am Antarctica.png'
+# output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.0_lat/6.1.3.0 ' + expid[i] + ' pre_weighted_lat am Antarctica + am aprt.png'
+
 # plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
 
 # plt1 = ax.pcolormesh(
@@ -165,12 +191,6 @@ plt_data = pre_weighted_lat[expid[i]]['am'].copy()
 #     plt_data,
 #     levels = pltlevel,
 #     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-
-plt_data.sel(lat=slice(90, -60)).values[:] = np.nan
-
-plt1 = plot_t63_contourf(
-    lon, lat, plt_data, ax,
-    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
 
 # # plot am aprt
 # pltctr1 = np.array([0.05, 0.1, 0.5, ])
@@ -195,20 +215,6 @@ plt1 = plot_t63_contourf(
 # ax.clabel(plt3, inline=1, colors='blue', fmt=remove_trailing_zero,
 #           levels=pltctr2, inline_spacing=5, fontsize=6,)
 
-cbar = fig.colorbar(
-    plt1, ax=ax, aspect=30,
-    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
-    pad=0.02, fraction=0.15,
-    )
-cbar.ax.set_xticklabels(
-    [remove_trailing_zero(x) for x in np.negative(pltticks)])
-cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel('Source latitude [$°\;S$]', linespacing=2)
-fig.savefig(output_png, dpi=1200)
-
-
-
-'''
 #-------------------------------- plot for Louise 13 Sep
 
 turner_obs = pd.read_csv(
