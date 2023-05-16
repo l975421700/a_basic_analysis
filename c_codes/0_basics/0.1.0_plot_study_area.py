@@ -362,6 +362,73 @@ with open(
 # plot
 output_png = "figures/1_study_area/Antarctic precipitation in ERA5 79_21.png"
 
+mpl.rc('font', family='Times New Roman', size=12)
+fig, ax = hemisphere_plot(
+    northextent=-60,
+    figsize=np.array([9, 11]) / 2.54,
+    )
+
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax, s=15, lw=1)
+
+pltlevel = np.array([0, 20, 50, 100, 200, 400, 600, 800, 1000, 1200])
+pltticks = np.array([0, 20, 50, 100, 200, 400, 600, 800, 1000, 1200])
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+pltcmp = cm.get_cmap('cividis', len(pltlevel)-1).reversed()
+
+plt_ctr = ax.contourf(
+    era5_mon_tp_1979_2021_alltime['am'].longitude,
+    era5_mon_tp_1979_2021_alltime['am'].latitude.sel(latitude=slice(-59, -90)),
+    era5_mon_tp_1979_2021_alltime['am'].sel(latitude=slice(-59, -90)) * 365,
+    levels=pltlevel,extend='max',
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+ax.add_feature(cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
+
+cbar = fig.colorbar(
+    plt_ctr, ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.95, ticks=pltticks, extend='max',
+    pad=0.04, fraction=0.14, format=remove_trailing_zero_pos,
+    )
+cbar.ax.set_xlabel('Antarctic precipitation in ERA5 [$mm/yr$]',
+                   linespacing=1.5, fontsize=14, labelpad=8)
+
+fig.savefig(output_png)
+
+
+'''
+# # plot topography
+# plt_ctr1 = ax.contour(
+#     era5_topograph.longitude,
+#     era5_topograph.latitude.sel(latitude=slice(-59, -90)),
+#     era5_topograph.sel(latitude=slice(-59, -90)) / 1000,
+#     levels=[1, 2, 3, 4], transform=ccrs.PlateCarree(),
+#     colors='blue', linewidths=0.3,)
+# ax.clabel(
+#     plt_ctr1, inline=1, colors='blue', fmt=remove_trailing_zero,
+#     levels=[2, 3, 4], inline_spacing=1,)
+
+#-------- Antarctic mask
+
+with open('scratch/products/era5/pre/tp_era5_mean_over_ais.pkl', 'rb') as f:
+    tp_era5_mean_over_ais = pickle.load(f)
+
+np.round(tp_era5_mean_over_ais['am'].values[0] * 365, 0)
+
+
+pltlevel = np.array([0, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 6, 8, 10,])
+pltticks = np.array([0, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 6, 8, 10,])
+
+
+
+
+# Plot for PAGES
+with open(
+    'scratch/products/era5/pre/era5_mon_tp_1979_2021_alltime.pkl', 'rb') as f:
+    era5_mon_tp_1979_2021_alltime = pickle.load(f)
+
+# plot
+output_png = "figures/1_study_area/Antarctic precipitation in ERA5 79_21.png"
+
 mpl.rc('font', family='Times New Roman', size=8)
 fig, ax = hemisphere_plot(
     northextent=-60, figsize=np.array([6.5, 7.5]) / 2.54,
@@ -406,20 +473,64 @@ cbar.ax.set_xlabel('Antarctic precipitation in ERA5 [$mm/yr$]', linespacing=1.5,
 
 # ax.get_grid
 fig.savefig(output_png)
-
-
-#-------- Antarctic mask
-
-with open('scratch/products/era5/pre/tp_era5_mean_over_ais.pkl', 'rb') as f:
-    tp_era5_mean_over_ais = pickle.load(f)
-
-np.round(tp_era5_mean_over_ais['am'].values[0] * 365, 0)
-
-'''
-pltlevel = np.array([0, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 6, 8, 10,])
-pltticks = np.array([0, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 6, 8, 10,])
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region plot AIS height from Bedmap2
+
+
+# plot
+output_png = "figures/1_study_area/Antarctic surface height in Bedmap2.png"
+
+mpl.rc('font', family='Times New Roman', size=12)
+fig, ax = hemisphere_plot(
+    northextent=-60, plot_scalebar=True,
+    fm_left=0.15, fm_right=0.86, fm_bottom=0.1, fm_top=0.95,
+    figsize=np.array([10, 11]) / 2.54, add_grid_labels=True,
+    sb_location=(-0.14, -0.12), sb_barheight=200, )
+
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax, s=15, lw=1)
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=0, cm_max=4500, cm_interval1=500, cm_interval2=1000, cmap='viridis',
+    reversed=False)
+
+# plot AIS divisions
+plt_wais = ais_imbie2.loc[ais_imbie2.Regions == 'West'].plot(
+    ax=ax, transform=ccrs.epsg(3031),
+    edgecolor='red', facecolor='none', linewidths=1, zorder=10)
+plt_eais = ais_imbie2.loc[ais_imbie2.Regions == 'East'].plot(
+    ax=ax, transform=ccrs.epsg(3031),
+    edgecolor='blue', facecolor='none', linewidths=1, zorder=10)
+plt_ap = ais_imbie2.loc[ais_imbie2.Regions == 'Peninsula'].plot(
+    ax=ax, transform=ccrs.epsg(3031),
+    edgecolor='m', facecolor='none', linewidths=1, zorder=10)
+
+plt_ctr = ax.contourf(
+    bedmap_tif.x.values,
+    bedmap_tif.y.values,
+    bedmap_height,
+    levels=pltlevel,extend='max',
+    norm=pltnorm, cmap=pltcmp,transform=bedmap_transform,)
+
+ax.add_feature(cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
+
+cbar = fig.colorbar(
+    plt_ctr, ax=ax, aspect=30,
+    orientation="horizontal", shrink=1.3, ticks=pltticks, extend='max',
+    pad=0.14, fraction=0.1, format=remove_trailing_zero_pos,
+    )
+cbar.ax.set_xlabel('Antarctic surface height in Bedmap2 [$m$]',
+                   linespacing=1.5, fontsize=14, labelpad=8)
+
+fig.savefig(output_png)
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
 

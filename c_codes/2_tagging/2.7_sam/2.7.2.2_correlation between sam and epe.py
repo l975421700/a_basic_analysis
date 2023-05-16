@@ -49,6 +49,7 @@ plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
 from matplotlib.ticker import AutoMinorLocator
+import cartopy.feature as cfeature
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -97,6 +98,7 @@ from a_basic_analysis.b_module.statistics import (
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
     plt_mesh_pars,
+    plot_t63_contourf,
 )
 
 # endregion
@@ -283,7 +285,7 @@ sam_posneg_epe['neg'] = \
 sam_posneg_epe['neg_mean'] = sam_posneg_epe['neg'].mean(dim='time')
 
 posneg_epe_diff = sam_posneg_epe['pos_mean'] - sam_posneg_epe['neg_mean']
-posneg_epe_diff.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+# posneg_epe_diff.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_epe/6.1.9.0 ' + expid[i] + ' sam_posneg_epe mon.png'
 
@@ -295,12 +297,17 @@ fig, ax = hemisphere_plot(northextent=-60,)
 
 cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
+plt1 = plot_t63_contourf(
+    lon, lat, posneg_epe_diff, ax,
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+ax.add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
 
-plt1 = ax.pcolormesh(
-    lon,
-    lat,
-    posneg_epe_diff,
-    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+# plt1 = ax.pcolormesh(
+#     lon,
+#     lat,
+#     posneg_epe_diff,
+#     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 ttest_fdr_res = ttest_fdr_control(
     sam_posneg_epe['pos'],
     sam_posneg_epe['neg'],)
@@ -318,7 +325,7 @@ cbar = fig.colorbar(
     )
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel(
-    'EPE frequency differences between\nSAM+ and SAM- months [$day$]',
+    'HP frequency differences [$days \; month^{-1}$]\nSAM+ vs. SAM-',
     linespacing=1.5, fontsize=8)
 fig.savefig(output_png)
 

@@ -68,6 +68,8 @@ source ${HOME}/miniconda3/bin/activate test
 
 #-------------------------------- Others
 
+mamba uninstall xesmf
+
 # clean conda installed pkgs
 # conda clean -a
 

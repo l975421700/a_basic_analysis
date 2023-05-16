@@ -191,7 +191,7 @@ rms_err['EC_tas'] = np.round(
         data_to_plot['EC_tas']['sim_ann_tas_lig_pi'],
         squared=False), 1)
 
-ax.plot([0, 1], [0, 1], transform=ax.transAxes, c='k', lw=0.5, ls='--')
+ax.plot([-100, 100], [-100, 100], c='k', lw=0.5, ls='--')
 ax.hlines(0, axis_min, axis_max, colors='k', lw=0.5, linestyles='--')
 ax.vlines(0, axis_min, axis_max, colors='k', lw=0.5, linestyles='--')
 
@@ -199,6 +199,7 @@ ax.set_ylabel('Simulations [$°C$]')
 ax.set_ylim(axis_min, axis_max)
 ax.set_yticks(np.arange(axis_min, axis_max + 1e-4, 2))
 ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+# ax.set_ylim(-2, 2)
 
 ax.set_xlabel('Reconstructions [$°C$]')
 ax.set_xlim(axis_min, axis_max)
@@ -228,7 +229,7 @@ ax.xaxis.set_minor_locator(AutoMinorLocator(2))
 
 ax.grid(True, which='both',
         linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
-fig.subplots_adjust(left=0.14, right=0.95, bottom=0.15, top=0.97)
+fig.subplots_adjust(left=0.16, right=0.95, bottom=0.15, top=0.97)
 fig.savefig(output_png)
 
 

@@ -28,7 +28,7 @@ from dask.diagnostics import ProgressBar
 pbar = ProgressBar()
 pbar.register()
 from scipy import stats
-import xesmf as xe
+# import xesmf as xe
 import pandas as pd
 from metpy.interpolate import cross_section
 from statsmodels.stats import multitest
@@ -49,6 +49,7 @@ plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
 from matplotlib.ticker import AutoMinorLocator
+import cartopy.feature as cfeature
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -97,6 +98,7 @@ from a_basic_analysis.b_module.statistics import (
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
     plt_mesh_pars,
+    plot_t63_contourf,
 )
 
 # endregion
@@ -253,40 +255,52 @@ anom = (pre_weighted_var[expid[i]][ivar]['mon'].groupby(
 
 cor_sam_var_anom = xr.corr(b_sam_mon, anom, dim='time').compute()
 
-cor_sam_var_anom_p = xs.pearson_r_eff_p_value(b_sam_mon, anom,dim='time').values
+cor_sam_var_anom_p = xs.pearson_r_eff_p_value(
+    b_sam_mon,
+    anom,
+    dim='time', skipna=True).values
 
 #---------------- plot
 output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' correlation sam_' + ivar + ' mon.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.5, cm_max=0.2, cm_interval1=0.1, cm_interval2=0.1,
-    cmap='PuOr', asymmetric=True, reversed=False)
-pltticks[-3] = 0
+    cm_min=-0.4, cm_max=0.4, cm_interval1=0.1, cm_interval2=0.1,
+    cmap='PuOr', asymmetric=False, reversed=True)
+pltticks[-5] = 0
 
-fig, ax = hemisphere_plot(northextent=-60,)
+fig, ax = hemisphere_plot(northextent=-60, figsize=np.array([5.8, 6.8]) / 2.54,)
 
 cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
-plt1 = ax.pcolormesh(
-    lon,
-    lat,
-    cor_sam_var_anom,
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+cor_sam_var_anom.values[cor_sam_var_anom_p > 0.05] = np.nan
 
-ax.scatter(
-    x=lon_2d[cor_sam_var_anom_p <= 0.05],
-    y=lat_2d[cor_sam_var_anom_p <= 0.05],
-    s=0.5, c='k', marker='.', edgecolors='none',
-    transform=ccrs.PlateCarree(),)
+plt1 = plot_t63_contourf(
+    lon, lat, cor_sam_var_anom, ax,
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+
+# plt1 = ax.pcolormesh(
+#     lon,
+#     lat,
+#     cor_sam_var_anom,
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+# ax.scatter(
+#     x=lon_2d[cor_sam_var_anom_p <= 0.05],
+#     y=lat_2d[cor_sam_var_anom_p <= 0.05],
+#     s=0.5, c='k', marker='.', edgecolors='none',
+#     transform=ccrs.PlateCarree(),)
+
+ax.add_feature(
+    cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
 
 cbar = fig.colorbar(
     plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
-    pad=0.02, fraction=0.2,
+    pad=0.02, fraction=0.15,
     )
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel(
-    'Correlation coefficient between SAM\nand source SST [$-$]',
+    'Correlation: SAM & source SST',
     linespacing=1.5, fontsize=8)
 fig.savefig(output_png)
 
@@ -309,40 +323,52 @@ anom = (pre_weighted_var[expid[i]][ivar]['mon'].groupby(
 
 cor_sam_var_anom = xr.corr(b_sam_mon, anom, dim='time').compute()
 
-cor_sam_var_anom_p = xs.pearson_r_eff_p_value(b_sam_mon, anom,dim='time').values
+cor_sam_var_anom_p = xs.pearson_r_eff_p_value(
+    b_sam_mon,
+    anom,
+    dim='time', skipna=True).values
 
 #---------------- plot
 output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' correlation sam_' + ivar + ' mon.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.3, cm_max=0.5, cm_interval1=0.1, cm_interval2=0.1,
-    cmap='PuOr', asymmetric=True, reversed=False)
-# pltticks[-2] = 0
+    cm_min=-0.4, cm_max=0.4, cm_interval1=0.1, cm_interval2=0.1,
+    cmap='PuOr', asymmetric=False, reversed=True)
+pltticks[-5] = 0
 
-fig, ax = hemisphere_plot(northextent=-60,)
+fig, ax = hemisphere_plot(northextent=-60, figsize=np.array([5.8, 6.8]) / 2.54,)
 
 cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
-plt1 = ax.pcolormesh(
-    lon,
-    lat,
-    cor_sam_var_anom,
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+cor_sam_var_anom.values[cor_sam_var_anom_p > 0.05] = np.nan
 
-ax.scatter(
-    x=lon_2d[cor_sam_var_anom_p <= 0.05],
-    y=lat_2d[cor_sam_var_anom_p <= 0.05],
-    s=0.5, c='k', marker='.', edgecolors='none',
-    transform=ccrs.PlateCarree(),)
+plt1 = plot_t63_contourf(
+    lon, lat, cor_sam_var_anom, ax,
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+
+# plt1 = ax.pcolormesh(
+#     lon,
+#     lat,
+#     cor_sam_var_anom,
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+# ax.scatter(
+#     x=lon_2d[cor_sam_var_anom_p <= 0.05],
+#     y=lat_2d[cor_sam_var_anom_p <= 0.05],
+#     s=0.5, c='k', marker='.', edgecolors='none',
+#     transform=ccrs.PlateCarree(),)
+
+ax.add_feature(
+    cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
 
 cbar = fig.colorbar(
     plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
-    pad=0.02, fraction=0.2,
+    pad=0.02, fraction=0.15,
     )
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel(
-    'Correlation coefficient between SAM\nand source ' + ivar + ' [$-$]',
+    'Correlation: SAM & source rh2m',
     linespacing=1.5, fontsize=8)
 fig.savefig(output_png)
 
@@ -365,40 +391,52 @@ anom = (pre_weighted_var[expid[i]][ivar]['mon'].groupby(
 
 cor_sam_var_anom = xr.corr(b_sam_mon, anom, dim='time').compute()
 
-cor_sam_var_anom_p = xs.pearson_r_eff_p_value(b_sam_mon, anom,dim='time').values
+cor_sam_var_anom_p = xs.pearson_r_eff_p_value(
+    b_sam_mon,
+    anom,
+    dim='time', skipna=True).values
 
 #---------------- plot
 output_png = 'figures/6_awi/6.1_echam6/6.1.9_sam/6.1.9.0_cor_' + ivar + '/6.1.9.0 ' + expid[i] + ' correlation sam_' + ivar + ' mon.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.1, cm_max=0.6, cm_interval1=0.1, cm_interval2=0.1,
-    cmap='PuOr', asymmetric=True, reversed=False)
-# pltticks[-2] = 0
+    cm_min=-0.4, cm_max=0.4, cm_interval1=0.1, cm_interval2=0.1,
+    cmap='PuOr', asymmetric=False, reversed=True)
+pltticks[-5] = 0
 
-fig, ax = hemisphere_plot(northextent=-60,)
+fig, ax = hemisphere_plot(northextent=-60, figsize=np.array([5.8, 6.8]) / 2.54,)
 
 cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
-plt1 = ax.pcolormesh(
-    lon,
-    lat,
-    cor_sam_var_anom,
-    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+cor_sam_var_anom.values[cor_sam_var_anom_p > 0.05] = np.nan
 
-ax.scatter(
-    x=lon_2d[cor_sam_var_anom_p <= 0.05],
-    y=lat_2d[cor_sam_var_anom_p <= 0.05],
-    s=0.5, c='k', marker='.', edgecolors='none',
-    transform=ccrs.PlateCarree(),)
+plt1 = plot_t63_contourf(
+    lon, lat, cor_sam_var_anom, ax,
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+
+# plt1 = ax.pcolormesh(
+#     lon,
+#     lat,
+#     cor_sam_var_anom,
+#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+# ax.scatter(
+#     x=lon_2d[cor_sam_var_anom_p <= 0.05],
+#     y=lat_2d[cor_sam_var_anom_p <= 0.05],
+#     s=0.5, c='k', marker='.', edgecolors='none',
+#     transform=ccrs.PlateCarree(),)
+
+ax.add_feature(
+    cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
 
 cbar = fig.colorbar(
     plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
-    pad=0.02, fraction=0.2,
+    pad=0.02, fraction=0.15,
     )
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel(
-    'Correlation coefficient between SAM\nand source ' + ivar + ' [$-$]',
+    'Correlation: SAM & source wind10',
     linespacing=1.5, fontsize=8)
 fig.savefig(output_png)
 
