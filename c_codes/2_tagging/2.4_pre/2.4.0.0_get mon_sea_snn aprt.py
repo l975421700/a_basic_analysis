@@ -1,14 +1,18 @@
 
 
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_m_416_4.9',
-    'pi_m_502_5.0',
+    # 'pi_m_502_5.0',
+    # 'pi_600_5.0',
+    'pi_601_5.1',
+    # 'pi_602_5.2',
+    # 'pi_603_5.3',
     ]
 i = 0
 
 ifile_start = 120
-ifile_end   = 720 # 1080
+ifile_end   = 360 # 1080
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -20,7 +24,7 @@ import warnings
 warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
-sys.path.append('/work/ollie/qigao001')
+# sys.path.append('/work/ollie/qigao001')
 import psutil
 
 # data analysis
@@ -95,8 +99,8 @@ exp_org_o[expid[i]] = {}
 filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'))
 exp_org_o[expid[i]]['wiso'] = xr.open_mfdataset(
     filenames_wiso[ifile_start:ifile_end],
-    data_vars='minimal', coords='minimal', parallel=True)
-
+    # data_vars='minimal', coords='minimal', parallel=True,
+    )
 
 '''
 #-------- check pre

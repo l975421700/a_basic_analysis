@@ -3,10 +3,10 @@
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_m_502_5.0',
-    'pi_600_5.0',
+    # 'pi_600_5.0',
     # 'pi_601_5.1',
     # 'pi_602_5.2',
-    # 'pi_603_5.3',
+    'pi_603_5.3',
     ]
 i=0
 
@@ -17,10 +17,10 @@ ifile_end   = 360
 
 ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
 
-var_name  = 'sst'
-itag      = 7
-min_sf    = 268.15
-max_sf    = 318.15
+# var_name  = 'sst'
+# itag      = 7
+# min_sf    = 268.15
+# max_sf    = 318.15
 
 # var_name  = 'lat'
 # itag      = 5
@@ -42,10 +42,10 @@ max_sf    = 318.15
 # min_sf    = -1
 # max_sf    = 1
 
-# var_name  = 'coslon'
-# itag      = 12
-# min_sf    = -1
-# max_sf    = 1
+var_name  = 'coslon'
+itag      = 12
+min_sf    = -1
+max_sf    = 1
 
 
 # -----------------------------------------------------------------------------

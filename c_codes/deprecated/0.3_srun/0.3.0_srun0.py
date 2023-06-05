@@ -1,5 +1,15 @@
 
 
+exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+expid = [
+    # 'pi_m_502_5.0',
+    'pi_600_5.0',
+    # 'pi_601_5.1',
+    # 'pi_602_5.2',
+    # 'pi_603_5.3',
+    ]
+i = 0
+
 # -----------------------------------------------------------------------------
 # region import packages
 
@@ -10,8 +20,9 @@ import warnings
 warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
-sys.path.append('/work/ollie/qigao001')
-os.chdir('/work/ollie/qigao001')
+sys.path.append('/albedo/work/user/qigao001')
+import datetime
+import psutil
 
 # data analysis
 import numpy as np
@@ -27,6 +38,8 @@ import pandas as pd
 from metpy.interpolate import cross_section
 from statsmodels.stats import multitest
 import pycircstat as circ
+from geopy.distance import geodesic, great_circle
+from haversine import haversine, haversine_vector
 
 # plot
 import matplotlib as mpl
@@ -41,8 +54,6 @@ mpl.rcParams['axes.linewidth'] = 0.2
 plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
-from matplotlib.ticker import AutoMinorLocator
-import cartopy.feature as cfeature
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -88,96 +99,282 @@ from a_basic_analysis.b_module.statistics import (
 
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
-    plt_mesh_pars,
-    plot_t63_contourf,
 )
 
 # endregion
 # -----------------------------------------------------------------------------
 
 
-
 # -----------------------------------------------------------------------------
-# -----------------------------------------------------------------------------
-# region fractioin of EPE, with a threshold of 0.002 mm/day
+# region import data
 
-ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
-tp_era5_daily = xr.open_mfdataset(
-    'scratch/cmip6/hist/pre/tp_ERA5_daily_sl_??_??_Antarctica.nc',
-    ).chunk({'time': 15706, 'longitude': 20, 'latitude': 1})
+pre_weighted_lon = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lon.pkl', 'rb') as f:
+    pre_weighted_lon[expid[i]] = pickle.load(f)
 
-lon = tp_era5_daily.longitude
-lat = tp_era5_daily.latitude
+pre_weighted_lat = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lat.pkl', 'rb') as f:
+    pre_weighted_lat[expid[i]] = pickle.load(f)
 
-tp_era5 = {}
-tp_era5['original'] = tp_era5_daily.tp.copy().where(
-    tp_era5_daily.tp >= 0.002,
-    other=np.nan,).compute()
-
-tp_era5['quantiles_90'] = \
-    tp_era5['original'].quantile(0.9, dim='time', skipna=True).compute()
-
-tp_era5['mask_90'] = (tp_era5_daily.tp.copy() >= tp_era5['quantiles_90']).compute()
-
-tp_era5['masked_90'] = tp_era5_daily.tp.copy().where(
-    tp_era5['mask_90'],
-    other=0,).compute()
-
-tp_era5['frc'] = (tp_era5['masked_90'].mean(dim='time') / tp_era5_daily.tp.copy().mean(dim='time'))
-
-
-output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.1_pre/6.1.7.1 ear5 st_daily precipitation percentile_90_frc Antarctica.png'
-
-pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=30, cm_max=70, cm_interval1=2.5, cm_interval2=5, cmap='Oranges',
-    reversed=False)
-
-fig, ax = hemisphere_plot(
-    northextent=-60, figsize=np.array([5.8, 6.8]) / 2.54)
-
-cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
-
-plt_data = tp_era5['frc'] * 100
-
-plt1 = ax.contourf(
-    lon,
-    lat,
-    plt_data,
-    levels=pltlevel, extend='both',
-    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
-
-ax.add_feature(
-	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
-
-plt_ctr = ax.contour(
-    lon,
-    lat.sel(latitude=slice(-60, -90)),
-    plt_data.sel(latitude=slice(-60, -90)),
-    [50],
-    colors = 'b', linewidths=0.3, transform=ccrs.PlateCarree(),)
-ax.clabel(
-    plt_ctr, inline=1, colors='b', fmt=remove_trailing_zero,
-    levels=[50], inline_spacing=10, fontsize=8,)
-
-cbar = fig.colorbar(
-    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
-    orientation="horizontal", shrink=0.95, ticks=pltticks, extend='both',
-    pad=0.04, fraction=0.15,
-    )
-cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
-cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel(
-    'Contribution of HP to total precipitation [$\%$]', linespacing=1.5,
-    fontsize=8)
-fig.savefig(output_png, dpi=600)
+lon = pre_weighted_lat[expid[i]]['am'].lon
+lat = pre_weighted_lat[expid[i]]['am'].lat
+lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
 
 '''
-# plt_data.values[echam6_t63_ais_mask['mask']['AIS'] == False] = np.nan
+major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
+major_ice_core_site = major_ice_core_site.loc[
+    major_ice_core_site['age (kyr)'] > 120, ]
 
-# plt1 = plot_t63_contourf(
-#     lon, lat, plt_data, ax,
-#     pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+wisoaprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
+    wisoaprt_alltime[expid[i]] = pickle.load(f)
+
+lon_2d_flatten = lon_2d.reshape(-1, 1).copy()
+lat_2d_flatten = lat_2d.reshape(-1, 1).copy()
+local_pairs = [[x, y] for x, y in zip(lat_2d_flatten, lon_2d_flatten)]
+
+print(psutil.Process().memory_info().rss / (2 ** 30))
+
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get transport distance
+
+transport_distance = {}
+transport_distance[expid[i]] = {}
+
+begin_time = datetime.datetime.now()
+print(begin_time)
+
+for ialltime in pre_weighted_lat[expid[i]].keys():
+    # ialltime = 'daily'
+    # ialltime = 'ann'
+    
+    transport_distance[expid[i]][ialltime] = pre_weighted_lat[expid[i]][ialltime].copy().rename('transport_distance')
+    transport_distance[expid[i]][ialltime][:] = 0
+    
+    if (ialltime in ['daily', 'mon', 'sea', 'ann']):
+        print(ialltime)
+        
+        years = np.unique(transport_distance[expid[i]][ialltime].time.dt.year)
+        for iyear in years:
+            # iyear = 2010
+            print(str(iyear) + ' / ' + str(years[-1]))
+            
+            time_indices = np.where(
+                transport_distance[expid[i]][ialltime].time.dt.year == iyear)
+            
+            b_lon_2d = np.broadcast_to(
+                lon_2d,
+                transport_distance[expid[i]][ialltime][time_indices].shape,
+                )
+            b_lat_2d = np.broadcast_to(
+                lat_2d,
+                transport_distance[expid[i]][ialltime][time_indices].shape,
+                )
+            b_lon_2d_flatten = b_lon_2d.reshape(-1, 1)
+            b_lat_2d_flatten = b_lat_2d.reshape(-1, 1)
+            local_pairs = [[x, y] for x, y in zip(b_lat_2d_flatten, b_lon_2d_flatten)]
+            
+            lon_src_flatten = pre_weighted_lon[expid[i]][
+                ialltime][time_indices].values.reshape(-1, 1).copy()
+            lat_src_flatten = pre_weighted_lat[expid[i]][
+                ialltime][time_indices].values.reshape(-1, 1).copy()
+            source_pairs = [[x, y] for x, y in zip(
+                lat_src_flatten, lon_src_flatten)]
+            
+            transport_distance[expid[i]][ialltime][time_indices] = \
+                haversine_vector(
+                local_pairs, source_pairs, normalize=True).reshape(
+                    transport_distance[expid[i]][ialltime][time_indices].shape)
+            
+            print(datetime.datetime.now() - begin_time)
+            
+    elif (ialltime in ['mm', 'sm', 'am']):
+        print(ialltime)
+        b_lon_2d = np.broadcast_to(
+            lon_2d, pre_weighted_lat[expid[i]][ialltime].shape, )
+        b_lat_2d = np.broadcast_to(
+            lat_2d, pre_weighted_lat[expid[i]][ialltime].shape, )
+        b_lon_2d_flatten = b_lon_2d.reshape(-1, 1)
+        b_lat_2d_flatten = b_lat_2d.reshape(-1, 1)
+        local_pairs = [[x, y] for x, y in zip(b_lat_2d_flatten, b_lon_2d_flatten)]
+
+        lon_src_flatten = pre_weighted_lon[expid[i]][
+            ialltime].values.reshape(-1, 1).copy()
+        lat_src_flatten = pre_weighted_lat[expid[i]][
+            ialltime].values.reshape(-1, 1).copy()
+        source_pairs = [[x, y] for x, y in zip(lat_src_flatten, lon_src_flatten)]
+
+        transport_distance[expid[i]][ialltime][:] = haversine_vector(
+                    local_pairs, source_pairs, normalize=True).reshape(
+                        pre_weighted_lat[expid[i]][ialltime].shape)
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance.pkl', 'wb') as f:
+    pickle.dump(transport_distance[expid[i]], f)
+
+
+'''
+#-------------------------------- check
+
+from geopy.distance import geodesic, great_circle
+from sklearn.metrics.pairwise import haversine_distances
+from math import radians
+from haversine import haversine, Unit, haversine_vector
+
+transport_distance = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance.pkl', 'rb') as f:
+    transport_distance[expid[i]] = pickle.load(f)
+
+transport_distance[expid[i]]['am'].to_netcdf('scratch/test/test.nc')
+
+ilat = 40
+ilon = 90
+
+for ialltime in ['daily', 'mon', 'ann', 'mm', 'sm']:
+    # ialltime = 'mm'
+    itime = -4
+    
+    local = [lat_2d[ilat, ilon], lon_2d[ilat, ilon]]
+    source = [pre_weighted_lat[expid[i]][ialltime][itime, ilat, ilon].values,
+              pre_weighted_lon[expid[i]][ialltime][itime, ilat, ilon].values,]
+
+    # print(geodesic(local, source).km)
+    # print(great_circle(local, source).km)
+
+    # local_in_radians = [radians(_) for _ in local]
+    # source_in_radians = [radians(_) for _ in source]
+    # result = haversine_distances([local_in_radians, source_in_radians])
+    # print((result * 6371000/1000)[0, 1])
+
+    print(haversine(local, source, normalize=True))
+
+    print(transport_distance[expid[i]][ialltime][itime, ilat, ilon].values)
+
+ialltime = 'am'
+
+local = [lat_2d[ilat, ilon], lon_2d[ilat, ilon]]
+source = [pre_weighted_lat[expid[i]][ialltime][ilat, ilon].values,
+          pre_weighted_lon[expid[i]][ialltime][ilat, ilon].values,]
+
+print(haversine(local, source, normalize=True))
+print(transport_distance[expid[i]][ialltime][ilat, ilon].values)
+
+
+
+
+#-------- Function to normalize longitude
+
+def lon_180(lon):
+    lon_copy = lon.copy()
+    
+    if (type(lon_copy) != np.float64):
+        lon_copy[lon_copy>180] -= 360
+    elif (lon_copy > 180):
+        lon_copy -= - 360
+    
+    return(lon_copy)
+
+
+
+
+#-------- previous trial by calculating in order
+
+            # for ilat in range(len(lat)):
+            #     for ilon in range(len(lon)):
+                    
+            #         # itime = 0; ilat = 0; ilon = 0
+                    
+            #         local = [lat_2d[ilat, ilon], lon_2d[ilat, ilon]]
+            #         source = [
+            #             pre_weighted_lat[expid[i]][ialltime][
+            #                 itime, ilat, ilon].values,
+            #             pre_weighted_lon[expid[i]][ialltime][
+            #                 itime, ilat, ilon].values,]
+                    
+            #         if (np.isnan(source).sum() > 0):
+            #             transport_distance[expid[i]][ialltime][
+            #                 itime, ilat, ilon] = np.nan
+            #         else:
+            #             transport_distance[expid[i]][ialltime][
+            #                 itime, ilat, ilon] = geodesic(local, source).km
+
+        
+        # for ilat in range(len(lat)):
+        #     for ilon in range(len(lon)):
+                
+        #         # ilat = 48; ilon = 96
+                
+        #         local = [lat_2d[ilat, ilon], lon_2d[ilat, ilon]]
+        #         source = [
+        #             pre_weighted_lat[expid[i]][ialltime][ilat, ilon].values,
+        #             pre_weighted_lon[expid[i]][ialltime][ilat, ilon].values,]
+                
+        #         if (np.isnan(source).sum() > 0):
+        #             transport_distance[expid[i]][ialltime][
+        #                 ilat, ilon] = np.nan
+        #         else:
+        #             transport_distance[expid[i]][ialltime][
+        #                 ilat, ilon] = geodesic(local, source)
+
+
+#-------- previous trial calculate for each timestep
+
+    if (ialltime in ['daily', 'mon', 'sea', 'ann', 'mm', 'sm']):
+        
+        transport_distance[expid[i]][ialltime] = pre_weighted_lat[expid[i]][ialltime].rename('transport_distance')
+        transport_distance[expid[i]][ialltime][:] = 0
+        
+        b_lon_2d = np.broadcast_to(
+                lon_2d, pre_weighted_lat[expid[i]][ialltime].shape, )
+        b_lat_2d = np.broadcast_to(
+            lat_2d, pre_weighted_lat[expid[i]][ialltime].shape, )
+        b_lon_2d_flatten = b_lon_2d.reshape(-1, 1).copy()
+        b_lat_2d_flatten = b_lat_2d.reshape(-1, 1).copy()
+        
+        for itime in range(pre_weighted_lat[expid[i]][ialltime].shape[0]):
+            # itime = 0
+            
+            
+            
+            
+            
+            local_pairs = [[x, y] for x, y in zip(lat_2d_flatten, lon_2d_flatten)]
+            
+            
+            lon_src_flatten = pre_weighted_lon[expid[i]][ialltime][
+                itime].values.reshape(-1, 1).copy()
+            lat_src_flatten = pre_weighted_lat[expid[i]][ialltime][
+                itime].values.reshape(-1, 1).copy()
+            source_pairs = [[x, y] for x, y in zip(lat_src_flatten, lon_src_flatten)]
+            
+            transport_distance[expid[i]][ialltime][itime, ] = haversine_vector(
+                local_pairs, source_pairs, normalize=True).reshape(lon_2d.shape)
+            
+            if (itime % 100 == 0):
+                print(str(itime) + ': ' + str(datetime.datetime.now() - begin_time))
+            
+    elif (ialltime in ['am']):
+        # ialltime = 'am'
+        print(ialltime)
+        transport_distance[expid[i]][ialltime] = pre_weighted_lat[expid[i]][ialltime].rename('transport_distance')
+        transport_distance[expid[i]][ialltime][:] = 0
+        
+        lon_src_flatten = pre_weighted_lon[expid[i]][
+            ialltime].values.reshape(-1, 1).copy()
+        lat_src_flatten = pre_weighted_lat[expid[i]][
+            ialltime].values.reshape(-1, 1).copy()
+        source_pairs = [[x, y] for x, y in zip(lat_src_flatten, lon_src_flatten)]
+        
+        transport_distance[expid[i]][ialltime][:] = haversine_vector(
+            local_pairs, source_pairs, normalize=True).reshape(lon_2d.shape)
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+

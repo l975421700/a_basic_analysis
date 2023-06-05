@@ -1,9 +1,12 @@
 
 
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'pi_m_502_5.0',
-    # 'pi_d_501_5.0',
+    # 'pi_m_502_5.0',
+    'pi_600_5.0',
+    'pi_601_5.1',
+    'pi_602_5.2',
+    'pi_603_5.3',
     ]
 
 ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
@@ -79,13 +82,16 @@ for i in range(len(expid)):
     filenames_sf_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '*.01_sf_wiso.nc'))
     exp_org_o[expid[i]]['echam'] = xr.open_mfdataset(
         filenames_echam[ifile_start:ifile_end],
-        data_vars='minimal', coords='minimal', parallel=True)
+        # data_vars='minimal', coords='minimal', parallel=True,
+        )
     exp_org_o[expid[i]]['wiso'] = xr.open_mfdataset(
         filenames_wiso[ifile_start:ifile_end],
-        data_vars='minimal', coords='minimal', parallel=True)
+        # data_vars='minimal', coords='minimal', parallel=True,
+        )
     exp_org_o[expid[i]]['sf_wiso'] = xr.open_mfdataset(
         filenames_sf_wiso[ifile_start:ifile_end],
-        data_vars='minimal', coords='minimal', parallel=True)
+        # data_vars='minimal', coords='minimal', parallel=True,
+        )
 
 '''
     file_exists = os.path.exists(
@@ -1078,8 +1084,8 @@ exp_org_o[expid[i]]['wiso'].xi16o[i3[0], level[ij[0]]-1, i4[0], i5[0]].values
 # region check bit identity
 
 i = 0
-j = 1
-expid[i] + '   ' + expid[j]
+j = 3
+print(expid[i] + '  vs.  ' + expid[j])
 
 
 #-------------------------------- normal climate variables
@@ -1094,13 +1100,11 @@ expid[i] + '   ' + expid[j]
 
 #-------------------------------- wiso variables
 
-(exp_org_o[expid[i]]['wiso'].wisoaprl[:, :3] == exp_org_o[expid[j]]['wiso'].wisoaprl[:, :3]).all().values
-(exp_org_o[expid[i]]['wiso'].wisoaprc[:, :3] == exp_org_o[expid[j]]['wiso'].wisoaprc[:, :3]).all().values
-(exp_org_o[expid[i]]['wiso'].wisoevap[:, :3] == exp_org_o[expid[j]]['wiso'].wisoevap[:, :3]).all().values
-(exp_org_o[expid[i]]['wiso'].wisows[:, :3] == exp_org_o[expid[j]]['wiso'].wisows[:, :3]).all().values
+(exp_org_o[expid[i]]['wiso'].wisoaprl[:, :1] == exp_org_o[expid[j]]['wiso'].wisoaprl[:, :1]).all().values
+(exp_org_o[expid[i]]['wiso'].wisoaprc[:, :1] == exp_org_o[expid[j]]['wiso'].wisoaprc[:, :1]).all().values
 
-np.max(abs(exp_org_o[expid[i]]['wiso'].wisoaprl[:, :3] - exp_org_o[expid[j]]['wiso'].wisoaprl[:, :3])).values
 
+'''
 #-------------------------------- while lupdate_tagmap = False
 
 i = 0
@@ -1120,7 +1124,6 @@ exp_org_o[expid[i]]['wiso'].wisoevap[:, 3:5, :, :].values[wheremax]
 exp_org_o[expid[i]]['wiso'].wisoevap[:, (2*j+5):(2*j+7), :, :].values[wheremax]
 
 
-'''
 '''
 # endregion
 # -----------------------------------------------------------------------------

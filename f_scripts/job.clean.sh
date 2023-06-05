@@ -1,11 +1,9 @@
 
-output_dir='output/echam-6.3.05p2-wiso/pi'
-expid='pi_m_416_4.9'
+output_dir='/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi'
+expid='pi_603_5.3'
 
 echo $'\n#-------- clean model output: ' ${expid}
 
-
-cd $WORK
 
 cd ${output_dir}/${expid}/
 
@@ -74,7 +72,7 @@ rm unknown/restart*
 
 
 echo 'job done'
-cd $WORK
+# cd $WORK
 
 
 

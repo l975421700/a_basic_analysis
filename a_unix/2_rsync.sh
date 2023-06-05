@@ -6,6 +6,8 @@
 # download figures
 rsync -avzP xfer1:/home/users/qino/figures /Users/gao/OneDrive\ -\ University\ of\ Cambridge/research/
 
+rsync -avzP albedo:/albedo/work/user/qigao001/figures /Users/gao/OneDrive\ -\ University\ of\ Cambridge/research/
+
 # endregion
 # -----------------------------------------------------------------------------
 

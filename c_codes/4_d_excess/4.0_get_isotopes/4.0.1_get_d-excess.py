@@ -1,7 +1,13 @@
 
 
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_502_5.0',]
+exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+expid = [
+    # 'pi_m_502_5.0',
+    # 'pi_600_5.0',
+    # 'pi_601_5.1',
+    # 'pi_602_5.2',
+    'pi_603_5.3',
+    ]
 i = 0
 
 
@@ -15,7 +21,7 @@ import warnings
 warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
-sys.path.append('/work/ollie/qigao001')
+# sys.path.append('/work/ollie/qigao001')
 
 # data analysis
 import numpy as np
@@ -30,6 +36,7 @@ import xesmf as xe
 import pandas as pd
 from statsmodels.stats import multitest
 import pycircstat as circ
+import math
 
 # plot
 import matplotlib as mpl
@@ -158,6 +165,31 @@ cc = d_excess_alltime[expid[i]][ialltime][itime, ilat, ilon].values
 aa - 8 * bb
 cc
 '''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get d-excess, logarithmic definition
+
+d_ln_alltime = {}
+d_ln_alltime[expid[i]] = {}
+
+for ialltime in dO18_alltime[expid[i]].keys():
+    print(ialltime)
+    # ialltime = 'sm'
+    
+    d_ln_alltime[expid[i]][ialltime] = \
+        np.log(1 + dD_alltime[expid[i]][ialltime] / 1000) - \
+            8.47 * np.log(1 + dO18_alltime[expid[i]][ialltime] / 1000) + \
+                0.0285 * (np.log(1 + dO18_alltime[expid[i]][ialltime] / 1000)) ** 2
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_alltime.pkl', 'wb') as f:
+    pickle.dump(d_ln_alltime[expid[i]], f)
+
+
+# math.log(math.e)
+# math.log(1 + dD_alltime[expid[i]][ialltime])
 # endregion
 # -----------------------------------------------------------------------------
 

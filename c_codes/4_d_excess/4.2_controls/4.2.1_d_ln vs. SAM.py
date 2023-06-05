@@ -114,7 +114,7 @@ from a_basic_analysis.b_module.component_plot import (
 # region import data
 
 sam_mon = {}
-d_excess_alltime = {}
+d_ln_alltime = {}
 b_sam_mon = {}
 
 for i in range(len(expid)):
@@ -123,121 +123,62 @@ for i in range(len(expid)):
     sam_mon[expid[i]] = xr.open_dataset(
         exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.sam_mon.nc')
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_alltime.pkl', 'rb') as f:
-        d_excess_alltime[expid[i]] = pickle.load(f)
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_alltime.pkl', 'rb') as f:
+        d_ln_alltime[expid[i]] = pickle.load(f)
     
     b_sam_mon[expid[i]], _ = xr.broadcast(
         sam_mon[expid[i]].sam,
-        d_excess_alltime[expid[i]]['mon'])
+        d_ln_alltime[expid[i]]['mon'])
 
-lon = d_excess_alltime[expid[i]]['am'].lon
-lat = d_excess_alltime[expid[i]]['am'].lat
+lon = d_ln_alltime[expid[i]]['am'].lon
+lat = d_ln_alltime[expid[i]]['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
 ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
-
 '''
+(sam_mon[expid[0]].sam.values == sam_mon[expid[3]].sam.values).all()
+
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region Corr. d-excess & SAM
+# region Corr. d_ln & SAM
 
-i = 0
-
-cor_sam_d_excess = xr.corr(
-    b_sam_mon,
-    d_excess_alltime[expid[i]]['mon'],
-    dim='time').compute()
-
-cor_sam_d_excess_p = xs.pearson_r_eff_p_value(
-    b_sam_mon,
-    d_excess_alltime[expid[i]]['mon'],
-    dim='time').values
-
-
-#---------------- plot
-
-pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.4, cm_max=0.4, cm_interval1=0.1, cm_interval2=0.1,
-    cmap='PuOr', asymmetric=False, reversed=True)
-
-pltticks[-5] = 0
-
-output_png = 'figures/8_d-excess/8.1_controls/8.1.0_SAM/8.1.0.0 ' + expid[i] + ' corr. sam_d-excess mon.png'
-
-fig, ax = hemisphere_plot(northextent=-60, figsize=np.array([5.8, 6.8]) / 2.54,)
-
-cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
-
-cor_sam_d_excess.values[cor_sam_d_excess_p > 0.05] = np.nan
-
-plt1 = plot_t63_contourf(
-    lon, lat, cor_sam_d_excess, ax,
-    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
-
-# plt1 = ax.pcolormesh(
-#     lon,
-#     lat,
-#     cor_sam_d_excess,
-#     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-
-ax.add_feature(
-    cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
-
-cbar = fig.colorbar(
-    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
-    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
-    pad=0.02, fraction=0.15,
-    )
-cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel(
-    'Correlation: SAM & d-excess',
-    linespacing=1.5, fontsize=8)
-fig.savefig(output_png)
-
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region Corr. d_excess & SAM all simulations
-
-cor_sam_d_excess = {}
-cor_sam_d_excess_p = {}
+cor_sam_d_ln = {}
+cor_sam_d_ln_p = {}
 
 for i in range(len(expid)):
     print(str(i) + ': ' + expid[i])
     
-    cor_sam_d_excess[expid[i]] = xr.corr(
+    cor_sam_d_ln[expid[i]] = xr.corr(
         b_sam_mon[expid[i]],
-        d_excess_alltime[expid[i]]['mon'],
+        d_ln_alltime[expid[i]]['mon'].groupby('time.month') - \
+            d_ln_alltime[expid[i]]['mm'],
         dim='time').compute()
     
-    cor_sam_d_excess_p[expid[i]] = xs.pearson_r_eff_p_value(
+    cor_sam_d_ln_p[expid[i]] = xs.pearson_r_eff_p_value(
         b_sam_mon[expid[i]],
-        d_excess_alltime[expid[i]]['mon'],
+        d_ln_alltime[expid[i]]['mon'].groupby('time.month') - \
+            d_ln_alltime[expid[i]]['mm'],
         dim='time').values
     
-    cor_sam_d_excess[expid[i]].values[
-        cor_sam_d_excess_p[expid[i]] > 0.05] = np.nan
+    cor_sam_d_ln[expid[i]].values[cor_sam_d_ln_p[expid[i]] > 0.05] = np.nan
 
 
 #---------------- plot
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.4, cm_max=0.4, cm_interval1=0.1, cm_interval2=0.1,
+    cm_min=-0.6, cm_max=0.6, cm_interval1=0.1, cm_interval2=0.1,
     cmap='PuOr', asymmetric=False, reversed=True)
-pltticks[-5] = 0
+pltticks[-7] = 0
 
 column_names = ['Control', 'Smooth wind regime', 'Rough wind regime',
                 'No supersaturation']
 
-output_png = 'figures/8_d-excess/8.1_controls/8.1.0_SAM/8.1.0.0 pi_600_3 corr. sam_d_excess mon.png'
+output_png = 'figures/8_d-excess/8.1_controls/8.1.0_SAM/8.1.0.0 pi_600_3 corr. sam_d_ln mon.png'
 
 nrow = 1
 ncol = 4
@@ -265,7 +206,7 @@ for jcol in range(ncol):
     
     # plot corr.
     plt1 = plot_t63_contourf(
-        lon, lat, cor_sam_d_excess[expid[jcol]], axs[jcol],
+        lon, lat, cor_sam_d_ln[expid[jcol]], axs[jcol],
         pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
     
     axs[jcol].add_feature(
@@ -277,7 +218,110 @@ cbar = fig.colorbar(
     orientation="horizontal", shrink=0.5, ticks=pltticks, extend='both',
     anchor=(0.5, 0.35), format=remove_trailing_zero_pos,
     )
-cbar.ax.set_xlabel('Correlation: SAM & d-excess', linespacing=1.5)
+cbar.ax.set_xlabel('Correlation: SAM & $d_{ln}$', linespacing=1.5)
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = 0.2, top = 0.98)
+fig.savefig(output_png)
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region SAM+ vs. SAM- d_ln
+
+sam_posneg_ind = {}
+sam_posneg_ind['pos'] = sam_mon[expid[0]].sam > sam_mon[expid[0]].sam.std(ddof = 1)
+sam_posneg_ind['neg'] = sam_mon[expid[0]].sam < (-1 * sam_mon[expid[0]].sam.std(ddof = 1))
+
+sam_posneg_d_ln = {}
+
+for i in range(len(expid)):
+    # i = 0
+    print(str(i) + ': ' + expid[i])
+    
+    sam_posneg_d_ln[expid[i]] = {}
+    
+    # sam_posneg_d_ln[expid[i]]['pos'] = \
+    #     d_ln_alltime[expid[i]]['mon'][sam_posneg_ind['pos']]
+    # sam_posneg_d_ln[expid[i]]['neg'] = \
+    #     d_ln_alltime[expid[i]]['mon'][sam_posneg_ind['neg']]
+    
+    sam_posneg_d_ln[expid[i]]['pos'] = \
+        (d_ln_alltime[expid[i]]['mon'].groupby('time.month') - \
+            d_ln_alltime[expid[i]]['mm'])[sam_posneg_ind['pos']]
+    sam_posneg_d_ln[expid[i]]['neg'] = \
+        (d_ln_alltime[expid[i]]['mon'].groupby('time.month') - \
+            d_ln_alltime[expid[i]]['mm'])[sam_posneg_ind['neg']]
+    
+    sam_posneg_d_ln[expid[i]]['pos_mean'] = \
+        sam_posneg_d_ln[expid[i]]['pos'].mean(dim='time')
+    sam_posneg_d_ln[expid[i]]['neg_mean'] = \
+        sam_posneg_d_ln[expid[i]]['neg'].mean(dim='time')
+
+
+#---------------- plot
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-28, cm_max=28, cm_interval1=4, cm_interval2=4,
+    cmap='PuOr', asymmetric=False, reversed=True)
+pltticks[-8] = 0
+
+column_names = ['Control', 'Smooth wind regime', 'Rough wind regime',
+                'No supersaturation']
+
+output_png = 'figures/8_d-excess/8.1_controls/8.1.0_SAM/8.1.0.1 pi_600_3 sam_posneg_d_ln mon.png'
+
+nrow = 1
+ncol = 4
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.05, 'wspace': 0.05},)
+
+ipanel=0
+for jcol in range(ncol):
+    axs[jcol] = hemisphere_plot(northextent=-60, ax_org = axs[jcol])
+    plt.text(
+        0.05, 0.95, panel_labels[ipanel],
+        transform=axs[jcol].transAxes,
+        ha='center', va='center', rotation='horizontal')
+    ipanel += 1
+    
+    plt.text(
+        0.5, 1.08, column_names[jcol],
+        transform=axs[jcol].transAxes,
+        ha='center', va='center', rotation='horizontal')
+    
+    cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
+    
+    ttest_fdr_res = ttest_fdr_control(
+        sam_posneg_d_ln[expid[jcol]]['pos'],
+        sam_posneg_d_ln[expid[jcol]]['neg'],)
+    d_ln_diff = (sam_posneg_d_ln[expid[jcol]]['pos_mean'] - \
+        sam_posneg_d_ln[expid[jcol]]['neg_mean']).compute() * 1000
+    d_ln_diff.values[ttest_fdr_res == False] = np.nan
+    
+    # plot corr.
+    plt1 = plot_t63_contourf(
+        lon, lat,
+        d_ln_diff,
+        axs[jcol], pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+    
+    axs[jcol].add_feature(
+        cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
+
+
+cbar = fig.colorbar(
+    plt1, ax=axs, aspect=50,
+    orientation="horizontal", shrink=0.6, ticks=pltticks, extend='both',
+    anchor=(0.5, 0.35), format=remove_trailing_zero_pos,
+    )
+cbar.ax.set_xlabel('Differences in $d_{ln}$ [‰] between SAM+ and SAM-', linespacing=1.5)
 
 fig.subplots_adjust(left=0.01, right = 0.99, bottom = 0.2, top = 0.98)
 fig.savefig(output_png)
@@ -286,6 +330,8 @@ fig.savefig(output_png)
 
 
 '''
+d_ln_alltime[expid[i]]['mon'].groupby('time.month') - \
+    d_ln_alltime[expid[i]]['mm']
 '''
 # endregion
 # -----------------------------------------------------------------------------

@@ -66,9 +66,19 @@ pip install pingouin
 
 source ${HOME}/miniconda3/bin/activate test
 
-#-------------------------------- Others
+#-------------------------------- xesmf and numba
 
 mamba uninstall xesmf
+mamba uninstall numba
+
+# https://github.com/JiaweiZhuang/xESMF/issues/47
+# mamba install -c conda-forge esmpy
+# mamba install -c conda-forge xesmf
+# pytest -v --pyargs xesmf
+
+# mamba install -c conda-forge numba -y
+
+#-------------------------------- Others
 
 # clean conda installed pkgs
 # conda clean -a
@@ -76,12 +86,6 @@ mamba uninstall xesmf
 # pip install igra
 # pip install siphon
 
-# regridding
-# https://github.com/JiaweiZhuang/xESMF/issues/47
-# conda search -c conda-forge -f esmpy
-# conda install -c conda-forge esmpy
-# conda install -c conda-forge xesmf
-# pytest -v --pyargs xesmf
 
 
 # mamba install -c conda-forge nco

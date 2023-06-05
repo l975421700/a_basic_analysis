@@ -1,8 +1,12 @@
 
 
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'pi_m_502_5.0',
+    # 'pi_m_502_5.0',
+    'pi_600_5.0',
+    # 'pi_601_5.1',
+    # 'pi_602_5.2',
+    # 'pi_603_5.3',
     ]
 i = 0
 
@@ -17,7 +21,7 @@ import warnings
 warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
-sys.path.append('/work/ollie/qigao001')
+# sys.path.append('/work/ollie/qigao001')
 
 # data analysis
 import numpy as np
@@ -105,13 +109,13 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-pre_weighted_lat = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lat.pkl', 'rb') as f:
-    pre_weighted_lat[expid[i]] = pickle.load(f)
-
 psl_zh = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.psl_zh.pkl', 'rb') as f:
     psl_zh[expid[i]] = pickle.load(f)
+
+d_excess_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_alltime.pkl', 'rb') as f:
+    d_excess_alltime[expid[i]] = pickle.load(f)
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -127,12 +131,10 @@ sam_index = get_mon_sam(lat, mslp)
 
 sam_mon = xr.Dataset(
     {'sam': (('time'), sam_index),},
-    coords={'time': pre_weighted_lat[expid[i]]['mon'].time,},
+    coords={'time': d_excess_alltime[expid[i]]['mon'].time,},
     )
 
 sam_mon.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.sam_mon.nc')
-
-
 
 '''
 # Write output file
