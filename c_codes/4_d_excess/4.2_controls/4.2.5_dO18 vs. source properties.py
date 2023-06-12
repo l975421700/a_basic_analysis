@@ -95,6 +95,7 @@ from a_basic_analysis.b_module.statistics import (
     check_equal_variance_3d,
     ttest_fdr_control,
     cplot_ttest,
+    xr_par_cor,
 )
 
 from a_basic_analysis.b_module.component_plot import (
@@ -165,300 +166,73 @@ ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 # endregion
 # -----------------------------------------------------------------------------
 
-
-# -----------------------------------------------------------------------------
-# region Corr. dO18 & source latitude
+ialltime = 'daily'
+ialltime = 'mon'
+ialltime = 'ann'
 
 ivar = 'latitude'
-
-cor_dO18_ivar = {}
-cor_dO18_ivar_p = {}
-
-for i in range(len(expid)):
-    print(str(i) + ': ' + expid[i])
-    
-    cor_dO18_ivar[expid[i]] = xr.corr(
-        dO18_alltime[expid[i]]['mon'].groupby('time.month') - \
-            dO18_alltime[expid[i]]['mm'],
-        pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month') - \
-            pre_weighted_var[expid[i]][ivar]['mm'],
-        dim='time').compute()
-    
-    cor_dO18_ivar_p[expid[i]] = xs.pearson_r_eff_p_value(
-        dO18_alltime[expid[i]]['mon'].groupby('time.month') - \
-            dO18_alltime[expid[i]]['mm'],
-        pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month') - \
-            pre_weighted_var[expid[i]][ivar]['mm'],
-        dim='time').values
-    
-    cor_dO18_ivar[expid[i]].values[cor_dO18_ivar_p[expid[i]] > 0.05] = np.nan
-
-
-#---------------- plot
-
-pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.8, cm_max=0.8, cm_interval1=0.1, cm_interval2=0.1,
-    cmap='PuOr', asymmetric=False, reversed=True)
-pltticks[-9] = 0
-
-column_names = ['Control', 'Smooth wind regime', 'Rough wind regime',
-                'No supersaturation']
-
-output_png = 'figures/8_d-excess/8.1_controls/8.1.1_pre_sources/8.1.1.0 pi_600_3 corr. dO18 and ' + ivar + ' mon.png'
-
-nrow = 1
-ncol = 4
-
-fig, axs = plt.subplots(
-    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
-    subplot_kw={'projection': ccrs.SouthPolarStereo()},
-    gridspec_kw={'hspace': 0.05, 'wspace': 0.05},)
-
-ipanel=0
-for jcol in range(ncol):
-    axs[jcol] = hemisphere_plot(northextent=-60, ax_org = axs[jcol])
-    plt.text(
-        0.05, 0.95, panel_labels[ipanel],
-        transform=axs[jcol].transAxes,
-        ha='center', va='center', rotation='horizontal')
-    ipanel += 1
-    
-    plt.text(
-        0.5, 1.08, column_names[jcol],
-        transform=axs[jcol].transAxes,
-        ha='center', va='center', rotation='horizontal')
-    
-    cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
-    
-    # plot corr.
-    plt1 = plot_t63_contourf(
-        lon, lat, cor_dO18_ivar[expid[jcol]], axs[jcol],
-        pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
-    
-    axs[jcol].add_feature(
-        cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
-
-cbar = fig.colorbar(
-    plt1, ax=axs, aspect=50,
-    orientation="horizontal", shrink=0.8, ticks=pltticks, extend='both',
-    anchor=(0.5, 0.35), format=remove_trailing_zero_pos,
-    )
-cbar.ax.set_xlabel('Correlation: source '+ivar+' & $\delta^{18}O$', linespacing=1.5)
-
-fig.subplots_adjust(left=0.01, right = 0.99, bottom = 0.2, top = 0.98)
-fig.savefig(output_png)
-
-
-'''
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region Corr. dO18 & source SST
-
 ivar = 'SST'
-
-cor_dO18_ivar = {}
-cor_dO18_ivar_p = {}
-
-for i in range(len(expid)):
-    print(str(i) + ': ' + expid[i])
-    
-    cor_dO18_ivar[expid[i]] = xr.corr(
-        dO18_alltime[expid[i]]['mon'].groupby('time.month') - \
-            dO18_alltime[expid[i]]['mm'],
-        pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month') - \
-            pre_weighted_var[expid[i]][ivar]['mm'],
-        dim='time').compute()
-    
-    cor_dO18_ivar_p[expid[i]] = xs.pearson_r_eff_p_value(
-        dO18_alltime[expid[i]]['mon'].groupby('time.month') - \
-            dO18_alltime[expid[i]]['mm'],
-        pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month') - \
-            pre_weighted_var[expid[i]][ivar]['mm'],
-        dim='time').values
-    
-    cor_dO18_ivar[expid[i]].values[cor_dO18_ivar_p[expid[i]] > 0.05] = np.nan
-
-
-#---------------- plot
-
-pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.8, cm_max=0.8, cm_interval1=0.1, cm_interval2=0.1,
-    cmap='PuOr', asymmetric=False, reversed=True)
-pltticks[-9] = 0
-
-column_names = ['Control', 'Smooth wind regime', 'Rough wind regime',
-                'No supersaturation']
-
-output_png = 'figures/8_d-excess/8.1_controls/8.1.1_pre_sources/8.1.1.0 pi_600_3 corr. dO18 and ' + ivar + ' mon.png'
-
-nrow = 1
-ncol = 4
-
-fig, axs = plt.subplots(
-    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
-    subplot_kw={'projection': ccrs.SouthPolarStereo()},
-    gridspec_kw={'hspace': 0.05, 'wspace': 0.05},)
-
-ipanel=0
-for jcol in range(ncol):
-    axs[jcol] = hemisphere_plot(northextent=-60, ax_org = axs[jcol])
-    plt.text(
-        0.05, 0.95, panel_labels[ipanel],
-        transform=axs[jcol].transAxes,
-        ha='center', va='center', rotation='horizontal')
-    ipanel += 1
-    
-    plt.text(
-        0.5, 1.08, column_names[jcol],
-        transform=axs[jcol].transAxes,
-        ha='center', va='center', rotation='horizontal')
-    
-    cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
-    
-    # plot corr.
-    plt1 = plot_t63_contourf(
-        lon, lat, cor_dO18_ivar[expid[jcol]], axs[jcol],
-        pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
-    
-    axs[jcol].add_feature(
-        cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
-
-cbar = fig.colorbar(
-    plt1, ax=axs, aspect=50,
-    orientation="horizontal", shrink=0.8, ticks=pltticks, extend='both',
-    anchor=(0.5, 0.35), format=remove_trailing_zero_pos,
-    )
-cbar.ax.set_xlabel('Correlation: source '+ivar+' & $\delta^{18}O$', linespacing=1.5)
-
-fig.subplots_adjust(left=0.01, right = 0.99, bottom = 0.2, top = 0.98)
-fig.savefig(output_png)
-
-
-'''
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region Corr. dO18 & source rh2m
-
 ivar = 'rh2m'
-
-cor_dO18_ivar = {}
-cor_dO18_ivar_p = {}
-
-for i in range(len(expid)):
-    print(str(i) + ': ' + expid[i])
-    
-    cor_dO18_ivar[expid[i]] = xr.corr(
-        dO18_alltime[expid[i]]['mon'].groupby('time.month') - \
-            dO18_alltime[expid[i]]['mm'],
-        pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month') - \
-            pre_weighted_var[expid[i]][ivar]['mm'],
-        dim='time').compute()
-    
-    cor_dO18_ivar_p[expid[i]] = xs.pearson_r_eff_p_value(
-        dO18_alltime[expid[i]]['mon'].groupby('time.month') - \
-            dO18_alltime[expid[i]]['mm'],
-        pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month') - \
-            pre_weighted_var[expid[i]][ivar]['mm'],
-        dim='time').values
-    
-    cor_dO18_ivar[expid[i]].values[cor_dO18_ivar_p[expid[i]] > 0.05] = np.nan
-
-
-#---------------- plot
-
-pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.8, cm_max=0.8, cm_interval1=0.1, cm_interval2=0.1,
-    cmap='PuOr', asymmetric=False, reversed=True)
-pltticks[-9] = 0
-
-column_names = ['Control', 'Smooth wind regime', 'Rough wind regime',
-                'No supersaturation']
-
-output_png = 'figures/8_d-excess/8.1_controls/8.1.1_pre_sources/8.1.1.0 pi_600_3 corr. dO18 and ' + ivar + ' mon.png'
-
-nrow = 1
-ncol = 4
-
-fig, axs = plt.subplots(
-    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
-    subplot_kw={'projection': ccrs.SouthPolarStereo()},
-    gridspec_kw={'hspace': 0.05, 'wspace': 0.05},)
-
-ipanel=0
-for jcol in range(ncol):
-    axs[jcol] = hemisphere_plot(northextent=-60, ax_org = axs[jcol])
-    plt.text(
-        0.05, 0.95, panel_labels[ipanel],
-        transform=axs[jcol].transAxes,
-        ha='center', va='center', rotation='horizontal')
-    ipanel += 1
-    
-    plt.text(
-        0.5, 1.08, column_names[jcol],
-        transform=axs[jcol].transAxes,
-        ha='center', va='center', rotation='horizontal')
-    
-    cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
-    
-    # plot corr.
-    plt1 = plot_t63_contourf(
-        lon, lat, cor_dO18_ivar[expid[jcol]], axs[jcol],
-        pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
-    
-    axs[jcol].add_feature(
-        cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
-
-cbar = fig.colorbar(
-    plt1, ax=axs, aspect=50,
-    orientation="horizontal", shrink=0.8, ticks=pltticks, extend='both',
-    anchor=(0.5, 0.35), format=remove_trailing_zero_pos,
-    )
-cbar.ax.set_xlabel('Correlation: source '+ivar+' & $\delta^{18}O$', linespacing=1.5)
-
-fig.subplots_adjust(left=0.01, right = 0.99, bottom = 0.2, top = 0.98)
-fig.savefig(output_png)
-
-
-'''
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region Corr. dO18 & source wind10
-
 ivar = 'wind10'
 
+# -----------------------------------------------------------------------------
+# region Corr. dO18 & source properties
+
+output_png = 'figures/8_d-excess/8.1_controls/8.1.1_pre_sources/8.1.1.0 pi_600_3 ' + ialltime + ' corr. dO18 and ' + ivar + '.png'
+
 cor_dO18_ivar = {}
 cor_dO18_ivar_p = {}
 
-for i in range(len(expid)):
-    print(str(i) + ': ' + expid[i])
+if (ialltime == 'daily'):
+    for i in range(len(expid)):
+        print(str(i) + ': ' + expid[i])
+        
+        cor_dO18_ivar[expid[i]] = xr.corr(
+            dO18_alltime[expid[i]]['daily'],
+            pre_weighted_var[expid[i]][ivar]['daily'],
+            dim='time').compute()
     
-    cor_dO18_ivar[expid[i]] = xr.corr(
-        dO18_alltime[expid[i]]['mon'].groupby('time.month') - \
-            dO18_alltime[expid[i]]['mm'],
-        pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month') - \
-            pre_weighted_var[expid[i]][ivar]['mm'],
-        dim='time').compute()
+elif (ialltime == 'mon'):
+    for i in range(len(expid)):
+        print(str(i) + ': ' + expid[i])
+        
+        cor_dO18_ivar[expid[i]] = xr.corr(
+            dO18_alltime[expid[i]]['mon'].groupby('time.month') - \
+                dO18_alltime[expid[i]]['mm'],
+            pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month') - \
+                pre_weighted_var[expid[i]][ivar]['mm'],
+            dim='time').compute()
+        
+        # cor_dO18_ivar_p[expid[i]] = xs.pearson_r_eff_p_value(
+        #     dO18_alltime[expid[i]]['mon'].groupby('time.month') - \
+        #         dO18_alltime[expid[i]]['mm'],
+        #     pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month') - \
+        #         pre_weighted_var[expid[i]][ivar]['mm'],
+        #     dim='time').values
+        
+        # cor_dO18_ivar[expid[i]].values[
+        #     cor_dO18_ivar_p[expid[i]] > 0.05] = np.nan
     
-    cor_dO18_ivar_p[expid[i]] = xs.pearson_r_eff_p_value(
-        dO18_alltime[expid[i]]['mon'].groupby('time.month') - \
-            dO18_alltime[expid[i]]['mm'],
-        pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month') - \
-            pre_weighted_var[expid[i]][ivar]['mm'],
-        dim='time').values
-    
-    cor_dO18_ivar[expid[i]].values[cor_dO18_ivar_p[expid[i]] > 0.05] = np.nan
+elif (ialltime == 'ann'):
+    for i in range(len(expid)):
+        print(str(i) + ': ' + expid[i])
+        
+        cor_dO18_ivar[expid[i]] = xr.corr(
+            (dO18_alltime[expid[i]]['ann'] - \
+                dO18_alltime[expid[i]]['am']).compute(),
+            (pre_weighted_var[expid[i]][ivar]['ann'] - \
+                pre_weighted_var[expid[i]][ivar]['am']).compute(),
+            dim='time').compute()
+        
+        # cor_dO18_ivar_p[expid[i]] = xs.pearson_r_eff_p_value(
+        #     (dO18_alltime[expid[i]]['ann'] - \
+        #         dO18_alltime[expid[i]]['am']).compute(),
+        #     pre_weighted_var[expid[i]][ivar]['ann'] - \
+        #         pre_weighted_var[expid[i]][ivar]['am'],
+        #     dim='time').values
+        
+        # cor_dO18_ivar[expid[i]].values[
+        #     cor_dO18_ivar_p[expid[i]] > 0.05] = np.nan
 
 
 #---------------- plot
@@ -470,8 +244,6 @@ pltticks[-9] = 0
 
 column_names = ['Control', 'Smooth wind regime', 'Rough wind regime',
                 'No supersaturation']
-
-output_png = 'figures/8_d-excess/8.1_controls/8.1.1_pre_sources/8.1.1.0 pi_600_3 corr. dO18 and ' + ivar + ' mon.png'
 
 nrow = 1
 ncol = 4
@@ -520,3 +292,126 @@ fig.savefig(output_png)
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+ialltime = 'ann'
+
+ivar = 'latitude'
+ivar = 'rh2m'
+ivar = 'wind10'
+
+control_var = 'SST'
+
+# -----------------------------------------------------------------------------
+# region Partial Corr. dO18 & source properties, given source SST
+
+output_png = 'figures/8_d-excess/8.1_controls/8.1.1_pre_sources/8.1.1.1 pi_600_3 ' + ialltime + ' partial corr. dO18 and ' + ivar + ' controlling ' + control_var + '.png'
+
+
+par_cor_dO18_ivar = {}
+par_cor_dO18_ivar_p = {}
+
+if (ialltime == 'ann'):
+    for i in range(len(expid)):
+        print(str(i) + ': ' + expid[i])
+        
+        par_cor_dO18_ivar[expid[i]] = xr.apply_ufunc(
+            xr_par_cor,
+            dO18_alltime[expid[i]]['ann'],
+            pre_weighted_var[expid[i]][ivar]['ann'],
+            pre_weighted_var[expid[i]][control_var]['ann'],
+            input_core_dims=[["time"], ["time"], ["time"]],
+            kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
+        )
+        
+        par_cor_dO18_ivar_p[expid[i]] = xr.apply_ufunc(
+            xr_par_cor,
+            dO18_alltime[expid[i]]['ann'],
+            pre_weighted_var[expid[i]][ivar]['ann'],
+            pre_weighted_var[expid[i]][control_var]['ann'],
+            input_core_dims=[["time"], ["time"], ["time"]],
+            kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
+        )
+
+#---------------- plot
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-0.8, cm_max=0.8, cm_interval1=0.1, cm_interval2=0.1,
+    cmap='PuOr', asymmetric=False, reversed=True)
+pltticks[-9] = 0
+
+column_names = ['Control', 'Smooth wind regime', 'Rough wind regime',
+                'No supersaturation']
+
+nrow = 1
+ncol = 4
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.05, 'wspace': 0.05},)
+
+ipanel=0
+for jcol in range(ncol):
+    axs[jcol] = hemisphere_plot(northextent=-60, ax_org = axs[jcol])
+    plt.text(
+        0.05, 0.95, panel_labels[ipanel],
+        transform=axs[jcol].transAxes,
+        ha='center', va='center', rotation='horizontal')
+    ipanel += 1
+    
+    plt.text(
+        0.5, 1.08, column_names[jcol],
+        transform=axs[jcol].transAxes,
+        ha='center', va='center', rotation='horizontal')
+    
+    cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
+    
+    # plot corr.
+    plt1 = plot_t63_contourf(
+        lon, lat, par_cor_dO18_ivar[expid[jcol]], axs[jcol],
+        pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+    
+    axs[jcol].add_feature(
+        cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
+
+cbar = fig.colorbar(
+    plt1, ax=axs, aspect=50,
+    orientation="horizontal", shrink=0.8, ticks=pltticks, extend='both',
+    anchor=(0.5, 0.35), format=remove_trailing_zero_pos,
+    )
+cbar.ax.set_xlabel('Partial correlation: source '+ivar+' & $\delta^{18}O$, controlling ' + control_var, linespacing=1.5)
+
+fig.subplots_adjust(left=0.01, right = 0.99, bottom = 0.2, top = 0.98)
+fig.savefig(output_png)
+
+
+
+
+'''
+#-------------------------------- check individual grid
+
+import pingouin as pg
+i = 2
+ilat = 30
+ilon = 60
+
+x = dO18_alltime[expid[i]]['ann'][:, ilat, ilon]
+y = pre_weighted_var[expid[i]][ivar]['ann'][:, ilat, ilon]
+covar = pre_weighted_var[expid[i]][control_var]['ann'][:, ilat, ilon]
+
+xr_par_cor(x, y, covar, output = 'r')
+par_cor_dO18_ivar[expid[i]][ilat, ilon]
+
+xr_par_cor(x, y, covar, output = 'p')
+par_cor_dO18_ivar_p[expid[i]][ilat, ilon]
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+
+
+
+

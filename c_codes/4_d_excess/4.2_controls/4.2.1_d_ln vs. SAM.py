@@ -159,13 +159,13 @@ for i in range(len(expid)):
             d_ln_alltime[expid[i]]['mm'],
         dim='time').compute()
     
-    cor_sam_d_ln_p[expid[i]] = xs.pearson_r_eff_p_value(
-        b_sam_mon[expid[i]],
-        d_ln_alltime[expid[i]]['mon'].groupby('time.month') - \
-            d_ln_alltime[expid[i]]['mm'],
-        dim='time').values
+    # cor_sam_d_ln_p[expid[i]] = xs.pearson_r_eff_p_value(
+    #     b_sam_mon[expid[i]],
+    #     d_ln_alltime[expid[i]]['mon'].groupby('time.month') - \
+    #         d_ln_alltime[expid[i]]['mm'],
+    #     dim='time').values
     
-    cor_sam_d_ln[expid[i]].values[cor_sam_d_ln_p[expid[i]] > 0.05] = np.nan
+    # cor_sam_d_ln[expid[i]].values[cor_sam_d_ln_p[expid[i]] > 0.05] = np.nan
 
 
 #---------------- plot
@@ -299,12 +299,12 @@ for jcol in range(ncol):
     
     cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
     
-    ttest_fdr_res = ttest_fdr_control(
-        sam_posneg_d_ln[expid[jcol]]['pos'],
-        sam_posneg_d_ln[expid[jcol]]['neg'],)
+    # ttest_fdr_res = ttest_fdr_control(
+    #     sam_posneg_d_ln[expid[jcol]]['pos'],
+    #     sam_posneg_d_ln[expid[jcol]]['neg'],)
     d_ln_diff = (sam_posneg_d_ln[expid[jcol]]['pos_mean'] - \
         sam_posneg_d_ln[expid[jcol]]['neg_mean']).compute() * 1000
-    d_ln_diff.values[ttest_fdr_res == False] = np.nan
+    # d_ln_diff.values[ttest_fdr_res == False] = np.nan
     
     # plot corr.
     plt1 = plot_t63_contourf(

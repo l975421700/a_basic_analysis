@@ -131,6 +131,8 @@ lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
 ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
 
 '''
 d_excess_alltime[expid[i]]['am']
@@ -338,6 +340,17 @@ cbar2.ax.set_xlabel('Differences in $d_{ln}$ [‰] (*) vs. (a)', linespacing=1.5
 
 fig.subplots_adjust(left=0.01, right = 0.99, bottom = 0.2, top = 0.98)
 fig.savefig(output_png)
+
+
+
+
+# check diff
+for jcol in np.arange(1, 4, 1):
+    print(expid[jcol])
+    
+    diff = (d_ln_alltime[expid[jcol]]['am'] - d_ln_alltime[expid[0]]['am']).values[echam6_t63_ais_mask['mask']['AIS']] * 1000
+    print(np.round(np.min(diff), 1))
+    print(np.round(np.max(diff), 1))
 
 
 

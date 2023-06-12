@@ -2,11 +2,13 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
+    # 'pi_m_502_5.0',
     'pi_600_5.0',
     'pi_601_5.1',
     'pi_602_5.2',
     'pi_603_5.3',
     ]
+# i = 0
 
 
 # -----------------------------------------------------------------------------
@@ -30,11 +32,11 @@ from dask.diagnostics import ProgressBar
 pbar = ProgressBar()
 pbar.register()
 from scipy import stats
-# import xesmf as xe
+import xesmf as xe
 import pandas as pd
 from statsmodels.stats import multitest
 import pycircstat as circ
-import xskillscore as xs
+import math
 
 # plot
 import matplotlib as mpl
@@ -111,49 +113,30 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-#---- import d_ln
+dO18_alltime = {}
+dD_alltime = {}
 
-d_ln_alltime = {}
 
 for i in range(len(expid)):
     print(str(i) + ': ' + expid[i])
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_alltime.pkl', 'rb') as f:
-        d_ln_alltime[expid[i]] = pickle.load(f)
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_alltime.pkl', 'rb') as f:
+        dO18_alltime[expid[i]] = pickle.load(f)
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_alltime.pkl', 'rb') as f:
+        dD_alltime[expid[i]] = pickle.load(f)
 
-lon = d_ln_alltime[expid[i]]['am'].lon
-lat = d_ln_alltime[expid[i]]['am'].lat
+lon = dO18_alltime[expid[i]]['am'].lon
+lat = dO18_alltime[expid[i]]['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
-
-#---- import precipitation sources
-
-source_var = ['latitude', 'SST', 'rh2m', 'wind10']
-pre_weighted_var = {}
-
-for i in range(len(expid)):
-    # i = 0
-    print(str(i) + ': ' + expid[i])
-    
-    pre_weighted_var[expid[i]] = {}
-    
-    prefix = exp_odir + expid[i] + '/analysis/echam/' + expid[i]
-    
-    source_var_files = [
-        prefix + '.pre_weighted_lat.pkl',
-        prefix + '.pre_weighted_sst.pkl',
-        prefix + '.pre_weighted_rh2m.pkl',
-        prefix + '.pre_weighted_wind10.pkl',
-    ]
-    
-    for ivar, ifile in zip(source_var, source_var_files):
-        print(ivar + ':    ' + ifile)
-        with open(ifile, 'rb') as f:
-            pre_weighted_var[expid[i]][ivar] = pickle.load(f)
 
 ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+
+
 '''
-(sam_mon[expid[0]].sam.values == sam_mon[expid[3]].sam.values).all()
 
 '''
 # endregion
@@ -161,44 +144,16 @@ ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
 
 # -----------------------------------------------------------------------------
-# region Corr. d_ln & source latitude
-
-ivar = 'latitude'
-
-cor_d_ln_ivar = {}
-cor_d_ln_ivar_p = {}
-
-for i in range(len(expid)):
-    print(str(i) + ': ' + expid[i])
-    
-    cor_d_ln_ivar[expid[i]] = xr.corr(
-        d_ln_alltime[expid[i]]['mon'].groupby('time.month') - \
-            d_ln_alltime[expid[i]]['mm'],
-        pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month') - \
-            pre_weighted_var[expid[i]][ivar]['mm'],
-        dim='time').compute()
-    
-    cor_d_ln_ivar_p[expid[i]] = xs.pearson_r_eff_p_value(
-        d_ln_alltime[expid[i]]['mon'].groupby('time.month') - \
-            d_ln_alltime[expid[i]]['mm'],
-        pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month') - \
-            pre_weighted_var[expid[i]][ivar]['mm'],
-        dim='time').values
-    
-    cor_d_ln_ivar[expid[i]].values[cor_d_ln_ivar_p[expid[i]] > 0.05] = np.nan
-
-
-#---------------- plot
+# region plot delta_018
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.8, cm_max=0.8, cm_interval1=0.1, cm_interval2=0.1,
-    cmap='PuOr', asymmetric=False, reversed=True)
-pltticks[-9] = 0
+    cm_min=-60, cm_max=-20, cm_interval1=5, cm_interval2=5,
+    cmap='viridis', reversed=True)
 
 column_names = ['Control', 'Smooth wind regime', 'Rough wind regime',
                 'No supersaturation']
 
-output_png = 'figures/8_d-excess/8.1_controls/8.1.1_pre_sources/8.1.1.0 pi_600_3 corr. d_ln and ' + ivar + ' mon.png'
+output_png = 'figures/8_d-excess/8.1_controls/8.1.0_SAM/8.1.0.0 pi_600_3 delta_018 am.png'
 
 nrow = 1
 ncol = 4
@@ -224,70 +179,45 @@ for jcol in range(ncol):
     
     cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
     
-    # plot corr.
+    # plot
     plt1 = plot_t63_contourf(
-        lon, lat, cor_d_ln_ivar[expid[jcol]], axs[jcol],
+        lon, lat.sel(lat=slice(-57, -90)),
+        dO18_alltime[expid[jcol]]['am'].sel(lat=slice(-57, -90)),
+        axs[jcol],
         pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
     
     axs[jcol].add_feature(
         cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
 
 cbar = fig.colorbar(
-    plt1, ax=axs, aspect=50,
-    orientation="horizontal", shrink=0.8, ticks=pltticks, extend='both',
+    plt1, ax=axs, aspect=40,
+    orientation="horizontal", shrink=0.5, ticks=pltticks, extend='both',
     anchor=(0.5, 0.35), format=remove_trailing_zero_pos,
     )
-cbar.ax.set_xlabel('Correlation: source '+ivar+' & $d_{ln}$', linespacing=1.5)
+cbar.ax.set_xlabel('Annual mean $\delta^{18}O$ [‰]', linespacing=1.5)
 
 fig.subplots_adjust(left=0.01, right = 0.99, bottom = 0.2, top = 0.98)
 fig.savefig(output_png)
 
 
 '''
+dO18_alltime[expid[i]]['am']
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region Corr. d_ln & source SST
-
-ivar = 'SST'
-
-cor_d_ln_ivar = {}
-cor_d_ln_ivar_p = {}
-
-for i in range(len(expid)):
-    print(str(i) + ': ' + expid[i])
-    
-    cor_d_ln_ivar[expid[i]] = xr.corr(
-        d_ln_alltime[expid[i]]['mon'].groupby('time.month') - \
-            d_ln_alltime[expid[i]]['mm'],
-        pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month') - \
-            pre_weighted_var[expid[i]][ivar]['mm'],
-        dim='time').compute()
-    
-    cor_d_ln_ivar_p[expid[i]] = xs.pearson_r_eff_p_value(
-        d_ln_alltime[expid[i]]['mon'].groupby('time.month') - \
-            d_ln_alltime[expid[i]]['mm'],
-        pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month') - \
-            pre_weighted_var[expid[i]][ivar]['mm'],
-        dim='time').values
-    
-    cor_d_ln_ivar[expid[i]].values[cor_d_ln_ivar_p[expid[i]] > 0.05] = np.nan
-
-
-#---------------- plot
+# region plot delta_D
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.8, cm_max=0.8, cm_interval1=0.1, cm_interval2=0.1,
-    cmap='PuOr', asymmetric=False, reversed=True)
-pltticks[-9] = 0
+    cm_min=-450, cm_max=-100, cm_interval1=25, cm_interval2=50,
+    cmap='viridis', reversed=True)
 
 column_names = ['Control', 'Smooth wind regime', 'Rough wind regime',
                 'No supersaturation']
 
-output_png = 'figures/8_d-excess/8.1_controls/8.1.1_pre_sources/8.1.1.0 pi_600_3 corr. d_ln and ' + ivar + ' mon.png'
+output_png = 'figures/8_d-excess/8.1_controls/8.1.0_SAM/8.1.0.0 pi_600_3 delta_D am.png'
 
 nrow = 1
 ncol = 4
@@ -313,70 +243,49 @@ for jcol in range(ncol):
     
     cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
     
-    # plot corr.
+    # plot
     plt1 = plot_t63_contourf(
-        lon, lat, cor_d_ln_ivar[expid[jcol]], axs[jcol],
+        lon, lat.sel(lat=slice(-57, -90)),
+        dD_alltime[expid[jcol]]['am'].sel(lat=slice(-57, -90)),
+        axs[jcol],
         pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
     
     axs[jcol].add_feature(
         cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
 
 cbar = fig.colorbar(
-    plt1, ax=axs, aspect=50,
-    orientation="horizontal", shrink=0.8, ticks=pltticks, extend='both',
+    plt1, ax=axs, aspect=40,
+    orientation="horizontal", shrink=0.5, ticks=pltticks, extend='both',
     anchor=(0.5, 0.35), format=remove_trailing_zero_pos,
     )
-cbar.ax.set_xlabel('Correlation: source '+ivar+' & $d_{ln}$', linespacing=1.5)
+cbar.ax.set_xlabel('Annual mean $\delta D$ [‰]', linespacing=1.5)
 
 fig.subplots_adjust(left=0.01, right = 0.99, bottom = 0.2, top = 0.98)
 fig.savefig(output_png)
 
 
 '''
+dO18_alltime[expid[i]]['am']
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region Corr. d_ln & source rh2m
-
-ivar = 'rh2m'
-
-cor_d_ln_ivar = {}
-cor_d_ln_ivar_p = {}
-
-for i in range(len(expid)):
-    print(str(i) + ': ' + expid[i])
-    
-    cor_d_ln_ivar[expid[i]] = xr.corr(
-        d_ln_alltime[expid[i]]['mon'].groupby('time.month') - \
-            d_ln_alltime[expid[i]]['mm'],
-        pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month') - \
-            pre_weighted_var[expid[i]][ivar]['mm'],
-        dim='time').compute()
-    
-    cor_d_ln_ivar_p[expid[i]] = xs.pearson_r_eff_p_value(
-        d_ln_alltime[expid[i]]['mon'].groupby('time.month') - \
-            d_ln_alltime[expid[i]]['mm'],
-        pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month') - \
-            pre_weighted_var[expid[i]][ivar]['mm'],
-        dim='time').values
-    
-    cor_d_ln_ivar[expid[i]].values[cor_d_ln_ivar_p[expid[i]] > 0.05] = np.nan
-
-
-#---------------- plot
+# region plot delta_018 differences
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.8, cm_max=0.8, cm_interval1=0.1, cm_interval2=0.1,
-    cmap='PuOr', asymmetric=False, reversed=True)
-pltticks[-9] = 0
+    cm_min=-60, cm_max=-20, cm_interval1=5, cm_interval2=5,
+    cmap='viridis', reversed=True)
+
+pltlevel2, pltticks2, pltnorm2, pltcmp2 = plt_mesh_pars(
+    cm_min=-10, cm_max=10, cm_interval1=0.1, cm_interval2=2,
+    cmap='PiYG', reversed=False)
 
 column_names = ['Control', 'Smooth wind regime', 'Rough wind regime',
                 'No supersaturation']
 
-output_png = 'figures/8_d-excess/8.1_controls/8.1.1_pre_sources/8.1.1.0 pi_600_3 corr. d_ln and ' + ivar + ' mon.png'
+output_png = 'figures/8_d-excess/8.1_controls/8.1.0_SAM/8.1.0.0 pi_600_3 delta_018 and differences am.png'
 
 nrow = 1
 ncol = 4
@@ -401,71 +310,72 @@ for jcol in range(ncol):
         ha='center', va='center', rotation='horizontal')
     
     cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
+
+# plot
+plt1 = plot_t63_contourf(
+    lon, lat.sel(lat=slice(-57, -90)),
+    dO18_alltime[expid[0]]['am'].sel(lat=slice(-57, -90)),
+    axs[0], pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+
+for jcol in np.arange(1, 4, 1):
+    print(jcol)
     
-    # plot corr.
-    plt1 = plot_t63_contourf(
-        lon, lat, cor_d_ln_ivar[expid[jcol]], axs[jcol],
-        pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
-    
+    plt2 = plot_t63_contourf(
+        lon, lat.sel(lat=slice(-57, -90)),
+        (dO18_alltime[expid[jcol]]['am'] - dO18_alltime[expid[0]]['am']).sel(lat=slice(-57, -90)),
+        axs[jcol], pltlevel2, 'both', pltnorm2, pltcmp2, ccrs.PlateCarree(),)
+
+for jcol in range(ncol):
     axs[jcol].add_feature(
         cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
 
-cbar = fig.colorbar(
-    plt1, ax=axs, aspect=50,
-    orientation="horizontal", shrink=0.8, ticks=pltticks, extend='both',
-    anchor=(0.5, 0.35), format=remove_trailing_zero_pos,
+cbar1 = fig.colorbar(
+    plt1, ax=axs, aspect=40,
+    orientation="horizontal", shrink=0.5, ticks=pltticks, extend='both',
+    anchor=(-0.2, 0.35), format=remove_trailing_zero_pos,
     )
-cbar.ax.set_xlabel('Correlation: source '+ivar+' & $d_{ln}$', linespacing=1.5)
+cbar1.ax.set_xlabel('$\delta^{18}O$ [‰]', linespacing=1.5)
+
+cbar2 = fig.colorbar(
+    plt2, ax=axs, aspect=40,
+    orientation="horizontal", shrink=0.5, ticks=pltticks2, extend='both',
+    anchor=(1.2, -3.5), format=remove_trailing_zero_pos,
+    )
+cbar2.ax.set_xlabel('Differences in $\delta^{18}O$ [‰] between (*) and (a)', linespacing=1.5)
 
 fig.subplots_adjust(left=0.01, right = 0.99, bottom = 0.2, top = 0.98)
 fig.savefig(output_png)
 
 
-'''
-'''
+# check diff
+for jcol in np.arange(1, 4, 1):
+    print(expid[jcol])
+    
+    diff = (dO18_alltime[expid[jcol]]['am'] - dO18_alltime[expid[0]]['am']).values[echam6_t63_ais_mask['mask']['AIS']]
+    print(np.round(np.min(diff), 1))
+    print(np.round(np.max(diff), 1))
+
+
+
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region Corr. d_ln & source wind10
-
-ivar = 'wind10'
-
-cor_d_ln_ivar = {}
-cor_d_ln_ivar_p = {}
-
-for i in range(len(expid)):
-    print(str(i) + ': ' + expid[i])
-    
-    cor_d_ln_ivar[expid[i]] = xr.corr(
-        d_ln_alltime[expid[i]]['mon'].groupby('time.month') - \
-            d_ln_alltime[expid[i]]['mm'],
-        pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month') - \
-            pre_weighted_var[expid[i]][ivar]['mm'],
-        dim='time').compute()
-    
-    cor_d_ln_ivar_p[expid[i]] = xs.pearson_r_eff_p_value(
-        d_ln_alltime[expid[i]]['mon'].groupby('time.month') - \
-            d_ln_alltime[expid[i]]['mm'],
-        pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month') - \
-            pre_weighted_var[expid[i]][ivar]['mm'],
-        dim='time').values
-    
-    cor_d_ln_ivar[expid[i]].values[cor_d_ln_ivar_p[expid[i]] > 0.05] = np.nan
-
-
-#---------------- plot
+# region plot delta_D differences
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-0.8, cm_max=0.8, cm_interval1=0.1, cm_interval2=0.1,
-    cmap='PuOr', asymmetric=False, reversed=True)
-pltticks[-9] = 0
+    cm_min=-450, cm_max=-100, cm_interval1=25, cm_interval2=50,
+    cmap='viridis', reversed=True)
+
+pltlevel2, pltticks2, pltnorm2, pltcmp2 = plt_mesh_pars(
+    cm_min=-30, cm_max=30, cm_interval1=0.3, cm_interval2=6,
+    cmap='PiYG', reversed=False)
 
 column_names = ['Control', 'Smooth wind regime', 'Rough wind regime',
                 'No supersaturation']
 
-output_png = 'figures/8_d-excess/8.1_controls/8.1.1_pre_sources/8.1.1.0 pi_600_3 corr. d_ln and ' + ivar + ' mon.png'
+output_png = 'figures/8_d-excess/8.1_controls/8.1.0_SAM/8.1.0.0 pi_600_3 delta_D and differences am.png'
 
 nrow = 1
 ncol = 4
@@ -490,27 +400,54 @@ for jcol in range(ncol):
         ha='center', va='center', rotation='horizontal')
     
     cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
+
+# plot
+plt1 = plot_t63_contourf(
+    lon, lat.sel(lat=slice(-57, -90)),
+    dD_alltime[expid[0]]['am'].sel(lat=slice(-57, -90)),
+    axs[0], pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+
+for jcol in np.arange(1, 4, 1):
+    print(jcol)
     
-    # plot corr.
-    plt1 = plot_t63_contourf(
-        lon, lat, cor_d_ln_ivar[expid[jcol]], axs[jcol],
-        pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
-    
+    plt2 = plot_t63_contourf(
+        lon, lat.sel(lat=slice(-57, -90)),
+        (dD_alltime[expid[jcol]]['am'] - dD_alltime[expid[0]]['am']).sel(lat=slice(-57, -90)),
+        axs[jcol], pltlevel2, 'both', pltnorm2, pltcmp2, ccrs.PlateCarree(),)
+
+for jcol in range(ncol):
     axs[jcol].add_feature(
         cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
 
-cbar = fig.colorbar(
-    plt1, ax=axs, aspect=50,
-    orientation="horizontal", shrink=0.8, ticks=pltticks, extend='both',
-    anchor=(0.5, 0.35), format=remove_trailing_zero_pos,
+cbar1 = fig.colorbar(
+    plt1, ax=axs, aspect=40,
+    orientation="horizontal", shrink=0.5, ticks=pltticks, extend='both',
+    anchor=(-0.2, 0.35), format=remove_trailing_zero_pos,
     )
-cbar.ax.set_xlabel('Correlation: source '+ivar+' & $d_{ln}$', linespacing=1.5)
+cbar1.ax.set_xlabel('$\delta D$ [‰]', linespacing=1.5)
+
+cbar2 = fig.colorbar(
+    plt2, ax=axs, aspect=40,
+    orientation="horizontal", shrink=0.5, ticks=pltticks2, extend='both',
+    anchor=(1.2, -3.5), format=remove_trailing_zero_pos,
+    )
+cbar2.ax.set_xlabel('Differences in $\delta D$ [‰] between (*) and (a)', linespacing=1.5)
 
 fig.subplots_adjust(left=0.01, right = 0.99, bottom = 0.2, top = 0.98)
 fig.savefig(output_png)
 
 
-'''
-'''
+# check diff
+for jcol in np.arange(1, 4, 1):
+    print(expid[jcol])
+    
+    diff = (dD_alltime[expid[jcol]]['am'] - dD_alltime[expid[0]]['am']).values[echam6_t63_ais_mask['mask']['AIS']]
+    print(np.round(np.min(diff), 1))
+    print(np.round(np.max(diff), 1))
+
+
 # endregion
 # -----------------------------------------------------------------------------
+
+
+

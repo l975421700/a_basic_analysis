@@ -365,3 +365,56 @@ plt.close()
 
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region Function to calculate partial correlation
+
+def xr_par_cor(x, y, covar, output = 'r'):
+    '''
+    output: 'r' correlation coefficient; 'p' p-values.
+    '''
+    
+    import pandas as pd
+    import pingouin as pg
+    import numpy as np
+    
+    if ((np.isfinite(x).sum() < 4) | \
+        (np.isfinite(y).sum() < 4) | \
+            (np.isfinite(covar).sum() < 4)):
+        return(np.nan)
+    
+    dataframe = pd.DataFrame(data={
+        'x': x,
+        'y': y,
+        'covar': covar,
+    })
+    
+    par_corr = pg.partial_corr(data=dataframe, x='x', y='y', covar='covar')
+    
+    if (output == 'r'):
+        return(par_corr.r.values[0])
+    elif (output == 'p'):
+        return(par_corr["p-val"].values[0])
+
+
+'''
+import pingouin as pg
+ilat = 48
+ilon = 96
+
+x = d_ln_alltime[expid[i]]['ann'][:, ilat, ilon]
+y = pre_weighted_var[expid[i]][ivar]['ann'][:, ilat, ilon]
+covar = pre_weighted_var[expid[i]][control_var]['ann'][:, ilat, ilon]
+xr_par_cor(x, y, covar, output = 'p')
+
+dataframe = pd.DataFrame(data={
+        'ivar1': x,
+        'ivar2': y,
+        'ivar3': covar,
+    })
+pg.partial_corr(
+        data=dataframe, x='ivar1', y='ivar2', covar='ivar3')
+'''
+# endregion
+# -----------------------------------------------------------------------------

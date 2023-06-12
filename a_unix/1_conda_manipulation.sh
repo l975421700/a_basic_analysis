@@ -59,7 +59,7 @@ mamba install -c conda-forge xskillscore -y
 mamba install -c conda-forge eofs -y
 pip install Pympler
 pip install pingouin
-
+mamba install -c conda-forge lazy_loader -y
 
 '''
 #-------------------------------- TEST REGION
