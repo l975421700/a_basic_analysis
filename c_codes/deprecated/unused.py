@@ -1,6 +1,68 @@
 
 
 # -----------------------------------------------------------------------------
+# region check individual site
+
+ialltime = 'ann'
+
+for i in range(len(expid)):
+    # i = 0
+    print(str(i) + ': ' + expid[i])
+    
+    for isite in ten_sites_loc.Site:
+        # isite = 'EDC'
+        print('#-------- ' + isite)
+        
+        isitelat = ten_sites_loc.lat[ten_sites_loc.Site == isite].values[0]
+        isitelon = ten_sites_loc.lon[ten_sites_loc.Site == isite].values[0]
+        
+        # print(str(isitelon) + ' & ' + str(isitelat))
+        
+        for ivar in source_var:
+            # ivar = 'latitude'
+            print('#-------- ' + ivar)
+            
+            for iisotopes in ['d_ln', 'dD', 'wisoaprt', ]:
+                # iisotopes = 'd_ln'
+                print('#---- ' + iisotopes)
+                
+                if (iisotopes == 'd_ln'):
+                    isotopevar = d_ln_alltime[expid[i]][ialltime] * 1000
+                    
+                if (iisotopes == 'dD'):
+                    isotopevar = dD_alltime[expid[i]][ialltime]
+                    
+                if (iisotopes == 'wisoaprt'):
+                    isotopevar = wisoaprt_alltime[expid[i]][ialltime].sel(
+                        wisotype=1) * seconds_per_d
+                
+            sns.scatterplot(
+                x = pre_weighted_var[expid[i]][ivar][ialltime].sel(
+                    lat=isitelat, lon=isitelon, method='nearest',
+                ),
+                y = isotopevar.sel(
+                    lat=isitelat, lon=isitelon, method='nearest',
+                ) * 1000,
+            )
+            plt.savefig('figures/test/test.png')
+            plt.close()
+            pearsonr(
+                pre_weighted_var[expid[i]][ivar][ialltime].sel(
+                    lat=isitelat, lon=isitelon, method='nearest',
+                ),
+                isotopevar.sel(
+                    lat=isitelat, lon=isitelon, method='nearest',
+                ) * 1000,
+            )
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
 # region trial of linear regressions
 
 

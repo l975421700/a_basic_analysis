@@ -288,6 +288,7 @@ fig.savefig(output_png)
 
 
 ialltime = 'ann'
+ialltime = 'mon'
 
 ivar = 'latitude'
 ivar = 'rh2m'
@@ -317,14 +318,41 @@ if (ialltime == 'ann'):
             kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
         )
         
-        par_cor_aprt_ivar_p[expid[i]] = xr.apply_ufunc(
+        # par_cor_aprt_ivar_p[expid[i]] = xr.apply_ufunc(
+        #     xr_par_cor,
+        #     wisoaprt_alltime[expid[i]]['ann'].sel(wisotype=1),
+        #     pre_weighted_var[expid[i]][ivar]['ann'],
+        #     pre_weighted_var[expid[i]][control_var]['ann'],
+        #     input_core_dims=[["time"], ["time"], ["time"]],
+        #     kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
+        # )
+elif (ialltime == 'mon'):
+    for i in range(len(expid)):
+        print(str(i) + ': ' + expid[i])
+        
+        par_cor_aprt_ivar[expid[i]] = xr.apply_ufunc(
             xr_par_cor,
-            wisoaprt_alltime[expid[i]]['ann'].sel(wisotype=1),
-            pre_weighted_var[expid[i]][ivar]['ann'],
-            pre_weighted_var[expid[i]][control_var]['ann'],
+            wisoaprt_alltime[expid[i]]['mon'].sel(wisotype=1).groupby('time.month') - \
+                wisoaprt_alltime[expid[i]]['mm'].sel(wisotype=1),
+            pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month') - \
+                pre_weighted_var[expid[i]][ivar]['mm'],
+            pre_weighted_var[expid[i]][control_var]['mon'].groupby('time.month') - \
+                pre_weighted_var[expid[i]][control_var]['mm'],
             input_core_dims=[["time"], ["time"], ["time"]],
-            kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
+            kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
         )
+        
+        # par_cor_aprt_ivar_p[expid[i]] = xr.apply_ufunc(
+        #     xr_par_cor,
+        #     wisoaprt_alltime[expid[i]]['mon'].sel(wisotype=1).groupby('time.month') - \
+        #         wisoaprt_alltime[expid[i]]['mm'].sel(wisotype=1),
+        #     pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month') - \
+        #         pre_weighted_var[expid[i]][ivar]['mm'],
+        #     pre_weighted_var[expid[i]][control_var]['mon'].groupby('time.month') - \
+        #         pre_weighted_var[expid[i]][control_var]['mm'],
+        #     input_core_dims=[["time"], ["time"], ["time"]],
+        #     kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
+        # )
 
 #---------------- plot
 

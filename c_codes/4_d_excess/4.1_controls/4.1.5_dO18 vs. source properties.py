@@ -112,19 +112,25 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-#---- import d_ln
+#---- import dO18 and dD
 
-d_ln_alltime = {}
+dO18_alltime = {}
+dD_alltime = {}
+
 
 for i in range(len(expid)):
     print(str(i) + ': ' + expid[i])
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_alltime.pkl', 'rb') as f:
-        d_ln_alltime[expid[i]] = pickle.load(f)
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_alltime.pkl', 'rb') as f:
+        dO18_alltime[expid[i]] = pickle.load(f)
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_alltime.pkl', 'rb') as f:
+        dD_alltime[expid[i]] = pickle.load(f)
 
-lon = d_ln_alltime[expid[i]]['am'].lon
-lat = d_ln_alltime[expid[i]]['am'].lat
+lon = dO18_alltime[expid[i]]['am'].lon
+lat = dO18_alltime[expid[i]]['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
+
 
 #---- import precipitation sources
 
@@ -160,7 +166,6 @@ ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 # endregion
 # -----------------------------------------------------------------------------
 
-
 ialltime = 'daily'
 ialltime = 'mon'
 ialltime = 'ann'
@@ -171,81 +176,64 @@ ivar = 'rh2m'
 ivar = 'wind10'
 
 # -----------------------------------------------------------------------------
-# region Corr. d_ln & source properties
+# region Corr. dO18 & source properties
 
+output_png = 'figures/8_d-excess/8.1_controls/8.1.1_pre_sources/8.1.1.0 pi_600_3 ' + ialltime + ' corr. dO18 and ' + ivar + '.png'
 
-output_png = 'figures/8_d-excess/8.1_controls/8.1.1_pre_sources/8.1.1.0 pi_600_3 ' + ialltime + ' corr. d_ln and ' + ivar + '.png'
-
-cor_d_ln_ivar = {}
-cor_d_ln_ivar_p = {}
+cor_dO18_ivar = {}
+cor_dO18_ivar_p = {}
 
 if (ialltime == 'daily'):
     for i in range(len(expid)):
         print(str(i) + ': ' + expid[i])
         
-        cor_d_ln_ivar[expid[i]] = xr.corr(
-            d_ln_alltime[expid[i]]['daily'],
+        cor_dO18_ivar[expid[i]] = xr.corr(
+            dO18_alltime[expid[i]]['daily'],
             pre_weighted_var[expid[i]][ivar]['daily'],
             dim='time').compute()
-
-        # cor_d_ln_ivar[expid[i]] = xr.corr(
-        #     d_ln_alltime[expid[i]]['daily'].groupby('time.month') - \
-        #         d_ln_alltime[expid[i]]['mm'],
-        #     pre_weighted_var[expid[i]][ivar]['daily'].groupby('time.month') - \
-        #         pre_weighted_var[expid[i]][ivar]['mm'],
-        #     dim='time').compute()
-        
-        # cor_d_ln_ivar_p[expid[i]] = xs.pearson_r_eff_p_value(
-        #     d_ln_alltime[expid[i]]['daily'].groupby('time.month') - \
-        #         d_ln_alltime[expid[i]]['mm'],
-        #     pre_weighted_var[expid[i]][ivar]['daily'].groupby('time.month') - \
-        #         pre_weighted_var[expid[i]][ivar]['mm'],
-        #     dim='time').values
-        
-        # cor_d_ln_ivar[expid[i]].values[
-        #     cor_d_ln_ivar_p[expid[i]] > 0.05] = np.nan
     
 elif (ialltime == 'mon'):
     for i in range(len(expid)):
         print(str(i) + ': ' + expid[i])
         
-        cor_d_ln_ivar[expid[i]] = xr.corr(
-            d_ln_alltime[expid[i]]['mon'].groupby('time.month') - \
-                d_ln_alltime[expid[i]]['mm'],
+        cor_dO18_ivar[expid[i]] = xr.corr(
+            dO18_alltime[expid[i]]['mon'].groupby('time.month') - \
+                dO18_alltime[expid[i]]['mm'],
             pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month') - \
                 pre_weighted_var[expid[i]][ivar]['mm'],
             dim='time').compute()
         
-        # cor_d_ln_ivar_p[expid[i]] = xs.pearson_r_eff_p_value(
-        #     d_ln_alltime[expid[i]]['mon'].groupby('time.month') - \
-        #         d_ln_alltime[expid[i]]['mm'],
+        # cor_dO18_ivar_p[expid[i]] = xs.pearson_r_eff_p_value(
+        #     dO18_alltime[expid[i]]['mon'].groupby('time.month') - \
+        #         dO18_alltime[expid[i]]['mm'],
         #     pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month') - \
         #         pre_weighted_var[expid[i]][ivar]['mm'],
         #     dim='time').values
         
-        # cor_d_ln_ivar[expid[i]].values[
-        #     cor_d_ln_ivar_p[expid[i]] > 0.05] = np.nan
+        # cor_dO18_ivar[expid[i]].values[
+        #     cor_dO18_ivar_p[expid[i]] > 0.05] = np.nan
     
 elif (ialltime == 'ann'):
     for i in range(len(expid)):
         print(str(i) + ': ' + expid[i])
         
-        cor_d_ln_ivar[expid[i]] = xr.corr(
-            (d_ln_alltime[expid[i]]['ann'] - \
-                d_ln_alltime[expid[i]]['am']).compute(),
+        cor_dO18_ivar[expid[i]] = xr.corr(
+            (dO18_alltime[expid[i]]['ann'] - \
+                dO18_alltime[expid[i]]['am']).compute(),
             (pre_weighted_var[expid[i]][ivar]['ann'] - \
                 pre_weighted_var[expid[i]][ivar]['am']).compute(),
             dim='time').compute()
         
-        # cor_d_ln_ivar_p[expid[i]] = xs.pearson_r_eff_p_value(
-        #     (d_ln_alltime[expid[i]]['ann'] - \
-        #         d_ln_alltime[expid[i]]['am']).compute(),
-        #     (pre_weighted_var[expid[i]][ivar]['ann'] - \
-        #         pre_weighted_var[expid[i]][ivar]['am']).compute(),
+        # cor_dO18_ivar_p[expid[i]] = xs.pearson_r_eff_p_value(
+        #     (dO18_alltime[expid[i]]['ann'] - \
+        #         dO18_alltime[expid[i]]['am']).compute(),
+        #     pre_weighted_var[expid[i]][ivar]['ann'] - \
+        #         pre_weighted_var[expid[i]][ivar]['am'],
         #     dim='time').values
         
-        # cor_d_ln_ivar[expid[i]].values[
-        #     cor_d_ln_ivar_p[expid[i]] > 0.05] = np.nan
+        # cor_dO18_ivar[expid[i]].values[
+        #     cor_dO18_ivar_p[expid[i]] > 0.05] = np.nan
+
 
 #---------------- plot
 
@@ -283,7 +271,7 @@ for jcol in range(ncol):
     
     # plot corr.
     plt1 = plot_t63_contourf(
-        lon, lat, cor_d_ln_ivar[expid[jcol]], axs[jcol],
+        lon, lat, cor_dO18_ivar[expid[jcol]], axs[jcol],
         pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
     
     axs[jcol].add_feature(
@@ -294,7 +282,7 @@ cbar = fig.colorbar(
     orientation="horizontal", shrink=0.8, ticks=pltticks, extend='both',
     anchor=(0.5, 0.35), format=remove_trailing_zero_pos,
     )
-cbar.ax.set_xlabel('Correlation: source '+ivar+' & $d_{ln}$', linespacing=1.5)
+cbar.ax.set_xlabel('Correlation: source '+ivar+' & $\delta^{18}O$', linespacing=1.5)
 
 fig.subplots_adjust(left=0.01, right = 0.99, bottom = 0.2, top = 0.98)
 fig.savefig(output_png)
@@ -307,44 +295,71 @@ fig.savefig(output_png)
 
 
 ialltime = 'ann'
+ialltime = 'mon'
 
-# ivar = 'latitude'
-# ivar = 'rh2m'
+ivar = 'latitude'
+ivar = 'rh2m'
 ivar = 'wind10'
 
 control_var = 'SST'
 
 # -----------------------------------------------------------------------------
-# region Partial Corr. d_ln & source properties, given source SST
+# region Partial Corr. dO18 & source properties, given source SST
 
-output_png = 'figures/8_d-excess/8.1_controls/8.1.1_pre_sources/8.1.1.1 pi_600_3 ' + ialltime + ' partial corr. d_ln and ' + ivar + ' controlling ' + control_var + '.png'
+output_png = 'figures/8_d-excess/8.1_controls/8.1.1_pre_sources/8.1.1.1 pi_600_3 ' + ialltime + ' partial corr. dO18 and ' + ivar + ' controlling ' + control_var + '.png'
 
 
-par_cor_d_ln_ivar = {}
-par_cor_d_ln_ivar_p = {}
+par_cor_dO18_ivar = {}
+par_cor_dO18_ivar_p = {}
 
 if (ialltime == 'ann'):
     for i in range(len(expid)):
         print(str(i) + ': ' + expid[i])
         
-        
-        par_cor_d_ln_ivar[expid[i]] = xr.apply_ufunc(
+        par_cor_dO18_ivar[expid[i]] = xr.apply_ufunc(
             xr_par_cor,
-            d_ln_alltime[expid[i]]['ann'],
+            dO18_alltime[expid[i]]['ann'],
             pre_weighted_var[expid[i]][ivar]['ann'],
             pre_weighted_var[expid[i]][control_var]['ann'],
             input_core_dims=[["time"], ["time"], ["time"]],
             kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
         )
         
-        par_cor_d_ln_ivar_p[expid[i]] = xr.apply_ufunc(
+        # par_cor_dO18_ivar_p[expid[i]] = xr.apply_ufunc(
+        #     xr_par_cor,
+        #     dO18_alltime[expid[i]]['ann'],
+        #     pre_weighted_var[expid[i]][ivar]['ann'],
+        #     pre_weighted_var[expid[i]][control_var]['ann'],
+        #     input_core_dims=[["time"], ["time"], ["time"]],
+        #     kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
+        # )
+elif (ialltime == 'mon'):
+    for i in range(len(expid)):
+        print(str(i) + ': ' + expid[i])
+        
+        par_cor_dO18_ivar[expid[i]] = xr.apply_ufunc(
             xr_par_cor,
-            d_ln_alltime[expid[i]]['ann'],
-            pre_weighted_var[expid[i]][ivar]['ann'],
-            pre_weighted_var[expid[i]][control_var]['ann'],
+            dO18_alltime[expid[i]]['mon'].groupby('time.month') - \
+                dO18_alltime[expid[i]]['mm'],
+            pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month') - \
+                pre_weighted_var[expid[i]][ivar]['mm'],
+            pre_weighted_var[expid[i]][control_var]['mon'].groupby('time.month') - \
+                pre_weighted_var[expid[i]][control_var]['mm'],
             input_core_dims=[["time"], ["time"], ["time"]],
-            kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
+            kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
         )
+        
+        # par_cor_dO18_ivar_p[expid[i]] = xr.apply_ufunc(
+        #     xr_par_cor,
+        #     dO18_alltime[expid[i]]['mon'].groupby('time.month') - \
+        #         dO18_alltime[expid[i]]['mm'],
+        #     pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month') - \
+        #         pre_weighted_var[expid[i]][ivar]['mm'],
+        #     pre_weighted_var[expid[i]][control_var]['mon'].groupby('time.month') - \
+        #         pre_weighted_var[expid[i]][control_var]['mm'],
+        #     input_core_dims=[["time"], ["time"], ["time"]],
+        #     kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
+        # )
 
 #---------------- plot
 
@@ -382,7 +397,7 @@ for jcol in range(ncol):
     
     # plot corr.
     plt1 = plot_t63_contourf(
-        lon, lat, par_cor_d_ln_ivar[expid[jcol]], axs[jcol],
+        lon, lat, par_cor_dO18_ivar[expid[jcol]], axs[jcol],
         pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
     
     axs[jcol].add_feature(
@@ -393,7 +408,7 @@ cbar = fig.colorbar(
     orientation="horizontal", shrink=0.8, ticks=pltticks, extend='both',
     anchor=(0.5, 0.35), format=remove_trailing_zero_pos,
     )
-cbar.ax.set_xlabel('Partial correlation: source '+ivar+' & $d_{ln}$, controlling ' + control_var, linespacing=1.5)
+cbar.ax.set_xlabel('Partial correlation: source '+ivar+' & $\delta^{18}O$, controlling ' + control_var, linespacing=1.5)
 
 fig.subplots_adjust(left=0.01, right = 0.99, bottom = 0.2, top = 0.98)
 fig.savefig(output_png)
@@ -409,19 +424,21 @@ i = 2
 ilat = 30
 ilon = 60
 
-x = d_ln_alltime[expid[i]]['ann'][:, ilat, ilon]
+x = dO18_alltime[expid[i]]['ann'][:, ilat, ilon]
 y = pre_weighted_var[expid[i]][ivar]['ann'][:, ilat, ilon]
 covar = pre_weighted_var[expid[i]][control_var]['ann'][:, ilat, ilon]
 
 xr_par_cor(x, y, covar, output = 'r')
-par_cor_d_ln_ivar[expid[i]][ilat, ilon]
+par_cor_dO18_ivar[expid[i]][ilat, ilon]
 
 xr_par_cor(x, y, covar, output = 'p')
-par_cor_d_ln_ivar_p[expid[i]][ilat, ilon]
+par_cor_dO18_ivar_p[expid[i]][ilat, ilon]
 
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
 
 
 

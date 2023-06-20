@@ -936,3 +936,96 @@ ds_check = xr.open_dataset('/work/ollie/qigao001/scratch/test/test1.nc')
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region calculate inversion top
+
+# Function to find inversion top, defined as the first layer where temperature decreases with height
+def inversion_top(temperature, height, height_unit = 'km'):
+    '''
+    Input --------
+    temperature:
+    height: decreasing, in km
+    
+    Output --------
+    t_it:
+    h_it:
+    '''
+    
+    import numpy as np
+    
+    if (height_unit == 'm'):
+        height = height.copy() / 1000
+    
+    if (height[0] > height[1]): # decreasing
+        try:
+            level = np.where(temperature[1:] - temperature[:-1] > 0)[0][-1]
+            
+            if (level == (len(temperature) - 2)):
+                t_it = np.nan
+                h_it = np.nan
+            else:
+                t_it = temperature[level + 1]
+                h_it = height[level + 1]
+        except:
+            t_it = np.nan
+            h_it = np.nan
+    else:
+        try:
+            level = np.where(temperature[1:] - temperature[:-1] < 0)[0][0]
+            if (level == 0):
+                t_it = np.nan
+                h_it = np.nan
+            else:
+                t_it = temperature[level]
+                h_it = height[level]
+        except:
+            t_it = np.nan
+            h_it = np.nan
+    
+    if (h_it > 5):
+        t_it = np.nan
+        h_it = np.nan
+    
+    return(t_it, h_it)
+
+
+
+
+
+
+'''
+# test
+
+/albedo/work/user/qigao001/a_basic_analysis/c_codes/4_d_excess/4.4_climate/4.4.0_inversion.py
+
+i = 0
+imon = 0
+isite = 'Rothera'
+ilat = t63_sites_indices[isite]['ilat']
+ilon = t63_sites_indices[isite]['ilon']
+temperature = zh_st_ml[expid[i]]['st']['mon'][imon, :, ilat, ilon].values
+height = zh_st_ml[expid[i]]['zh']['mon'][imon, :, ilat, ilon].values / 1000
+
+t_it, h_it = inversion_top(temperature, height)
+
+
+/albedo/work/user/qigao001/a_basic_analysis/c_codes/4_d_excess/4.4_climate/4.4.1_EDC_radiosonde.py
+
+import pandas as pd
+import numpy as np
+EDC_df_drvd = pd.read_pickle('scratch/radiosonde/igra2/EDC_df_drvd.pkl')
+date = np.unique(EDC_df_drvd.date)
+
+altitude = EDC_df_drvd.iloc[
+    np.where(EDC_df_drvd.date == date[i])[0]][
+        'calculated_height'].values / 1000
+temperature = EDC_df_drvd.iloc[
+    np.where(EDC_df_drvd.date == date[i])[0]][
+    'temperature'].values
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+

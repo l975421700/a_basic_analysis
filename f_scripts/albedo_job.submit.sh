@@ -31,6 +31,6 @@ echo "Current time : " $(date +"%T")
 # ${pp_dir}/job.get.wiso.sh ${output_dir} ${expid} ${yrstart} ${yrend}
 # ${pp_dir}/job.get.wiso_d.sh ${output_dir} ${expid} ${yrstart} ${yrend}
 
-# partition: https://spaces.awi.de/display/HELP/SLURM
+# partition: https://spaces.awi.de/display/HELP/Slurm-Albedo
 
 

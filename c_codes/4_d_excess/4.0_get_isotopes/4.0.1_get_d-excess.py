@@ -3,9 +3,9 @@
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_m_502_5.0',
-    # 'pi_600_5.0',
-    # 'pi_601_5.1',
-    # 'pi_602_5.2',
+    'pi_600_5.0',
+    'pi_601_5.1',
+    'pi_602_5.2',
     'pi_603_5.3',
     ]
 i = 0
@@ -179,15 +179,74 @@ for ialltime in dO18_alltime[expid[i]].keys():
     print(ialltime)
     # ialltime = 'sm'
     
+    ln_dD = 1000 * np.log(1 + dD_alltime[expid[i]][ialltime] / 1000)
+    ln_d18O = 1000 * np.log(1 + dO18_alltime[expid[i]][ialltime] / 1000)
+    
     d_ln_alltime[expid[i]][ialltime] = \
-        np.log(1 + dD_alltime[expid[i]][ialltime] / 1000) - \
-            8.47 * np.log(1 + dO18_alltime[expid[i]][ialltime] / 1000) + \
-                0.0285 * (np.log(1 + dO18_alltime[expid[i]][ialltime] / 1000)) ** 2
+        ln_dD - 8.47 * ln_d18O + 0.0285 * (ln_d18O ** 2)
 
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_alltime.pkl', 'wb') as f:
     pickle.dump(d_ln_alltime[expid[i]], f)
 
 
+
+
+'''
+#-------------------------------- check
+
+d_ln_alltime = {}
+
+for i in range(len(expid)):
+    print(str(i) + ': ' + expid[i])
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_alltime.pkl', 'rb') as f:
+        d_ln_alltime[expid[i]] = pickle.load(f)
+
+dO18_alltime = {}
+dD_alltime = {}
+
+for i in range(len(expid)):
+    print(str(i) + ': ' + expid[i])
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_alltime.pkl', 'rb') as f:
+        dO18_alltime[expid[i]] = pickle.load(f)
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_alltime.pkl', 'rb') as f:
+        dD_alltime[expid[i]] = pickle.load(f)
+
+for i in range(len(expid)):
+    print(str(i) + ': ' + expid[i])
+    
+    for ilat in np.arange(1, 96, 30):
+        for ilon in np.arange(1, 192, 60):
+            # i = 0; ilat = 40; ilon = 90
+            
+            for ialltime in ['daily', 'mon', 'sea', 'ann', 'mm', 'sm', 'am']:
+                # ialltime = 'ann'
+                if (ialltime != 'am'):
+                    dO18 = dO18_alltime[expid[i]][ialltime][-1, ilat, ilon]
+                    dD = dD_alltime[expid[i]][ialltime][-1, ilat, ilon]
+                    d_ln = d_ln_alltime[expid[i]][ialltime][-1, ilat, ilon].values
+                else:
+                    dO18 = dO18_alltime[expid[i]][ialltime][ilat, ilon]
+                    dD = dD_alltime[expid[i]][ialltime][ilat, ilon]
+                    d_ln = d_ln_alltime[expid[i]][ialltime][ilat, ilon]
+                
+                d_ln_new = (1000 * np.log(1 + dD / 1000) - \
+                    8.47 * 1000 * np.log(1 + dO18 / 1000) + \
+                        0.0285 * (1000 * np.log(1 + dO18 / 1000)) ** 2).values
+                
+                # print(np.round(d_ln, 2))
+                # print(np.round(d_ln_new, 2))
+                if (((d_ln - d_ln_new) / d_ln) > 0.000001):
+                    print(d_ln)
+                    print(d_ln_new)
+
+
+
+
+
+'''
 # math.log(math.e)
 # math.log(1 + dD_alltime[expid[i]][ialltime])
 # endregion

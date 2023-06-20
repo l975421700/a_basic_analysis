@@ -2,17 +2,14 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_m_502_5.0',
     # 'pi_600_5.0',
     # 'pi_601_5.1',
     # 'pi_602_5.2',
     'pi_603_5.3',
     ]
 i = 0
-
 ifile_start = 120
-ifile_end =   360
-
+ifile_end   = 360
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -61,11 +58,11 @@ from a_basic_analysis.b_module.mapplot import (
     mesh2plot,
     framework_plot1,
     remove_trailing_zero,
+    plot_maxmin_points,
 )
 
 from a_basic_analysis.b_module.basic_calculations import (
     mon_sea_ann,
-    time_weighted_mean,
 )
 
 from a_basic_analysis.b_module.namelist import (
@@ -92,45 +89,50 @@ from a_basic_analysis.b_module.source_properties import (
 exp_org_o = {}
 exp_org_o[expid[i]] = {}
 
-filenames_st_plev = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_st_plev.nc'))
+filenames_zh_st_ml = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_geop_t.nc'))
 
-exp_org_o[expid[i]]['st_plev'] = xr.open_mfdataset(
-    filenames_st_plev[ifile_start:ifile_end])
+exp_org_o[expid[i]]['zh_st_ml'] = xr.open_mfdataset(
+    filenames_zh_st_ml[ifile_start:ifile_end],
+    # data_vars='minimal', coords='minimal', parallel=True,
+    )
+
 
 '''
-data_vars='minimal', coords='minimal', parallel=True
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region calculate mon_sea_ann st_plev
+# region calculate mon_sea_ann zh and st
+
+zh_st_ml = {}
+zh_st_ml[expid[i]] = {}
+
+zh_st_ml[expid[i]]['zh'] = mon_sea_ann(var_monthly=exp_org_o[expid[i]]['zh_st_ml'].zh)
+zh_st_ml[expid[i]]['st'] = mon_sea_ann(var_monthly=exp_org_o[expid[i]]['zh_st_ml'].st)
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.zh_st_ml.pkl', 'wb') as f:
+    pickle.dump(zh_st_ml[expid[i]], f)
 
 
-st_plev = {}
-
-st_plev[expid[i]] = mon_sea_ann(
-    var_monthly=exp_org_o[expid[i]]['st_plev'].st)
-
-with open(
-    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.st_plev.pkl',
-    'wb') as f:
-    pickle.dump(st_plev[expid[i]], f)
 
 
 '''
+#-------- import data
+expid = [
+    'pi_600_5.0',
+    'pi_601_5.1',
+    'pi_602_5.2',
+    'pi_603_5.3',
+    ]
 
-#-------------------------------- check
-st_plev = {}
-with open(
-    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.st_plev.pkl',
-    'rb') as f:
-    st_plev[expid[i]] = pickle.load(f)
-
-data1 = st_plev[expid[i]]['mon'].values
-data2 = exp_org_o[expid[i]]['st_plev'].st.values
-(data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all()
+zh_st_ml = {}
+for i in range(len(expid)):
+    print(str(i) + ' ' + expid[i])
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.zh_st_ml.pkl', 'rb') as f:
+        zh_st_ml[expid[i]] = pickle.load(f)
 
 '''
 # endregion

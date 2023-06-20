@@ -5,16 +5,18 @@ echo '#-------- basic settings'
 YEAR=$1
 output_dir=$2
 expid=$3
-cd ${WORK}/${output_dir}/${expid}
+cd ${output_dir}/${expid}
 
 echo 'settings: ' ${YEAR} ${output_dir} ${expid}
 
 
-echo '#-------- cdo version'
+echo '#-------- activate conda env'
 
-cdo="/global/AWIsoft/cdo/1.9.2/bin/cdo"
+source ${HOME}/miniconda3/bin/activate deepice
+which cdo
+which python
 
-# which cdo
+cdo="/albedo/soft/sw/spack-sw/cdo/2.2.0-7hyzlde/bin/cdo"
 
 echo '#-------- processing monthly output'
 

@@ -60,6 +60,7 @@ mamba install -c conda-forge eofs -y
 pip install Pympler
 pip install pingouin
 mamba install -c conda-forge lazy_loader -y
+mamba install -c conda-forge siphon
 
 '''
 #-------------------------------- TEST REGION
