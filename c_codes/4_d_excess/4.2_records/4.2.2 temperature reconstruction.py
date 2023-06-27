@@ -140,14 +140,14 @@ tem_rec['Stenni']['T_source'] = \
     0.06 * delta_dD + 0.93 * delta_d_excess
 
 tem_rec['echam_qg']['T_site'] = \
-    -0.02 * delta_dD + 0.19 * delta_d_ln
+    0.05 * delta_dD + 0.15 * delta_d_ln
 tem_rec['echam_qg']['T_source'] = \
-    -0.09 * delta_dD + 0.25 * delta_d_ln
+    0 * delta_dD + 0.28 * delta_d_ln
 
 tem_rec['echam_qg_no_ss']['T_site'] = \
-    0.05 * delta_dD + 0.05 * delta_d_ln
+    0.05 * delta_dD - 0.03 * delta_d_ln
 tem_rec['echam_qg_no_ss']['T_source'] = \
-    -0.01 * delta_dD + 0.16 * delta_d_ln
+    0.07 * delta_dD + 0.13 * delta_d_ln
 
 '''
 isotopes_EDC_800kyr_AICC.keys()

@@ -186,10 +186,19 @@ fig.subplots_adjust(left=0.3, right=0.95, bottom=0.25, top=0.95)
 fig.savefig(output_png)
 
 
+
 '''
 inversion_height_strength[isite]['mon']['Inversion height'].mean()
-inversion_height_strength[isite]['mon']['Inversion height'][sam_posneg_ind['pos'].values].mean()
-inversion_height_strength[isite]['mon']['Inversion height'][sam_posneg_ind['neg'].values].mean()
+inversion_height_strength[isite]['mon']['Inversion height'].std(ddof = 1)
+
+isite = 'EDC'
+plt_data = inversion_height_strength[isite]['mon']['Inversion height']
+plt_data[sam_posneg_ind['pos'].values].mean()
+plt_data[sam_posneg_ind['pos'].values].std(ddof = 1)
+plt_data[sam_posneg_ind['neg'].values].mean()
+plt_data[sam_posneg_ind['neg'].values].std(ddof = 1)
+
+stats.ttest_ind(plt_data[sam_posneg_ind['pos'].values], plt_data[sam_posneg_ind['neg'].values])
 '''
 # endregion
 # -----------------------------------------------------------------------------

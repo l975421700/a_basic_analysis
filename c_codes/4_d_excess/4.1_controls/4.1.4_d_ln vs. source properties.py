@@ -436,5 +436,63 @@ par_cor_d_ln_ivar_p[expid[i]][ilat, ilon]
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region plot ann cor d_ln & source SST
+
+i = 0
+ialltime = 'ann'
+ivar = 'SST'
+output_png = 'figures/8_d-excess/8.1_controls/8.1.1_pre_sources/8.1.1.0 ' + expid[i] + ' ' + ialltime + ' corr. d_ln and ' + ivar + '.png'
+
+cor_d_ln_ivar = {}
+# cor_d_ln_ivar_p = {}
+
+cor_d_ln_ivar[expid[i]] = xr.corr(
+    (d_ln_alltime[expid[i]]['ann'] - \
+        d_ln_alltime[expid[i]]['am']).compute(),
+    (pre_weighted_var[expid[i]][ivar]['ann'] - \
+        pre_weighted_var[expid[i]][ivar]['am']).compute(),
+    dim='time').compute()
+
+# cor_d_ln_ivar_p[expid[i]] = xs.pearson_r_eff_p_value(
+#     (d_ln_alltime[expid[i]]['ann'] - \
+#         d_ln_alltime[expid[i]]['am']).compute(),
+#     (pre_weighted_var[expid[i]][ivar]['ann'] - \
+#         pre_weighted_var[expid[i]][ivar]['am']).compute(),
+#     dim='time').values
+
+# cor_d_ln_ivar[expid[i]].values[
+#     cor_d_ln_ivar_p[expid[i]] > 0.05] = np.nan
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=0, cm_max=1, cm_interval1=0.1, cm_interval2=0.2,
+    cmap='PuOr', asymmetric=True, reversed=True)
+
+fig, ax = hemisphere_plot(northextent=-60, figsize=np.array([5.8, 7]) / 2.54,)
+
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
+
+plt1 = plot_t63_contourf(
+    lon, lat, cor_d_ln_ivar[expid[i]], ax,
+    pltlevel, 'neither', pltnorm, pltcmp, ccrs.PlateCarree(),)
+
+ax.add_feature(
+    cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
+
+cbar = fig.colorbar(
+    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+    pad=0.02, fraction=0.15,
+    )
+cbar.ax.tick_params(labelsize=8)
+cbar.ax.set_xlabel('Correlation: source '+ivar+' & $d_{ln}$',)
+fig.savefig(output_png)
+
+
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
 
 

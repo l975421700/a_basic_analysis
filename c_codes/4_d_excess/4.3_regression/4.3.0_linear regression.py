@@ -216,8 +216,8 @@ lat_lon_sites = {
 
 source_sink_isotopes = {}
 
-ialltime = 'ann'
-source_sink_isotopes[ialltime] = {}
+# ialltime = 'ann'
+# source_sink_isotopes[ialltime] = {}
 
 ialltime = 'mon'
 source_sink_isotopes[ialltime] = {}
@@ -237,8 +237,10 @@ for i in range(len(expid)):
         isitelat = ten_sites_loc.lat[ten_sites_loc.Site == isite].values[0]
         isitelon = ten_sites_loc.lon[ten_sites_loc.Site == isite].values[0]
         
+        if (isitelon < 0): isitelon = isitelon + 360
+        
         source_sink_isotopes[ialltime][expid[i]][isite]['d_ln'] = \
-            1000 * d_ln_alltime[expid[i]][ialltime].sel(
+            d_ln_alltime[expid[i]][ialltime].sel(
                 lat=isitelat, lon=isitelon, method='nearest',
             )
         
@@ -300,7 +302,7 @@ pearsonr(t_src, wind10_src,)
 # -----------------------------------------------------------------------------
 # region linear regression
 
-ialltime = 'ann'
+# ialltime = 'ann'
 
 ialltime = 'mon'
 

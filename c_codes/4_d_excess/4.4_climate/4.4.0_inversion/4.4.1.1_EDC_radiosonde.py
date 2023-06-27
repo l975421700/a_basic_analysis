@@ -107,29 +107,6 @@ from a_basic_analysis.b_module.component_plot import (
 
 
 # -----------------------------------------------------------------------------
-# region download EDC radiosonde data
-
-daterange = [datetime(2006, 1, 1, 0), datetime(2022, 12, 31, 23)]
-station = 'AYM00089625'
-
-EDC_df_drvd, EDC_header_drvd = IGRAUpperAir.request_data(
-    daterange, station, derived=True)
-EDC_df_drvd.to_pickle('scratch/radiosonde/igra2/EDC_df_drvd.pkl')
-
-'''
-EDC_df, EDC_header = IGRAUpperAir.request_data(daterange, station)
-EDC_df.to_pickle('scratch/radiosonde/igra2/EDC_df.pkl')
-EDC_header.to_pickle('scratch/radiosonde/igra2/EDC_header.pkl')
-
-EDC_header_drvd.to_pickle(
-    'scratch/radiosonde/igra2/EDC_header_drvd.pkl')
-
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
 # region animate EDC vertical temperature profiles
 
 EDC_df_drvd = pd.read_pickle('scratch/radiosonde/igra2/EDC_df_drvd.pkl')
@@ -158,8 +135,10 @@ for i in range(len(date)):
     t_it, h_it = inversion_top(temperature, altitude)
     if (not np.isnan(t_it)):
         plt_scatter = ax.scatter(t_it, h_it, s=5, c='red', zorder=3)
+        ims.append(plt_line + [plt_text, plt_scatter])
+    else:
+        ims.append(plt_line + [plt_text])
     
-    ims.append(plt_line + [plt_text, plt_scatter])
     print(str(i) + '/' + str(len(date)))
 
 plt.text(
