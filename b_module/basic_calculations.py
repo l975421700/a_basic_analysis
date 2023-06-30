@@ -683,11 +683,11 @@ ds_mean_over_ais[itime].values
 def find_ilat_ilon(slat, slon, lat, lon):
     '''
     #-------- Input
-    slat: latitude in the range of [-90, 90], scalar
-    slon: longitude in the range of [0, 360], scalar
+    slat: latitude, scalar
+    slon: longitude, scalar
     
-    lat:  latitude in the range of [-90, 90], 1d array
-    lon:  longitude in the range of [0, 360], 1d array
+    lat:  latitude, 1d array
+    lon:  longitude, 1d array
     '''
     
     import numpy as np

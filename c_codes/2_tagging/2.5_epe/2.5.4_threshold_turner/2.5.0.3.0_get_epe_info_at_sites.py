@@ -116,7 +116,7 @@ stations_sites = pd.concat(
     )
 
 T63GR15_jan_surf = xr.open_dataset(
-    '/work/ollie/pool/ECHAM6/input/r0007/T63/T63GR15_jan_surf.nc')
+    'output/echam-6.3.05p2-wiso/pi/pi_m_502_5.0/input/echam/unit.24')
 
 lon = T63GR15_jan_surf.lon
 lat = T63GR15_jan_surf.lat
@@ -127,6 +127,9 @@ t63_sites_indices = {}
 for icores, slat, slon in zip(stations_sites.Site,
                               stations_sites.lat,
                               stations_sites.lon, ):
+    # icores = stations_sites.Site[18]
+    # slat = stations_sites.lat[18]
+    # slon = stations_sites.lon[18]
     t63_sites_indices[icores] = {}
     
     t63_sites_indices[icores]['lat'] = slat
@@ -134,6 +137,11 @@ for icores, slat, slon in zip(stations_sites.Site,
     
     t63_sites_indices[icores]['ilat'], t63_sites_indices[icores]['ilon'] = \
         find_ilat_ilon(slat, slon, lat.values, lon.values)
+
+# slat
+# slon
+# lat.values[t63_sites_indices[icores]['ilat']]
+# lon.values[t63_sites_indices[icores]['ilon']]
 
 with open(
     exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.t63_sites_indices.pkl',

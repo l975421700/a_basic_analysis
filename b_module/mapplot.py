@@ -1228,6 +1228,8 @@ def mesh2plot(
 def remove_trailing_zero(x):
     return ('%f' % x).rstrip('0').rstrip('.')
 
+def remove_trailing_zero_abs(x):
+    return ('%f' % abs(x)).rstrip('0').rstrip('.')
 
 from matplotlib.ticker import FuncFormatter
 @FuncFormatter

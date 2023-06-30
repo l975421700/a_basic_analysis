@@ -133,11 +133,11 @@ lat = q_weighted_lat[expid[i]]['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
 plevs = q_weighted_lat[expid[i]]['am'].plev
 
-tpot_plev = {}
-with open(
-    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.tpot_plev.pkl',
-    'rb') as f:
-    tpot_plev[expid[i]] = pickle.load(f)
+# tpot_plev = {}
+# with open(
+#     exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.tpot_plev.pkl',
+#     'rb') as f:
+#     tpot_plev[expid[i]] = pickle.load(f)
 
 with open(
     exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.theta_e_alltime.pkl',
@@ -536,7 +536,7 @@ am_zm_rel_source_lat = q_weighted_lat[expid[i]]['am'].weighted(
 
 am_zm_q = q_plev[expid[i]]['am'].mean(dim='lon') * 1000
 
-am_zm_tpot = tpot_plev[expid[i]]['am'].mean(dim='lon') - zerok
+# am_zm_tpot = tpot_plev[expid[i]]['am'].mean(dim='lon') - zerok
 
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.5_source_var_q/6.1.5.0_lat/6.1.5.0 ' + expid[i] + ' relative q_weighted_lat am zm_SH.png'
@@ -646,10 +646,8 @@ fig.savefig(output_png)
 # -----------------------------------------------------------------------------
 
 
-
-
 # -----------------------------------------------------------------------------
-# region plot q_weighted_lat am zm SH
+# region plot q_weighted_lat am zm SH, djf vs. jja
 
 djf_zm_tpot = theta_e_alltime['sm'].sel(season='DJF').mean(dim='lon') - zerok
 jja_zm_tpot = theta_e_alltime['sm'].sel(season='JJA').mean(dim='lon') - zerok
@@ -706,6 +704,109 @@ fig.savefig(output_png)
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region plot q_weighted_lat am zm SH
+
+am_zm_source_lat = q_weighted_lat[expid[i]]['am'].weighted(
+        ocean_q_alltime[expid[i]]['am'].sel(var_names='lat').fillna(0)
+        ).mean(dim='lon')
+
+am_zm_q = q_plev[expid[i]]['am'].mean(dim='lon') * 1000
+
+am_zm_tpot = theta_e_alltime['am'].mean(dim='lon') - zerok
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.5_source_var_q/6.1.5.0_lat/6.1.5.0 ' + expid[i] + ' q_weighted_lat am zm_SH contours.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-60, cm_max=0, cm_interval1=2.5, cm_interval2=5, cmap='viridis',
+    reversed=False)
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([13.2, 8.8]) / 2.54)
+
+plt_mesh = ax.contourf(
+    lat.sel(lat=slice(3, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
+    am_zm_source_lat.sel(lat=slice(3, -90), plev=slice(1e+5, 2e+4)),
+    norm=pltnorm, cmap=pltcmp, levels=pltlevel, extend='both',)
+
+# tpot contours
+tpot_intervals = np.arange(-20, 80 + 1e-4, 5)
+plt_ctr_tpot = ax.contour(
+    lat.sel(lat=slice(3, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
+    am_zm_tpot.sel(lat=slice(3, -90), plev=slice(1e+5, 2e+4)),
+    colors='k', levels=tpot_intervals, linewidths=0.4, linestyles='solid',
+    clip_on=True, alpha=0.5, zorder=2)
+ax_clabel = ax.clabel(
+    plt_ctr_tpot, inline=1, colors='k', fmt=remove_trailing_zero,
+    levels=tpot_intervals, inline_spacing=1, fontsize=10,)
+
+# source lat contours
+lat_intervals = np.arange(-50, -30 + 1e-4, 10)
+plt_ctr_tpot2 = ax.contour(
+    lat.sel(lat=slice(3, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
+    am_zm_source_lat.sel(lat=slice(3, -90), plev=slice(1e+5, 2e+4)),
+    colors='r', levels=lat_intervals, linewidths=1, linestyles='solid',
+    clip_on=True, alpha=0.75, zorder=2)
+ax_clabel = ax.clabel(
+    plt_ctr_tpot2, inline=1, colors='r', fmt=remove_trailing_zero_abs,
+    levels=lat_intervals, inline_spacing=1, fontsize=10,)
+
+# x-axis
+ax.set_xticks(np.arange(0, -90 - 1e-4, -10))
+ax.set_xlim(0, -88.57)
+ax.xaxis.set_major_formatter(LatitudeFormatter(degree_symbol='° '))
+
+# y-axis
+ax.invert_yaxis()
+ax.set_ylim(1000, 200)
+ax.set_yticks(np.arange(1000, 200 - 1e-4, -100))
+ax.set_ylabel('Pressure [$hPa$]')
+
+# grid
+ax.grid(True, lw=0.5, c='gray', alpha=0.5, linestyle='--',)
+
+# mesh cbar
+cbar = fig.colorbar(
+    plt_mesh, ax=ax, aspect=25, format=remove_trailing_zero_pos_abs,
+    orientation="horizontal", shrink=0.7, ticks=pltticks, extend='both',
+    pad=0.1, fraction=0.04,
+    anchor=(1.1, -1),
+    )
+# cbar.ax.set_xticklabels([remove_trailing_zero(x) for x in abs(pltticks)])
+cbar.ax.set_xlabel('Source latitude [$°\;S$]',)
+cbar.ax.invert_xaxis()
+
+
+# contours legend
+# h1, _ = plt_ctr.legend_elements()
+h2, _ = plt_ctr_tpot.legend_elements()
+ax_legend = ax.legend(
+    [
+        # h1[0],
+        h2[0],
+        ],
+    [
+        # 'Specific humidity [$g \; kg^{-1}$]',
+        'Equivalent\npotential temperature [$°C$]',
+        ],
+    loc='lower left', frameon=False,
+    bbox_to_anchor=(-0.13, -0.3), labelspacing=1.2,
+    handlelength=1, columnspacing=1)
+
+for line in ax_legend.get_lines():
+    line.set_linewidth(1)
+
+fig.subplots_adjust(left=0.12, right=0.96, bottom=0.14, top=0.98)
+fig.savefig(output_png)
+
+
+
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
 
 
 

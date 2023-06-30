@@ -570,3 +570,73 @@ min(aprt_frc_AIS['AIS']['Open ocean'].frc_AIS)
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region plot global pre from open ocean
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.4_precipitation/6.1.4.0_aprt/6.1.4.0.0_aprt_frc/6.1.4.0.0 ' + expid[i] + ' aprt_frc am Open ocean globe.png'
+
+pltlevel = np.arange(0, 100.01, 20)
+pltticks = np.arange(0, 100.01, 20)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+pltcmp = cm.get_cmap('Blues', len(pltlevel)-1)
+
+fig, ax = globe_plot()
+
+plt_cmp = ax.pcolormesh(
+    lon, lat,
+    aprt_frc['Atlantic Ocean']['am'] + aprt_frc['Indian Ocean']['am'] + \
+        aprt_frc['Pacific Ocean']['am'] + aprt_frc['Southern Ocean']['am'],
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.7, ticks=pltticks, extend='neither',
+    pad=0.1, fraction=0.2,
+    )
+cbar.ax.tick_params(length=2, width=0.4, labelsize=8,)
+cbar.ax.set_xlabel(
+    'Fraction of annual mean precipitation from open ocean [%]', size=8,)
+fig.savefig(output_png)
+
+
+'''
+#-------- check
+
+wisoaprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
+    wisoaprt_alltime[expid[i]] = pickle.load(f)
+
+ocean_aprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_aprt_alltime.pkl', 'rb') as f:
+    ocean_aprt_alltime[expid[i]] = pickle.load(f)
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.4_precipitation/6.1.4.0_aprt/6.1.4.0.0_aprt_frc/6.1.4.0.0 ' + expid[i] + ' aprt_frc am Open ocean globe2.png'
+
+pltlevel = np.arange(75, 100.01, 2.5)
+pltticks = np.arange(75, 100.01, 5)
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+pltcmp = cm.get_cmap('Blues', len(pltlevel)-1)
+
+fig, ax = globe_plot()
+
+plt_cmp = ax.pcolormesh(
+    lon, lat,
+    ocean_aprt_alltime[expid[i]]['am'].sel(var_names='lat') / \
+        wisoaprt_alltime[expid[i]]['am'].sel(wisotype=1) * 100,
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    plt_cmp, ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.7, ticks=pltticks, extend='min',
+    pad=0.1, fraction=0.2,
+    )
+cbar.ax.tick_params(length=2, width=0.4, labelsize=8,)
+cbar.ax.set_xlabel(
+    'Fraction of annual mean precipitation from the open ocean [%]', size=8,)
+fig.savefig(output_png)
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+

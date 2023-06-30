@@ -45,6 +45,7 @@ import cartopy.crs as ccrs
 plt.rcParams['pcolor.shading'] = 'auto'
 mpl.rcParams['figure.dpi'] = 600
 mpl.rc('font', family='Times New Roman', size=10)
+mpl.rc('font', family='Arial')
 mpl.rcParams['axes.linewidth'] = 0.2
 plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
@@ -168,7 +169,7 @@ for icores in Sites:
 #     columnspacing=0.5, handletextpad=0.5)
 
 # ax.set_xlabel('Source latitude [$°\;S$]')
-ax.set_title('Source latitude [$°\;S$]', fontsize=10,)
+ax.set_title('Source latitude ($°\;S$)', fontsize=10,)
 ax.set_xticklabels(monthini)
 ax.set_xlim(-0.55, 11.55)
 
@@ -184,20 +185,20 @@ fig.subplots_adjust(left=0.11, right=0.99, bottom=0.1, top=0.9)
 fig.savefig(output_png)
 
 
-# # annual mean
-# ivar = 'lat'
-# Sites = ['EDC', 'DOME F']
-# for icores in Sites:
-#     print('#--------' + icores)
-#     print(np.round(
-#         pre_weighted_var_icores[expid[i]][icores][ivar]['am'].values, 1))
+# annual mean
+ivar = 'lat'
+Sites = ['EDC', 'DOME F']
+for icores in Sites:
+    print('#--------' + icores)
+    print(np.round(
+        pre_weighted_var_icores[expid[i]][icores][ivar]['am'].values, 1))
 
-# ivar = 'sst'
-# Sites = ['EDC', 'DOME F']
-# for icores in Sites:
-#     print('#--------' + icores)
-#     print(np.round(
-#         pre_weighted_var_icores[expid[i]][icores][ivar]['am'].values, 1))
+ivar = 'sst'
+Sites = ['EDC', 'DOME F']
+for icores in Sites:
+    print('#--------' + icores)
+    print(np.round(
+        pre_weighted_var_icores[expid[i]][icores][ivar]['am'].values, 1))
 
 
 
@@ -258,7 +259,7 @@ for icores in Sites:
 #     columnspacing=0.5, handletextpad=0.5)
 
 # ax.set_xlabel('Source SST [$°C$]')
-ax.set_title('Source SST [$°C$]', fontsize=10,)
+ax.set_title('Source SST ($°C$)', fontsize=10,)
 ax.set_xticklabels(monthini)
 ax.set_xlim(-0.55, 11.55)
 
@@ -341,7 +342,7 @@ for icores in Sites:
 #     columnspacing=0.5, handletextpad=0.5)
 
 # ax.set_xlabel('Relative source longitude [$°$]')
-ax.set_title('Relative source longitude [$°$]', fontsize=10,)
+ax.set_title('Relative source longitude ($°$)', fontsize=10,)
 ax.set_xticklabels(monthini)
 ax.set_xlim(-0.55, 11.55)
 
@@ -377,7 +378,7 @@ fig.savefig(output_png)
 Sites = ['EDC', 'DOME F']
 output_png = 'figures/6_awi/6.1_echam6/6.1.8_ice_cores/6.1.8.6_pre/6.1.8.6 ' + expid[i] + ' aprt mm EDC and Dome Fuji.png'
 colors = {'EDC': 'dodgerblue', 'DOME F': 'darkorange'}
-labels = {'EDC': 'EDC', 'DOME F': 'Dome Fuji'}
+labels = {'EDC': 'Dome C', 'DOME F': 'Dome F'}
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([6, 6]) / 2.54)
 
@@ -404,7 +405,7 @@ ax.legend(
     columnspacing=0.5, handletextpad=0.5)
 
 # ax.set_xlabel('Monthly precipitation [$mm \; mon^{-1}$]')
-ax.set_title('Monthly precipitation [$mm \; mon^{-1}$]', fontsize=10,)
+ax.set_title('Monthly precipitation ($mm/mon$)', fontsize=10,)
 ax.set_xticklabels(monthini)
 ax.set_xlim(-0.55, 11.55)
 

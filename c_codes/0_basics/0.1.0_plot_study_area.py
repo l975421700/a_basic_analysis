@@ -10,7 +10,7 @@ import warnings
 warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
-sys.path.append('/work/ollie/qigao001')
+# sys.path.append('/work/ollie/qigao001')
 
 # data analysis
 import numpy as np
@@ -359,7 +359,8 @@ with open(
     'scratch/products/era5/pre/era5_mon_tp_1979_2021_alltime.pkl', 'rb') as f:
     era5_mon_tp_1979_2021_alltime = pickle.load(f)
 
-# plot
+#-------- PAGES text
+
 output_png = "figures/1_study_area/Antarctic precipitation in ERA5 79_21.png"
 
 mpl.rc('font', family='Times New Roman', size=12)
@@ -395,6 +396,51 @@ cbar.ax.set_xlabel('Antarctic precipitation in ERA5 [$mm/yr$]',
 fig.savefig(output_png)
 
 
+#-------- PAGES front cover
+
+pltlevel = np.array([0, 20, 50, 100, 200, 400, 600, 800, 1000, 1200])
+pltticks = np.array([0, 20, 50, 100, 200, 400, 600, 800, 1000, 1200])
+pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+
+output_png = "figures/1_study_area/Antarctic precipitation in ERA5 79_21_frontcover_viridis.pdf"
+pltcmp = cm.get_cmap('viridis', len(pltlevel)-1).reversed()
+
+output_png = "figures/1_study_area/Antarctic precipitation in ERA5 79_21_frontcover_orange.pdf"
+pltcmp = cm.get_cmap('Oranges', len(pltlevel)-1)
+
+output_png = "figures/1_study_area/Antarctic precipitation in ERA5 79_21_frontcover_viridis.eps"
+pltcmp = cm.get_cmap('viridis', len(pltlevel)-1).reversed()
+
+mpl.rc('font', family='Arial', size=8)
+
+fig, ax = hemisphere_plot(
+    northextent=-60, figsize=np.array([6.5, 7.5]) / 2.54,
+    fm_left=0.01, fm_right=0.99, fm_bottom=0.1, fm_top=0.99,)
+
+cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
+
+plt_ctr = ax.contourf(
+    era5_mon_tp_1979_2021_alltime['am'].longitude,
+    era5_mon_tp_1979_2021_alltime['am'].latitude.sel(latitude=slice(-59, -90)),
+    era5_mon_tp_1979_2021_alltime['am'].sel(latitude=slice(-59, -90)) * 365,
+    levels=pltlevel,extend='max',
+    norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
+
+ax.add_feature(
+	cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
+
+cbar = fig.colorbar(
+    plt_ctr, ax=ax, aspect=30,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
+    pad=0.02, fraction=0.1, format=remove_trailing_zero_pos,
+    )
+cbar.ax.set_xlabel('Precipitation in ERA5 ($mm/yr$)', linespacing=1.5, size=10)
+
+# ax.get_grid
+fig.savefig(output_png, dpi=600)
+
+
+
 '''
 # # plot topography
 # plt_ctr1 = ax.contour(
@@ -421,7 +467,8 @@ pltticks = np.array([0, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 6, 8, 10,])
 
 
 
-# Plot for PAGES
+#-------- Plot for PAGES
+
 with open(
     'scratch/products/era5/pre/era5_mon_tp_1979_2021_alltime.pkl', 'rb') as f:
     era5_mon_tp_1979_2021_alltime = pickle.load(f)
@@ -429,17 +476,18 @@ with open(
 # plot
 output_png = "figures/1_study_area/Antarctic precipitation in ERA5 79_21.png"
 
-mpl.rc('font', family='Times New Roman', size=8)
+mpl.rc('font', family='Arial', size=8)
+
 fig, ax = hemisphere_plot(
     northextent=-60, figsize=np.array([6.5, 7.5]) / 2.54,
     add_grid_labels=True, plot_scalebar=True,
-    fm_left=0.14, fm_right=0.86, fm_bottom=0.1, fm_top=0.95,
+    fm_left=0.16, fm_right=0.86, fm_bottom=0.1, fm_top=0.95,
     sb_location=(-0.14, -0.12), sb_barheight=150, llatlabel = False)
 
 cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
 
-pltlevel = np.array([0, 20, 50, 100, 200, 400, 600, 800, 1000, 1200, 1400])
-pltticks = np.array([0, 20, 50, 100, 200, 400, 600, 800, 1000, 1200, 1400])
+pltlevel = np.array([0, 20, 50, 100, 200, 400, 600, 800, 1000, 1200])
+pltticks = np.array([0, 20, 50, 100, 200, 400, 600, 800, 1000, 1200])
 pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
 pltcmp = cm.get_cmap('viridis', len(pltlevel)-1).reversed()
 
@@ -469,7 +517,7 @@ cbar = fig.colorbar(
     orientation="horizontal", shrink=1.3, ticks=pltticks, extend='max',
     pad=0.14, fraction=0.1, format=remove_trailing_zero_pos,
     )
-cbar.ax.set_xlabel('Antarctic precipitation in ERA5 [$mm/yr$]', linespacing=1.5, size=10)
+cbar.ax.set_xlabel('Precipitation in ERA5 ($mm/yr$)', linespacing=1.5, size=10)
 
 # ax.get_grid
 fig.savefig(output_png)

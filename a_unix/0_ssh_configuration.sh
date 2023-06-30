@@ -9,8 +9,6 @@
 ssh -A qino@login1.jasmin.ac.uk
 ssh qino@sci1.jasmin.ac.uk
 
-# python -c "from IPython import start_ipython; start_ipython()" --no-autoindent
-
 ssh -X qino@mass-cli.jasmin.ac.uk
 
 # /gws/nopw/j04/bas_palaeoclim
@@ -20,6 +18,8 @@ ssh -X qino@mass-cli.jasmin.ac.uk
 # module load jaspy
 # module load jasmin-sci
 # which xconv
+
+# python -c "from IPython import start_ipython; start_ipython()" --no-autoindent
 
 # endregion
 # -----------------------------------------------------------------------------

@@ -237,7 +237,11 @@ print(np.min(tp_era5_frc_st))
 # -----------------------------------------------------------------------------
 # region fractioin of EPE, with a threshold of 0.002 mm/day
 
+major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
+major_ice_core_site = major_ice_core_site.loc[
+    major_ice_core_site['age (kyr)'] > 600, ]
 # ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
+
 tp_era5_daily = xr.open_mfdataset(
     'scratch/cmip6/hist/pre/tp_ERA5_daily_sl_??_??_Antarctica.nc',
     ).chunk({'time': 15706, 'longitude': 20, 'latitude': 1})
@@ -259,9 +263,10 @@ tp_era5['masked_90'] = tp_era5_daily.tp.copy().where(
     tp_era5['mask_90'],
     other=0,).compute()
 
-tp_era5['frc'] = (tp_era5['masked_90'].mean(dim='time') / tp_era5_daily.tp.copy().mean(dim='time'))
+tp_era5['frc'] = (tp_era5['masked_90'].mean(dim='time') / tp_era5_daily.tp.copy().mean(dim='time')).compute()
 
 
+mpl.rc('font', family='Arial',)
 output_png = 'figures/6_awi/6.1_echam6/6.1.7_epe/6.1.7.1_pre/6.1.7.1 ear5 st_daily precipitation percentile_90_frc Antarctica.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
@@ -271,6 +276,7 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
 fig, ax = hemisphere_plot(
     northextent=-60, figsize=np.array([5.8, 6.8]) / 2.54)
 
+cplot_ice_cores(major_ice_core_site.lon, major_ice_core_site.lat, ax)
 # cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
 plt_data = tp_era5['frc'] * 100
@@ -303,7 +309,7 @@ cbar = fig.colorbar(
 cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel(
-    'Contribution of HP to total precipitation [$\%$]', linespacing=1.5,
+    'Contribution of EPE to total precipitation ($\%$)', linespacing=1.5,
     fontsize=8)
 fig.savefig(output_png, dpi=600)
 

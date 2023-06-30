@@ -143,6 +143,92 @@ with open(
 
 
 # -----------------------------------------------------------------------------
+# region attribut pre to source lat and lon
+
+contributions2site_aprt = {}
+
+for isite in ten_sites_loc.Site:
+    # isite = 'EDC'
+    # isite = 'Rothera'
+    print('#-------- ' + isite)
+    
+    contributions=np.zeros((len(one_degree_grid.lat), len(one_degree_grid.lon)))
+    
+    isitelat = ten_sites_loc.lat[ten_sites_loc.Site == isite].values[0]
+    isitelon = ten_sites_loc.lon[ten_sites_loc.Site == isite].values[0]
+    if (isitelon < 0): isitelon += 360
+    
+    # print(str(isitelon) + ' & ' + str(isitelat))
+    
+    #---- get data
+    
+    daily_src_lat_isite = pre_weighted_lat[expid[i]]['daily'].sel(lat = isitelat, lon = isitelon, method = 'nearest')
+    daily_src_lon_isite = pre_weighted_lon[expid[i]]['daily'].sel(lat = isitelat, lon = isitelon, method = 'nearest')
+    
+    daily_aprt_isite = ocean_aprt_alltime[expid[i]]['daily'].sel(var_names = 'lat').sel(lat = isitelat, lon = isitelon, method = 'nearest')
+    daily_aprt_isite = daily_aprt_isite.copy().where(daily_aprt_isite > 2e-8, other=np.nan).compute()
+    
+    finite_data = (np.isfinite(daily_src_lat_isite) & np.isfinite(daily_src_lon_isite) & np.isfinite(daily_aprt_isite)).values
+    # finite_data.sum()
+    
+    daily_src_lat_isite = daily_src_lat_isite[finite_data]
+    daily_src_lon_isite = daily_src_lon_isite[finite_data]
+    daily_aprt_isite = daily_aprt_isite[finite_data]
+    
+    if ((len(daily_src_lat_isite) != len(daily_aprt_isite)) | (len(daily_src_lon_isite) != len(daily_aprt_isite))):
+        sys.exit("Error: length differs")
+    
+    #---- attribute
+    
+    for itime in range(len(daily_src_lat_isite)):
+        # itime = 299
+        
+        ilat, ilon = find_ilat_ilon(
+            slat=daily_src_lat_isite[itime].values,
+            slon=daily_src_lon_isite[itime].values,
+            lat=one_degree_grid.lat.values,
+            lon=one_degree_grid.lon.values,
+            )
+        # print(daily_src_lat_isite[itime].values)
+        # print(one_degree_grid.lat[ilat].values)
+        
+        # print(daily_src_lon_isite[itime].values)
+        # print(one_degree_grid.lon[ilon].values)
+        
+        contributions[ilat, ilon] += daily_aprt_isite[itime].values
+    
+    contributions = contributions / np.sum(daily_aprt_isite.values)
+    
+    contributions2site_aprt[isite] = xr.DataArray(
+        data=contributions,
+        coords={'lat': one_degree_grid.lat, 'lon': one_degree_grid.lon,},
+    )
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.contributions2site_aprt.pkl', 'wb') as f:
+    pickle.dump(contributions2site_aprt, f)
+
+
+
+
+'''
+#-------------------------------- check
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.contributions2site_aprt.pkl', 'rb') as f:
+    contributions2site_aprt = pickle.load(f)
+
+# np.sum(contributions)
+for isite in ten_sites_loc.Site:
+    print('#-------- ' + isite)
+    
+    print(np.sum(contributions2site_aprt[isite]).values)
+
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
 # region attribute pre to source lat and lon for whole Antarctica
 
 
@@ -228,6 +314,7 @@ for icount, igrid in enumerate(items):
     
     contributions2AIS_aprt[ilat, ilon, :, :] = contributions[icount]
 
+
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.contributions2AIS_aprt.pkl', 'wb') as f:
     pickle.dump(contributions2AIS_aprt, f)
 
@@ -246,25 +333,38 @@ with open(
     'rb') as f:
     t63_sites_indices = pickle.load(f)
 
-for isite in t63_sites_indices.keys():
+for isite in ten_sites_loc.Site:
     # isite = 'EDC'
+    # isite = 'Halley'
     print(isite)
     
     ilat = t63_sites_indices[isite]['ilat']
     ilon = t63_sites_indices[isite]['ilon']
     
-    daily_aprt_isite = ocean_aprt_alltime[expid[i]]['daily'].sel(var_names = 'lat')[:, ilat, ilon].values
+    daily_aprt_isite = ocean_aprt_alltime[expid[i]]['daily'].sel(var_names = 'lat')[:, ilat, ilon]
+    daily_aprt_isite = daily_aprt_isite.copy().where(daily_aprt_isite > 2e-8, other=np.nan).compute()
     contribution1 = contributions2site_aprt[isite].values
     contribution2 = contributions2AIS_aprt[ilat, ilon].values
     
-    print(daily_aprt_isite.sum())
+    print(daily_aprt_isite.sum().values)
     print(contribution2.sum())
     
-    contribution2 = contribution2 / daily_aprt_isite.sum()
+    contribution2 = contribution2 / contribution2.sum()
     print(contribution2.sum())
     print(contribution1.sum())
     
-    print((contribution1 == contribution2).all())
+    # print((contribution1 == contribution2).all())
+    print(np.nanmax(abs((contribution2 - contribution1) / contribution1)))
+
+for isite in ten_sites_loc.Site:
+    # isite = 'EDC'
+    # isite = 'Halley'
+    print(isite)
+    
+    ilat = t63_sites_indices[isite]['ilat']
+    ilon = t63_sites_indices[isite]['ilon']
+    
+    print(echam6_t63_ais_mask['mask']['AIS'][ilat, ilon])
 
 
 #-------------------------------- others

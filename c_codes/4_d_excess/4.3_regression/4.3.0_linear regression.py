@@ -244,20 +244,20 @@ for i in range(len(expid)):
                 lat=isitelat, lon=isitelon, method='nearest',
             )
         
-        source_sink_isotopes[ialltime][expid[i]][isite]['dD'] = \
-            dD_alltime[expid[i]][ialltime].sel(
-                lat=isitelat, lon=isitelon, method='nearest',
-            )
+        # source_sink_isotopes[ialltime][expid[i]][isite]['dD'] = \
+        #     dD_alltime[expid[i]][ialltime].sel(
+        #         lat=isitelat, lon=isitelon, method='nearest',
+        #     )
         
-        source_sink_isotopes[ialltime][expid[i]][isite]['T_site'] = \
-            temp2_alltime[expid[i]][ialltime].sel(
-                lat=isitelat, lon=isitelon, method='nearest',
-            )
+        # source_sink_isotopes[ialltime][expid[i]][isite]['T_site'] = \
+        #     temp2_alltime[expid[i]][ialltime].sel(
+        #         lat=isitelat, lon=isitelon, method='nearest',
+        #     )
         
-        source_sink_isotopes[ialltime][expid[i]][isite]['T_source'] = \
-            pre_weighted_var[expid[i]]['SST'][ialltime].sel(
-                lat=isitelat, lon=isitelon, method='nearest',
-            )
+        # source_sink_isotopes[ialltime][expid[i]][isite]['T_source'] = \
+        #     pre_weighted_var[expid[i]]['SST'][ialltime].sel(
+        #         lat=isitelat, lon=isitelon, method='nearest',
+        #     )
 
 
 '''
