@@ -1,9 +1,12 @@
 
 
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_m_416_4.9',
-    'pi_m_502_5.0',
+    # 'pi_m_502_5.0',
+    # 'pi_600_5.0',
+    # 'pi_601_5.1',
+    # 'pi_602_5.2',
+    'pi_603_5.3',
     ]
 i = 0
 
@@ -18,7 +21,7 @@ import warnings
 warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
-sys.path.append('/work/ollie/qigao001')
+# sys.path.append('/work/ollie/qigao001')
 
 # data analysis
 import numpy as np
@@ -118,17 +121,15 @@ stations_sites = pd.concat(
     )
 
 # get grid information
-T63GR15_jan_surf = xr.open_dataset(
-    '/work/ollie/pool/ECHAM6/input/r0007/T63/T63GR15_jan_surf.nc')
+echam6_t63_slm = xr.open_dataset(
+    'scratch/others/land_sea_masks/echam6_t63_slm.nc')
 
-lon = T63GR15_jan_surf.lon
-lat = T63GR15_jan_surf.lat
+lon = echam6_t63_slm.lon
+lat = echam6_t63_slm.lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
 # import sites indices
-with open(
-    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.t63_sites_indices.pkl',
-    'rb') as f:
+with open('scratch/others/pi_m_502_5.0.t63_sites_indices.pkl', 'rb') as f:
     t63_sites_indices = pickle.load(f)
 
 
@@ -275,14 +276,13 @@ for icores in stations_sites.Site:
         if ialltime in ['daily', 'mon', 'sea', 'ann', 'mm', 'sm']:
             # ialltime = 'daily'
             wisoaprt_alltime_icores[expid[i]][icores][ialltime] = \
-                wisoaprt_alltime[expid[i]][ialltime][
-                    :, :,
+                wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1)[
+                    :,
                     t63_sites_indices[icores]['ilat'],
                     t63_sites_indices[icores]['ilon']]
         elif (ialltime == 'am'):
             wisoaprt_alltime_icores[expid[i]][icores][ialltime] = \
-                wisoaprt_alltime[expid[i]][ialltime][
-                    :,
+                wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1)[
                     t63_sites_indices[icores]['ilat'],
                     t63_sites_indices[icores]['ilon']]
 
@@ -357,7 +357,7 @@ for icores in stations_sites.Site:
                 (aprt_frc[expid[i]]['Atlantic Ocean'][ialltime] + \
                     aprt_frc[expid[i]]['Indian Ocean'][ialltime] + \
                         aprt_frc[expid[i]]['Pacific Ocean'][ialltime] + \
-                            aprt_frc[expid[i]]['Southern Ocean'][ialltime])[
+                            aprt_frc[expid[i]]['Southern Ocean'][ialltime]).compute()[
                                 :,
                                 t63_sites_indices[icores]['ilat'],
                                 t63_sites_indices[icores]['ilon']]
@@ -367,7 +367,7 @@ for icores in stations_sites.Site:
                 (aprt_frc[expid[i]]['Atlantic Ocean'][ialltime] + \
                     aprt_frc[expid[i]]['Indian Ocean'][ialltime] + \
                         aprt_frc[expid[i]]['Pacific Ocean'][ialltime] + \
-                            aprt_frc[expid[i]]['Southern Ocean'][ialltime])[
+                            aprt_frc[expid[i]]['Southern Ocean'][ialltime]).compute()[
                                 t63_sites_indices[icores]['ilat'],
                                 t63_sites_indices[icores]['ilon']]
 
@@ -552,6 +552,111 @@ ivar = 'lon'
 circstd(pre_weighted_var_icores[expid[i]][icores][ivar]['ann'],
         high=360, low=0)
 (pre_weighted_var_icores[expid[i]][icores][ivar]['ann']).std(ddof=1).values
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get delta O18, delta D, and d_ln
+
+
+#-------------------------------- import data
+
+isotopes_alltime = {}
+isotopes_alltime[expid[i]] = {}
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_alltime.pkl', 'rb') as f:
+    isotopes_alltime[expid[i]]['dO18'] = pickle.load(f)
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_alltime.pkl', 'rb') as f:
+    isotopes_alltime[expid[i]]['dD'] = pickle.load(f)
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_alltime.pkl', 'rb') as f:
+    isotopes_alltime[expid[i]]['d_excess'] = pickle.load(f)
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_alltime.pkl', 'rb') as f:
+    isotopes_alltime[expid[i]]['d_ln'] = pickle.load(f)
+
+
+#-------------------------------- extract data
+
+isotopes_alltime_icores = {}
+isotopes_alltime_icores[expid[i]] = {}
+
+for iisotope in ['dO18', 'dD', 'd_excess', 'd_ln']:
+    # iisotope = 'd_ln'
+    print('#---------------- ' + iisotope)
+    
+    isotopes_alltime_icores[expid[i]][iisotope] = {}
+    
+    for icores in stations_sites.Site:
+        # icores = 'EDC'
+        print('#-------- ' + icores)
+        
+        isotopes_alltime_icores[expid[i]][iisotope][icores] = {}
+        
+        for ialltime in ['daily', 'mon', 'sea', 'ann', 'mm', 'sm']:
+            # ialltime = 'mon'
+            print('#---- ' + ialltime)
+            
+            isotopes_alltime_icores[expid[i]][iisotope][icores][ialltime] = \
+                isotopes_alltime[expid[i]][iisotope][ialltime][
+                    :,
+                    t63_sites_indices[icores]['ilat'],
+                    t63_sites_indices[icores]['ilon']]
+        
+        isotopes_alltime_icores[expid[i]][iisotope][icores]['am'] = \
+            isotopes_alltime[expid[i]][iisotope]['am'][
+                t63_sites_indices[icores]['ilat'],
+                t63_sites_indices[icores]['ilon']]
+
+
+
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.isotopes_alltime_icores.pkl',
+    'wb') as f:
+    pickle.dump(isotopes_alltime_icores[expid[i]], f)
+
+
+
+'''
+#-------------------------------- check
+isotopes_alltime_icores = {}
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.isotopes_alltime_icores.pkl', 'rb') as f:
+    isotopes_alltime_icores[expid[i]] = pickle.load(f)
+
+for iisotope in ['dO18', 'dD', 'd_excess', 'd_ln']:
+    # iisotope = 'd_ln'
+    print('#---------------- ' + iisotope)
+    
+    for icores in stations_sites.Site:
+        # icores = 'EDC'
+        print('#----------------' + icores)
+        
+        # print('local lat:  ' + str(t63_sites_indices[icores]['lat']))
+        # print('grid lat:   ' + str(np.round(isotopes_alltime_icores[expid[i]][iisotope][icores]['am'].lat.values, 1)))
+        # print('local lon:  ' + str(t63_sites_indices[icores]['lon']))
+        # print('grid lon:   ' + str(np.round(isotopes_alltime_icores[expid[i]][iisotope][icores]['am'].lon.values, 1)))
+        
+        local_lat = t63_sites_indices[icores]['lat']
+        grid_lat = isotopes_alltime_icores[expid[i]][iisotope][icores]['am'].lat.values
+        
+        local_lon = t63_sites_indices[icores]['lon']
+        grid_lon = isotopes_alltime_icores[expid[i]][iisotope][icores]['am'].lon.values
+        
+        if (local_lon < 0): local_lon += 360
+        
+        if (abs(local_lat - grid_lat) > 2):
+            print('local lat:  ' + str(local_lat))
+            print('grid lat:   ' + str(np.round(grid_lat, 1)))
+        
+        if (abs(local_lon - grid_lon) > 2):
+            print('local lon:  ' + str(local_lon))
+            print('grid lon:   ' + str(np.round(grid_lon, 1)))
+
 
 '''
 # endregion

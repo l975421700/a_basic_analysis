@@ -173,6 +173,65 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_l
 #     pickle.dump(ocean_pre_alltime, f)
 
 
+#-------- check precipitation sources are bit identical
+
+
+exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+expid = [
+    'pi_600_5.0',
+    'pi_601_5.1',
+    'pi_602_5.2',
+    'pi_603_5.3',
+    ]
+
+source_var = ['latitude', 'longitude', 'SST', 'rh2m', 'wind10', 'distance']
+pre_weighted_var = {}
+
+for i in range(len(expid)):
+    # i = 0
+    print(str(i) + ': ' + expid[i])
+    
+    pre_weighted_var[expid[i]] = {}
+    
+    prefix = exp_odir + expid[i] + '/analysis/echam/' + expid[i]
+    
+    source_var_files = [
+        prefix + '.pre_weighted_lat.pkl',
+        prefix + '.pre_weighted_lon.pkl',
+        prefix + '.pre_weighted_sst.pkl',
+        prefix + '.pre_weighted_rh2m.pkl',
+        prefix + '.pre_weighted_wind10.pkl',
+        prefix + '.transport_distance.pkl',
+    ]
+    
+    for ivar, ifile in zip(source_var, source_var_files):
+        print(ivar + ':    ' + ifile)
+        with open(ifile, 'rb') as f:
+            pre_weighted_var[expid[i]][ivar] = pickle.load(f)
+
+column_names = ['Control', 'Smooth wind regime', 'Rough wind regime',
+                'No supersaturation']
+
+for ivar in source_var:
+    # ivar = 'SST'
+    print('#---------------- ' + ivar)
+    
+    for ialltime in ['mon', 'sea', 'ann', 'mm', 'sm', 'am']:
+        # ialltime = 'am'
+        print('#-------- ' + ialltime)
+        
+        for i in [1, 2, 3]:
+            # i = 1
+            print('#---- expid 0 vs. ' + str(i))
+            
+            data1 = pre_weighted_var[expid[0]][ivar][ialltime].values
+            data2 = pre_weighted_var[expid[i]][ivar][ialltime].values
+            
+            data1 = data1[np.isfinite(data1)]
+            data2 = data2[np.isfinite(data2)]
+            
+            print((data1 == data2).all())
+
 '''
 # endregion
 # -----------------------------------------------------------------------------

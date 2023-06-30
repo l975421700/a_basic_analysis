@@ -2,7 +2,6 @@
 #SBATCH -p mpp
 #SBATCH --time=00:30:00
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=36
 #SBATCH -o %A_job.out
 #SBATCH -e %A_job.err
 #SBATCH --account=paleodyn.paleodyn
@@ -13,7 +12,7 @@ cd $WORK
 
 source ${HOME}/miniconda3/bin/activate deepice
 
-python "/albedo/work/user/qigao001/a_basic_analysis/c_codes/deprecated/0.3_srun/0.3.0_srun0.py"
+python "/albedo/work/user/qigao001/a_basic_analysis/c_codes/deprecated/0.3_srun/0.3.0_srun3.py"
 
 echo "Current time : " $(date +"%T")
 

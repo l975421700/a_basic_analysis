@@ -2,12 +2,11 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_m_416_4.9',
     # 'pi_m_502_5.0',
     # 'pi_600_5.0',
-    'pi_601_5.1',
+    # 'pi_601_5.1',
     # 'pi_602_5.2',
-    # 'pi_603_5.3',
+    'pi_603_5.3',
     ]
 i = 0
 
@@ -304,7 +303,7 @@ wisoaprt_mean_over_ais[expid[i]]['am'].values
 
 
 # -----------------------------------------------------------------------------
-# region get mon/sea/ann aprt_geo7
+# region get mon/sea/ann aprt_geo7 !!! run in sbatch
 
 
 aprt_geo7 = {}
@@ -349,9 +348,6 @@ ncfile = xr.open_dataset(filenames_wiso[ifile_start:ifile_end][ifile])
 
 
 #-------- check calculation of sum over wisotypes
-aprt_geo7_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_geo7_alltime.pkl', 'rb') as f:
-    aprt_geo7_alltime[expid[i]] = pickle.load(f)
 
 print((aprt_geo7_alltime[expid[i]]['sum']['daily'] == aprt_geo7_alltime[expid[i]]['daily'].sum(dim='wisotype')).all().values)
 print((aprt_geo7_alltime[expid[i]]['sum']['mon'] == aprt_geo7_alltime[expid[i]]['mon'].sum(dim='wisotype')).all().values)

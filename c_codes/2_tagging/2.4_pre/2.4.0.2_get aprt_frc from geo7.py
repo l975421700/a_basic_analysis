@@ -1,9 +1,12 @@
 
 
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_m_416_4.9',
-    'pi_m_502_5.0',
+    # 'pi_m_502_5.0',
+    # 'pi_600_5.0',
+    # 'pi_601_5.1',
+    # 'pi_602_5.2',
+    'pi_603_5.3',
     ]
 i = 0
 
@@ -17,7 +20,7 @@ import warnings
 warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
-sys.path.append('/work/ollie/qigao001')
+# sys.path.append('/work/ollie/qigao001')
 
 # data analysis
 import numpy as np
@@ -170,15 +173,22 @@ aprt_frc['Otherocean']  = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc.pkl', 'rb') as f:
     aprt_frc = pickle.load(f)
 
-print((aprt_frc['SHseaice']['am'] == 100 * (aprt_geo7_alltime[expid[i]]['am'].sel(wisotype=22) / aprt_geo7_alltime[expid[i]]['sum']['am'])).all().values)
+print((aprt_frc['AIS']['ann'] == 100 * (aprt_geo7_alltime[expid[i]]['ann'].sel(wisotype=16) / aprt_geo7_alltime[expid[i]]['sum']['ann'])).all().values)
 
-print((aprt_frc['SHocean']['mon'] == 100 * (aprt_geo7_alltime[expid[i]]['mon'].sel(wisotype=21) / aprt_geo7_alltime[expid[i]]['sum']['mon'])).all().values)
+print((aprt_frc['Land excl. AIS']['ann'] == 100 * (aprt_geo7_alltime[expid[i]]['ann'].sel(wisotype=17) / aprt_geo7_alltime[expid[i]]['sum']['ann'])).all().values)
 
-print((aprt_frc['Antarctica']['ann'] == 100 * (aprt_geo7_alltime[expid[i]]['ann'].sel(wisotype=18) / aprt_geo7_alltime[expid[i]]['sum']['ann'])).all().values)
+print((aprt_frc['Atlantic Ocean']['ann'] == 100 * (aprt_geo7_alltime[expid[i]]['ann'].sel(wisotype=18) / aprt_geo7_alltime[expid[i]]['sum']['ann'])).all().values)
 
-print((aprt_frc['Otherland']['mon'] == (aprt_frc['NHland']['mon'] + aprt_frc['SHland']['mon'])).all().values)
+print((aprt_frc['Indian Ocean']['ann'] == 100 * (aprt_geo7_alltime[expid[i]]['ann'].sel(wisotype=19) / aprt_geo7_alltime[expid[i]]['sum']['ann'])).all().values)
 
-print((aprt_frc['Otherocean']['ann'] == (aprt_frc['NHocean']['ann'] + aprt_frc['NHseaice']['ann'] + aprt_frc['SHocean']['ann'])).all().values)
+print((aprt_frc['Pacific Ocean']['ann'] == 100 * (aprt_geo7_alltime[expid[i]]['ann'].sel(wisotype=20) / aprt_geo7_alltime[expid[i]]['sum']['ann'])).all().values)
+
+print((aprt_frc['SH seaice']['am'] == 100 * (aprt_geo7_alltime[expid[i]]['am'].sel(wisotype=21) / aprt_geo7_alltime[expid[i]]['sum']['am'])).all().values)
+
+print((aprt_frc['Southern Ocean']['mon'] == 100 * (aprt_geo7_alltime[expid[i]]['mon'].sel(wisotype=22) / aprt_geo7_alltime[expid[i]]['sum']['mon'])).all().values)
+
+
+
 
 
 (100 * (aprt_geo7_alltime[expid[i]]['am'].sel(wisotype=22) / aprt_geo7_alltime[expid[i]]['sum']['am']) == (100 * aprt_geo7_alltime[expid[i]]['am'].sel(wisotype=22) / aprt_geo7_alltime[expid[i]]['sum']['am'])).all()
