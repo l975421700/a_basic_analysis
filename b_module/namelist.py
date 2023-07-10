@@ -81,6 +81,35 @@ ten_sites_names = [
 
 marker_recs = {'EC': 'o', 'JH': 's', 'DC': 'v', 'MC': '^'}
 
+plot_labels = {
+    'dO18': '$\delta^{18}O$ [‰]',
+    'dD': '$\delta D$ [‰]',
+    'd_excess': '$d-excess$ [‰]',
+    'd_ln': '$d_{ln}$ [‰]',
+    'lat': 'Source latitude [$°\;S$]',
+    'lon': 'Source longitude [$°$]',
+    'sst': 'Source SST [$°C$]',
+    'rh2m': 'Source rh2m [$\%$]',
+    'wind10': 'Source wind10 [$m \; s^{-1}$]',
+    'distance': 'Source-sink distance [$km$]',
+    'temp2': 'temp2 [$°C$]',
+}
+
+plot_labels_no_unit = {
+    'wisoaprt': 'precipitation',
+    'dO18': '$\delta^{18}O$',
+    'dD': '$\delta D$',
+    'd_excess': '$d-excess$',
+    'd_ln': '$d_{ln}$',
+    'lat': 'Source latitude',
+    'lon': 'Source longitude',
+    'sst': 'Source SST',
+    'rh2m': 'Source rh2m',
+    'wind10': 'Source wind10',
+    'distance': 'Source-sink distance',
+    'temp2': 'temp2',
+}
+
 # endregion
 # -----------------------------------------------------------------------------
 

@@ -36,6 +36,8 @@ from statsmodels.stats import multitest
 import pycircstat as circ
 import xskillscore as xs
 from scipy.stats import linregress
+from metpy.calc import pressure_to_height_std, geopotential_to_height
+from metpy.units import units
 
 # plot
 import matplotlib as mpl
@@ -86,6 +88,7 @@ from a_basic_analysis.b_module.namelist import (
     panel_labels,
     seconds_per_d,
     monthini,
+    plot_labels,
 )
 
 from a_basic_analysis.b_module.source_properties import (
@@ -116,6 +119,7 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
+
 dO18_alltime = {}
 dD_alltime = {}
 
@@ -132,8 +136,50 @@ lon = dO18_alltime[expid[i]]['am'].lon
 lat = dO18_alltime[expid[i]]['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
+
+source_var = ['lat', 'lon', 'sst', 'rh2m', 'wind10', 'distance']
+pre_weighted_var = {}
+
+for i in range(len(expid)):
+    # i = 0
+    print(str(i) + ': ' + expid[i])
+    
+    pre_weighted_var[expid[i]] = {}
+    
+    prefix = exp_odir + expid[i] + '/analysis/echam/' + expid[i]
+    
+    source_var_files = [
+        prefix + '.pre_weighted_lat.pkl',
+        prefix + '.pre_weighted_lon.pkl',
+        prefix + '.pre_weighted_sst.pkl',
+        prefix + '.pre_weighted_rh2m.pkl',
+        prefix + '.pre_weighted_wind10.pkl',
+        prefix + '.transport_distance.pkl',
+    ]
+    
+    for ivar, ifile in zip(source_var, source_var_files):
+        print(ivar + ':    ' + ifile)
+        with open(ifile, 'rb') as f:
+            pre_weighted_var[expid[i]][ivar] = pickle.load(f)
+
+
+temp2_alltime = {}
+
+for i in range(len(expid)):
+    # i = 0
+    print(str(i) + ': ' + expid[i])
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
+        temp2_alltime[expid[i]] = pickle.load(f)
+
+
 with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
     echam6_t63_ais_mask = pickle.load(f)
+
+
+echam6_t63_geosp = xr.open_dataset(exp_odir + expid[i] + '/input/echam/unit.24')
+echam6_t63_surface_height = geopotential_to_height(
+    echam6_t63_geosp.GEOSP * (units.m / units.s)**2)
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -268,6 +314,203 @@ fig.savefig(output_png)
 
 '''
 '''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region scatterplot am source latitude and elevation over AIS
+
+i = 0
+ivar = 'sst'
+
+ais_height = echam6_t63_surface_height.values[echam6_t63_ais_mask['mask']['AIS']]
+ais_sources = pre_weighted_var[expid[i]][ivar]['am'].values[echam6_t63_ais_mask['mask']['AIS']]
+
+xmax_value = np.max(ais_height)
+xmin_value = np.min(ais_height)
+xlimmax = xmax_value + 50
+xlimmin = xmin_value - 50
+
+ymax_value = np.max(ais_sources)
+ymin_value = np.min(ais_sources)
+ylimmax = ymax_value + 5
+ylimmin = ymin_value - 5
+
+linearfit = linregress(x = ais_height, y = ais_sources,)
+
+output_png = 'figures/8_d-excess/8.1_controls/8.1.4_spatial_analysis/8.1.4.0 ' + expid[i] + ' am source ' + ivar + ' vs. surface height over AIS.png'
+fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
+
+ax.scatter(
+    ais_height, ais_sources, s=6, lw=0.1, facecolors='white', edgecolors='k',
+    )
+ax.axline(
+    (0, linearfit.intercept), slope = linearfit.slope,
+    lw=0.5, color='k')
+
+plt.text(0.05, 0.9, 'AIS', transform=ax.transAxes, color='k',)
+
+plt.text(
+    0.5, 0.05,
+    '$y = $' + str(np.round(linearfit.slope, 1)) + '$x $' + \
+        str(np.round(linearfit.intercept, 1)) + \
+            '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3)),
+    transform=ax.transAxes, fontsize=6, linespacing=1.5)
+
+ax.set_ylabel(plot_labels[ivar], labelpad=2)
+# ax.set_yticks(np.arange(-600, 0 + 1e-4, 100))
+ax.set_ylim(ylimmin, ylimmax)
+ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+
+ax.set_xlabel('Surface height [$m$]', labelpad=2)
+# ax.set_xticks(np.arange(-60, 0 + 1e-4, 10))
+ax.set_xlim(xlimmin, xlimmax)
+ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+ax.tick_params(axis='both', labelsize=8)
+
+ax.grid(True, which='both',
+        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+fig.subplots_adjust(left=0.32, right=0.95, bottom=0.25, top=0.95)
+fig.savefig(output_png)
+
+
+
+(pearsonr(
+    pre_weighted_var[expid[i]][ivar]['am'].values[echam6_t63_ais_mask['mask']['AIS']],
+    echam6_t63_surface_height.values[echam6_t63_ais_mask['mask']['AIS']],
+).statistic) ** 2
+
+
+i = 0
+sourcelat = pre_weighted_var[expid[i]]['lat']['am'].values[echam6_t63_ais_mask['mask']['AIS']]
+locallat = lat_2d[echam6_t63_ais_mask['mask']['AIS']]
+(pearsonr(sourcelat, locallat,).statistic) ** 2
+
+sns.scatterplot(x = sourcelat, y = locallat)
+plt.savefig('figures/test/test.png')
+plt.close()
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region scatterplot am source and local temperature
+
+i = 0
+
+source_tem = pre_weighted_var[expid[i]]['sst']['am'].values[echam6_t63_ais_mask['mask']['AIS']]
+site_tem = temp2_alltime[expid[i]]['am'].values[echam6_t63_ais_mask['mask']['AIS']]
+
+
+xmax_value = np.max(site_tem)
+xmin_value = np.min(site_tem)
+xlimmax = xmax_value + 2
+xlimmin = xmin_value - 2
+
+ymax_value = np.max(source_tem)
+ymin_value = np.min(source_tem)
+ylimmax = ymax_value + 2
+ylimmin = ymin_value - 2
+
+linearfit = linregress(x = site_tem, y = source_tem,)
+
+output_png = 'figures/8_d-excess/8.1_controls/8.1.4_spatial_analysis/8.1.4.0 ' + expid[i] + ' am source sst vs. local sst over AIS.png'
+fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
+
+ax.scatter(
+    site_tem, source_tem, s=6, lw=0.1, facecolors='white', edgecolors='k',
+    )
+ax.axline(
+    (0, linearfit.intercept), slope = linearfit.slope,
+    lw=0.5, color='k')
+
+plt.text(0.05, 0.9, 'AIS', transform=ax.transAxes, color='k',)
+
+plt.text(
+    0.5, 0.05,
+    '$y = $' + str(np.round(linearfit.slope, 1)) + '$x $' + \
+        str(np.round(linearfit.intercept, 1)) + \
+            '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3)),
+    transform=ax.transAxes, fontsize=6, linespacing=1.5)
+
+ax.set_ylabel(plot_labels['sst'], labelpad=2)
+# ax.set_yticks(np.arange(-600, 0 + 1e-4, 100))
+ax.set_ylim(ylimmin, ylimmax)
+ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+
+ax.set_xlabel(plot_labels['temp2'], labelpad=2)
+# ax.set_xticks(np.arange(-60, 0 + 1e-4, 10))
+ax.set_xlim(xlimmin, xlimmax)
+ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+ax.tick_params(axis='both', labelsize=8)
+
+ax.grid(True, which='both',
+        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+fig.subplots_adjust(left=0.32, right=0.95, bottom=0.25, top=0.95)
+fig.savefig(output_png)
+
+
+(pearsonr(source_tem, site_tem,).statistic) ** 2
+
+
+i = 0
+
+source_tem = pre_weighted_var[expid[i]]['sst']['am'].values[echam6_t63_ais_mask['mask']['AIS']]
+site_tem = temp2_alltime[expid[i]]['am'].values[echam6_t63_ais_mask['mask']['AIS']]
+
+xmax_value = np.max(site_tem)
+xmin_value = np.min(site_tem)
+xlimmax = xmax_value + 2
+xlimmin = xmin_value - 2
+
+ymax_value = np.max(source_tem - site_tem)
+ymin_value = np.min(source_tem - site_tem)
+ylimmax = ymax_value + 2
+ylimmin = ymin_value - 2
+
+linearfit = linregress(x = site_tem, y = source_tem - site_tem,)
+
+output_png = 'figures/8_d-excess/8.1_controls/8.1.4_spatial_analysis/8.1.4.0 ' + expid[i] + ' am source - local sst vs. local sst over AIS.png'
+fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
+
+ax.scatter(
+    site_tem, source_tem - site_tem, s=6, lw=0.1, facecolors='white', edgecolors='k',
+    )
+ax.axline(
+    (0, linearfit.intercept), slope = linearfit.slope,
+    lw=0.5, color='k')
+
+plt.text(0.05, 0.9, 'AIS', transform=ax.transAxes, color='k',)
+
+plt.text(
+    0.5, 0.05,
+    '$y = $' + str(np.round(linearfit.slope, 1)) + '$x $' + \
+        str(np.round(linearfit.intercept, 1)) + \
+            '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3)),
+    transform=ax.transAxes, fontsize=6, linespacing=1.5)
+
+ax.set_ylabel('Source SST - temp2', labelpad=2)
+# ax.set_yticks(np.arange(-600, 0 + 1e-4, 100))
+ax.set_ylim(ylimmin, ylimmax)
+ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+
+ax.set_xlabel(plot_labels['temp2'], labelpad=2)
+# ax.set_xticks(np.arange(-60, 0 + 1e-4, 10))
+ax.set_xlim(xlimmin, xlimmax)
+ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+ax.tick_params(axis='both', labelsize=8)
+
+ax.grid(True, which='both',
+        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+fig.subplots_adjust(left=0.32, right=0.95, bottom=0.25, top=0.95)
+fig.savefig(output_png)
+
+
+(pearsonr(source_tem - site_tem, site_tem,).statistic) ** 2
+
+
 # endregion
 # -----------------------------------------------------------------------------
 

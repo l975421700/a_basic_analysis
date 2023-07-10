@@ -1,18 +1,14 @@
 #!/bin/bash
 #SBATCH -p mpp
-#SBATCH --time=00:30:00
-#SBATCH --ntasks=1
-#SBATCH -o %A_job.out
-#SBATCH -e %A_job.err
-#SBATCH --account=paleodyn.paleodyn
+#SBATCH --time=02:00:00
+#SBATCH -o %A.out
+#SBATCH -e %A.err
 
 echo "Current time : " $(date +"%T")
-
 cd $WORK
-
 source ${HOME}/miniconda3/bin/activate deepice
 
-python "/albedo/work/user/qigao001/a_basic_analysis/c_codes/deprecated/0.3_srun/0.3.0_srun3.py"
+python /albedo/work/user/qigao001/a_basic_analysis/f_scripts/1_py_scripts/srun0.py
 
 echo "Current time : " $(date +"%T")
 
@@ -32,4 +28,6 @@ echo "Current time : " $(date +"%T")
 
 # partition: https://spaces.awi.de/display/HELP/Slurm-Albedo
 
+# #SBATCH --ntasks=1
+# #SBATCH --account=paleodyn.paleodyn
 

@@ -122,10 +122,6 @@ for i in range(len(expid)):
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_alltime.pkl', 'rb') as f:
         d_ln_alltime[expid[i]] = pickle.load(f)
 
-lon = d_ln_alltime[expid[i]]['am'].lon
-lat = d_ln_alltime[expid[i]]['am'].lat
-lon_2d, lat_2d = np.meshgrid(lon, lat,)
-
 #---- import precipitation sources
 
 source_var = ['latitude', 'SST', 'rh2m', 'wind10']

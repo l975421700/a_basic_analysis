@@ -19,7 +19,7 @@ import warnings
 warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
-sys.path.append('/work/ollie/qigao001')
+sys.path.append('/albedo/work/user/qigao001')
 
 # data analysis
 import numpy as np
@@ -114,10 +114,10 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-#---- import dO18 and dD
 
 dO18_alltime = {}
 dD_alltime = {}
+d_ln_alltime = {}
 
 for i in range(len(expid)):
     print(str(i) + ': ' + expid[i])
@@ -127,18 +127,10 @@ for i in range(len(expid)):
     
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_alltime.pkl', 'rb') as f:
         dD_alltime[expid[i]] = pickle.load(f)
-
-#---- import d_ln
-
-d_ln_alltime = {}
-
-for i in range(len(expid)):
-    print(str(i) + ': ' + expid[i])
     
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_alltime.pkl', 'rb') as f:
         d_ln_alltime[expid[i]] = pickle.load(f)
 
-#---- import precipitation sources
 
 source_var = ['latitude', 'SST', 'rh2m', 'wind10']
 pre_weighted_var = {}
@@ -302,9 +294,8 @@ pearsonr(t_src, wind10_src,)
 # -----------------------------------------------------------------------------
 # region linear regression
 
-# ialltime = 'ann'
-
 ialltime = 'mon'
+
 
 for i in range(len(expid)):
     # i = 0
@@ -314,12 +305,7 @@ for i in range(len(expid)):
         # isite = 'EDC'
         print('#-------- ' + isite)
         
-        if (ialltime == 'ann'):
-            delta_d_ln = source_sink_isotopes[ialltime][expid[i]][isite]['d_ln'] - np.mean(source_sink_isotopes[ialltime][expid[i]][isite]['d_ln'])
-            delta_dD = source_sink_isotopes[ialltime][expid[i]][isite]['dD'] - np.mean(source_sink_isotopes[ialltime][expid[i]][isite]['dD'])
-            delta_T_site = source_sink_isotopes[ialltime][expid[i]][isite]['T_site'] - np.mean(source_sink_isotopes[ialltime][expid[i]][isite]['T_site'])
-            delta_T_source = source_sink_isotopes[ialltime][expid[i]][isite]['T_source'] - np.mean(source_sink_isotopes[ialltime][expid[i]][isite]['T_source'])
-        elif (ialltime == 'mon'):
+        if (ialltime == 'mon'):
             delta_d_ln = source_sink_isotopes[ialltime][expid[i]][isite]['d_ln'].groupby('time.month') - source_sink_isotopes[ialltime][expid[i]][isite]['d_ln'].groupby('time.month').mean()
             delta_dD = source_sink_isotopes[ialltime][expid[i]][isite]['dD'].groupby('time.month') - source_sink_isotopes[ialltime][expid[i]][isite]['dD'].groupby('time.month').mean()
             delta_T_site = source_sink_isotopes[ialltime][expid[i]][isite]['T_site'].groupby('time.month') - source_sink_isotopes[ialltime][expid[i]][isite]['T_site'].groupby('time.month').mean()
@@ -377,6 +363,16 @@ for i in range(len(expid)):
 #     result2.params[2] * X[:, 2]
 
 '''
+# ialltime = 'ann'
+        if (ialltime == 'ann'):
+            delta_d_ln = source_sink_isotopes[ialltime][expid[i]][isite]['d_ln'] - np.mean(source_sink_isotopes[ialltime][expid[i]][isite]['d_ln'])
+            delta_dD = source_sink_isotopes[ialltime][expid[i]][isite]['dD'] - np.mean(source_sink_isotopes[ialltime][expid[i]][isite]['dD'])
+            delta_T_site = source_sink_isotopes[ialltime][expid[i]][isite]['T_site'] - np.mean(source_sink_isotopes[ialltime][expid[i]][isite]['T_site'])
+            delta_T_source = source_sink_isotopes[ialltime][expid[i]][isite]['T_source'] - np.mean(source_sink_isotopes[ialltime][expid[i]][isite]['T_source'])
+
+
+
+
 model1 = sm.OLS(
     t_site - np.mean(t_site),
     sm.add_constant(np.column_stack((

@@ -114,47 +114,36 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-#---- import wisoaprt
+#---- import isotopes
 
 wisoaprt_alltime = {}
+dO18_alltime = {}
+dD_alltime = {}
+d_ln_alltime = {}
+d_excess_alltime = {}
 
 for i in range(len(expid)):
     print(str(i) + ': ' + expid[i])
     
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
         wisoaprt_alltime[expid[i]] = pickle.load(f)
-
-lon = wisoaprt_alltime[expid[0]]['am'].lon
-lat = wisoaprt_alltime[expid[0]]['am'].lat
-lon_2d, lat_2d = np.meshgrid(lon, lat,)
-
-#---- import dO18 and dD
-
-dO18_alltime = {}
-dD_alltime = {}
-
-for i in range(len(expid)):
-    print(str(i) + ': ' + expid[i])
     
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_alltime.pkl', 'rb') as f:
         dO18_alltime[expid[i]] = pickle.load(f)
     
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_alltime.pkl', 'rb') as f:
         dD_alltime[expid[i]] = pickle.load(f)
-
-#---- import d_ln
-
-d_ln_alltime = {}
-
-for i in range(len(expid)):
-    print(str(i) + ': ' + expid[i])
     
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_alltime.pkl', 'rb') as f:
         d_ln_alltime[expid[i]] = pickle.load(f)
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_alltime.pkl', 'rb') as f:
+        d_excess_alltime[expid[i]] = pickle.load(f)
+
 
 #---- import precipitation sources
 
-source_var = ['latitude', 'SST', 'rh2m', 'wind10']
+source_var = ['lat', 'lon', 'sst', 'rh2m', 'wind10', 'distance']
 pre_weighted_var = {}
 
 for i in range(len(expid)):
@@ -167,15 +156,18 @@ for i in range(len(expid)):
     
     source_var_files = [
         prefix + '.pre_weighted_lat.pkl',
+        prefix + '.pre_weighted_lon.pkl',
         prefix + '.pre_weighted_sst.pkl',
         prefix + '.pre_weighted_rh2m.pkl',
         prefix + '.pre_weighted_wind10.pkl',
+        prefix + '.transport_distance.pkl',
     ]
     
     for ivar, ifile in zip(source_var, source_var_files):
         print(ivar + ':    ' + ifile)
         with open(ifile, 'rb') as f:
             pre_weighted_var[expid[i]][ivar] = pickle.load(f)
+
 
 #---- import site locations
 ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')

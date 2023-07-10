@@ -86,6 +86,7 @@ from a_basic_analysis.b_module.namelist import (
     panel_labels,
     seconds_per_d,
     monthini,
+    plot_labels,
 )
 
 from a_basic_analysis.b_module.source_properties import (
@@ -118,7 +119,6 @@ from a_basic_analysis.b_module.component_plot import (
 
 isotopes_alltime_icores = {}
 pre_weighted_var_icores = {}
-wisoaprt_alltime_icores = {}
 
 for i in range(len(expid)):
     print(i)
@@ -130,14 +130,17 @@ for i in range(len(expid)):
     with open(
         exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.pre_weighted_var_icores.pkl', 'rb') as f:
         pre_weighted_var_icores[expid[i]] = pickle.load(f)
+
+
+
+'''
+
+wisoaprt_alltime_icores = {}
     
     with open(
         exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_alltime_icores.pkl', 'rb') as f:
         wisoaprt_alltime_icores[expid[i]] = pickle.load(f)
 
-
-
-'''
 
 aprt_frc_alltime_icores = {}
 with open(
@@ -212,26 +215,84 @@ fig.savefig(output_png)
 # -----------------------------------------------------------------------------
 # region d_ln vs. source SST
 
+# plot scatter density of daily values
+
+import mpl_scatter_density
+from matplotlib.colors import LinearSegmentedColormap
+
 i = 0
-icores = 'EDC'
+icores = 'DOME F'
 iisotope = 'd_ln'
 ivar = 'sst'
 
-ialltime = 'sea'
+ialltime = 'daily'
 
-output_png = 'figures/test/test.png'
-fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
+white_viridis = LinearSegmentedColormap.from_list('white_viridis', [
+    (0, '#ffffff'),
+    (1e-20, '#440053'),
+    (0.2, '#404388'),
+    (0.4, '#2a788e'),
+    (0.6, '#21a784'),
+    (0.8, '#78d151'),
+    (1, '#fde624'),
+], N=256)
 
-ax.scatter(
-    pre_weighted_var_icores[expid[i]][icores][ivar][ialltime],
-    isotopes_alltime_icores[expid[i]][iisotope][icores][ialltime],
-    s=6, lw=0.1, facecolors='white', edgecolors='k',
-    )
-fig.tight_layout()
+xdata = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime]
+ydata = isotopes_alltime_icores[expid[i]][iisotope][icores][ialltime]
+subset = (np.isfinite(xdata) & np.isfinite(ydata))
+xdata = xdata[subset]
+ydata = ydata[subset]
+
+xmax_value = np.max(xdata)
+xmin_value = np.min(xdata)
+ymax_value = np.max(ydata)
+ymin_value = np.min(ydata)
+
+output_png = 'figures/8_d-excess/8.1_controls/8.1.3_site_analysis/8.1.3.0_isotopes_sources_alltimes/8.1.3.0.0 ' + expid[i] + ' ' + icores + ' ' + ialltime + ' ' + ivar + ' vs. ' + iisotope + '_scatter_density.png'
+
+linearfit = linregress(x = xdata, y = ydata,)
+
+#---------------- plot
+
+fig = plt.figure(figsize=np.array([4.4, 4]) / 2.54,)
+ax = fig.add_subplot(1, 1, 1, projection='scatter_density')
+
+ax.scatter_density(
+    xdata,
+    ydata,
+    cmap=white_viridis)
+
+ax.axline(
+    (0, linearfit.intercept), slope = linearfit.slope,
+    lw=0.5, color='k')
+plt.text(0.05, 0.9, icores, transform=ax.transAxes, color='k',)
+plt.text(
+    0.5, 0.05,
+    '$y = $' + str(np.round(linearfit.slope, 1)) + '$x + $' + \
+        str(np.round(linearfit.intercept, 1)) + \
+            '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3)),
+    transform=ax.transAxes, fontsize=6, linespacing=1.5)
+
+ax.set_ylabel(plot_labels[iisotope], labelpad=2)
+ax.set_ylim(ymin_value, ymax_value)
+ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+
+ax.set_xlabel(plot_labels[ivar], labelpad=2)
+ax.set_xlim(xmin_value, xmax_value)
+ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+ax.tick_params(axis='both', labelsize=8)
+
+ax.grid(
+    True, which='both',
+    linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+
+fig.subplots_adjust(left=0.32, right=0.95, bottom=0.25, top=0.95)
 fig.savefig(output_png)
 
 
-
+'''
+https://stackoverflow.com/questions/20105364/how-can-i-make-a-scatter-plot-colored-by-density
+'''
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -241,7 +302,7 @@ fig.savefig(output_png)
 
 i = 0
 
-for icores in ['DOME F']:
+for icores in ['EDC', 'DOME F']:
     # ['EDC', 'DOME F']:
     # icores = 'EDC'
     # pre_weighted_var_icores[expid[i]].keys()
@@ -251,7 +312,7 @@ for icores in ['DOME F']:
         # iisotope = 'd_ln'
         print('#---------------- ' + iisotope)
         
-        for ivar in pre_weighted_var_icores[expid[i]][icores].keys():
+        for ivar in ['sst', 'rh2m', 'wind10']:
             # ivar = 'sst'
             print('#-------- ' + ivar)
             
@@ -296,11 +357,11 @@ for icores in ['DOME F']:
                             '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3)),
                     transform=ax.transAxes, fontsize=6, linespacing=1.5)
                 
-                ax.set_ylabel(iisotope, labelpad=2)
+                ax.set_ylabel(plot_labels[iisotope], labelpad=2)
                 ax.set_ylim(ymin_value, ymax_value)
                 ax.yaxis.set_minor_locator(AutoMinorLocator(2))
                 
-                ax.set_xlabel(ivar, labelpad=2)
+                ax.set_xlabel(plot_labels[ivar], labelpad=2)
                 ax.set_xlim(xmin_value, xmax_value)
                 ax.xaxis.set_minor_locator(AutoMinorLocator(2))
                 ax.tick_params(axis='both', labelsize=8)
@@ -314,11 +375,10 @@ for icores in ['DOME F']:
 
 
 
-'''
 #-------- partial correlation
 
 i = 0
-icores = 'EDC'
+# icores = 'EDC'
 icores = 'DOME F'
 iisotope = 'd_ln'
 ialltime = 'mon'
@@ -338,6 +398,7 @@ xr_par_cor(iso_var, src_var, ctl_var) ** 2
 # (pearsonr(iso_var, ctl_var).statistic) ** 2
 
 
+'''
 len(isotopes_alltime_icores[expid[i]].keys()) * len(pre_weighted_var_icores[expid[i]][icores].keys()) * 3
 '''
 # endregion
@@ -349,7 +410,7 @@ len(isotopes_alltime_icores[expid[i]].keys()) * len(pre_weighted_var_icores[expi
 
 i = 0
 
-for icores in ['DOME F']:
+for icores in ['EDC', 'DOME F']:
     # ['EDC', 'DOME F']:
     # icores = 'EDC'
     # pre_weighted_var_icores[expid[i]].keys()
@@ -359,7 +420,7 @@ for icores in ['DOME F']:
         # iisotope = 'd_ln'
         print('#---------------- ' + iisotope)
         
-        for ivar in pre_weighted_var_icores[expid[i]][icores].keys():
+        for ivar in ['sst', 'rh2m', 'wind10']:
             # ivar = 'sst'
             print('#-------- ' + ivar)
             
@@ -407,11 +468,11 @@ for icores in ['DOME F']:
                             '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3)),
                     transform=ax.transAxes, fontsize=6, linespacing=1.5)
                 
-                ax.set_ylabel(iisotope, labelpad=2)
+                ax.set_ylabel(plot_labels[iisotope], labelpad=2)
                 ax.set_ylim(ymin_value, ymax_value)
                 ax.yaxis.set_minor_locator(AutoMinorLocator(2))
                 
-                ax.set_xlabel(ivar, labelpad=2)
+                ax.set_xlabel(plot_labels[ivar], labelpad=2)
                 ax.set_xlim(xmin_value, xmax_value)
                 ax.xaxis.set_minor_locator(AutoMinorLocator(2))
                 ax.tick_params(axis='both', labelsize=8)
@@ -465,13 +526,13 @@ i = 0
 
 ivar1 = 'sst'
 
-for icores in ['DOME F']:
+for icores in ['EDC', 'DOME F']:
     # ['EDC', 'DOME F']:
     # icores = 'EDC'
     # pre_weighted_var_icores[expid[i]].keys()
     print('#-------------------------------- ' + icores)
     
-    for ivar in ['lat', 'lon', 'rh2m', 'wind10', 'distance']:
+    for ivar in ['rh2m', 'wind10']:
         # ivar = 'sst'
         print('#-------- ' + ivar)
         
@@ -513,11 +574,11 @@ for icores in ['DOME F']:
                         '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3)),
                 transform=ax.transAxes, fontsize=6, linespacing=1.5)
             
-            ax.set_ylabel(ivar, labelpad=2)
+            ax.set_ylabel(plot_labels[ivar], labelpad=2)
             ax.set_ylim(ymin_value, ymax_value)
             ax.yaxis.set_minor_locator(AutoMinorLocator(2))
             
-            ax.set_xlabel(ivar1, labelpad=2)
+            ax.set_xlabel(plot_labels[ivar1], labelpad=2)
             ax.set_xlim(xmin_value, xmax_value)
             ax.xaxis.set_minor_locator(AutoMinorLocator(2))
             ax.tick_params(axis='both', labelsize=8)
@@ -541,13 +602,13 @@ i = 0
 
 ivar1 = 'sst'
 
-for icores in ['DOME F']:
+for icores in ['EDC', 'DOME F']:
     # ['EDC', 'DOME F']:
     # icores = 'EDC'
     # pre_weighted_var_icores[expid[i]].keys()
     print('#-------------------------------- ' + icores)
     
-    for ivar in ['lat', 'lon', 'rh2m', 'wind10', 'distance']:
+    for ivar in ['rh2m', 'wind10']:
         # ivar = 'sst'
         print('#-------- ' + ivar)
         
@@ -592,11 +653,11 @@ for icores in ['DOME F']:
                         '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3)),
                 transform=ax.transAxes, fontsize=6, linespacing=1.5)
             
-            ax.set_ylabel(ivar, labelpad=2)
+            ax.set_ylabel(plot_labels[ivar], labelpad=2)
             ax.set_ylim(ymin_value, ymax_value)
             ax.yaxis.set_minor_locator(AutoMinorLocator(2))
             
-            ax.set_xlabel(ivar1, labelpad=2)
+            ax.set_xlabel(plot_labels[ivar1], labelpad=2)
             ax.set_xlim(xmin_value, xmax_value)
             ax.xaxis.set_minor_locator(AutoMinorLocator(2))
             ax.tick_params(axis='both', labelsize=8)
@@ -612,5 +673,9 @@ for icores in ['DOME F']:
 
 # endregion
 # -----------------------------------------------------------------------------
+
+
+
+
 
 
