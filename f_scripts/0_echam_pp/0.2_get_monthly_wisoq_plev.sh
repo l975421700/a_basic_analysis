@@ -13,13 +13,10 @@ echo 'settings: ' ${YEAR} ${output_dir} ${expid}
 echo '#-------- activate conda env'
 
 source ${HOME}/miniconda3/bin/activate deepice
-which cdo
-which python
 
 cdo="/albedo/soft/sw/spack-sw/cdo/2.2.0-7hyzlde/bin/cdo"
 
 echo '#-------- processing monthly output'
-
 
 task(){
     MONTH=$1

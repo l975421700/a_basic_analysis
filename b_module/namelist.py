@@ -84,7 +84,7 @@ marker_recs = {'EC': 'o', 'JH': 's', 'DC': 'v', 'MC': '^'}
 plot_labels = {
     'dO18': '$\delta^{18}O$ [‰]',
     'dD': '$\delta D$ [‰]',
-    'd_excess': '$d-excess$ [‰]',
+    'd_excess': '$d_{xs}$ [‰]',
     'd_ln': '$d_{ln}$ [‰]',
     'lat': 'Source latitude [$°\;S$]',
     'lon': 'Source longitude [$°$]',
@@ -99,7 +99,7 @@ plot_labels_no_unit = {
     'wisoaprt': 'precipitation',
     'dO18': '$\delta^{18}O$',
     'dD': '$\delta D$',
-    'd_excess': '$d-excess$',
+    'd_excess': '$d_{xs}$',
     'd_ln': '$d_{ln}$',
     'lat': 'Source latitude',
     'lon': 'Source longitude',

@@ -1,4 +1,19 @@
 
+# -----------------------------------------------------------------------------
+# region check whether set kinetic fractionation coefficient correctly
+
+ncfile1 = xr.open_dataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/pi_601_5.1/unknown/pi_601_5.1_200001.01_wiso.nc')
+ncfile2 = xr.open_dataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/pi_604_5.4/unknown/pi_604_5.4_200001.01_wiso.nc')
+
+(ncfile1.wisoaprl == ncfile2.wisoaprl).all().values
+(ncfile1.wisoaprc == ncfile2.wisoaprc).all().values
+
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
 # ${HOME}/a_basic_analysis/c_codes/1_cmip6/1.0_hist/1.0.4_sst/1.0.4.0_combine_daily_esacci_sst.sh ${SLURM_ARRAY_TASK_ID}
 
 # ${HOME}/a_basic_analysis/c_codes/1_cmip6/1.0_hist/1.0.4_sst/1.0.4.1_combine_monthly_esacci_sst.sh ${SLURM_ARRAY_TASK_ID}

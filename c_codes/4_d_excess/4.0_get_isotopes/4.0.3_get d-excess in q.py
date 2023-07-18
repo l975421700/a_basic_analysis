@@ -2,7 +2,6 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_m_502_5.0',
     'pi_600_5.0',
     'pi_601_5.1',
     'pi_602_5.2',
@@ -21,7 +20,7 @@ import warnings
 warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
-# sys.path.append('/work/ollie/qigao001')
+sys.path.append('/albedo/work/user/qigao001')
 
 # data analysis
 import numpy as np
@@ -36,7 +35,6 @@ import xesmf as xe
 import pandas as pd
 from statsmodels.stats import multitest
 import pycircstat as circ
-import math
 
 # plot
 import matplotlib as mpl
@@ -113,17 +111,15 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-dO18_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_alltime.pkl', 'rb') as f:
-    dO18_alltime[expid[i]] = pickle.load(f)
 
-dD_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_alltime.pkl', 'rb') as f:
-    dD_alltime[expid[i]] = pickle.load(f)
+dO18_q_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_q_alltime.pkl', 'rb') as f:
+    dO18_q_alltime[expid[i]] = pickle.load(f)
 
+dD_q_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_q_alltime.pkl', 'rb') as f:
+    dD_q_alltime[expid[i]] = pickle.load(f)
 
-'''
-'''
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -131,36 +127,37 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_alltime.pkl
 # -----------------------------------------------------------------------------
 # region get d_xs
 
-d_excess_alltime = {}
-d_excess_alltime[expid[i]] = {}
+d_excess_q_alltime = {}
+d_excess_q_alltime[expid[i]] = {}
 
-for ialltime in dO18_alltime[expid[i]].keys():
+for ialltime in dO18_q_alltime[expid[i]].keys():
     print(ialltime)
     
-    d_excess_alltime[expid[i]][ialltime] = \
-        dD_alltime[expid[i]][ialltime] - 8 * dO18_alltime[expid[i]][ialltime]
+    d_excess_q_alltime[expid[i]][ialltime] = \
+        dD_q_alltime[expid[i]][ialltime] - 8 * dO18_q_alltime[expid[i]][ialltime]
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_alltime.pkl', 'wb') as f:
-    pickle.dump(d_excess_alltime[expid[i]], f)
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_q_alltime.pkl', 'wb') as f:
+    pickle.dump(d_excess_q_alltime[expid[i]], f)
 
 
 
 '''
 #-------------------------------- check
 
-d_excess_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_alltime.pkl', 'rb') as f:
-    d_excess_alltime[expid[i]] = pickle.load(f)
+d_excess_q_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_q_alltime.pkl', 'rb') as f:
+    d_excess_q_alltime[expid[i]] = pickle.load(f)
 
 ialltime = 'sea'
 
 itime = -1
+iplev = 0
 ilat = 40
 ilon = 90
 
-aa = dD_alltime[expid[i]][ialltime][itime, ilat, ilon].values
-bb = dO18_alltime[expid[i]][ialltime][itime, ilat, ilon].values
-cc = d_excess_alltime[expid[i]][ialltime][itime, ilat, ilon].values
+aa = dD_q_alltime[expid[i]][ialltime][itime, iplev, ilat, ilon].values
+bb = dO18_q_alltime[expid[i]][ialltime][itime, iplev, ilat, ilon].values
+cc = d_excess_q_alltime[expid[i]][ialltime][itime, iplev, ilat, ilon].values
 
 aa - 8 * bb
 cc
@@ -172,21 +169,21 @@ cc
 # -----------------------------------------------------------------------------
 # region get d-excess, logarithmic definition
 
-d_ln_alltime = {}
-d_ln_alltime[expid[i]] = {}
+d_ln_q_alltime = {}
+d_ln_q_alltime[expid[i]] = {}
 
-for ialltime in dO18_alltime[expid[i]].keys():
+for ialltime in dO18_q_alltime[expid[i]].keys():
     print(ialltime)
     # ialltime = 'sm'
     
-    ln_dD = 1000 * np.log(1 + dD_alltime[expid[i]][ialltime] / 1000)
-    ln_d18O = 1000 * np.log(1 + dO18_alltime[expid[i]][ialltime] / 1000)
+    ln_dD = 1000 * np.log(1 + dD_q_alltime[expid[i]][ialltime] / 1000)
+    ln_d18O = 1000 * np.log(1 + dO18_q_alltime[expid[i]][ialltime] / 1000)
     
-    d_ln_alltime[expid[i]][ialltime] = \
+    d_ln_q_alltime[expid[i]][ialltime] = \
         ln_dD - 8.47 * ln_d18O + 0.0285 * (ln_d18O ** 2)
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_alltime.pkl', 'wb') as f:
-    pickle.dump(d_ln_alltime[expid[i]], f)
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_q_alltime.pkl', 'wb') as f:
+    pickle.dump(d_ln_q_alltime[expid[i]], f)
 
 
 
@@ -194,25 +191,27 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_alltime.p
 '''
 #-------------------------------- check
 
-d_ln_alltime = {}
+d_ln_q_alltime = {}
 
 for i in range(len(expid)):
     print(str(i) + ': ' + expid[i])
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_alltime.pkl', 'rb') as f:
-        d_ln_alltime[expid[i]] = pickle.load(f)
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_q_alltime.pkl', 'rb') as f:
+        d_ln_q_alltime[expid[i]] = pickle.load(f)
 
-dO18_alltime = {}
-dD_alltime = {}
+dO18_q_alltime = {}
+dD_q_alltime = {}
 
 for i in range(len(expid)):
     print(str(i) + ': ' + expid[i])
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_alltime.pkl', 'rb') as f:
-        dO18_alltime[expid[i]] = pickle.load(f)
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_q_alltime.pkl', 'rb') as f:
+        dO18_q_alltime[expid[i]] = pickle.load(f)
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_alltime.pkl', 'rb') as f:
-        dD_alltime[expid[i]] = pickle.load(f)
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_q_alltime.pkl', 'rb') as f:
+        dD_q_alltime[expid[i]] = pickle.load(f)
+
+iplev = 0
 
 for i in range(len(expid)):
     print(str(i) + ': ' + expid[i])
@@ -221,25 +220,25 @@ for i in range(len(expid)):
         for ilon in np.arange(1, 192, 60):
             # i = 0; ilat = 40; ilon = 90
             
-            for ialltime in ['daily', 'mon', 'sea', 'ann', 'mm', 'sm', 'am']:
+            for ialltime in ['mon', 'sea', 'ann', 'mm', 'sm', 'am']:
                 # ialltime = 'ann'
                 if (ialltime != 'am'):
-                    dO18 = dO18_alltime[expid[i]][ialltime][-1, ilat, ilon]
-                    dD = dD_alltime[expid[i]][ialltime][-1, ilat, ilon]
-                    d_ln = d_ln_alltime[expid[i]][ialltime][-1, ilat, ilon].values
+                    dO18_q = dO18_q_alltime[expid[i]][ialltime][-1, iplev, ilat, ilon]
+                    dD_q = dD_q_alltime[expid[i]][ialltime][-1, iplev, ilat, ilon]
+                    d_ln_q = d_ln_q_alltime[expid[i]][ialltime][-1, iplev, ilat, ilon].values
                 else:
-                    dO18 = dO18_alltime[expid[i]][ialltime][ilat, ilon]
-                    dD = dD_alltime[expid[i]][ialltime][ilat, ilon]
-                    d_ln = d_ln_alltime[expid[i]][ialltime][ilat, ilon]
+                    dO18_q = dO18_q_alltime[expid[i]][ialltime][iplev, ilat, ilon]
+                    dD_q = dD_q_alltime[expid[i]][ialltime][iplev, ilat, ilon]
+                    d_ln_q = d_ln_q_alltime[expid[i]][ialltime][iplev, ilat, ilon]
                 
-                d_ln_new = (1000 * np.log(1 + dD / 1000) - \
-                    8.47 * 1000 * np.log(1 + dO18 / 1000) + \
-                        0.0285 * (1000 * np.log(1 + dO18 / 1000)) ** 2).values
+                d_ln_new = (1000 * np.log(1 + dD_q / 1000) - \
+                    8.47 * 1000 * np.log(1 + dO18_q / 1000) + \
+                        0.0285 * (1000 * np.log(1 + dO18_q / 1000)) ** 2).values
                 
-                # print(np.round(d_ln, 2))
+                # print(np.round(d_ln_q, 2))
                 # print(np.round(d_ln_new, 2))
-                if (((d_ln - d_ln_new) / d_ln) > 0.000001):
-                    print(d_ln)
+                if (((d_ln_q - d_ln_new) / d_ln_q) > 0.001):
+                    print(d_ln_q)
                     print(d_ln_new)
 
 
@@ -247,8 +246,7 @@ for i in range(len(expid)):
 
 
 '''
-# math.log(math.e)
-# math.log(1 + dD_alltime[expid[i]][ialltime])
 # endregion
 # -----------------------------------------------------------------------------
+
 

@@ -12,7 +12,7 @@ general:
 
 echam:
     version: "6.3.05p2-wiso"
-    executable: echam6_230519_5.3_no_ss
+    executable: echam6_230711_5.4_k_6
     bin_sources:
             echam_bin: "${bin_dir}/${executable}"
     bin_in_work:

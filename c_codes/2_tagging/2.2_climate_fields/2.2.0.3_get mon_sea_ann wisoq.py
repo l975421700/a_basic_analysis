@@ -1,11 +1,17 @@
 
 
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_502_5.0',]
+exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+expid = [
+    # 'pi_m_502_5.0',
+    # 'pi_600_5.0',
+    # 'pi_601_5.1',
+    # 'pi_602_5.2',
+    'pi_603_5.3',
+    ]
 i = 0
 
 ifile_start = 120
-ifile_end   = 720
+ifile_end   = 360
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -92,7 +98,9 @@ exp_org_o[expid[i]] = {}
 filenames_wiso_q_plev = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_wiso_q_plev.nc'))
 exp_org_o[expid[i]]['wiso_q_plev'] = xr.open_mfdataset(
     filenames_wiso_q_plev[ifile_start:ifile_end],
-    data_vars='minimal', coords='minimal', parallel=True)
+    # data_vars='minimal', coords='minimal', parallel=True,
+    )
+
 
 '''
 ifile = -1
@@ -227,4 +235,44 @@ ocean_q[expid[i]].sel(var_names='geo7')[:] = \
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region get mon_sea_ann q16o, q18o, and qhdo
+
+wiso_q_plev = {}
+wiso_q_plev[expid[i]] = {}
+
+wiso_q_plev[expid[i]]['q16o'] = (exp_org_o[expid[i]]['wiso_q_plev']['q16o'] + exp_org_o[expid[i]]['wiso_q_plev']['xl16o'] + exp_org_o[expid[i]]['wiso_q_plev']['xi16o']).compute()
+
+wiso_q_plev[expid[i]]['q18o'] = (exp_org_o[expid[i]]['wiso_q_plev']['q18o'] + exp_org_o[expid[i]]['wiso_q_plev']['xl18o'] + exp_org_o[expid[i]]['wiso_q_plev']['xi18o']).compute()
+
+wiso_q_plev[expid[i]]['qhdo'] = (exp_org_o[expid[i]]['wiso_q_plev']['qhdo'] + exp_org_o[expid[i]]['wiso_q_plev']['xlhdo'] + exp_org_o[expid[i]]['wiso_q_plev']['xihdo']).compute()
+
+
+wiso_q_plev_alltime = {}
+wiso_q_plev_alltime[expid[i]] = {}
+
+wiso_q_plev_alltime[expid[i]]['q16o'] = mon_sea_ann(
+    var_monthly=wiso_q_plev[expid[i]]['q16o'])
+
+wiso_q_plev_alltime[expid[i]]['q18o'] = mon_sea_ann(
+    var_monthly=wiso_q_plev[expid[i]]['q18o'])
+
+wiso_q_plev_alltime[expid[i]]['qhdo'] = mon_sea_ann(
+    var_monthly=wiso_q_plev[expid[i]]['qhdo'])
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wiso_q_plev_alltime.pkl', 'wb') as f:
+    pickle.dump(wiso_q_plev_alltime[expid[i]], f)
+
+
+
+'''
+wiso_q_plev_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wiso_q_plev_alltime.pkl', 'rb') as f:
+    wiso_q_plev_alltime[expid[i]] = pickle.load(f)
+
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
 

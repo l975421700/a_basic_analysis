@@ -1028,4 +1028,124 @@ temperature = EDC_df_drvd.iloc[
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region find site values from grid data
+
+def find_gridvalue_at_site(slat, slon, lat, lon, gridded_data):
+    '''
+    #-------- Input
+    slat: site latitude, scalar
+    slon: site longitude, scalar
+    
+    lat:  latitude, 1d or 2d array
+    lon:  longitude, 1d or 2d array
+    
+    gridded_data: 2d array
+    '''
+    
+    import numpy as np
+    
+    if (np.isnan(slat) | np.isnan(slon)):
+        gridvalue = np.nan
+    else:
+        if (lon.ndim == 2):
+            ilat, ilon = find_ilat_ilon_general(slat, slon, lat, lon)
+        elif (lon.ndim == 1):
+            ilat, ilon = find_ilat_ilon(slat, slon, lat, lon)
+        
+        gridvalue = gridded_data[ilat, ilon]
+    
+    return(gridvalue)
+
+
+def find_multi_gridvalue_at_site(latitudes, longitudes, lat, lon, gridded_data):
+    '''
+    #-------- Input
+    latitudes: 1d array
+    longitudes: 1d array
+    
+    lat: 1d or 2d array
+    lon: 1d or 2d array
+    
+    gridded_data: 2d array
+    '''
+    
+    import numpy as np
+    
+    gridvalues = np.zeros(len(latitudes))
+    
+    for i in range(len(latitudes)):
+        gridvalues[i] = find_gridvalue_at_site(
+            latitudes[i], longitudes[i], lat, lon, gridded_data)
+    
+    return(gridvalues)
+
+
+
+
+
+'''
+#-------------------------------- check
+import pandas as pd
+import numpy as np
+import pickle
+
+Antarctic_snow_isotopes = pd.read_csv(
+    'data_sources/ice_core_records/Antarctic_snow_isotopic_composition/Antarctic_snow_isotopic_composition_DB.tab',
+    sep='\t', header=0, skiprows=97,)
+
+Antarctic_snow_isotopes = Antarctic_snow_isotopes.rename(columns={
+    'Latitude': 'lat',
+    'Longitude': 'lon',
+    'δD [‰ SMOW] (Calculated average/mean values)': 'dD',
+    'δ18O H2O [‰ SMOW] (Calculated average/mean values)': 'dO18',
+    'd xs [‰] (Calculated average/mean values)': 'd-excess',
+})
+
+exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+expid = ['pi_600_5.0',]
+i = 0
+d_ln_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_alltime.pkl', 'rb') as f:
+    d_ln_alltime[expid[i]] = pickle.load(f)
+
+lon = d_ln_alltime[expid[0]]['am'].lon
+lat = d_ln_alltime[expid[0]]['am'].lat
+lon_2d, lat_2d = np.meshgrid(lon, lat,)
+
+latitudes = Antarctic_snow_isotopes['lat'].values
+longitudes = Antarctic_snow_isotopes['lon'].values
+
+result = find_multi_gridvalue_at_site(
+    latitudes,
+    longitudes,
+    d_ln_alltime[expid[i]]['am'].lat.values,
+    d_ln_alltime[expid[i]]['am'].lon.values,
+    d_ln_alltime[expid[i]]['am'].values,
+    )
+
+
+for irecord in range(len(latitudes)):
+    # irecord = 100
+    
+    slat = Antarctic_snow_isotopes['lat'].values[irecord]
+    slon = Antarctic_snow_isotopes['lon'].values[irecord]
+    
+    if (np.isfinite(slat) & np.isfinite(slon)):
+        ilat, ilon = find_ilat_ilon_general(slat, slon, lat_2d, lon_2d)
+        site_value = d_ln_alltime[expid[i]]['am'].values[ilat, ilon]
+    else:
+        site_value = np.nan
+    
+    if (np.isfinite(site_value)):
+        if (site_value != result[irecord]):
+            print('mismatch: ' + str(irecord))
+
+
+
+
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
 

@@ -2,6 +2,7 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
+    # 'pi_m_502_5.0',
     'pi_600_5.0',
     # 'pi_601_5.1',
     # 'pi_602_5.2',
@@ -20,7 +21,7 @@ import warnings
 warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
-sys.path.append('/albedo/work/user/qigao001')
+# sys.path.append('/work/ollie/qigao001')
 
 # data analysis
 import numpy as np
@@ -35,6 +36,7 @@ import xesmf as xe
 import pandas as pd
 from statsmodels.stats import multitest
 import pycircstat as circ
+import math
 
 # plot
 import matplotlib as mpl
@@ -50,6 +52,7 @@ plt.rcParams.update({"mathtext.fontset": "stix"})
 import matplotlib.animation as animation
 import seaborn as sns
 import cartopy.feature as cfeature
+from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -82,6 +85,7 @@ from a_basic_analysis.b_module.namelist import (
     zerok,
     panel_labels,
     seconds_per_d,
+    plot_labels,
 )
 
 from a_basic_analysis.b_module.source_properties import (
@@ -111,83 +115,79 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-wiso_q_plev_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wiso_q_plev_alltime.pkl', 'rb') as f:
-    wiso_q_plev_alltime[expid[i]] = pickle.load(f)
-
-
-# setting
-VSMOW_O18 = 0.22279967
-VSMOW_D   = 0.3288266
-
-
-'''
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region get mon_sea_ann dO18
-
-dO18_q_alltime = {}
-dO18_q_alltime[expid[i]] = {}
-
-for ialltime in wiso_q_plev_alltime[expid[i]]['q16o'].keys():
-    # ialltime = 'am'
-    print(ialltime)
-    
-    dO18_q_alltime[expid[i]][ialltime] = \
-        (((wiso_q_plev_alltime[expid[i]]['q18o'][ialltime] / \
-            wiso_q_plev_alltime[expid[i]]['q16o'][ialltime]) / \
-                VSMOW_O18 - 1) * 1000).compute()
-    
-    dO18_q_alltime[expid[i]][ialltime] = \
-        dO18_q_alltime[expid[i]][ialltime].rename('dO18')
-
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_q_alltime.pkl', 'wb') as f:
-    pickle.dump(dO18_q_alltime[expid[i]], f)
-
-
-'''
 dO18_q_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_q_alltime.pkl', 'rb') as f:
     dO18_q_alltime[expid[i]] = pickle.load(f)
 
-'''
+dD_q_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_q_alltime.pkl', 'rb') as f:
+    dD_q_alltime[expid[i]] = pickle.load(f)
+
+wiso_q_plev_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wiso_q_plev_alltime.pkl', 'rb') as f:
+    wiso_q_plev_alltime[expid[i]] = pickle.load(f)
+
+lon = dO18_q_alltime[expid[i]]['am'].lon
+lat = dO18_q_alltime[expid[i]]['am'].lat
+lon_2d, lat_2d = np.meshgrid(lon, lat,)
+plevs = dO18_q_alltime[expid[i]]['am'].plev
+
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region get mon_sea_ann dD
+# region plot dD_q_alltime
 
-dD_q_alltime = {}
-dD_q_alltime[expid[i]] = {}
+am_zm_dD = dD_q_alltime[expid[i]]['am'].weighted(
+    wiso_q_plev_alltime[expid[i]]['q16o']['am'].fillna(0)
+    ).mean(dim='lon').compute()
 
-for ialltime in wiso_q_plev_alltime[expid[i]]['qhdo'].keys():
-    # ialltime = 'am'
-    print(ialltime)
-    
-    dD_q_alltime[expid[i]][ialltime] = \
-        (((wiso_q_plev_alltime[expid[i]]['qhdo'][ialltime] / \
-            wiso_q_plev_alltime[expid[i]]['q16o'][ialltime]) / \
-                VSMOW_D - 1) * 1000).compute()
-    
-    dD_q_alltime[expid[i]][ialltime] = \
-        dD_q_alltime[expid[i]][ialltime].rename('dD')
+output_png = 'figures/test/test.png'
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_q_alltime.pkl', 'wb') as f:
-    pickle.dump(dD_q_alltime[expid[i]], f)
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-550, cm_max=-50, cm_interval1=25, cm_interval2=50, cmap='viridis',
+    reversed=False)
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([13.2, 8.8]) / 2.54)
+
+plt_mesh = ax.contourf(
+    lat.sel(lat=slice(3, -90)),
+    plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
+    am_zm_dD.sel(lat=slice(3, -90), plev=slice(1e+5, 2e+4)),
+    norm=pltnorm, cmap=pltcmp, levels=pltlevel, extend='both'
+)
+
+# x-axis
+ax.set_xticks(np.arange(0, -90 - 1e-4, -10))
+ax.set_xlim(0, -88.57)
+ax.xaxis.set_major_formatter(LatitudeFormatter(degree_symbol='° '))
+
+# y-axis
+ax.invert_yaxis()
+ax.set_ylim(1000, 200)
+ax.set_yticks(np.arange(1000, 200 - 1e-4, -100))
+ax.set_ylabel('Pressure [$hPa$]')
+
+# grid
+ax.grid(True, lw=0.5, c='gray', alpha=0.5, linestyle='--',)
+
+# mesh cbar
+cbar = fig.colorbar(
+    plt_mesh, ax=ax, aspect=25,
+    orientation="horizontal", shrink=1, ticks=pltticks, extend='both',
+    pad=0.1, fraction=0.04,
+    anchor=(0.5, -1),
+    )
+cbar.ax.set_xlabel(plot_labels['dD'],)
+cbar.ax.invert_xaxis()
+
+fig.subplots_adjust(left=0.12, right=0.96, bottom=0.14, top=0.98)
+fig.savefig(output_png)
 
 
 
 
-'''
-dD_q_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_q_alltime.pkl', 'rb') as f:
-    dD_q_alltime[expid[i]] = pickle.load(f)
-'''
 # endregion
 # -----------------------------------------------------------------------------
 
