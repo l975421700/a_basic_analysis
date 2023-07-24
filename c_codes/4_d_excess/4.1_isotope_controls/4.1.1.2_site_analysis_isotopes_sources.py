@@ -3,9 +3,9 @@
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     'pi_600_5.0',
-    # 'pi_601_5.1',
-    # 'pi_602_5.2',
-    # 'pi_603_5.3',
+    'pi_601_5.1',
+    'pi_602_5.2',
+    'pi_603_5.3',
     ]
 
 
@@ -300,15 +300,13 @@ https://stackoverflow.com/questions/20105364/how-can-i-make-a-scatter-plot-color
 # -----------------------------------------------------------------------------
 # region isotopes vs. source properties at all times
 
-i = 0
+i = 3
 
-for icores in ['EDC', 'DOME F']:
-    # ['EDC', 'DOME F']:
+for icores in ['EDC',]:
     # icores = 'EDC'
-    # pre_weighted_var_icores[expid[i]].keys()
     print('#-------------------------------- ' + icores)
     
-    for iisotope in ['dO18', 'd_excess', 'd_ln']:
+    for iisotope in ['dO18', 'dD', 'd_excess', 'd_ln']:
         # iisotope = 'd_ln'
         print('#---------------- ' + iisotope)
         
@@ -316,7 +314,7 @@ for icores in ['EDC', 'DOME F']:
             # ivar = 'sst'
             print('#-------- ' + ivar)
             
-            for ialltime in ['daily', 'mon', 'ann',]:
+            for ialltime in ['daily', 'mon', 'ann', 'mm']:
                 # ['daily', 'mon', 'ann',]:
                 # ialltime = 'daily'
                 print('#---- ' + ialltime)
@@ -350,11 +348,17 @@ for icores in ['EDC', 'DOME F']:
                     lw=0.5, color='k')
                 plt.text(0.05, 0.9, icores, transform=ax.transAxes, color='k',)
                 
-                plt.text(
-                    0.5, 0.05,
-                    '$y = $' + str(np.round(linearfit.slope, 1)) + '$x + $' + \
+                if (linearfit.intercept >= 0):
+                    eq_text = '$y = $' + str(np.round(linearfit.slope, 1)) + '$x + $' + \
                         str(np.round(linearfit.intercept, 1)) + \
-                            '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3)),
+                            '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3))
+                else:
+                    eq_text = '$y = $' + str(np.round(linearfit.slope, 1)) + '$x $' + \
+                        str(np.round(linearfit.intercept, 1)) + \
+                            '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3))
+                
+                plt.text(
+                    0.5, 0.05, eq_text,
                     transform=ax.transAxes, fontsize=6, linespacing=1.5)
                 
                 ax.set_ylabel(plot_labels[iisotope], labelpad=2)
@@ -379,7 +383,6 @@ for icores in ['EDC', 'DOME F']:
 
 i = 0
 # icores = 'EDC'
-icores = 'DOME F'
 iisotope = 'd_ln'
 ialltime = 'mon'
 
@@ -399,7 +402,6 @@ xr_par_cor(iso_var, src_var, ctl_var) ** 2
 
 
 '''
-len(isotopes_alltime_icores[expid[i]].keys()) * len(pre_weighted_var_icores[expid[i]][icores].keys()) * 3
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -408,15 +410,13 @@ len(isotopes_alltime_icores[expid[i]].keys()) * len(pre_weighted_var_icores[expi
 # -----------------------------------------------------------------------------
 # region isotopes vs. source properties at monthly scale without mm
 
-i = 0
+i = 3
 
-for icores in ['EDC', 'DOME F']:
-    # ['EDC', 'DOME F']:
+for icores in ['EDC',]:
     # icores = 'EDC'
-    # pre_weighted_var_icores[expid[i]].keys()
     print('#-------------------------------- ' + icores)
     
-    for iisotope in ['dO18', 'd_excess', 'd_ln']:
+    for iisotope in ['dO18', 'dD', 'd_excess', 'd_ln']:
         # iisotope = 'd_ln'
         print('#---------------- ' + iisotope)
         
@@ -433,9 +433,9 @@ for icores in ['EDC', 'DOME F']:
                 
                 xdata = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime]
                 ydata = isotopes_alltime_icores[expid[i]][iisotope][icores][ialltime]
-                subset = (np.isfinite(xdata) & np.isfinite(ydata))
-                xdata = xdata[subset]
-                ydata = ydata[subset]
+                # subset = (np.isfinite(xdata) & np.isfinite(ydata))
+                # xdata = xdata[subset]
+                # ydata = ydata[subset]
                 
                 xdata = xdata.groupby('time.month') - xdata.groupby('time.month').mean()
                 ydata = ydata.groupby('time.month') - ydata.groupby('time.month').mean()
@@ -445,7 +445,7 @@ for icores in ['EDC', 'DOME F']:
                 ymax_value = np.max(ydata)
                 ymin_value = np.min(ydata)
                 
-                output_png = 'figures/8_d-excess/8.1_controls/8.1.3_site_analysis/8.1.3.0_isotopes_sources_alltimes/8.1.3.0.1 ' + expid[i] + ' ' + icores + ' no mm ' + ialltime + ' ' + ivar + ' vs. ' + iisotope + '.png'
+                output_png = 'figures/8_d-excess/8.1_controls/8.1.3_site_analysis/8.1.3.0_isotopes_sources_alltimes/8.1.3.0.0 ' + expid[i] + ' ' + icores + ' ' + ialltime + ' no mm ' + ivar + ' vs. ' + iisotope + '.png'
                 
                 linearfit = linregress(x = xdata, y = ydata,)
                 
@@ -463,9 +463,8 @@ for icores in ['EDC', 'DOME F']:
                 
                 plt.text(
                     0.5, 0.05,
-                    '$y = $' + str(np.round(linearfit.slope, 1)) + '$x + $' + \
-                        str(np.round(linearfit.intercept, 1)) + \
-                            '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3)),
+                    '$y = $' + str(np.round(linearfit.slope, 1)) + '$x$' + \
+                        '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3)),
                     transform=ax.transAxes, fontsize=6, linespacing=1.5)
                 
                 ax.set_ylabel(plot_labels[iisotope], labelpad=2)
@@ -485,12 +484,10 @@ for icores in ['EDC', 'DOME F']:
 
 
 
-'''
 #-------- partial correlation
 
 i = 0
-# icores = 'EDC'
-icores = 'DOME F'
+icores = 'EDC'
 iisotope = 'd_ln'
 ialltime = 'mon'
 
@@ -513,7 +510,7 @@ xr_par_cor(iso_var, src_var, ctl_var) ** 2
 # (pearsonr(iso_var, ctl_var).statistic) ** 2
 
 
-len(isotopes_alltime_icores[expid[i]].keys()) * len(pre_weighted_var_icores[expid[i]][icores].keys()) * 3
+'''
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -526,17 +523,15 @@ i = 0
 
 ivar1 = 'sst'
 
-for icores in ['EDC', 'DOME F']:
-    # ['EDC', 'DOME F']:
+for icores in ['EDC']:
     # icores = 'EDC'
-    # pre_weighted_var_icores[expid[i]].keys()
     print('#-------------------------------- ' + icores)
     
     for ivar in ['rh2m', 'wind10']:
         # ivar = 'sst'
         print('#-------- ' + ivar)
         
-        for ialltime in ['daily', 'mon', 'ann',]:
+        for ialltime in ['mm',]:
             # ialltime = 'mon'
             print('#---- ' + ialltime)
             
@@ -551,7 +546,7 @@ for icores in ['EDC', 'DOME F']:
             ymax_value = np.max(ydata)
             ymin_value = np.min(ydata)
             
-            output_png = 'figures/8_d-excess/8.1_controls/8.1.3_site_analysis/8.1.3.0_isotopes_sources_alltimes/8.1.3.0.2 ' + expid[i] + ' ' + icores + ' ' + ialltime + ' ' + ivar1 + ' vs. ' + ivar + '.png'
+            output_png = 'figures/8_d-excess/8.1_controls/8.1.3_site_analysis/8.1.3.0_isotopes_sources_alltimes/8.1.3.0.1 ' + expid[i] + ' ' + icores + ' ' + ialltime + ' ' + ivar1 + ' vs. ' + ivar + '.png'
             
             linearfit = linregress(x = xdata, y = ydata,)
             
@@ -567,11 +562,18 @@ for icores in ['EDC', 'DOME F']:
                 lw=0.5, color='k')
             plt.text(0.05, 0.9, icores, transform=ax.transAxes, color='k',)
             
+            if (linearfit.intercept >= 0):
+                eq_text = '$y = $' + str(np.round(linearfit.slope, 1)) + '$x + $' + \
+                    str(np.round(linearfit.intercept, 1)) + \
+                        '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3))
+            else:
+                eq_text = '$y = $' + str(np.round(linearfit.slope, 1)) + '$x $' + \
+                    str(np.round(linearfit.intercept, 1)) + \
+                        '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3))
+            
             plt.text(
                 0.5, 0.05,
-                '$y = $' + str(np.round(linearfit.slope, 1)) + '$x + $' + \
-                    str(np.round(linearfit.intercept, 1)) + \
-                        '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3)),
+                eq_text,
                 transform=ax.transAxes, fontsize=6, linespacing=1.5)
             
             ax.set_ylabel(plot_labels[ivar], labelpad=2)
@@ -602,10 +604,8 @@ i = 0
 
 ivar1 = 'sst'
 
-for icores in ['EDC', 'DOME F']:
-    # ['EDC', 'DOME F']:
+for icores in ['EDC',]:
     # icores = 'EDC'
-    # pre_weighted_var_icores[expid[i]].keys()
     print('#-------------------------------- ' + icores)
     
     for ivar in ['rh2m', 'wind10']:
@@ -618,9 +618,9 @@ for icores in ['EDC', 'DOME F']:
             
             xdata = pre_weighted_var_icores[expid[i]][icores][ivar1][ialltime]
             ydata = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime]
-            subset = (np.isfinite(xdata) & np.isfinite(ydata))
-            xdata = xdata[subset]
-            ydata = ydata[subset]
+            # subset = (np.isfinite(xdata) & np.isfinite(ydata))
+            # xdata = xdata[subset]
+            # ydata = ydata[subset]
             
             xdata = xdata.groupby('time.month') - xdata.groupby('time.month').mean()
             ydata = ydata.groupby('time.month') - ydata.groupby('time.month').mean()
@@ -630,7 +630,7 @@ for icores in ['EDC', 'DOME F']:
             ymax_value = np.max(ydata)
             ymin_value = np.min(ydata)
             
-            output_png = 'figures/8_d-excess/8.1_controls/8.1.3_site_analysis/8.1.3.0_isotopes_sources_alltimes/8.1.3.0.3 ' + expid[i] + ' ' + icores + ' no mm ' + ialltime + ' ' + ivar1 + ' vs. ' + ivar + '.png'
+            output_png = 'figures/8_d-excess/8.1_controls/8.1.3_site_analysis/8.1.3.0_isotopes_sources_alltimes/8.1.3.0.1 ' + expid[i] + ' ' + icores + ' ' + ialltime + ' no mm ' + ivar1 + ' vs. ' + ivar + '.png'
             
             linearfit = linregress(x = xdata, y = ydata,)
             
@@ -648,9 +648,8 @@ for icores in ['EDC', 'DOME F']:
             
             plt.text(
                 0.5, 0.05,
-                '$y = $' + str(np.round(linearfit.slope, 1)) + '$x + $' + \
-                    str(np.round(linearfit.intercept, 1)) + \
-                        '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3)),
+                '$y = $' + str(np.round(linearfit.slope, 1)) + '$x$' + \
+                    '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3)),
                 transform=ax.transAxes, fontsize=6, linespacing=1.5)
             
             ax.set_ylabel(plot_labels[ivar], labelpad=2)

@@ -3,9 +3,9 @@
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     'pi_600_5.0',
-    'pi_601_5.1',
-    'pi_602_5.2',
-    'pi_603_5.3',
+    # 'pi_601_5.1',
+    # 'pi_602_5.2',
+    # 'pi_603_5.3',
     ]
 
 
@@ -86,6 +86,7 @@ from a_basic_analysis.b_module.namelist import (
     zerok,
     panel_labels,
     seconds_per_d,
+    plot_labels,
 )
 
 from a_basic_analysis.b_module.source_properties import (
@@ -143,19 +144,6 @@ lat = d_ln_alltime[expid[0]]['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
 
-'''
-wisoaprt_alltime = {}
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
-        wisoaprt_alltime[expid[i]] = pickle.load(f)
-    
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region clean Valerie's data
-
 Antarctic_snow_isotopes = pd.read_csv(
     'data_sources/ice_core_records/Antarctic_snow_isotopic_composition/Antarctic_snow_isotopic_composition_DB.tab',
     sep='\t', header=0, skiprows=97,)
@@ -177,84 +165,147 @@ ln_d18O = 1000 * np.log(1 + Antarctic_snow_isotopes['dO18'] / 1000)
 
 Antarctic_snow_isotopes['d_ln'] = ln_dD - 8.47 * ln_d18O + 0.0285 * (ln_d18O ** 2)
 
-# Antarctic_snow_isotopes = Antarctic_snow_isotopes.dropna(
-#     subset=['lat', 'lon'], ignore_index=True)
-
+'''
+'''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region extract simulations for obserations
-
-Antarctic_snow_isotopes_simulations = {}
+# region plot annual mean values
 
 for i in range(len(expid)):
     # i = 0
     print('#---------------- ' + str(i) + ': ' + expid[i])
     
-    Antarctic_snow_isotopes_simulations[expid[i]] = Antarctic_snow_isotopes.copy()
-    
     for iisotopes in ['dO18', 'dD', 'd_ln', 'd_excess',]:
         # iisotopes = 'd_ln'
+        # ['dO18', 'dD', 'd_ln', 'd_excess',]
         print('#-------- ' + iisotopes)
         
         if (iisotopes == 'dO18'):
             isotopevar = dO18_alltime[expid[i]]['am']
+            pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+                cm_min=-60, cm_max=-20, cm_interval1=5, cm_interval2=5,
+                cmap='viridis', reversed=True)
+            
         elif (iisotopes == 'dD'):
             isotopevar = dD_alltime[expid[i]]['am']
+            pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+                cm_min=-450, cm_max=-100, cm_interval1=25, cm_interval2=50,
+                cmap='viridis', reversed=True)
+            
         elif (iisotopes == 'd_ln'):
             isotopevar = d_ln_alltime[expid[i]]['am']
+            pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+                cm_min=0, cm_max=80, cm_interval1=5, cm_interval2=10,
+                cmap='viridis', reversed=False)
+            
         elif (iisotopes == 'd_excess'):
             isotopevar = d_excess_alltime[expid[i]]['am']
+            pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+                cm_min=0, cm_max=20, cm_interval1=2, cm_interval2=4,
+                cmap='viridis', reversed=False)
         
-        Antarctic_snow_isotopes_simulations[expid[i]][iisotopes + '_sim'] = \
-            find_multi_gridvalue_at_site(
-                Antarctic_snow_isotopes_simulations[expid[i]]['lat'].values,
-                Antarctic_snow_isotopes_simulations[expid[i]]['lon'].values,
-                lat.values,
-                lon.values,
-                isotopevar.values,
-            )
-    
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.Antarctic_snow_isotopes_simulations.pkl', 'wb') as f:
-        pickle.dump(Antarctic_snow_isotopes_simulations[expid[i]], f)
-
-
-
-
-'''
-#-------------------------------- check
-
-i = 0
-Antarctic_snow_isotopes_simulations = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.Antarctic_snow_isotopes_simulations.pkl', 'rb') as f:
-    Antarctic_snow_isotopes_simulations[expid[i]] = pickle.load(f)
-
-for irecord in np.arange(10, 1000, 10):
-    # irecord = 100
-    print('irecord: ' + str(irecord))
-    
-    slat = Antarctic_snow_isotopes_simulations[expid[i]]['lat'][irecord]
-    slon = Antarctic_snow_isotopes_simulations[expid[i]]['lon'][irecord]
-    
-    if (np.isfinite(slat) & np.isfinite(slon)):
-        ilat, ilon = find_ilat_ilon_general(slat, slon, lat_2d, lon_2d)
+        output_png = 'figures/8_d-excess/8.0_records/8.0.3_isotopes/8.0.3.1_sim_vs_obs_spatial/8.0.3.1.0 ' + expid[i] + ' observed vs. simulated ' + iisotopes + '_AIS.png'
         
-        if(abs(slat - lat[ilat].values) > 1.5):
-            print('Site vs. grid lat: ' + str(np.round(slat, 1)) + ' vs. ' + str(np.round(lat[ilat].values, 1)))
+        fig, ax = hemisphere_plot(northextent=-60)
         
-        if (abs(slon - lon[ilon].values) > 2):
-            print('Site vs. grid lon: ' + str(np.round(slon, 1)) + ' vs. ' + str(np.round(lon[ilon].values, 1)))
+        xdata = Antarctic_snow_isotopes['lon']
+        ydata = Antarctic_snow_isotopes['lat']
+        cdata = Antarctic_snow_isotopes[iisotopes]
+        subset = (np.isfinite(xdata) & np.isfinite(ydata) & np.isfinite(cdata))
+        xdata = xdata[subset]
+        ydata = ydata[subset]
+        cdata = cdata[subset]
         
-        data1 = Antarctic_snow_isotopes_simulations[expid[i]]['d_ln_sim'][irecord]
-        data2 = d_ln_alltime[expid[i]]['am'][ilat, ilon].values
+        plt_scatter = ax.scatter(
+            xdata, ydata, s=8, c=cdata,
+            edgecolors='k', linewidths=0.1, zorder=3,
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
         
-        if (data1 != data2):
-            print('!----------- mismatch')
+        plt1 = plot_t63_contourf(
+            lon, lat, isotopevar, ax,
+            pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+        ax.add_feature(
+            cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
+        
+        cbar = fig.colorbar(
+            plt_scatter, ax=ax, aspect=30,
+            orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+            pad=0.02, fraction=0.2,)
+        cbar.ax.tick_params(labelsize=8)
+        cbar.ax.set_xlabel(plot_labels[iisotopes], linespacing=1.5)
+        fig.savefig(output_png)
 
 
-'''
+
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot annual standard deviation
+
+
+for i in range(len(expid)):
+    # i = 0
+    print('#---------------- ' + str(i) + ': ' + expid[i])
+    
+    for iisotopes in ['dO18', 'dD', 'd_ln', 'd_excess',]:
+        # iisotopes = 'd_ln'
+        # ['dO18', 'dD', 'd_ln', 'd_excess',]
+        print('#-------- ' + iisotopes)
+        
+        if (iisotopes == 'dO18'):
+            isotopevar = dO18_alltime[expid[i]]['ann'].std(dim='time', ddof=1)
+            pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+                cm_min=0, cm_max=4, cm_interval1=0.5, cm_interval2=1,
+                cmap='viridis', reversed=True)
+            
+        elif (iisotopes == 'dD'):
+            isotopevar = dD_alltime[expid[i]]['ann'].std(dim='time', ddof=1)
+            pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+                cm_min=0, cm_max=40, cm_interval1=5, cm_interval2=10,
+                cmap='viridis', reversed=True)
+            
+        elif (iisotopes == 'd_ln'):
+            isotopevar = d_ln_alltime[expid[i]]['ann'].std(dim='time', ddof=1)
+            pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+                cm_min=0, cm_max=4, cm_interval1=0.5, cm_interval2=1,
+                cmap='viridis', reversed=True)
+            
+        elif (iisotopes == 'd_excess'):
+            isotopevar = d_excess_alltime[expid[i]]['ann'].std(dim='time', ddof=1)
+            pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+                cm_min=0, cm_max=4, cm_interval1=0.5, cm_interval2=1,
+                cmap='viridis', reversed=True)
+        
+        output_png = 'figures/8_d-excess/8.0_records/8.0.3_isotopes/8.0.3.1_sim_vs_obs_spatial/8.0.3.1.1 ' + expid[i] + ' simulated ' + iisotopes + ' std_AIS.png'
+        
+        fig, ax = hemisphere_plot(northextent=-60)
+        
+        plt1 = plot_t63_contourf(
+            lon, lat, isotopevar, ax,
+            pltlevel, 'max', pltnorm, pltcmp, ccrs.PlateCarree(),)
+        ax.add_feature(
+            cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
+        
+        cbar = fig.colorbar(
+            plt1, ax=ax, aspect=30,
+            orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
+            pad=0.02, fraction=0.2,)
+        cbar.ax.tick_params(labelsize=8)
+        cbar.ax.set_xlabel(
+            'Standard deviation of ' + plot_labels[iisotopes],
+            linespacing=1.5)
+        fig.savefig(output_png)
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+
 

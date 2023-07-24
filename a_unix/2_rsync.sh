@@ -1,68 +1,26 @@
 
+#-------------------------------- download figures
 
-# -----------------------------------------------------------------------------
-# region rsync download figures
-
-# download figures
 rsync -avzP xfer1:/home/users/qino/figures /Users/gao/OneDrive\ -\ University\ of\ Cambridge/research/
 
 rsync -avzP albedo:/albedo/work/user/qigao001/figures /Users/gao/OneDrive\ -\ University\ of\ Cambridge/research/
 
-# endregion
-# -----------------------------------------------------------------------------
+
+#-------------------------------- sync from albedo to jasmin
+
+rsync -avzLP /albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/* xfer1:/gws/nopw/j04/bas_palaeoclim/qino/output/echam-6.3.05p2-wiso/pi/ &
+
+rsync -avzLP xfer1:/gws/nopw/j04/bas_palaeoclim/qino/output/echam-6.3.05p2-wiso/pi/pi_600_5.0 /albedo/work/user/qigao001/output/echam-6.3.05p2-wiso/pi/ &
+
+# pi_600_5.0; pi_601_5.1; pi_602_5.2; pi_603_5.3; pi_604_5.4
+
+#-------------------------------- backup jasmin to lacie
+
+rsync -avzLP sci3:/gws/nopw/j04/bas_palaeoclim/qino/* /Volumes/LaCie/jasmin/qino/bas_palaeoclim_qino/
 
 
-# -----------------------------------------------------------------------------
-# region backup jasmin to lacie
+#-------------------------------- copy from $SCRATCH to $WORK on albedo
 
-rsync -avz sci3:/home/users/qino/a00_basic_analysis /Volumes/LaCie/jasmin/qino/
-rsync -avz sci3:/home/users/qino/figures /Volumes/LaCie/jasmin/qino/
-rsync -avz sci3:/home/users/qino/git_repo /Volumes/LaCie/jasmin/qino/
+cp -rnL /albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/* /albedo/work/user/qigao001/output/echam-6.3.05p2-wiso/pi/ &
 
-rsync -avz sci3:/gws/nopw/j04/bas_palaeoclim/qino/* /Volumes/LaCie/jasmin/qino/bas_palaeoclim_qino/
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-
-# -----------------------------------------------------------------------------
-# region partial backup ollie to levante
-# -l, --links                 copy symlinks as symlinks
-# -F --exclude=PATTERN       exclude files matching PATTERN
-
-rsync -avzLP --exclude '**/run_/*' /work/ollie/qigao001/output/archived_exp levante:/work/ab0246/a270200/output/
-
-rsync -avzLP --exclude '**/run_/*' /work/ollie/qigao001/output levante:/work/ab0246/a270200/
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region backup ollie to jasmin
-
-rsync -avzLP /work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/pi_m_502_5.0 xfer1:/home/users/qino/output/echam-6.3.05p2-wiso/pi/ #
-
-rsync -avzLP /work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/pi_d_500_wiso xfer1:/home/users/qino/output/echam-6.3.05p2-wiso/pi/
-rsync -avzLP /work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/pi_d_501_5.0 xfer1:/home/users/qino/output/echam-6.3.05p2-wiso/pi/
-rsync -avzLP /work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/pi_m_416_4.9 xfer1:/home/users/qino/output/echam-6.3.05p2-wiso/pi/
-rsync -avzLP /work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/pi_m_503_5.0 xfer1:/home/users/qino/output/echam-6.3.05p2-wiso/pi/
-
-rsync -avzLP /work/ollie/qigao001/data_sources xfer1:/home/users/qino/
-
-rsync -avzLP /work/ollie/qigao001/finse_school xfer1:/home/users/qino/
-
-rsync -avzLP /work/ollie/qigao001/model_codes xfer1:/home/users/qino/
-
-rsync -avzLP /work/ollie/qigao001/scratch/* xfer1:/home/users/qino/scratch/ #
-
-rsync -avzLP /work/ollie/qigao001/startdump/* xfer1:/home/users/qino/startdump/ #
-
-rsync -avzLP /work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/pi_m_502_5.0/analysis xfer1:/home/users/qino/output/echam-6.3.05p2-wiso/pi/pi_m_502_5.0/ #
-rsync -avzLP /work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/pi_m_502_5.0/outdata xfer1:/home/users/qino/output/echam-6.3.05p2-wiso/pi/pi_m_502_5.0/ #
-
-
-# endregion
-# -----------------------------------------------------------------------------
 

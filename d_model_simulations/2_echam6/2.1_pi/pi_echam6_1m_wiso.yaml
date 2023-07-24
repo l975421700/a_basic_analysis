@@ -3,21 +3,22 @@ general:
     compute_time: "00:30:00"
     initial_date: "2000-01-01"
     final_date: "2000-02-01"
-    model_dir: "/work/ollie/qigao001/model_codes/echam-6.3.05p2-wiso/"
-    base_dir: "/work/ollie/qigao001/output/echam-6.3.05p2-wiso/pi/"
+    model_dir: "/albedo/work/user/qigao001/model_codes/echam-6.3.05p2-wiso/"
+    base_dir: "/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/"
     nmonth: 1
     nyear: 0
     use_venv: False
+    account: paleodyn.paleodyn
 
 echam:
     version: "6.3.05p2-wiso"
-    executable: echam6_0713_wiso
+    executable: echam6_230519_wiso
     bin_sources:
             echam_bin: "${bin_dir}/${executable}"
     bin_in_work:
             echam_bin: "${executable}"
-    namelist_dir: '/work/ollie/qigao001/esm_tools/namelists/echam/6.3.05p2-wiso/PI-CTRL/'
-    # namelist_dir: '/work/ollie/qigao001/a_basic_analysis/g_namelists/pi/'
+    namelist_dir: '/albedo/work/user/qigao001/esm_tools/namelists/echam/6.3.05p2-wiso/PI-CTRL/'
+    # namelist_dir: '/albedo/work/user/qigao001/a_basic_analysis/g_namelists/pi/'
     scenario: "PI-CTRL"
     res: T63
     lresume: False
@@ -39,10 +40,10 @@ echam:
                 runctl:
                     # default_output: True
                     out_filetype: 2
-                    putdata: [ 450, 'seconds', 'first', 0 ]
+                    # putdata: [ 450, 'seconds', 'first', 0 ]
                     # putdata: [ 6, 'hours', 'last', 0 ]
-                    # putdata: [ 1, 'days', 'last', 0 ]
-                    dt_stop: [ 2000, 1, 1, 3 ]
+                    putdata: [ 1, 'days', 'last', 0 ]
+                    # dt_stop: [ 2000, 1, 1, 3 ]
                 radctl:
                     lrad_async: False
                 wisoctl:
@@ -78,16 +79,16 @@ echam:
                     # ltag_corr3_m: False
                     # ltag_corr_xtec: False
                     # lcorrfac: False
-    # file_movements:
-        # forcing:
-        #     all_directions: "link"
-        # input:
-        #     all_directions: "link"
+    file_movements:
+        forcing:
+            all_directions: "link"
+        input:
+            all_directions: "link"
     forcing_sources:
-        wiso_sw_observed: "/home/ollie/mwerner/model_input/ECHAM6-wiso/PI_ctrl/T63/T63_wisosw_d.nc"
-        # wiso_tagmap_1: "/work/ollie/qigao001/startdump/tagging/archived/pi_6tagmap_2.nc"
-        sic_1: "/work/ollie/qigao001/startdump/model_input/pi/alex/T63_amipsic_pcmdi_187001-189912.nc"
-        sst_1: "/work/ollie/qigao001/startdump/model_input/pi/alex/T63_amipsst_pcmdi_187001-189912.nc"
+        wiso_sw_observed: "/albedo/home/mwerner/model_input/ECHAM6-wiso/PI_ctrl/T63/T63_wisosw_d.nc"
+        # wiso_tagmap_1: "/albedo/work/user/qigao001/startdump/tagging/tagmap/pi_6tagmap.nc"
+        sic_1: "/albedo/work/user/qigao001/startdump/model_input/pi/alex/T63_amipsic_pcmdi_187001-189912.nc"
+        sst_1: "/albedo/work/user/qigao001/startdump/model_input/pi/alex/T63_amipsst_pcmdi_187001-189912.nc"
     add_forcing_files:
         wiso_sw: wiso_sw_observed
         # wiso_tagmap: wiso_tagmap_1
@@ -100,11 +101,11 @@ echam:
         sst: "unit.20"
 
 jsbach:
-    # file_movements:
-        # forcing:
-        #     all_directions: "link"
-        # input:
-        #     all_directions: "link"
+    file_movements:
+        forcing:
+            all_directions: "link"
+        input:
+            all_directions: "link"
     add_namelist_changes:
         namelist.jsbach:
             jsbach_ctl:

@@ -678,116 +678,6 @@ ds_mean_over_ais[itime].values
 
 
 # -----------------------------------------------------------------------------
-# region find ilat/ilon for site lat/lon
-
-def find_ilat_ilon(slat, slon, lat, lon):
-    '''
-    #-------- Input
-    slat: latitude, scalar
-    slon: longitude, scalar
-    
-    lat:  latitude, 1d array
-    lon:  longitude, 1d array
-    '''
-    
-    import numpy as np
-    
-    # scale longitude to be between [0, 360]
-    if (slon < 0):
-        slon += 360
-    
-    lon[lon < 0] += 360
-    
-    ilon = np.where(abs(slon - lon) == np.min(abs(slon - lon)))[0][0]
-    ilat = np.where(abs(slat - lat) == np.min(abs(slat - lat)))[0][0]
-    
-    return([ilat, ilon])
-
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region find ilat/ilon for site lat/lon: general approach
-
-def find_ilat_ilon_general(slat, slon, lat, lon):
-    '''
-    #-------- Input
-    slat: site latitude, scalar
-    slon: site longitude, scalar
-    
-    lat:  latitude, 1d or 2d array
-    lon:  longitude, 1d or 2d array
-    '''
-    
-    import numpy as np
-    from haversine import haversine_vector
-    
-    if (lon.ndim == 2):
-        lon1d = lon.reshape(-1, 1)
-        lat1d = lat.reshape(-1, 1)
-    elif (lon.ndim == 1):
-        lon1d = lon
-        lat1d = lat
-    
-    slocation_pair = [slat, slon]
-    location_pairs = [[x, y] for x, y in zip(lat1d, lon1d)]
-    
-    distances1d = haversine_vector(
-        slocation_pair, location_pairs, comb=True, normalize=True,
-        )
-    
-    if (lon.ndim == 2):
-        distances = distances1d.reshape(lon.shape)
-    elif (lon.ndim == 1):
-        distances = distances1d
-    
-    wheremin = np.where(distances == np.nanmin(distances))
-    
-    iind0 = wheremin[0][0]
-    iind1 = wheremin[-1][0]
-    
-    return([iind0, iind1])
-
-
-'''
-#-------- check
-
-from haversine import haversine
-
-model = list(lig_sst.keys())[-1]
-# model = 'AWI-ESM-1-1-LR'
-
-slat = ec_sst_rec['original'].Latitude[2]
-slon = ec_sst_rec['original'].Longitude[2]
-lon = pi_sst[model].lon.values
-lat = pi_sst[model].lat.values
-
-iind0, iind1 = find_ilat_ilon_general(slat, slon, lat, lon)
-
-if (lon.ndim == 2):
-    print(lon[iind0, iind1])
-    print(lat[iind0, iind1])
-elif (lon.ndim == 1):
-    print(lon[iind0])
-    print(lat[iind0])
-
-print(slon)
-print(slat)
-
-if (lon.ndim == 2):
-    print(haversine([slat, slon], [lat[iind0, iind1], lon[iind0, iind1]]))
-elif (lon.ndim == 1):
-    print(haversine([slat, slon], [lat[iind0], lon[iind0]]))
-
-
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
 # region find the nearest value in an array to a scalar
 
 def find_nearest_1d(array, value):
@@ -1029,7 +919,78 @@ temperature = EDC_df_drvd.iloc[
 
 
 # -----------------------------------------------------------------------------
-# region find site values from grid data
+# region Funcion to find site values from grid data
+
+
+#-------------------------------- find ilat/ilon for site lat/lon
+
+def find_ilat_ilon(slat, slon, lat, lon):
+    '''
+    #-------- Input
+    slat: latitude, scalar
+    slon: longitude, scalar
+    
+    lat:  latitude, 1d array
+    lon:  longitude, 1d array
+    '''
+    
+    import numpy as np
+    
+    # scale longitude to be between [0, 360]
+    if (slon < 0):
+        slon += 360
+    
+    lon[lon < 0] += 360
+    
+    ilon = np.where(abs(slon - lon) == np.min(abs(slon - lon)))[0][0]
+    ilat = np.where(abs(slat - lat) == np.min(abs(slat - lat)))[0][0]
+    
+    return([ilat, ilon])
+
+
+#-------------------------------- find ilat/ilon: general approach
+
+def find_ilat_ilon_general(slat, slon, lat, lon):
+    '''
+    #-------- Input
+    slat: site latitude, scalar
+    slon: site longitude, scalar
+    
+    lat:  latitude, 1d or 2d array
+    lon:  longitude, 1d or 2d array
+    '''
+    
+    import numpy as np
+    from haversine import haversine_vector
+    
+    if (lon.ndim == 2):
+        lon1d = lon.reshape(-1, 1)
+        lat1d = lat.reshape(-1, 1)
+    elif (lon.ndim == 1):
+        lon1d = lon
+        lat1d = lat
+    
+    slocation_pair = [slat, slon]
+    location_pairs = [[x, y] for x, y in zip(lat1d, lon1d)]
+    
+    distances1d = haversine_vector(
+        slocation_pair, location_pairs, comb=True, normalize=True,
+        )
+    
+    if (lon.ndim == 2):
+        distances = distances1d.reshape(lon.shape)
+    elif (lon.ndim == 1):
+        distances = distances1d
+    
+    wheremin = np.where(distances == np.nanmin(distances))
+    
+    iind0 = wheremin[0][0]
+    iind1 = wheremin[-1][0]
+    
+    return([iind0, iind1])
+
+
+#-------------------------------- find grid value at site
 
 def find_gridvalue_at_site(slat, slon, lat, lon, gridded_data):
     '''
@@ -1058,6 +1019,8 @@ def find_gridvalue_at_site(slat, slon, lat, lon, gridded_data):
     return(gridvalue)
 
 
+#-------------------------------- find a series of grid values at sites
+
 def find_multi_gridvalue_at_site(latitudes, longitudes, lat, lon, gridded_data):
     '''
     #-------- Input
@@ -1081,11 +1044,131 @@ def find_multi_gridvalue_at_site(latitudes, longitudes, lat, lon, gridded_data):
     return(gridvalues)
 
 
+#-------------------------------- find grid value at site: multiple methods
+
+def find_gridvalue_at_site_interp(
+    slat, slon, lat, lon, gridded_data, method='linear'):
+    '''
+    #-------- Input
+    slat: site latitude, scalar
+    slon: site longitude, scalar
+    
+    lat:  latitude, 1d array
+    lon:  longitude, 1d array
+    
+    gridded_data: 2d array
+    
+    method: “linear”, “nearest”, “slinear”, “cubic”, “quintic”, “pchip”, and “splinef2d”
+    '''
+    
+    import numpy as np
+    from scipy.interpolate import interpn
+    
+    if (slon < 0): slon += 360
+    lon[lon < 0] += 360
+    
+    if (np.isnan(slat) | np.isnan(slon)):
+        gridvalue = np.nan
+    else:
+        points = (lat, lon)
+        point  = np.array([slat, slon])
+        gridvalue = interpn(
+            points, gridded_data, point, method=method,
+            bounds_error=False, fill_value=None)
+    
+    return(gridvalue)
+
+
+#-------------------------------- find a series of grid values: multiple methods
+
+def find_multi_gridvalue_at_site_interpn(
+    latitudes, longitudes, lat, lon, gridded_data, method='linear'):
+    '''
+    #-------- Input
+    latitudes: 1d array
+    longitudes: 1d array
+    
+    lat: 1d array
+    lon: 1d array
+    
+    gridded_data: 2d array
+    
+    method: “linear”, “nearest”, “slinear”, “cubic”, “quintic”, “pchip”, and “splinef2d”
+    '''
+    
+    import numpy as np
+    
+    gridvalues = np.zeros(len(latitudes))
+    
+    for i in range(len(latitudes)):
+        gridvalues[i] = find_gridvalue_at_site_interp(
+            latitudes[i], longitudes[i], lat, lon, gridded_data, method=method)
+    
+    return(gridvalues)
+
 
 
 
 '''
-#-------------------------------- check
+#-------------------------------- check find_ilat_ilon_general
+
+from haversine import haversine
+
+model = list(lig_sst.keys())[-1]
+# model = 'AWI-ESM-1-1-LR'
+
+slat = ec_sst_rec['original'].Latitude[2]
+slon = ec_sst_rec['original'].Longitude[2]
+lon = pi_sst[model].lon.values
+lat = pi_sst[model].lat.values
+
+iind0, iind1 = find_ilat_ilon_general(slat, slon, lat, lon)
+
+if (lon.ndim == 2):
+    print(lon[iind0, iind1])
+    print(lat[iind0, iind1])
+elif (lon.ndim == 1):
+    print(lon[iind0])
+    print(lat[iind0])
+
+print(slon)
+print(slat)
+
+if (lon.ndim == 2):
+    print(haversine([slat, slon], [lat[iind0, iind1], lon[iind0, iind1]]))
+elif (lon.ndim == 1):
+    print(haversine([slat, slon], [lat[iind0], lon[iind0]]))
+
+
+#-------------------------------- check find_gridvalue_at_site
+from scipy.interpolate import interpn
+from a_basic_analysis.b_module.basic_calculations import find_gridvalue_at_site
+
+irecord = 100
+
+points = (lat.values, lon.values)
+values = d_ln_alltime[expid[i]]['am'].values
+point = np.array([Antarctic_snow_isotopes['lat'][irecord],
+                  Antarctic_snow_isotopes['lon'][irecord]])
+print(interpn(points, values, point, method='linear'))
+
+print(find_gridvalue_at_site(
+    Antarctic_snow_isotopes['lat'][irecord],
+    Antarctic_snow_isotopes['lon'][irecord],
+    lat.values,
+    lon.values,
+    d_ln_alltime[expid[i]]['am'].values))
+
+print(find_gridvalue_at_site(
+    Antarctic_snow_isotopes['lat'][irecord],
+    Antarctic_snow_isotopes['lon'][irecord],
+    lat_2d,
+    lon_2d,
+    d_ln_alltime[expid[i]]['am'].values))
+
+
+#-------------------------------- check find_multi_gridvalue_at_site
+
 import pandas as pd
 import numpy as np
 import pickle
@@ -1141,9 +1224,41 @@ for irecord in range(len(latitudes)):
         if (site_value != result[irecord]):
             print('mismatch: ' + str(irecord))
 
+#-------------------------------- check find_multi_gridvalue_at_site_interpn
+
+result1 = find_multi_gridvalue_at_site(
+    Antarctic_snow_isotopes['lat'].values,
+    Antarctic_snow_isotopes['lon'].values,
+    d_ln_alltime[expid[i]]['am'].lat.values,
+    d_ln_alltime[expid[i]]['am'].lon.values,
+    d_ln_alltime[expid[i]]['am'].values,
+    )
+
+result2 = find_multi_gridvalue_at_site_interpn(
+    Antarctic_snow_isotopes['lat'].values,
+    Antarctic_snow_isotopes['lon'].values,
+    d_ln_alltime[expid[i]]['am'].lat.values,
+    d_ln_alltime[expid[i]]['am'].lon.values,
+    d_ln_alltime[expid[i]]['am'].values,
+    method='nearest'
+    )
+
+print((result1[np.isfinite(result1)] == result2[np.isfinite(result2)]).all())
 
 
-
+# for irecord in range(len(Antarctic_snow_isotopes['lat'].values)):
+#     # irecord = 16
+#     print(irecord)
+#     if (np.isfinite(Antarctic_snow_isotopes['lat'].values[irecord]) & np.isfinite(Antarctic_snow_isotopes['lon'].values[irecord])):
+        
+#         find_gridvalue_at_site_interp(
+#             Antarctic_snow_isotopes['lat'].values[irecord],
+#             Antarctic_snow_isotopes['lon'].values[irecord],
+#             d_ln_alltime[expid[i]]['am'].lat.values,
+#             d_ln_alltime[expid[i]]['am'].lon.values,
+#             d_ln_alltime[expid[i]]['am'].values,
+#             method='nearest'
+#         )
 
 '''
 # endregion

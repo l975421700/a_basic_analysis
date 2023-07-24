@@ -4,9 +4,9 @@ exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_m_502_5.0',
     'pi_600_5.0',
-    'pi_601_5.1',
-    'pi_602_5.2',
-    'pi_603_5.3',
+    # 'pi_601_5.1',
+    # 'pi_602_5.2',
+    # 'pi_603_5.3',
     ]
 i = 0
 
@@ -162,8 +162,8 @@ aa = dD_alltime[expid[i]][ialltime][itime, ilat, ilon].values
 bb = dO18_alltime[expid[i]][ialltime][itime, ilat, ilon].values
 cc = d_excess_alltime[expid[i]][ialltime][itime, ilat, ilon].values
 
-aa - 8 * bb
-cc
+print(aa - 8 * bb)
+print(cc)
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -196,23 +196,8 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_alltime.p
 
 d_ln_alltime = {}
 
-for i in range(len(expid)):
-    print(str(i) + ': ' + expid[i])
-    
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_alltime.pkl', 'rb') as f:
-        d_ln_alltime[expid[i]] = pickle.load(f)
-
-dO18_alltime = {}
-dD_alltime = {}
-
-for i in range(len(expid)):
-    print(str(i) + ': ' + expid[i])
-    
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_alltime.pkl', 'rb') as f:
-        dO18_alltime[expid[i]] = pickle.load(f)
-    
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_alltime.pkl', 'rb') as f:
-        dD_alltime[expid[i]] = pickle.load(f)
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_alltime.pkl', 'rb') as f:
+    d_ln_alltime[expid[i]] = pickle.load(f)
 
 for i in range(len(expid)):
     print(str(i) + ': ' + expid[i])
@@ -242,13 +227,7 @@ for i in range(len(expid)):
                     print(d_ln)
                     print(d_ln_new)
 
-
-
-
-
 '''
-# math.log(math.e)
-# math.log(1 + dD_alltime[expid[i]][ialltime])
 # endregion
 # -----------------------------------------------------------------------------
 

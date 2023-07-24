@@ -3,8 +3,8 @@
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_m_502_5.0',
-    # 'pi_600_5.0',
-    'pi_601_5.1',
+    'pi_600_5.0',
+    # 'pi_601_5.1',
     # 'pi_602_5.2',
     # 'pi_603_5.3',
     ]
@@ -160,7 +160,7 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_alltime.p
 
 
 '''
-#-------------------------------- check 1st
+#-------------------------------- check
 dO18_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_alltime.pkl', 'rb') as f:
     dO18_alltime[expid[i]] = pickle.load(f)
@@ -174,19 +174,6 @@ ddd[wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1).values < wiso_calc_min]
 
 (ccc[np.isfinite(ccc)] == ddd[np.isfinite(ddd)]).all()
 
-#-------------------------------- check 2nd
-
-dO18_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_alltime.pkl', 'rb') as f:
-    dO18_alltime[expid[i]] = pickle.load(f)
-
-dO18_alltime[expid[i]]['am'].to_netcdf('scratch/test/run/test.nc')
-
-(wisoaprt_alltime[expid[i]][ialltime][0].values < wiso_calc_min).sum()
-
-np.isnan(dO18_alltime[expid[i]][ialltime].values).sum()
-
-(wisoaprt_alltime[expid[i]]['daily'][0].values < wiso_calc_min).sum()
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -222,7 +209,7 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_alltime.pkl
 
 
 '''
-#-------------------------------- check 1st
+#-------------------------------- check
 dD_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_alltime.pkl', 'rb') as f:
     dD_alltime[expid[i]] = pickle.load(f)
@@ -236,13 +223,6 @@ ddd[wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1).values < wiso_calc_min]
 
 (ccc[np.isfinite(ccc)] == ddd[np.isfinite(ddd)]).all()
 
-#-------------------------------- check 2nd
-
-dD_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_alltime.pkl', 'rb') as f:
-    dD_alltime[expid[i]] = pickle.load(f)
-
-dD_alltime[expid[i]]['ann'].to_netcdf('scratch/test/run/test.nc')
 
 '''
 # endregion

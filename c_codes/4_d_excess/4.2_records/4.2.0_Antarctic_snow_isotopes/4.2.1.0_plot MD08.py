@@ -227,20 +227,29 @@ ln_d18O = 1000 * np.log(1 + Antarctic_snow_isotopes['δ18O H2O [‰ SMOW] (Calcu
 
 d_ln = ln_dD - 8.47 * ln_d18O + 0.0285 * (ln_d18O ** 2)
 
+subset = (
+    np.isfinite(Antarctic_snow_isotopes['Longitude']) & \
+        np.isfinite(Antarctic_snow_isotopes['Latitude']) & \
+            np.isfinite(Antarctic_snow_isotopes['δD [‰ SMOW] (Calculated average/mean values)']) & \
+                Antarctic_snow_isotopes['δ18O H2O [‰ SMOW] (Calculated average/mean values)'] & \
+                    np.isfinite(Antarctic_snow_isotopes['Acc rate [cm/a] (Calculated)']) & \
+                        np.isfinite(Antarctic_snow_isotopes['t [°C]'])
+)
+subset.sum()
 
 output_png = 'figures/8_d-excess/8.0_records/8.0.3_isotopes/8.0.3.0 Antarctic snow isotopes, d_ln, Masson-Delmotte et al., 2008.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=0, cm_max=60, cm_interval1=5, cm_interval2=10,
+    cm_min=0, cm_max=30, cm_interval1=2.5, cm_interval2=5,
     cmap='viridis', reversed=False)
 
 fig, ax = hemisphere_plot(northextent=-60)
 
 plt_scatter = ax.scatter(
-    Antarctic_snow_isotopes['Longitude'],
-    Antarctic_snow_isotopes['Latitude'],
+    Antarctic_snow_isotopes['Longitude'][subset],
+    Antarctic_snow_isotopes['Latitude'][subset],
     s=8,
-    c=d_ln,
+    c=d_ln[subset],
     edgecolors='k', linewidths=0.1,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 

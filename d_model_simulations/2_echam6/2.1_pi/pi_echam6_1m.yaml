@@ -2,7 +2,7 @@ general:
     setup_name: "echam"
     compute_time: "00:30:00"
     initial_date: "2000-01-01"
-    final_date: "2000-02-01"
+    final_date: "2030-01-01"
     model_dir: "/albedo/work/user/qigao001/model_codes/echam-6.3.05p2-wiso/"
     base_dir: "/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/"
     nmonth: 1
@@ -12,7 +12,7 @@ general:
 
 echam:
     version: "6.3.05p2-wiso"
-    executable: echam6_230711_5.4_k_6
+    executable: echam6_230721_5.7_ss006
     bin_sources:
             echam_bin: "${bin_dir}/${executable}"
     bin_in_work:

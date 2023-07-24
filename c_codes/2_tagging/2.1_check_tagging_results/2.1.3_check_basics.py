@@ -2,16 +2,14 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_m_502_5.0',
     'pi_600_5.0',
-    'pi_601_5.1',
-    'pi_602_5.2',
-    'pi_603_5.3',
+    'pi_607_start',
+    'pi_608_wiso',
     ]
 
 ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
-ifile_start = -13
-ifile_end = -1
+ifile_start = 0
+ifile_end = 1
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -1083,8 +1081,8 @@ exp_org_o[expid[i]]['wiso'].xi16o[i3[0], level[ij[0]]-1, i4[0], i5[0]].values
 # -----------------------------------------------------------------------------
 # region check bit identity
 
-i = 0
-j = 3
+i = 1
+j = 2
 print(expid[i] + '  vs.  ' + expid[j])
 
 
@@ -1100,9 +1098,11 @@ print(expid[i] + '  vs.  ' + expid[j])
 
 #-------------------------------- wiso variables
 
-(exp_org_o[expid[i]]['wiso'].wisoaprl[:, :1] == exp_org_o[expid[j]]['wiso'].wisoaprl[:, :1]).all().values
-(exp_org_o[expid[i]]['wiso'].wisoaprc[:, :1] == exp_org_o[expid[j]]['wiso'].wisoaprc[:, :1]).all().values
+(exp_org_o[expid[i]]['wiso'].wisoaprl[:, :3] == exp_org_o[expid[j]]['wiso'].wisoaprl[:, :3]).all().values
+(exp_org_o[expid[i]]['wiso'].wisoaprc[:, :3] == exp_org_o[expid[j]]['wiso'].wisoaprc[:, :3]).all().values
 
+np.max(abs((exp_org_o[expid[i]]['wiso'].wisoaprl[:, :3].values - exp_org_o[expid[j]]['wiso'].wisoaprl[:, :3].values) / exp_org_o[expid[i]]['wiso'].wisoaprl[:, :3].values))
+np.nanmax(abs((exp_org_o[expid[i]]['wiso'].wisoaprc[:, :3].values - exp_org_o[expid[j]]['wiso'].wisoaprc[:, :3].values) / exp_org_o[expid[i]]['wiso'].wisoaprc[:, :3].values))
 
 '''
 #-------------------------------- while lupdate_tagmap = False
