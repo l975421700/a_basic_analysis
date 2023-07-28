@@ -7,6 +7,9 @@ expid = [
     # 'pi_601_5.1',
     # 'pi_602_5.2',
     # 'pi_603_5.3',
+    # 'pi_605_5.5',
+    # 'pi_606_5.6',
+    # 'pi_609_5.7',
     ]
 i = 0
 
@@ -21,7 +24,7 @@ import warnings
 warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
-# sys.path.append('/work/ollie/qigao001')
+sys.path.append('/albedo/work/user/qigao001')
 
 # data analysis
 import numpy as np

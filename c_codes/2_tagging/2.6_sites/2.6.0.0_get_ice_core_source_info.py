@@ -3,10 +3,13 @@
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_m_502_5.0',
-    # 'pi_600_5.0',
+    'pi_600_5.0',
     # 'pi_601_5.1',
     # 'pi_602_5.2',
-    'pi_603_5.3',
+    # 'pi_603_5.3',
+    # 'pi_605_5.5',
+    # 'pi_606_5.6',
+    # 'pi_609_5.7',
     ]
 i = 0
 
@@ -21,7 +24,7 @@ import warnings
 warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
-# sys.path.append('/work/ollie/qigao001')
+sys.path.append('/albedo/work/user/qigao001')
 
 # data analysis
 import numpy as np
@@ -333,88 +336,6 @@ for icores in wisoaprt_alltime_icores[expid[i]].keys():
 
 
 # -----------------------------------------------------------------------------
-# region get aprt_frc at ice core sites
-
-aprt_frc = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc.pkl', 'rb') as f:
-    aprt_frc[expid[i]] = pickle.load(f)
-
-# aprt_frc[expid[i]].keys()
-
-aprt_frc_alltime_icores = {}
-aprt_frc_alltime_icores[expid[i]] = {}
-
-for icores in stations_sites.Site:
-    # icores = 'EDC'
-    print('#--------' + icores)
-    aprt_frc_alltime_icores[expid[i]][icores] = {}
-    
-    for ialltime in aprt_frc[expid[i]]['Atlantic Ocean'].keys():
-        # print('#----' + ialltime)
-        if ialltime in ['daily', 'mon', 'sea', 'ann', 'mm', 'sm']:
-            # ialltime = 'daily'
-            aprt_frc_alltime_icores[expid[i]][icores][ialltime] = \
-                (aprt_frc[expid[i]]['Atlantic Ocean'][ialltime] + \
-                    aprt_frc[expid[i]]['Indian Ocean'][ialltime] + \
-                        aprt_frc[expid[i]]['Pacific Ocean'][ialltime] + \
-                            aprt_frc[expid[i]]['Southern Ocean'][ialltime]).compute()[
-                                :,
-                                t63_sites_indices[icores]['ilat'],
-                                t63_sites_indices[icores]['ilon']]
-        elif (ialltime == 'am'):
-            # ialltime = 'am'
-            aprt_frc_alltime_icores[expid[i]][icores][ialltime] = \
-                (aprt_frc[expid[i]]['Atlantic Ocean'][ialltime] + \
-                    aprt_frc[expid[i]]['Indian Ocean'][ialltime] + \
-                        aprt_frc[expid[i]]['Pacific Ocean'][ialltime] + \
-                            aprt_frc[expid[i]]['Southern Ocean'][ialltime]).compute()[
-                                t63_sites_indices[icores]['ilat'],
-                                t63_sites_indices[icores]['ilon']]
-
-
-with open(
-    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.aprt_frc_alltime_icores.pkl',
-    'wb') as f:
-    pickle.dump(aprt_frc_alltime_icores[expid[i]], f)
-
-
-
-
-'''
-for icores in aprt_frc_alltime_icores[expid[i]].keys():
-    # icores = 'EDC'
-    print('#----------------' + icores)
-    aprt_frc_am_icores = \
-        np.round(aprt_frc_alltime_icores[expid[i]][icores][
-            'am'].values, 1)
-    aprt_frc_annstd_icores = \
-        np.round((aprt_frc_alltime_icores[expid[i]][icores][
-            'ann']).std(ddof=1).values, 1)
-    print(str(aprt_frc_am_icores) + ' ± ' + str(aprt_frc_annstd_icores))
-
-
-#-------------------------------- check
-aprt_frc_alltime_icores = {}
-with open(
-    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.aprt_frc_alltime_icores.pkl', 'rb') as f:
-    aprt_frc_alltime_icores[expid[i]] = pickle.load(f)
-
-for icores in aprt_frc_alltime_icores[expid[i]].keys():
-    # icores = 'EDC'
-    print('#----------------' + icores)
-    print('local lat:  ' + str(t63_sites_indices[icores]['lat']))
-    print('grid lat:   ' + \
-        str(np.round(aprt_frc_alltime_icores[expid[i]][icores]['am'].lat.values, 2)))
-    print('local lon:  ' + str(t63_sites_indices[icores]['lon']))
-    print('grid lon:   ' + \
-        str(aprt_frc_alltime_icores[expid[i]][icores]['am'].lon.values))
-
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
 # region get source properties at ice core sites
 
 pre_weighted_var = {}
@@ -657,6 +578,88 @@ for iisotope in ['dO18', 'dD', 'd_excess', 'd_ln']:
             print('local lon:  ' + str(local_lon))
             print('grid lon:   ' + str(np.round(grid_lon, 1)))
 
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get aprt_frc at ice core sites
+
+aprt_frc = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc.pkl', 'rb') as f:
+    aprt_frc[expid[i]] = pickle.load(f)
+
+# aprt_frc[expid[i]].keys()
+
+aprt_frc_alltime_icores = {}
+aprt_frc_alltime_icores[expid[i]] = {}
+
+for icores in stations_sites.Site:
+    # icores = 'EDC'
+    print('#--------' + icores)
+    aprt_frc_alltime_icores[expid[i]][icores] = {}
+    
+    for ialltime in aprt_frc[expid[i]]['Atlantic Ocean'].keys():
+        # print('#----' + ialltime)
+        if ialltime in ['daily', 'mon', 'sea', 'ann', 'mm', 'sm']:
+            # ialltime = 'daily'
+            aprt_frc_alltime_icores[expid[i]][icores][ialltime] = \
+                (aprt_frc[expid[i]]['Atlantic Ocean'][ialltime] + \
+                    aprt_frc[expid[i]]['Indian Ocean'][ialltime] + \
+                        aprt_frc[expid[i]]['Pacific Ocean'][ialltime] + \
+                            aprt_frc[expid[i]]['Southern Ocean'][ialltime]).compute()[
+                                :,
+                                t63_sites_indices[icores]['ilat'],
+                                t63_sites_indices[icores]['ilon']]
+        elif (ialltime == 'am'):
+            # ialltime = 'am'
+            aprt_frc_alltime_icores[expid[i]][icores][ialltime] = \
+                (aprt_frc[expid[i]]['Atlantic Ocean'][ialltime] + \
+                    aprt_frc[expid[i]]['Indian Ocean'][ialltime] + \
+                        aprt_frc[expid[i]]['Pacific Ocean'][ialltime] + \
+                            aprt_frc[expid[i]]['Southern Ocean'][ialltime]).compute()[
+                                t63_sites_indices[icores]['ilat'],
+                                t63_sites_indices[icores]['ilon']]
+
+
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.aprt_frc_alltime_icores.pkl',
+    'wb') as f:
+    pickle.dump(aprt_frc_alltime_icores[expid[i]], f)
+
+
+
+
+'''
+for icores in aprt_frc_alltime_icores[expid[i]].keys():
+    # icores = 'EDC'
+    print('#----------------' + icores)
+    aprt_frc_am_icores = \
+        np.round(aprt_frc_alltime_icores[expid[i]][icores][
+            'am'].values, 1)
+    aprt_frc_annstd_icores = \
+        np.round((aprt_frc_alltime_icores[expid[i]][icores][
+            'ann']).std(ddof=1).values, 1)
+    print(str(aprt_frc_am_icores) + ' ± ' + str(aprt_frc_annstd_icores))
+
+
+#-------------------------------- check
+aprt_frc_alltime_icores = {}
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.aprt_frc_alltime_icores.pkl', 'rb') as f:
+    aprt_frc_alltime_icores[expid[i]] = pickle.load(f)
+
+for icores in aprt_frc_alltime_icores[expid[i]].keys():
+    # icores = 'EDC'
+    print('#----------------' + icores)
+    print('local lat:  ' + str(t63_sites_indices[icores]['lat']))
+    print('grid lat:   ' + \
+        str(np.round(aprt_frc_alltime_icores[expid[i]][icores]['am'].lat.values, 2)))
+    print('local lon:  ' + str(t63_sites_indices[icores]['lon']))
+    print('grid lon:   ' + \
+        str(aprt_frc_alltime_icores[expid[i]][icores]['am'].lon.values))
 
 '''
 # endregion

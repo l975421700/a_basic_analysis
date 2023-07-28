@@ -1,5 +1,6 @@
 #!/bin/bash
 #SBATCH -p mpp
+#SBATCH --qos=12h
 #SBATCH --time=02:00:00
 #SBATCH -o %A.out
 #SBATCH -e %A.err

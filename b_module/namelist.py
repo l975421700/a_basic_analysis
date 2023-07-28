@@ -110,6 +110,29 @@ plot_labels_no_unit = {
     'temp2': 'temp2',
 }
 
+expid_labels = {
+    'pi_600_5.0': '$PI_{control}$',
+    'pi_601_5.1': '$PI_{smooth}$',
+    'pi_602_5.2': '$PI_{rough}$',
+    'pi_605_5.5': '$PI_{low\_ss}$',
+    'pi_606_5.6': '$PI_{lowT}$',
+    'pi_609_5.7': '$PI_{highT}$',
+    
+    'pi_603_5.3': '$PI_{no\_ss}$',
+}
+
+expid_colours = {
+    'pi_600_5.0': 'black',
+    'pi_601_5.1': 'tab:blue',
+    'pi_602_5.2': 'tab:orange',
+    'pi_605_5.5': 'tab:green',
+    'pi_606_5.6': 'tab:red',
+    'pi_609_5.7': 'tab:purple',
+    
+    'pi_603_5.3': 'tab:brown',
+}
+
+
 # endregion
 # -----------------------------------------------------------------------------
 

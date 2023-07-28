@@ -5,6 +5,10 @@ expid = [
     'pi_600_5.0',
     # 'pi_601_5.1',
     # 'pi_602_5.2',
+    # 'pi_605_5.5',
+    # 'pi_606_5.6',
+    # 'pi_609_5.7',
+    
     # 'pi_603_5.3',
     ]
 
@@ -87,6 +91,8 @@ from a_basic_analysis.b_module.namelist import (
     panel_labels,
     seconds_per_d,
     plot_labels,
+    expid_colours,
+    expid_labels,
 )
 
 from a_basic_analysis.b_module.source_properties import (
@@ -198,7 +204,7 @@ for i in range(len(expid)):
         elif (iisotopes == 'd_ln'):
             isotopevar = d_ln_alltime[expid[i]]['am']
             pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-                cm_min=0, cm_max=80, cm_interval1=5, cm_interval2=10,
+                cm_min=0, cm_max=30, cm_interval1=2.5, cm_interval2=5,
                 cmap='viridis', reversed=False)
             
         elif (iisotopes == 'd_excess'):
@@ -235,7 +241,10 @@ for i in range(len(expid)):
             orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
             pad=0.02, fraction=0.2,)
         cbar.ax.tick_params(labelsize=8)
-        cbar.ax.set_xlabel(plot_labels[iisotopes], linespacing=1.5)
+        cbar.ax.set_xlabel(
+            'Annual mean ' + plot_labels[iisotopes] + '\n' + \
+                expid_labels[expid[i]],
+            linespacing=1.5)
         fig.savefig(output_png)
 
 

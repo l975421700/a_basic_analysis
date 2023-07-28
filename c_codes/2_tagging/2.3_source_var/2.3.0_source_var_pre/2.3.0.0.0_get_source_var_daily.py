@@ -7,30 +7,33 @@ expid = [
     # 'pi_601_5.1',
     # 'pi_602_5.2',
     # 'pi_603_5.3',
+    # 'pi_605_5.5',
+    # 'pi_606_5.6',
+    # 'pi_609_5.7',
     ]
 i=0
 
 output_dir = exp_odir + expid[i] + '/analysis/echam/'
 
 ifile_start = 120
-ifile_end   = 360
+ifile_end   = 840
 
 ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
 
-var_name  = 'sst'
-itag      = 7
-min_sf    = 268.15
-max_sf    = 318.15
+# var_name  = 'sst'
+# itag      = 7
+# min_sf    = 268.15
+# max_sf    = 318.15
 
 # var_name  = 'lat'
 # itag      = 5
 # min_sf    = -90
 # max_sf    = 90
 
-# var_name  = 'rh2m'
-# itag      = 8
-# min_sf    = 0
-# max_sf    = 1.6
+var_name  = 'rh2m'
+itag      = 8
+min_sf    = 0
+max_sf    = 1.6
 
 # var_name  = 'wind10'
 # itag      = 9

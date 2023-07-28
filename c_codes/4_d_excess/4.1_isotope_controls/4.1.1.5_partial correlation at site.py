@@ -3,9 +3,9 @@
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     'pi_600_5.0',
-    'pi_601_5.1',
-    'pi_602_5.2',
-    'pi_603_5.3',
+    # 'pi_601_5.1',
+    # 'pi_602_5.2',
+    # 'pi_603_5.3',
     ]
 
 
@@ -138,16 +138,16 @@ for i in range(len(expid)):
         pre_weighted_var_icores[expid[i]] = pickle.load(f)
 
 
-par_corr_sources_isotopes = {}
-par_corr_temp2_isotopes2 = {}
+# par_corr_sources_isotopes = {}
+# par_corr_temp2_isotopes2 = {}
 
-for i in range(len(expid)):
-    print(i)
+# for i in range(len(expid)):
+#     print(i)
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sources_isotopes.pkl', 'rb') as f:
-        par_corr_sources_isotopes[expid[i]] = pickle.load(f)
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_temp2_isotopes2.pkl', 'rb') as f:
-        par_corr_temp2_isotopes2[expid[i]] = pickle.load(f)
+#     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sources_isotopes.pkl', 'rb') as f:
+#         par_corr_sources_isotopes[expid[i]] = pickle.load(f)
+#     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_temp2_isotopes2.pkl', 'rb') as f:
+#         par_corr_temp2_isotopes2[expid[i]] = pickle.load(f)
 
 with open('scratch/others/pi_m_502_5.0.t63_sites_indices.pkl', 'rb') as f:
     t63_sites_indices = pickle.load(f)
@@ -165,16 +165,17 @@ icores = 'EDC'
 
 cvar = 'wind10'
 
-for i in [0, 1, 2, 3]:
+for i in [0,]:
     # i = 0
     print('#-------------------------------- ' + expid[i])
     
-    for iisotope in ['d_ln', 'd_excess']:
+    for iisotope in ['d_ln']:
         # iisotope = 'd_ln'
         print('#---------------- ' + iisotope)
         
         for ivar in ['sst']:
             # ivar = 'rh2m'
+            # ['sst']
             # ['rh2m', 'wind10']
             print('#-------- ' + ivar)
             
@@ -240,11 +241,11 @@ for i in [0,]:
     # i = 0
     print('#-------------------------------- ' + expid[i])
     
-    for iisotope in ['d_ln', 'd_excess']:
+    for iisotope in ['dD',]:
         # iisotope = 'd_excess'
         print('#---------------- ' + iisotope)
         
-        for iisotope1 in ['dD']:
+        for iisotope1 in ['d_ln']:
             # iisotope1 = 'dD'
             print('#-------- ' + iisotope1)
             
@@ -324,15 +325,15 @@ xr_par_cor(temp2_var, iso_var, ctl_var) ** 2
 
 icores = 'EDC'
 
-for i in [0, 1, 2, 3,]:
+for i in [0,]:
     # i = 0
     print('#-------------------------------- ' + expid[i])
     
-    for iisotope in ['d_ln',]:
+    for iisotope in ['dD',]:
         # iisotope = 'd_excess'
         print('#---------------- ' + iisotope)
         
-        for iisotope1 in ['dD',]:
+        for iisotope1 in ['d_ln',]:
             # iisotope1 = 'dD'
             print('#-------- ' + iisotope1)
             

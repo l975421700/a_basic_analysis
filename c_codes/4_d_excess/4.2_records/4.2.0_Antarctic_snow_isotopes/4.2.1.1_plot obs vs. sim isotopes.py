@@ -3,8 +3,12 @@
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     'pi_600_5.0',
-    # 'pi_601_5.1',
-    # 'pi_602_5.2',
+    'pi_601_5.1',
+    'pi_602_5.2',
+    'pi_605_5.5',
+    'pi_606_5.6',
+    'pi_609_5.7',
+    
     # 'pi_603_5.3',
     ]
 
@@ -87,6 +91,8 @@ from a_basic_analysis.b_module.namelist import (
     panel_labels,
     seconds_per_d,
     plot_labels,
+    expid_colours,
+    expid_labels,
 )
 
 from a_basic_analysis.b_module.source_properties import (
@@ -126,25 +132,6 @@ for i in range(len(expid)):
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.Antarctic_snow_isotopes_simulations.pkl', 'rb') as f:
         Antarctic_snow_isotopes_simulations[expid[i]] = pickle.load(f)
 
-i = 0
-Antarctic_snow_isotopes_sim_interpn = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.Antarctic_snow_isotopes_sim_interpn.pkl', 'rb') as f:
-    Antarctic_snow_isotopes_sim_interpn[expid[i]] = pickle.load(f)
-
-expid_colours = {
-    'pi_600_5.0': 'tab:blue',
-    'pi_601_5.1': 'tab:orange',
-    'pi_602_5.2': 'tab:green',
-    'pi_603_5.3': 'tab:red',
-}
-
-expid_remark = {
-    'pi_600_5.0': 'Control',
-    'pi_601_5.1': 'Smooth wind regime',
-    'pi_602_5.2': 'Rough wind regime',
-    'pi_603_5.3': 'No supersaturation',
-    }
-
 '''
 '''
 # endregion
@@ -159,7 +146,7 @@ for iisotopes in ['dO18', 'dD', 'd_ln', 'd_excess',]:
     # iisotopes = 'd_ln'
     print('#-------- ' + iisotopes)
     
-    output_png = 'figures/8_d-excess/8.0_records/8.0.3_isotopes/8.0.3.0_sim_vs_obs/8.0.3.0.0 pi_600_3 observed vs. simulated ' + iisotopes + '.png'
+    output_png = 'figures/8_d-excess/8.0_records/8.0.3_isotopes/8.0.3.0_sim_vs_obs/8.0.3.0.0 pi_60_6 observed vs. simulated ' + iisotopes + '.png'
     
     fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
     
@@ -171,6 +158,7 @@ for iisotopes in ['dO18', 'dD', 'd_ln', 'd_excess',]:
         subset = (np.isfinite(xdata) & np.isfinite(ydata))
         xdata = xdata[subset]
         ydata = ydata[subset]
+        RMSE = np.sqrt(np.average(np.square(xdata - ydata)))
         
         ax.scatter(
             xdata, ydata,
@@ -181,12 +169,23 @@ for iisotopes in ['dO18', 'dD', 'd_ln', 'd_excess',]:
         ax.axline(
             (0, linearfit.intercept), slope = linearfit.slope,
             lw=1, color=expid_colours[expid[i]], alpha=0.5)
+        
+        if (linearfit.intercept >= 0):
+            eq_text = '$y = $' + \
+                str(np.round(linearfit.slope, 2)) + '$x + $' + \
+                    str(np.round(linearfit.intercept, 1)) + \
+                        ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
+                            ', $RMSE = $' + str(np.round(RMSE, 1))
+        if (linearfit.intercept < 0):
+            eq_text = '$y = $' + \
+                str(np.round(linearfit.slope, 2)) + '$x $' + \
+                    str(np.round(linearfit.intercept, 1)) + \
+                        ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
+                            ', $RMSE = $' + str(np.round(RMSE, 1))
+        
         plt.text(
-            0.4, 0.28 - i * 0.08,
-            '$y = $' + str(np.round(linearfit.slope, 2)) + '$x + $' + \
-                str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 3)),
-            transform=ax.transAxes, fontsize=10, linespacing=1.5,
+            0.2, 0.35 - i * 0.06, eq_text,
+            transform=ax.transAxes, fontsize=10,
             color=expid_colours[expid[i]], ha='left')
     
     xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
@@ -195,7 +194,7 @@ for iisotopes in ['dO18', 'dD', 'd_ln', 'd_excess',]:
     ax.set_xlim(xylim_min, xylim_max)
     ax.set_ylim(xylim_min, xylim_max)
     
-    ax.axline((0, 0), slope = 1, lw=1, color='k', alpha=0.5)
+    ax.axline((0, 0), slope = 1, lw=1, color='grey', alpha=0.5)
     
     ax.xaxis.set_minor_locator(AutoMinorLocator(2))
     ax.set_xlabel('Observed '  + plot_labels[iisotopes], labelpad=6)
@@ -223,7 +222,7 @@ for iisotopes in ['d_excess', 'd_ln', ]:
     # iisotopes = 'd_ln'
     print('#-------- ' + iisotopes)
     
-    output_png = 'figures/8_d-excess/8.0_records/8.0.3_isotopes/8.0.3.0_sim_vs_obs/8.0.3.0.1 pi_600_3 observed and simulated ' + iisotopes + ' vs. dD.png'
+    output_png = 'figures/8_d-excess/8.0_records/8.0.3_isotopes/8.0.3.0_sim_vs_obs/8.0.3.0.1 pi_60_6 observed and simulated ' + iisotopes + ' vs. dD.png'
     
     fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
     
@@ -278,7 +277,7 @@ for iisotopes in ['d_excess', 'd_ln', ]:
 # -----------------------------------------------------------------------------
 # region plot legend for expid
 
-fig, ax = plt.subplots(1, 1, figsize=np.array([3.8, 2.4]) / 2.54)
+fig, ax = plt.subplots(1, 1, figsize=np.array([2, 3.6]) / 2.54)
 
 symbol_size = 20
 linewidth = 1
@@ -300,19 +299,29 @@ l4 = plt.scatter(
     [],[],
     s=symbol_size, c='white', edgecolors=expid_colours[expid[3]],
     lw=linewidth, alpha=alpha,)
+l5 = plt.scatter(
+    [],[],
+    s=symbol_size, c='white', edgecolors=expid_colours[expid[4]],
+    lw=linewidth, alpha=alpha,)
+l6 = plt.scatter(
+    [],[],
+    s=symbol_size, c='white', edgecolors=expid_colours[expid[5]],
+    lw=linewidth, alpha=alpha,)
 
 plt.legend(
-    [l1, l2, l3, l4,],
-    [expid_remark[expid[0]],
-     expid_remark[expid[1]],
-     expid_remark[expid[2]],
-     expid_remark[expid[3]],],
+    [l1, l2, l3, l4, l5, l6,],
+    [expid_labels[expid[0]],
+     expid_labels[expid[1]],
+     expid_labels[expid[2]],
+     expid_labels[expid[3]],
+     expid_labels[expid[4]],
+     expid_labels[expid[5]],],
     title = 'Experiments', title_fontsize = 10,
     ncol=1, frameon=False, loc = 'center', handletextpad=0.01)
 
 plt.axis('off')
 fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
-output_png = 'figures/8_d-excess/8.0_records/8.0.3_isotopes/8.0.3.0_sim_vs_obs/8.0.3.0.0 pi_600_3 legend.png'
+output_png = 'figures/8_d-excess/8.0_records/8.0.3_isotopes/8.0.3.0_sim_vs_obs/8.0.3.0.0 pi_60_6 legend.png'
 fig.savefig(output_png)
 
 # endregion
@@ -321,6 +330,12 @@ fig.savefig(output_png)
 
 # -----------------------------------------------------------------------------
 # region plot observed vs. simulated isotopes, control simulations
+
+
+i = 0
+Antarctic_snow_isotopes_sim_interpn = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.Antarctic_snow_isotopes_sim_interpn.pkl', 'rb') as f:
+    Antarctic_snow_isotopes_sim_interpn[expid[i]] = pickle.load(f)
 
 
 for iisotopes in ['d_ln',]:

@@ -3,9 +3,12 @@
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     'pi_600_5.0',
-    'pi_601_5.1',
-    'pi_602_5.2',
-    'pi_603_5.3',
+    # 'pi_601_5.1',
+    # 'pi_602_5.2',
+    # 'pi_603_5.3',
+    # 'pi_605_5.5',
+    # 'pi_606_5.6',
+    # 'pi_609_5.7',
     ]
 
 
@@ -300,7 +303,7 @@ https://stackoverflow.com/questions/20105364/how-can-i-make-a-scatter-plot-color
 # -----------------------------------------------------------------------------
 # region isotopes vs. source properties at all times
 
-i = 3
+i = 0
 
 for icores in ['EDC',]:
     # icores = 'EDC'
@@ -410,7 +413,7 @@ xr_par_cor(iso_var, src_var, ctl_var) ** 2
 # -----------------------------------------------------------------------------
 # region isotopes vs. source properties at monthly scale without mm
 
-i = 3
+i = 0
 
 for icores in ['EDC',]:
     # icores = 'EDC'
