@@ -2,11 +2,11 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'pi_600_5.0',
+    # 'pi_600_5.0',
     # 'pi_601_5.1',
     # 'pi_602_5.2',
     # 'pi_603_5.3',
-    # 'pi_605_5.5',
+    'pi_605_5.5',
     # 'pi_606_5.6',
     # 'pi_609_5.7',
     ]
@@ -123,14 +123,23 @@ from a_basic_analysis.b_module.component_plot import (
 # region import data
 
 
+wisoaprt_alltime = {}
+wisoevap_alltime = {}
 dO18_alltime = {}
 dD_alltime = {}
 d_ln_alltime = {}
 d_excess_alltime = {}
+temp2_alltime = {}
 
 
 for i in range(len(expid)):
     print(str(i) + ': ' + expid[i])
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
+        wisoaprt_alltime[expid[i]] = pickle.load(f)
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoevap_alltime.pkl', 'rb') as f:
+        wisoevap_alltime[expid[i]] = pickle.load(f)
     
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_alltime.pkl', 'rb') as f:
         dO18_alltime[expid[i]] = pickle.load(f)
@@ -143,6 +152,9 @@ for i in range(len(expid)):
     
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_alltime.pkl', 'rb') as f:
         d_excess_alltime[expid[i]] = pickle.load(f)
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
+        temp2_alltime[expid[i]] = pickle.load(f)
 
 lon = d_ln_alltime[expid[0]]['am'].lon
 lat = d_ln_alltime[expid[0]]['am'].lat
@@ -169,13 +181,18 @@ Antarctic_snow_isotopes = pd.read_csv(
 Antarctic_snow_isotopes = Antarctic_snow_isotopes.rename(columns={
     'Latitude': 'lat',
     'Longitude': 'lon',
+    't [°C]': 'temperature',
+    'Acc rate [cm/a] (Calculated)': 'accumulation',
     'δD [‰ SMOW] (Calculated average/mean values)': 'dD',
+    'δD std dev [±]': 'dD_std',
     'δ18O H2O [‰ SMOW] (Calculated average/mean values)': 'dO18',
+    'δ18O std dev [±]': 'dO18_std',
     'd xs [‰] (Calculated average/mean values)': 'd_excess',
+    'd xs std dev [±] (Calculated)': 'd_excess_std',
 })
 
 Antarctic_snow_isotopes = Antarctic_snow_isotopes[[
-    'lat', 'lon', 'dD', 'dO18', 'd_excess',
+    'lat', 'lon', 'temperature', 'accumulation', 'dD', 'dD_std', 'dO18', 'dO18_std', 'd_excess', 'd_excess_std',
 ]]
 
 ln_dD = 1000 * np.log(1 + Antarctic_snow_isotopes['dD'] / 1000)
@@ -186,6 +203,9 @@ Antarctic_snow_isotopes['d_ln'] = ln_dD - 8.47 * ln_d18O + 0.0285 * (ln_d18O ** 
 # Antarctic_snow_isotopes = Antarctic_snow_isotopes.dropna(
 #     subset=['lat', 'lon'], ignore_index=True)
 
+'''
+Antarctic_snow_isotopes.columns
+'''
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -201,26 +221,38 @@ for i in range(len(expid)):
     
     Antarctic_snow_isotopes_simulations[expid[i]] = Antarctic_snow_isotopes.copy()
     
-    for iisotopes in ['dO18', 'dD', 'd_ln', 'd_excess',]:
-        # iisotopes = 'd_ln'
-        print('#-------- ' + iisotopes)
+    for var_name in ['temperature', 'accumulation', 'dD', 'dD_std', 'dO18', 'dO18_std', 'd_excess', 'd_excess_std', 'd_ln', 'd_ln_std']:
+        # var_name = 'd_ln'
+        print('#-------- ' + var_name)
         
-        if (iisotopes == 'dO18'):
-            isotopevar = dO18_alltime[expid[i]]['am']
-        elif (iisotopes == 'dD'):
-            isotopevar = dD_alltime[expid[i]]['am']
-        elif (iisotopes == 'd_ln'):
-            isotopevar = d_ln_alltime[expid[i]]['am']
-        elif (iisotopes == 'd_excess'):
-            isotopevar = d_excess_alltime[expid[i]]['am']
+        if (var_name == 'temperature'):
+            ivar = temp2_alltime[expid[i]]['am']
+        elif (var_name == 'accumulation'):
+            ivar = ((wisoaprt_alltime[expid[i]]['am'].sel(wisotype=1) + wisoevap_alltime[expid[i]]['am'].sel(wisotype=1))  * seconds_per_d / 10 * 365).compute()
+        elif (var_name == 'dD'):
+            ivar = dD_alltime[expid[i]]['am']
+        elif (var_name == 'dD_std'):
+            ivar = dD_alltime[expid[i]]['ann'].std(dim='time', ddof=1)
+        elif (var_name == 'dO18'):
+            ivar = dO18_alltime[expid[i]]['am']
+        elif (var_name == 'dO18_std'):
+            ivar = dO18_alltime[expid[i]]['ann'].std(dim='time', ddof=1)
+        elif (var_name == 'd_excess'):
+            ivar = d_excess_alltime[expid[i]]['am']
+        elif (var_name == 'd_excess_std'):
+            ivar = d_excess_alltime[expid[i]]['ann'].std(dim='time', ddof=1)
+        elif (var_name == 'd_ln'):
+            ivar = d_ln_alltime[expid[i]]['am']
+        elif (var_name == 'd_ln_std'):
+            ivar = d_ln_alltime[expid[i]]['ann'].std(dim='time', ddof=1)
         
-        Antarctic_snow_isotopes_simulations[expid[i]][iisotopes + '_sim'] = \
+        Antarctic_snow_isotopes_simulations[expid[i]][var_name + '_sim'] = \
             find_multi_gridvalue_at_site(
                 Antarctic_snow_isotopes_simulations[expid[i]]['lat'].values,
                 Antarctic_snow_isotopes_simulations[expid[i]]['lon'].values,
                 lat.values,
                 lon.values,
-                isotopevar.values,
+                ivar.values,
             )
     
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.Antarctic_snow_isotopes_simulations.pkl', 'wb') as f:
@@ -286,71 +318,3 @@ Antarctic_snow_isotopes[ (Antarctic_snow_isotopes_simulations[expid[i]]['dD_sim'
 # endregion
 # -----------------------------------------------------------------------------
 
-
-# -----------------------------------------------------------------------------
-# region extract simulations for obserations bilinear interpolation
-
-
-Antarctic_snow_isotopes_sim_interpn = {}
-
-for i in range(len(expid)):
-    # i = 0
-    print('#---------------- ' + str(i) + ': ' + expid[i])
-    
-    Antarctic_snow_isotopes_sim_interpn[expid[i]] = Antarctic_snow_isotopes.copy()
-    
-    for iisotopes in ['dO18', 'dD', 'd_ln', 'd_excess',]:
-        # iisotopes = 'd_ln'
-        print('#-------- ' + iisotopes)
-        
-        if (iisotopes == 'dO18'):
-            isotopevar = dO18_alltime[expid[i]]['am']
-        elif (iisotopes == 'dD'):
-            isotopevar = dD_alltime[expid[i]]['am']
-        elif (iisotopes == 'd_ln'):
-            isotopevar = d_ln_alltime[expid[i]]['am']
-        elif (iisotopes == 'd_excess'):
-            isotopevar = d_excess_alltime[expid[i]]['am']
-        
-        Antarctic_snow_isotopes_sim_interpn[expid[i]][iisotopes + '_sim'] = \
-            find_multi_gridvalue_at_site_interpn(
-                Antarctic_snow_isotopes_sim_interpn[expid[i]]['lat'].values,
-                Antarctic_snow_isotopes_sim_interpn[expid[i]]['lon'].values,
-                lat.values,
-                lon.values,
-                isotopevar.values,
-                method='linear'
-            )
-    
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.Antarctic_snow_isotopes_sim_interpn.pkl', 'wb') as f:
-        pickle.dump(Antarctic_snow_isotopes_sim_interpn[expid[i]], f)
-
-
-
-'''
-#-------------------------------- check
-
-i = 0
-
-Antarctic_snow_isotopes_simulations = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.Antarctic_snow_isotopes_simulations.pkl', 'rb') as f:
-    Antarctic_snow_isotopes_simulations[expid[i]] = pickle.load(f)
-
-Antarctic_snow_isotopes_sim_interpn = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.Antarctic_snow_isotopes_sim_interpn.pkl', 'rb') as f:
-    Antarctic_snow_isotopes_sim_interpn[expid[i]] = pickle.load(f)
-
-for iisotopes in ['dO18', 'dD', 'd_ln', 'd_excess',]:
-    # iisotopes = 'd_ln'
-    print('#-------- ' + iisotopes)
-    
-    data1 = Antarctic_snow_isotopes_simulations[expid[i]][iisotopes + '_sim']
-    data2 = Antarctic_snow_isotopes_sim_interpn[expid[i]][iisotopes + '_sim']
-    subset = (np.isfinite(data1) & np.isfinite(data2))
-    data1 = data1[subset]
-    data2 = data2[subset]
-    
-    print(np.round(pearsonr(data1, data2,), 2))
-'''
-# endregion
-# -----------------------------------------------------------------------------

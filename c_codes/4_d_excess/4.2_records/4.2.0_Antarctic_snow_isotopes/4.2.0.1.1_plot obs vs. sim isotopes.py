@@ -127,12 +127,20 @@ from a_basic_analysis.b_module.component_plot import (
 Antarctic_snow_isotopes_simulations = {}
 
 for i in range(len(expid)):
+    # i = 0
     print(str(i) + ': ' + expid[i])
     
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.Antarctic_snow_isotopes_simulations.pkl', 'rb') as f:
         Antarctic_snow_isotopes_simulations[expid[i]] = pickle.load(f)
+    
+    Antarctic_snow_isotopes_simulations[expid[i]] = \
+        Antarctic_snow_isotopes_simulations[expid[i]].dropna(
+            subset=['lat', 'lon', 'temperature', 'accumulation', 'dD', 'dO18',],
+            ignore_index=True)
+
 
 '''
+Antarctic_snow_isotopes_simulations[expid[i]].columns
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -400,4 +408,6 @@ for iisotopes in ['d_ln',]:
 
 # endregion
 # -----------------------------------------------------------------------------
+
+
 

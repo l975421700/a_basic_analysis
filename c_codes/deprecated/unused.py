@@ -1,4 +1,74 @@
 
+
+# -----------------------------------------------------------------------------
+# region extract simulations for obserations bilinear interpolation
+
+
+Antarctic_snow_isotopes_sim_interpn = {}
+
+for i in range(len(expid)):
+    # i = 0
+    print('#---------------- ' + str(i) + ': ' + expid[i])
+    
+    Antarctic_snow_isotopes_sim_interpn[expid[i]] = Antarctic_snow_isotopes.copy()
+    
+    for iisotopes in ['dO18', 'dD', 'd_ln', 'd_excess',]:
+        # iisotopes = 'd_ln'
+        print('#-------- ' + iisotopes)
+        
+        if (iisotopes == 'dO18'):
+            isotopevar = dO18_alltime[expid[i]]['am']
+        elif (iisotopes == 'dD'):
+            isotopevar = dD_alltime[expid[i]]['am']
+        elif (iisotopes == 'd_ln'):
+            isotopevar = d_ln_alltime[expid[i]]['am']
+        elif (iisotopes == 'd_excess'):
+            isotopevar = d_excess_alltime[expid[i]]['am']
+        
+        Antarctic_snow_isotopes_sim_interpn[expid[i]][iisotopes + '_sim'] = \
+            find_multi_gridvalue_at_site_interpn(
+                Antarctic_snow_isotopes_sim_interpn[expid[i]]['lat'].values,
+                Antarctic_snow_isotopes_sim_interpn[expid[i]]['lon'].values,
+                lat.values,
+                lon.values,
+                isotopevar.values,
+                method='linear'
+            )
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.Antarctic_snow_isotopes_sim_interpn.pkl', 'wb') as f:
+        pickle.dump(Antarctic_snow_isotopes_sim_interpn[expid[i]], f)
+
+
+
+'''
+#-------------------------------- check
+
+i = 0
+
+Antarctic_snow_isotopes_simulations = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.Antarctic_snow_isotopes_simulations.pkl', 'rb') as f:
+    Antarctic_snow_isotopes_simulations[expid[i]] = pickle.load(f)
+
+Antarctic_snow_isotopes_sim_interpn = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.Antarctic_snow_isotopes_sim_interpn.pkl', 'rb') as f:
+    Antarctic_snow_isotopes_sim_interpn[expid[i]] = pickle.load(f)
+
+for iisotopes in ['dO18', 'dD', 'd_ln', 'd_excess',]:
+    # iisotopes = 'd_ln'
+    print('#-------- ' + iisotopes)
+    
+    data1 = Antarctic_snow_isotopes_simulations[expid[i]][iisotopes + '_sim']
+    data2 = Antarctic_snow_isotopes_sim_interpn[expid[i]][iisotopes + '_sim']
+    subset = (np.isfinite(data1) & np.isfinite(data2))
+    data1 = data1[subset]
+    data2 = data2[subset]
+    
+    print(np.round(pearsonr(data1, data2,), 2))
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
 # -----------------------------------------------------------------------------
 # region check whether set kinetic fractionation coefficient correctly
 
