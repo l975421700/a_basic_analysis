@@ -82,10 +82,10 @@ ten_sites_names = [
 marker_recs = {'EC': 'o', 'JH': 's', 'DC': 'v', 'MC': '^'}
 
 plot_labels = {
-    'dO18': '$\delta^{18}O$ [‰]',
-    'dD': '$\delta D$ [‰]',
-    'd_excess': '$d_{xs}$ [‰]',
-    'd_ln': '$d_{ln}$ [‰]',
+    'dO18': '$\delta^{18}O$ [$‰$]',
+    'dD': '$\delta D$ [$‰$]',
+    'd_excess': '$d_{xs}$ [$‰$]',
+    'd_ln': '$d_{ln}$ [$‰$]',
     'lat': 'Source latitude [$°\;S$]',
     'lon': 'Source longitude [$°$]',
     'sst': 'Source SST [$°C$]',
@@ -93,6 +93,9 @@ plot_labels = {
     'wind10': 'Source wind10 [$m \; s^{-1}$]',
     'distance': 'Source-sink distance [$km$]',
     'temp2': 'temp2 [$°C$]',
+    'pressure': 'pressure [$hPa$]',
+    'wind_speed': 'wind speed [$m \; s^{-1}$]',
+    'wisoaprt': 'precipitation [$mm \; day^{-1}$]',
 }
 
 plot_labels_no_unit = {

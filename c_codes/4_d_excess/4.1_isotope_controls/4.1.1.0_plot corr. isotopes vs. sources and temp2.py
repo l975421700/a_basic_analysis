@@ -209,15 +209,16 @@ for i in range(len(expid)):
     # i = 0
     print('#-------------------------------- ' + str(i) + ': ' + expid[i])
     
-    for ivar in ['lat', 'lon', 'sst', 'rh2m', 'wind10', 'distance']:
+    for ivar in ['sst', 'rh2m', 'wind10']:
         # ivar = 'sst'
+        # 'lat', 'lon', 'distance',
         print('#---------------- ' + ivar)
         
         for iisotope in ['wisoaprt', 'dO18', 'dD', 'd_ln', 'd_excess']:
             # iisotope = 'd_ln'
             print('#-------- ' + iisotope)
             
-            for ialltime in ['daily', 'mon', 'mon_no_mm', 'sea', 'ann']:
+            for ialltime in ['daily', 'mon', 'mon_no_mm', 'ann']:
                 # ialltime = 'mon_no_mm'
                 print('#---- ' + ialltime)
                 
@@ -265,8 +266,9 @@ for i in range(len(expid)):
     # i = 0
     print('#-------------------------------- ' + str(i) + ': ' + expid[i])
     
-    for ivar in ['lat', 'lon', 'rh2m', 'wind10', 'distance']:
+    for ivar in ['rh2m', 'wind10',]:
         # ivar = 'rh2m'
+        # 'lat', 'lon', 'distance'
         print('#---------------- ' + ivar)
         
         for iisotope in ['wisoaprt', 'dO18', 'dD', 'd_ln', 'd_excess']:
@@ -331,7 +333,7 @@ for i in range(len(expid)):
             # iisotope = 'd_ln'
             print('#-------- ' + iisotope)
             
-            for ialltime in ['mon', 'mon_no_mm', 'sea', 'ann']:
+            for ialltime in ['mon', 'mon_no_mm', 'ann']:
                 # ialltime = 'mon'
                 print('#---- ' + ialltime)
                 
@@ -547,10 +549,11 @@ for i in range(len(expid)):
     # i = 0
     print('#-------------------------------- ' + str(i) + ': ' + expid[i])
     
-    for ivar in ['lat', 'lon', 'sst', 'rh2m', 'wind10', 'distance',
+    for ivar in ['sst', 'rh2m', 'wind10',
                  'wisoaprt', 'dO18', 'dD', 'd_ln', 'd_excess',
                  'temp2',]:
         # ivar = 'sst'
+        # 'lat', 'lon', 'distance',
         print('#---------------- ' + ivar)
         
         for ialltime in ['mon', 'mon_no_mm',]:

@@ -418,3 +418,43 @@ pg.partial_corr(
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region Function for regression y = f(x)
+
+def xr_regression_y_x1(y, x, output = 'RMSE'):
+    '''
+    y:      dependent variable
+    x:      independent variable
+    output: 'RMSE', 'rsquared', 'slope', 'intercept'
+    '''
+    
+    import numpy as np
+    import statsmodels.api as sm
+    
+    subset = np.isfinite(x) & np.isfinite(y)
+    x_sub = x[subset]
+    y_sub = y[subset]
+    
+    ols_fit = sm.OLS(y_sub, sm.add_constant(x_sub), ).fit()
+    
+    intercept   = ols_fit.params[0]
+    slope       = ols_fit.params[1]
+    rsquared    = ols_fit.rsquared
+    
+    predicted_y = intercept + slope * x
+    
+    RMSE = np.sqrt(np.average(np.square(predicted_y[subset] - y_sub)))
+    
+    if (output == 'RMSE'):
+        return(RMSE)
+    elif (output == 'rsquared'):
+        return(rsquared)
+    elif (output == 'slope'):
+        return(slope)
+    elif (output == 'intercept'):
+        return(intercept)
+
+# endregion
+# -----------------------------------------------------------------------------

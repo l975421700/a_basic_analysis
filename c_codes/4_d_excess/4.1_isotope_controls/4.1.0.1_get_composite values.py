@@ -318,7 +318,7 @@ for i in range(len(expid)):
             # iqtl = '10%'
             print('#-------- ' + iqtl + ': ' + str(quantiles[iqtl]))
             
-            for ialltime in ['daily', 'mon', 'sea', 'ann', 'mon_no_mm']:
+            for ialltime in ['ann', 'mon_no_mm']:
                 # ialltime = 'ann'
                 print('#---- ' + ialltime)
                 
@@ -502,7 +502,7 @@ for i in range(len(expid)):
             # iqtl = '10%'
             print('#-------- ' + iqtl + ': ' + str(quantiles[iqtl]))
             
-            for ialltime in ['mon', 'sea', 'ann', 'mon_no_mm']:
+            for ialltime in ['ann', 'mon_no_mm']:
                 # ialltime = 'ann'
                 print('#---- ' + ialltime)
                 

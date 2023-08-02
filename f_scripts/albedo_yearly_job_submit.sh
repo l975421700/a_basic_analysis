@@ -1,11 +1,12 @@
 #!/bin/bash
 #SBATCH -p mpp
 #SBATCH --qos=12h
-#SBATCH --time=1:00:00
+#SBATCH --time=12:00:00
 #SBATCH -o %A_%a.out
 #SBATCH -e %A_%a.err
 #SBATCH --array=0-5
 #SBATCH --ntasks=6
+#SBATCH --mem=60GB
 
 echo "Current time : " $(date +"%T")
 cd $WORK
@@ -13,7 +14,7 @@ source ${HOME}/miniconda3/bin/activate deepice
 
 # /albedo/work/user/qigao001/a_basic_analysis/f_scripts/0_echam_pp/0.0_get_monthly_uv_plev.sh ${SLURM_ARRAY_TASK_ID} /albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi pi_600_5.0
 
-# /albedo/work/user/qigao001/a_basic_analysis/f_scripts/0_echam_pp/0.1_get_psl_zh.sh ${SLURM_ARRAY_TASK_ID} /albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi pi_603_5.3
+# /albedo/work/user/qigao001/a_basic_analysis/f_scripts/0_echam_pp/0.1_get_psl_zh.sh ${SLURM_ARRAY_TASK_ID} /albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi pi_600_5.0
 
 # /albedo/work/user/qigao001/a_basic_analysis/f_scripts/0_echam_pp/0.2_get_monthly_wisoq_plev.sh ${SLURM_ARRAY_TASK_ID} /albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi pi_603_5.3
 
