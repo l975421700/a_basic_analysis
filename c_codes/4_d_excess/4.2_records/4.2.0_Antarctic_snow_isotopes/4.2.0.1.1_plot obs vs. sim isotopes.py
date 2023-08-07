@@ -133,10 +133,10 @@ for i in range(len(expid)):
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.Antarctic_snow_isotopes_simulations.pkl', 'rb') as f:
         Antarctic_snow_isotopes_simulations[expid[i]] = pickle.load(f)
     
-    Antarctic_snow_isotopes_simulations[expid[i]] = \
-        Antarctic_snow_isotopes_simulations[expid[i]].dropna(
-            subset=['lat', 'lon', 'temperature', 'accumulation', 'dD', 'dO18',],
-            ignore_index=True)
+    # Antarctic_snow_isotopes_simulations[expid[i]] = \
+    #     Antarctic_snow_isotopes_simulations[expid[i]].dropna(
+    #         subset=['lat', 'lon', 'temperature', 'accumulation', 'dD', 'dO18',],
+    #         ignore_index=True)
 
 
 '''
@@ -337,34 +337,27 @@ fig.savefig(output_png)
 
 
 # -----------------------------------------------------------------------------
-# region plot observed vs. simulated isotopes, control simulations
-
+# region plot observed vs. simulated isotopes, PI_control
 
 i = 0
-Antarctic_snow_isotopes_sim_interpn = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.Antarctic_snow_isotopes_sim_interpn.pkl', 'rb') as f:
-    Antarctic_snow_isotopes_sim_interpn[expid[i]] = pickle.load(f)
-
 
 for iisotopes in ['d_ln',]:
     # iisotopes = 'd_ln'
     print('#-------- ' + iisotopes)
     
+    output_png = 'figures/8_d-excess/8.0_records/8.0.3_isotopes/8.0.3.0_sim_vs_obs/8.0.3.0.0 ' + expid[i] + ' observed vs. simulated ' + iisotopes + '.png'
+    
     fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
     
-    for i in [0]:
+    for i in range(1):
         print(str(i) + ': ' + expid[i])
         
-        # output_png = 'figures/8_d-excess/8.0_records/8.0.3_isotopes/8.0.3.0_sim_vs_obs/8.0.3.0.0 ' + expid[i] + ' observed vs. simulated ' + iisotopes + '.png'
-        output_png = 'figures/8_d-excess/8.0_records/8.0.3_isotopes/8.0.3.0_sim_vs_obs/8.0.3.0.0 ' + expid[i] + ' observed vs. simulated ' + iisotopes + '_interpn.png'
-        
-        # xdata = Antarctic_snow_isotopes_simulations[expid[i]][iisotopes]
-        # ydata = Antarctic_snow_isotopes_simulations[expid[i]][iisotopes + '_sim']
-        xdata = Antarctic_snow_isotopes_sim_interpn[expid[i]][iisotopes]
-        ydata = Antarctic_snow_isotopes_sim_interpn[expid[i]][iisotopes + '_sim']
+        xdata = Antarctic_snow_isotopes_simulations[expid[i]][iisotopes]
+        ydata = Antarctic_snow_isotopes_simulations[expid[i]][iisotopes + '_sim']
         subset = (np.isfinite(xdata) & np.isfinite(ydata))
         xdata = xdata[subset]
         ydata = ydata[subset]
+        RMSE = np.sqrt(np.average(np.square(xdata - ydata)))
         
         ax.scatter(
             xdata, ydata,
@@ -375,23 +368,32 @@ for iisotopes in ['d_ln',]:
         ax.axline(
             (0, linearfit.intercept), slope = linearfit.slope,
             lw=1, color=expid_colours[expid[i]], alpha=0.5)
+        
+        if (linearfit.intercept >= 0):
+            eq_text = '$y = $' + \
+                str(np.round(linearfit.slope, 2)) + '$x + $' + \
+                    str(np.round(linearfit.intercept, 1)) + \
+                        ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
+                            ', $RMSE = $' + str(np.round(RMSE, 1))
+        if (linearfit.intercept < 0):
+            eq_text = '$y = $' + \
+                str(np.round(linearfit.slope, 2)) + '$x $' + \
+                    str(np.round(linearfit.intercept, 1)) + \
+                        ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
+                            ', $RMSE = $' + str(np.round(RMSE, 1))
+        
         plt.text(
-            0.4, 0.1,
-            '$y = $' + str(np.round(linearfit.slope, 2)) + '$x + $' + \
-                str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 3)),
-            transform=ax.transAxes, fontsize=10, linespacing=1.5,
+            0.2, 0.35 - i * 0.06, eq_text,
+            transform=ax.transAxes, fontsize=10,
             color=expid_colours[expid[i]], ha='left')
     
-    # xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
-    # xylim_min = np.min(xylim)
-    # xylim_max = np.max(xylim)
-    # ax.set_xlim(xylim_min, xylim_max)
-    # ax.set_ylim(xylim_min, xylim_max)
-    ax.set_xlim(0, 30)
-    ax.set_ylim(0, 30)
+    xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
+    xylim_min = np.min(xylim)
+    xylim_max = np.max(xylim)
+    ax.set_xlim(xylim_min, xylim_max)
+    ax.set_ylim(xylim_min, xylim_max)
     
-    ax.axline((0, 0), slope = 1, lw=1, color='k', alpha=0.5)
+    ax.axline((0, 0), slope = 1, lw=1, color='grey', alpha=0.5)
     
     ax.xaxis.set_minor_locator(AutoMinorLocator(2))
     ax.set_xlabel('Observed '  + plot_labels[iisotopes], labelpad=6)
@@ -403,6 +405,7 @@ for iisotopes in ['d_ln',]:
     
     fig.subplots_adjust(left=0.18, right=0.98, bottom=0.18, top=0.98)
     fig.savefig(output_png)
+
 
 
 

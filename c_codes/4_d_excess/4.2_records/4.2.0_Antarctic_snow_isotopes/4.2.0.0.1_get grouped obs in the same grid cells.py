@@ -131,11 +131,6 @@ for i in range(len(expid)):
     
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.Antarctic_snow_isotopes_simulations.pkl', 'rb') as f:
         Antarctic_snow_isotopes_simulations[expid[i]] = pickle.load(f)
-    
-    Antarctic_snow_isotopes_simulations[expid[i]] = \
-        Antarctic_snow_isotopes_simulations[expid[i]].dropna(
-            subset=['lat', 'lon', 'temperature', 'accumulation', 'dD', 'dO18',],
-            ignore_index=True)
 
 
 d_ln_alltime = {}
@@ -165,6 +160,11 @@ Antarctic_snow_isotopes_sim_grouped = {}
 for i in range(len(expid)):
     # i = 0
     print(str(i) + ': ' + expid[i])
+    
+    Antarctic_snow_isotopes_simulations[expid[i]] = \
+        Antarctic_snow_isotopes_simulations[expid[i]].dropna(
+            subset=['lat', 'lon', 'temperature', 'accumulation', 'dD', 'dO18',],
+            ignore_index=True)
     
     grid_indices = np.zeros(
         (len(Antarctic_snow_isotopes_simulations[expid[i]].index)),
@@ -206,5 +206,65 @@ for i in range(len(expid)):
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region group data in the same grid cell
+
+Antarctic_snow_isotopes_sim_grouped_all = {}
+
+for i in range(len(expid)):
+    # i = 0
+    print(str(i) + ': ' + expid[i])
+    
+    Antarctic_snow_isotopes_simulations[expid[i]] = \
+        Antarctic_snow_isotopes_simulations[expid[i]].dropna(
+            subset=['lat', 'lon', ],
+            ignore_index=True)
+    
+    grid_indices = np.zeros(
+        (len(Antarctic_snow_isotopes_simulations[expid[i]].index)),
+        dtype=np.int64)
+    
+    for irecord in range(len(grid_indices)):
+        # irecord = 0
+        # print(irecord)
+        
+        slat = Antarctic_snow_isotopes_simulations[expid[i]]['lat'][irecord]
+        slon = Antarctic_snow_isotopes_simulations[expid[i]]['lon'][irecord]
+        
+        ilat, ilon = find_ilat_ilon(slat, slon, lat.values, lon.values)
+        
+        if (abs(lat_2d[ilat, ilon] - slat) > 1.5):
+            print('lat diff.: '+str(np.round(abs(lat_2d[ilat, ilon]-slat), 1)))
+        
+        if (slon < 0): slon += 360
+        if (abs(lon_2d[ilat, ilon] - slon) > 1.5):
+            print('lon diff.: '+str(np.round(abs(lon_2d[ilat, ilon]-slon), 1)))
+        
+        grid_indices[irecord] = ilat * len(lon.values) + ilon
+    
+    Antarctic_snow_isotopes_simulations[expid[i]]['grid_indices'] = \
+        grid_indices
+    
+    Antarctic_snow_isotopes_sim_grouped_all[expid[i]] = Antarctic_snow_isotopes_simulations[expid[i]].groupby('grid_indices').mean().reset_index()
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.Antarctic_snow_isotopes_sim_grouped_all.pkl', 'wb') as f:
+        pickle.dump(Antarctic_snow_isotopes_sim_grouped_all[expid[i]], f)
+
+
+
+'''
+#-------------------------------- check
+
+for i in range(len(expid)):
+    # i = 0
+    print(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.Antarctic_snow_isotopes_sim_grouped_all.pkl')
+
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
 
 

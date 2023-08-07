@@ -2,7 +2,7 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_600_5.0',
+    'pi_600_5.0',
     'pi_601_5.1',
     'pi_602_5.2',
     'pi_605_5.5',
@@ -176,9 +176,9 @@ ln_d18O = 1000 * np.log(1 + Antarctic_snow_isotopes['dO18'] / 1000)
 
 Antarctic_snow_isotopes['d_ln'] = ln_dD - 8.47 * ln_d18O + 0.0285 * (ln_d18O ** 2)
 
-Antarctic_snow_isotopes = Antarctic_snow_isotopes.dropna(
-    subset=['lat', 'lon', 'temperature', 'accumulation', 'dD', 'dO18',],
-    ignore_index=True)
+# Antarctic_snow_isotopes = Antarctic_snow_isotopes.dropna(
+#     subset=['lat', 'lon', 'temperature', 'accumulation', 'dD', 'dO18',],
+#     ignore_index=True)
 
 '''
 '''
