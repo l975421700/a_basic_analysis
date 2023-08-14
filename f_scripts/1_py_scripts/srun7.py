@@ -1,12 +1,49 @@
+# #SBATCH --time=00:30:00
 
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_600_5.0',
-    # 'pi_601_5.1',
-    # 'pi_602_5.2',
-    'pi_603_5.3',
+    'pi_601_5.1',
     ]
+i=0
+
+output_dir = exp_odir + expid[i] + '/analysis/echam/'
+
+ifile_start = 120
+ifile_end   = 360
+
+ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
+
+# var_name  = 'sst'
+# itag      = 7
+# min_sf    = 268.15
+# max_sf    = 318.15
+
+var_name  = 'lat'
+itag      = 5
+min_sf    = -90
+max_sf    = 90
+
+# var_name  = 'rh2m'
+# itag      = 8
+# min_sf    = 0
+# max_sf    = 1.6
+
+# var_name  = 'wind10'
+# itag      = 9
+# min_sf    = 0
+# max_sf    = 28
+
+# var_name  = 'sinlon'
+# itag      = 11
+# min_sf    = -1
+# max_sf    = 1
+
+# var_name  = 'coslon'
+# itag      = 12
+# min_sf    = -1
+# max_sf    = 1
 
 
 # -----------------------------------------------------------------------------
@@ -14,98 +51,30 @@ expid = [
 
 # management
 import glob
-import pickle
 import warnings
 warnings.filterwarnings('ignore')
-import os
 import sys  # print(sys.path)
 sys.path.append('/albedo/work/user/qigao001')
+import os
 
 # data analysis
-import numpy as np
+# import numpy as np
 import xarray as xr
 import dask
 dask.config.set({"array.slicing.split_large_chunks": True})
-from dask.diagnostics import ProgressBar
-pbar = ProgressBar()
-pbar.register()
-from scipy import stats
-# import xesmf as xe
-import pandas as pd
-from statsmodels.stats import multitest
-import pycircstat as circ
-import xskillscore as xs
+import pickle
 
-# plot
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from matplotlib.colors import BoundaryNorm
-from matplotlib import cm
-import cartopy.crs as ccrs
-plt.rcParams['pcolor.shading'] = 'auto'
-mpl.rcParams['figure.dpi'] = 600
-mpl.rc('font', family='Times New Roman', size=10)
-mpl.rcParams['axes.linewidth'] = 0.2
-plt.rcParams.update({"mathtext.fontset": "stix"})
-import matplotlib.animation as animation
-import seaborn as sns
-import cartopy.feature as cfeature
-from scipy.stats import pearsonr
-from matplotlib.ticker import AutoMinorLocator
-
-# self defined
-from a_basic_analysis.b_module.mapplot import (
-    globe_plot,
-    hemisphere_plot,
-    quick_var_plot,
-    mesh2plot,
-    framework_plot1,
-    remove_trailing_zero,
-    remove_trailing_zero_pos,
+from a_basic_analysis.b_module.source_properties import (
+    source_properties,
 )
 
 from a_basic_analysis.b_module.basic_calculations import (
     mon_sea_ann,
-    regrid,
-    mean_over_ais,
-    time_weighted_mean,
 )
 
-from a_basic_analysis.b_module.namelist import (
-    month,
-    month_num,
-    month_dec,
-    month_dec_num,
-    seasons,
-    seasons_last_num,
-    hours,
-    months,
-    month_days,
-    zerok,
-    panel_labels,
-    seconds_per_d,
-)
-
-from a_basic_analysis.b_module.source_properties import (
-    source_properties,
-    calc_lon_diff,
-)
-
-from a_basic_analysis.b_module.statistics import (
-    fdr_control_bh,
-    check_normality_3d,
-    check_equal_variance_3d,
-    ttest_fdr_control,
-    cplot_ttest,
-    xr_par_cor,
-)
-
-from a_basic_analysis.b_module.component_plot import (
-    cplot_ice_cores,
-    plt_mesh_pars,
-    plot_t63_contourf,
-)
-
+from dask.diagnostics import ProgressBar
+pbar = ProgressBar()
+pbar.register()
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -114,33 +83,101 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
+fl_wiso_daily = sorted(glob.glob(
+    exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'
+        ))
 
-wisoaprt_alltime = {}
-dO18_alltime = {}
-dD_alltime = {}
-d_ln_alltime = {}
-d_excess_alltime = {}
+exp_out_wiso_daily = xr.open_mfdataset(
+    fl_wiso_daily[ifile_start:ifile_end],
+    )
 
-for i in range(len(expid)):
-    print(str(i) + ': ' + expid[i])
-    
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
-        wisoaprt_alltime[expid[i]] = pickle.load(f)
-    
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_alltime.pkl', 'rb') as f:
-        dO18_alltime[expid[i]] = pickle.load(f)
-    
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_alltime.pkl', 'rb') as f:
-        dD_alltime[expid[i]] = pickle.load(f)
-    
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_alltime.pkl', 'rb') as f:
-        d_ln_alltime[expid[i]] = pickle.load(f)
-    
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_alltime.pkl', 'rb') as f:
-        d_excess_alltime[expid[i]] = pickle.load(f)
+# endregion
+# -----------------------------------------------------------------------------
 
 
-source_var = ['lat', 'lon', 'sst', 'rh2m', 'wind10', 'distance']
+# -----------------------------------------------------------------------------
+# region set indices
+
+kwiso2 = 3
+
+kstart = kwiso2 + sum(ntags[:itag])
+kend   = kwiso2 + sum(ntags[:(itag+1)])
+
+print(kstart); print(kend)
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region calculate source var
+
+#-------------------------------- precipitation
+
+ocean_pre = (
+    exp_out_wiso_daily.wisoaprl.sel(wisotype=slice(kstart+2, kstart+3)) + \
+        exp_out_wiso_daily.wisoaprc.sel(wisotype=slice(kstart+2, kstart+3))
+        ).sum(dim='wisotype').compute()
+var_scaled_pre = (
+    exp_out_wiso_daily.wisoaprl.sel(wisotype=kstart+2) + \
+        exp_out_wiso_daily.wisoaprc.sel(wisotype=kstart+2)).compute()
+
+var_scaled_pre.values[ocean_pre.values < 2e-8] = 0
+ocean_pre.values[ocean_pre.values < 2e-8] = 0
+
+
+#-------- monthly/seasonal/annual (mean) values
+
+ocean_pre_alltime      = mon_sea_ann(ocean_pre)
+var_scaled_pre_alltime = mon_sea_ann(var_scaled_pre)
+
+#-------------------------------- pre-weighted var
+
+pre_weighted_var = {}
+
+for ialltime in ['daily', 'mon', 'mm', 'sea', 'sm', 'ann', 'am']:
+    print(ialltime)
+    
+    pre_weighted_var[ialltime] = source_properties(
+        var_scaled_pre_alltime[ialltime],
+        ocean_pre_alltime[ialltime],
+        min_sf, max_sf,
+        var_name,
+    )
+
+#-------- monthly without monthly mean
+pre_weighted_var['mon no mm'] = (pre_weighted_var['mon'].groupby('time.month') - pre_weighted_var['mon'].groupby('time.month').mean(skipna=True)).compute()
+
+#-------- annual without annual mean
+pre_weighted_var['ann no am'] = (pre_weighted_var['ann'] - pre_weighted_var['ann'].mean(dim='time', skipna=True)).compute()
+
+output_file = output_dir + expid[i] + '.pre_weighted_' + var_name + '.pkl'
+
+if (os.path.isfile(output_file)):
+    os.remove(output_file)
+
+with open(output_file, 'wb') as f:
+    pickle.dump(pre_weighted_var, f)
+
+
+'''
+#-------- import data
+pre_weighted_lat = {}
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lat.pkl', 'rb') as f:
+    pre_weighted_lat[expid[i]] = pickle.load(f)
+
+#-------- check precipitation sources are bit identical
+
+exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+expid = [
+    'pi_600_5.0',
+    'pi_601_5.1',
+    'pi_602_5.2',
+    'pi_603_5.3',
+    ]
+
+source_var = ['latitude', 'longitude', 'SST', 'rh2m', 'wind10', 'distance']
 pre_weighted_var = {}
 
 for i in range(len(expid)):
@@ -165,205 +202,28 @@ for i in range(len(expid)):
         with open(ifile, 'rb') as f:
             pre_weighted_var[expid[i]][ivar] = pickle.load(f)
 
+column_names = ['Control', 'Smooth wind regime', 'Rough wind regime',
+                'No supersaturation']
 
-temp2_alltime = {}
-
-for i in range(len(expid)):
-    # i = 0
-    print(str(i) + ': ' + expid[i])
+for ivar in source_var:
+    # ivar = 'SST'
+    print('#---------------- ' + ivar)
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
-        temp2_alltime[expid[i]] = pickle.load(f)
-
-
-quantile_interval  = np.arange(10, 50 + 1e-4, 10, dtype=np.int64)
-quantiles = dict(zip(
-    [str(x) + '%' for x in quantile_interval],
-    [x/100 for x in quantile_interval],
-    ))
-
-'''
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region get composite temp2 and isotopes
-
-composite_temp2_isotopes = {}
-
-for i in range(len(expid)):
-    # i = 0
-    print('#-------------------------------- ' + str(i) + ': ' + expid[i])
-    
-    composite_temp2_isotopes[expid[i]] = {}
-    
-    for ivar in ['temp2']:
-        # ivar = 'temp2'
-        print('#---------------- ' + ivar)
+    for ialltime in ['mon', 'sea', 'ann', 'mm', 'sm', 'am']:
+        # ialltime = 'am'
+        print('#-------- ' + ialltime)
         
-        composite_temp2_isotopes[expid[i]][ivar] = {}
-        
-        for iisotopes in ['wisoaprt', 'dO18', 'dD', 'd_ln', 'd_excess',]:
-            # iisotopes = 'd_ln'
-            print('#-------- ' + iisotopes)
+        for i in [1, 2, 3]:
+            # i = 1
+            print('#---- expid 0 vs. ' + str(i))
             
-            composite_temp2_isotopes[expid[i]][ivar][iisotopes] = {}
+            data1 = pre_weighted_var[expid[0]][ivar][ialltime].values
+            data2 = pre_weighted_var[expid[i]][ivar][ialltime].values
             
-            for ialltime in ['mon', 'sea', 'ann', 'mon_no_mm',]:
-                # ialltime = 'ann'
-                print('#---- ' + ialltime)
-                
-                composite_temp2_isotopes[expid[i]][ivar][iisotopes][ialltime] = {}
-                
-                if (ialltime != 'mon_no_mm'):
-                    ialltime2 = ialltime
-                elif (ialltime == 'mon_no_mm'):
-                    ialltime2 = 'mon'
-                
-                temp2var = temp2_alltime[expid[i]][ialltime2].copy()
-                
-                if (iisotopes == 'wisoaprt'):
-                    isotopevar = (wisoaprt_alltime[expid[i]][ialltime2].sel(
-                        wisotype=1) * seconds_per_d).compute()
-                elif (iisotopes == 'dO18'):
-                    isotopevar = (dO18_alltime[expid[i]][ialltime2]).copy()
-                elif (iisotopes == 'dD'):
-                    isotopevar = (dD_alltime[expid[i]][ialltime2]).copy()
-                elif (iisotopes == 'd_ln'):
-                    isotopevar = (d_ln_alltime[expid[i]][ialltime2]).copy()
-                elif (iisotopes == 'd_excess'):
-                    isotopevar = (d_excess_alltime[expid[i]][ialltime2]).copy()
-                
-                if (ialltime == 'mon_no_mm'):
-                    temp2var = (temp2var.groupby('time.month') - temp2var.groupby('time.month').mean()).compute()
-                    isotopevar = (isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean()).compute()
-                
-                for iqtl in quantiles.keys():
-                    # iqtl = '10%'
-                    print('#-- ' + iqtl + ': ' + str(quantiles[iqtl]))
-                    
-                    composite_temp2_isotopes[expid[i]][ivar][iisotopes][ialltime][iqtl] = np.zeros(d_ln_alltime[expid[i]]['am'].shape)
-                    
-                    for ilat in range(isotopevar.shape[1]):
-                        # ilat = 2
-                        for ilon in range(isotopevar.shape[2]):
-                            # ilon = 2
-                            
-                            var1 = temp2var[:, ilat, ilon].values
-                            var2 = isotopevar[:, ilat, ilon].values
-                            
-                            subset = (np.isfinite(var1) & np.isfinite(var2))
-                            var1 = var1[subset]
-                            var2 = var2[subset]
-                            
-                            if (len(var1) < 3):
-                                composite_temp2_isotopes[expid[i]][ivar][iisotopes][ialltime][iqtl][ilat, ilon] = np.nan
-                            else:
-                                lower_qtl = np.quantile(var1, quantiles[iqtl])
-                                upper_qtl = np.quantile(var1, 1-quantiles[iqtl])
-                                
-                                var1_pos = (var1 > upper_qtl)
-                                var1_neg = (var1 < lower_qtl)
-                                
-                                var2_posmean = np.mean(var2[var1_pos])
-                                var2_negmean = np.mean(var2[var1_neg])
-                                
-                                composite_temp2_isotopes[expid[i]][ivar][iisotopes][ialltime][iqtl][ilat, ilon] = var2_posmean - var2_negmean
-
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.composite_temp2_isotopes.pkl', 'wb') as f:
-        pickle.dump(composite_temp2_isotopes[expid[i]], f)
-
-
-
-
-'''
-#-------------------------------- check
-composite_temp2_isotopes = {}
-
-for i in np.arange(0, 4, 1):
-    # i = 0
-    print('#-------------------------------- ' + str(i) + ': ' + expid[i])
-    
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.composite_temp2_isotopes.pkl', 'rb') as f:
-        composite_temp2_isotopes[expid[i]] = pickle.load(f)
-
-for i in np.arange(0, 4, 1):
-    # i = 0
-    print('#-------------------------------- ' + str(i) + ': ' + expid[i])
-    
-    for ivar in 'temp2':
-        # ivar = 'temp2'
-        print('#---------------- ' + ivar)
-        
-        for iqtl in ['10%']:
-            # iqtl = '10%'
-            print('#-------- ' + iqtl + ': ' + str(quantiles[iqtl]))
+            data1 = data1[np.isfinite(data1)]
+            data2 = data2[np.isfinite(data2)]
             
-            for ialltime in ['daily', 'mon', 'sea', 'ann', 'mon_no_mm']:
-                # ialltime = 'ann'
-                print('#---- ' + ialltime)
-                
-                for iisotopes in ['wisoaprt', 'dO18', 'dD', 'd_ln', 'd_excess', ]:
-                    # iisotopes = 'd_ln'
-                    print('#-- ' + iisotopes)
-                    
-                    if (ialltime != 'mon_no_mm'):
-                        ialltime2 = ialltime
-                    elif (ialltime == 'mon_no_mm'):
-                        ialltime2 = 'mon'
-                    
-                    temp2var = (temp2_alltime[expid[i]][ialltime2]).copy()
-                    if (iisotopes == 'wisoaprt'):
-                        isotopevar = (wisoaprt_alltime[expid[i]][ialltime2].sel(
-                            wisotype=1) * seconds_per_d).compute()
-                    elif (iisotopes == 'dO18'):
-                        isotopevar = (dO18_alltime[expid[i]][ialltime2]).copy()
-                    elif (iisotopes == 'dD'):
-                        isotopevar = (dD_alltime[expid[i]][ialltime2]).copy()
-                    elif (iisotopes == 'd_ln'):
-                        isotopevar = (d_ln_alltime[expid[i]][ialltime2]).copy()
-                    elif (iisotopes == 'd_excess'):
-                        isotopevar = (d_excess_alltime[expid[i]][ialltime2]).copy()
-                    
-                    if (ialltime == 'mon_no_mm'):
-                        temp2var = (temp2var.groupby('time.month') - temp2var.groupby('time.month').mean()).compute()
-                        isotopevar = (isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean()).compute()
-                    
-                    for ilat in np.arange(1, 96, 30):
-                        for ilon in np.arange(1, 192, 60):
-                            
-                            var1 = temp2var[:, ilat, ilon].values
-                            var2 = isotopevar[:, ilat, ilon].values
-                            
-                            subset = (np.isfinite(var1) & np.isfinite(var2))
-                            var2 = var2[subset]
-                            var1 = var1[subset]
-                            
-                            if (len(var1) < 3):
-                                result = np.nan
-                            else:
-                                lower_qtl = np.quantile(var1, quantiles[iqtl])
-                                upper_qtl = np.quantile(var1, 1-quantiles[iqtl])
-                                
-                                var1_pos = (var1 > upper_qtl)
-                                var1_neg = (var1 < lower_qtl)
-                                
-                                var2_posmean = np.mean(var2[var1_pos])
-                                var2_negmean = np.mean(var2[var1_neg])
-                                
-                                result = var2_posmean - var2_negmean
-                            
-                            # print(str(np.round(composite_temp2_isotopes[expid[i]][ivar][iisotopes][ialltime][iqtl][ilat, ilon], 2)))
-                            # print(str(np.round(result, 2)))
-                            
-                            data1 = composite_temp2_isotopes[expid[i]][ivar][iisotopes][ialltime][iqtl][ilat, ilon]
-                            data2 = result
-                            
-                            if (data1 != data2):
-                                print(data1)
-                                print(data2)
+            print((data1 == data2).all())
 
 
 '''

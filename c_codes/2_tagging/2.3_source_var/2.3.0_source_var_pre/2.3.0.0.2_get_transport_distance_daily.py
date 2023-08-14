@@ -1,15 +1,10 @@
+#SBATCH --time=00:30:00
 
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_m_502_5.0',
-    'pi_600_5.0',
-    # 'pi_601_5.1',
-    # 'pi_602_5.2',
-    # 'pi_603_5.3',
-    # 'pi_605_5.5',
-    # 'pi_606_5.6',
-    # 'pi_609_5.7',
+    # 'pi_600_5.0',
+    'pi_601_5.1',
     ]
 i = 0
 
@@ -17,7 +12,6 @@ i = 0
 # region import packages
 
 # management
-import glob
 import pickle
 import warnings
 warnings.filterwarnings('ignore')
@@ -25,84 +19,16 @@ import os
 import sys  # print(sys.path)
 sys.path.append('/albedo/work/user/qigao001')
 import datetime
-import psutil
 
 # data analysis
 import numpy as np
-import xarray as xr
 import dask
 dask.config.set({"array.slicing.split_large_chunks": True})
 from dask.diagnostics import ProgressBar
 pbar = ProgressBar()
 pbar.register()
-from scipy import stats
-import xesmf as xe
-import pandas as pd
-from metpy.interpolate import cross_section
-from statsmodels.stats import multitest
-import pycircstat as circ
-from geopy.distance import geodesic, great_circle
-from haversine import haversine, haversine_vector
+from haversine import haversine_vector
 
-# plot
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from matplotlib.colors import BoundaryNorm
-from matplotlib import cm
-import cartopy.crs as ccrs
-plt.rcParams['pcolor.shading'] = 'auto'
-mpl.rcParams['figure.dpi'] = 600
-mpl.rc('font', family='Times New Roman', size=10)
-mpl.rcParams['axes.linewidth'] = 0.2
-plt.rcParams.update({"mathtext.fontset": "stix"})
-import matplotlib.animation as animation
-import seaborn as sns
-
-# self defined
-from a_basic_analysis.b_module.mapplot import (
-    globe_plot,
-    hemisphere_plot,
-    quick_var_plot,
-    mesh2plot,
-    framework_plot1,
-    remove_trailing_zero,
-    remove_trailing_zero_pos,
-)
-
-from a_basic_analysis.b_module.basic_calculations import (
-    mon_sea_ann,
-)
-
-from a_basic_analysis.b_module.namelist import (
-    month,
-    month_num,
-    month_dec,
-    month_dec_num,
-    seasons,
-    seasons_last_num,
-    hours,
-    months,
-    month_days,
-    zerok,
-    panel_labels,
-    seconds_per_d,
-)
-
-from a_basic_analysis.b_module.source_properties import (
-    source_properties,
-    calc_lon_diff,
-)
-
-from a_basic_analysis.b_module.statistics import (
-    fdr_control_bh,
-    check_normality_3d,
-    check_equal_variance_3d,
-    ttest_fdr_control,
-)
-
-from a_basic_analysis.b_module.component_plot import (
-    cplot_ice_cores,
-)
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -125,20 +51,7 @@ lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
 
 '''
-major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
-major_ice_core_site = major_ice_core_site.loc[
-    major_ice_core_site['age (kyr)'] > 120, ]
-
-wisoaprt_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
-    wisoaprt_alltime[expid[i]] = pickle.load(f)
-
-lon_2d_flatten = lon_2d.reshape(-1, 1).copy()
-lat_2d_flatten = lat_2d.reshape(-1, 1).copy()
-local_pairs = [[x, y] for x, y in zip(lat_2d_flatten, lon_2d_flatten)]
-
 print(psutil.Process().memory_info().rss / (2 ** 30))
-
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -153,7 +66,7 @@ transport_distance[expid[i]] = {}
 begin_time = datetime.datetime.now()
 print(begin_time)
 
-for ialltime in pre_weighted_lat[expid[i]].keys():
+for ialltime in ['daily', 'mon', 'mm', 'sea', 'sm', 'ann', 'am']:
     # ialltime = 'daily'
     # ialltime = 'ann'
     
@@ -217,7 +130,18 @@ for ialltime in pre_weighted_lat[expid[i]].keys():
                     local_pairs, source_pairs, normalize=True).reshape(
                         pre_weighted_lat[expid[i]][ialltime].shape)
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance.pkl', 'wb') as f:
+#-------- monthly without monthly mean
+transport_distance[expid[i]]['mon no mm'] = (transport_distance[expid[i]]['mon'].groupby('time.month') - transport_distance[expid[i]]['mon'].groupby('time.month').mean(skipna=True)).compute()
+
+#-------- annual without annual mean
+transport_distance[expid[i]]['ann no am'] = (transport_distance[expid[i]]['ann'] - transport_distance[expid[i]]['ann'].mean(dim='time', skipna=True)).compute()
+
+output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance.pkl'
+
+if (os.path.isfile(output_file)):
+    os.remove(output_file)
+
+with open(output_file, 'wb') as f:
     pickle.dump(transport_distance[expid[i]], f)
 
 
@@ -381,3 +305,33 @@ def lon_180(lon):
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region copy output
+
+import shutil
+
+# src_exp = 'pi_600_5.0'
+src_exp = 'pi_601_5.1'
+
+expid = [
+    'pi_602_5.2',
+    'pi_605_5.5',
+    'pi_606_5.6',
+    'pi_609_5.7',
+    # 'pi_610_5.8',
+    ]
+
+for i in range(len(expid)):
+    print('#-------- ' + expid[i])
+    
+    input_file = exp_odir + src_exp + '/analysis/echam/' + src_exp + '.transport_distance.pkl'
+    
+    output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance.pkl'
+    
+    if (os.path.isfile(output_file)):
+        os.remove(output_file)
+    
+    shutil.copy2(input_file, output_file)
+
+# endregion
+# -----------------------------------------------------------------------------

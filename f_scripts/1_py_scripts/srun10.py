@@ -35,10 +35,10 @@ ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
 # min_sf    = 0
 # max_sf    = 28
 
-# var_name  = 'sinlon'
-# itag      = 11
-# min_sf    = -1
-# max_sf    = 1
+var_name  = 'sinlon'
+itag      = 11
+min_sf    = -1
+max_sf    = 1
 
 # var_name  = 'coslon'
 # itag      = 12
@@ -230,38 +230,4 @@ for ivar in source_var:
 # endregion
 # -----------------------------------------------------------------------------
 
-
-# -----------------------------------------------------------------------------
-# region copy output
-
-import shutil
-
-src_exp = 'pi_600_5.0'
-# src_exp = 'pi_601_5.1'
-
-expid = [
-    # 'pi_602_5.2',
-    # 'pi_605_5.5',
-    # 'pi_606_5.6',
-    # 'pi_609_5.7',
-    'pi_610_5.8',
-    ]
-
-for var_name in ['sst', 'lat', 'rh2m', 'wind10', 'sinlon', 'coslon']:
-    print('#---------------- ' + var_name)
-    
-    for i in range(len(expid)):
-        print('#-------- ' + expid[i])
-        
-        input_file = exp_odir + src_exp + '/analysis/echam/' + src_exp + '.pre_weighted_' + var_name + '.pkl'
-        
-        output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_' + var_name + '.pkl'
-        
-        if (os.path.isfile(output_file)):
-            os.remove(output_file)
-        
-        shutil.copy2(input_file, output_file)
-
-# endregion
-# -----------------------------------------------------------------------------
 

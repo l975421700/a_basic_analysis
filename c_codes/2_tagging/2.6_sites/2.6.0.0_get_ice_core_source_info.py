@@ -1,15 +1,15 @@
+#SBATCH --time=00:30:00, not PI control
 
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_m_502_5.0',
-    'pi_600_5.0',
+    # 'pi_600_5.0',
     # 'pi_601_5.1',
     # 'pi_602_5.2',
-    # 'pi_603_5.3',
     # 'pi_605_5.5',
     # 'pi_606_5.6',
     # 'pi_609_5.7',
+    'pi_610_5.8',
     ]
 i = 0
 
@@ -18,7 +18,6 @@ i = 0
 # region import packages
 
 # management
-import glob
 import pickle
 import warnings
 warnings.filterwarnings('ignore')
@@ -34,76 +33,8 @@ dask.config.set({"array.slicing.split_large_chunks": True})
 from dask.diagnostics import ProgressBar
 pbar = ProgressBar()
 pbar.register()
-from scipy import stats
-import xesmf as xe
 import pandas as pd
-from metpy.interpolate import cross_section
-from statsmodels.stats import multitest
-import pycircstat as circ
-from scipy.stats import circstd
 
-# plot
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from matplotlib.colors import BoundaryNorm, ListedColormap
-from matplotlib import cm
-import cartopy.crs as ccrs
-plt.rcParams['pcolor.shading'] = 'auto'
-mpl.rcParams['figure.dpi'] = 600
-mpl.rc('font', family='Times New Roman', size=10)
-mpl.rcParams['axes.linewidth'] = 0.2
-plt.rcParams.update({"mathtext.fontset": "stix"})
-import matplotlib.animation as animation
-import seaborn as sns
-from matplotlib.ticker import AutoMinorLocator
-
-# self defined
-from a_basic_analysis.b_module.mapplot import (
-    globe_plot,
-    hemisphere_plot,
-    quick_var_plot,
-    mesh2plot,
-    framework_plot1,
-    remove_trailing_zero,
-    remove_trailing_zero_pos,
-)
-
-from a_basic_analysis.b_module.basic_calculations import (
-    mon_sea_ann,
-    find_ilat_ilon,
-)
-
-from a_basic_analysis.b_module.namelist import (
-    month,
-    month_num,
-    month_dec,
-    month_dec_num,
-    seasons,
-    seasons_last_num,
-    hours,
-    months,
-    month_days,
-    zerok,
-    panel_labels,
-    seconds_per_d,
-)
-
-from a_basic_analysis.b_module.source_properties import (
-    source_properties,
-    calc_lon_diff,
-)
-
-from a_basic_analysis.b_module.statistics import (
-    fdr_control_bh,
-    check_normality_3d,
-    check_equal_variance_3d,
-    ttest_fdr_control,
-)
-
-from a_basic_analysis.b_module.component_plot import (
-    cplot_ice_cores,
-    plt_mesh_pars,
-)
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -185,157 +116,6 @@ for icores in major_ice_core_site.Site:
 
 
 # -----------------------------------------------------------------------------
-# region get temp2 at ice core sites
-
-# temp2
-temp2_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
-    temp2_alltime[expid[i]] = pickle.load(f)
-
-
-temp2_alltime_icores = {}
-temp2_alltime_icores[expid[i]] = {}
-
-for icores in stations_sites.Site:
-    # icores = 'EDC'
-    # print('#--------' + icores)
-    temp2_alltime_icores[expid[i]][icores] = {}
-    
-    for ialltime in temp2_alltime[expid[i]].keys():
-        # print('#----' + ialltime)
-        if ialltime in ['mon', 'sea', 'ann', 'mm', 'sm']:
-            # ialltime = 'mon'
-            temp2_alltime_icores[expid[i]][icores][ialltime] = \
-                temp2_alltime[expid[i]][ialltime][
-                    :,
-                    t63_sites_indices[icores]['ilat'],
-                    t63_sites_indices[icores]['ilon']]
-        elif (ialltime == 'am'):
-            temp2_alltime_icores[expid[i]][icores][ialltime] = \
-                temp2_alltime[expid[i]][ialltime][
-                    t63_sites_indices[icores]['ilat'],
-                    t63_sites_indices[icores]['ilon']]
-
-
-with open(
-    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.temp2_alltime_icores.pkl',
-    'wb') as f:
-    pickle.dump(temp2_alltime_icores[expid[i]], f)
-
-
-
-
-'''
-for icores in temp2_alltime_icores[expid[i]].keys():
-    # icores = 'EDC'
-    print('#----------------' + icores)
-    temp2_am_icores = \
-        np.round(temp2_alltime_icores[expid[i]][icores]['am'].values, 1)
-    temp2_annstd_icores = \
-        np.round(
-            temp2_alltime_icores[expid[i]][icores]['ann'].std(ddof=1).values,
-            1)
-    print(str(temp2_am_icores) + ' ± ' + str(temp2_annstd_icores))
-
-
-#-------------------------------- check
-temp2_alltime_icores = {}
-with open(
-    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.temp2_alltime_icores.pkl', 'rb') as f:
-    temp2_alltime_icores[expid[i]] = pickle.load(f)
-
-for icores in temp2_alltime_icores[expid[i]].keys():
-    # icores = 'EDC'
-    print('#----------------' + icores)
-    print('local lat:  ' + str(t63_sites_indices[icores]['lat']))
-    print('grid lat:   ' + \
-        str(np.round(temp2_alltime_icores[expid[i]][icores]['am'].lat.values, 2)))
-    print('local lon:  ' + str(t63_sites_indices[icores]['lon']))
-    print('grid lon:   ' + \
-        str(temp2_alltime_icores[expid[i]][icores]['am'].lon.values))
-
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region get wisoaprt at ice core sites
-
-wisoaprt_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
-    wisoaprt_alltime[expid[i]] = pickle.load(f)
-
-wisoaprt_alltime_icores = {}
-wisoaprt_alltime_icores[expid[i]] = {}
-
-for icores in stations_sites.Site:
-    # icores = 'EDC'
-    print('#--------' + icores)
-    wisoaprt_alltime_icores[expid[i]][icores] = {}
-    
-    for ialltime in wisoaprt_alltime[expid[i]].keys():
-        # print('#----' + ialltime)
-        if ialltime in ['daily', 'mon', 'sea', 'ann', 'mm', 'sm']:
-            # ialltime = 'daily'
-            wisoaprt_alltime_icores[expid[i]][icores][ialltime] = \
-                wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1)[
-                    :,
-                    t63_sites_indices[icores]['ilat'],
-                    t63_sites_indices[icores]['ilon']]
-        elif (ialltime == 'am'):
-            wisoaprt_alltime_icores[expid[i]][icores][ialltime] = \
-                wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1)[
-                    t63_sites_indices[icores]['ilat'],
-                    t63_sites_indices[icores]['ilon']]
-
-
-with open(
-    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_alltime_icores.pkl',
-    'wb') as f:
-    pickle.dump(wisoaprt_alltime_icores[expid[i]], f)
-
-
-
-
-'''
-for icores in wisoaprt_alltime_icores[expid[i]].keys():
-    # icores = 'EDC'
-    print('#----------------' + icores)
-    wisoaprt_am_icores = \
-        np.round(wisoaprt_alltime_icores[expid[i]][icores][
-            'am'].sel(wisotype=1).values * seconds_per_d * 365, 1)
-    wisoaprt_annstd_icores = \
-        np.round((wisoaprt_alltime_icores[expid[i]][icores][
-            'ann'].sel(wisotype=1)  * seconds_per_d * 365
-                  ).std(ddof=1).values, 1)
-    print(str(wisoaprt_am_icores) + ' ± ' + str(wisoaprt_annstd_icores))
-
-
-#-------------------------------- check
-wisoaprt_alltime_icores = {}
-with open(
-    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_alltime_icores.pkl', 'rb') as f:
-    wisoaprt_alltime_icores[expid[i]] = pickle.load(f)
-
-wisoaprt_alltime_icores[expid[i]]['EDC']['daily']
-
-for icores in wisoaprt_alltime_icores[expid[i]].keys():
-    # icores = 'EDC'
-    print('#----------------' + icores)
-    print('local lat:  ' + str(t63_sites_indices[icores]['lat']))
-    print('grid lat:   ' + \
-        str(np.round(wisoaprt_alltime_icores[expid[i]][icores]['am'].lat.values, 2)))
-    print('local lon:  ' + str(t63_sites_indices[icores]['lon']))
-    print('grid lon:   ' + \
-        str(wisoaprt_alltime_icores[expid[i]][icores]['am'].lon.values))
-
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
 # region get source properties at ice core sites
 
 pre_weighted_var = {}
@@ -376,7 +156,7 @@ for icores in stations_sites.Site:
         for ialltime in pre_weighted_var[expid[i]][ivar].keys():
             print('#-- ' + ialltime)
             
-            if ialltime in ['daily', 'mon', 'sea', 'ann', 'mm', 'sm']:
+            if ialltime in ['daily', 'mon', 'sea', 'ann', 'mm', 'sm', 'mon no mm', 'ann no am']:
                 # ialltime = 'daily'
                 pre_weighted_var_icores[expid[i]][icores][ivar][ialltime] = \
                     pre_weighted_var[expid[i]][ivar][ialltime][
@@ -390,10 +170,17 @@ for icores in stations_sites.Site:
                     t63_sites_indices[icores]['ilat'],
                     t63_sites_indices[icores]['ilon']]
 
+output_file = exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.pre_weighted_var_icores.pkl'
+
+if (os.path.isfile(output_file)):
+    os.remove(output_file)
+
 with open(
-    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.pre_weighted_var_icores.pkl', 'wb') as f:
+    output_file, 'wb') as f:
     pickle.dump(pre_weighted_var_icores[expid[i]], f)
 
+
+del pre_weighted_var, pre_weighted_var_icores
 
 '''
 for ivar in source_var:
@@ -480,7 +267,7 @@ circstd(pre_weighted_var_icores[expid[i]][icores][ivar]['ann'],
 
 
 # -----------------------------------------------------------------------------
-# region get delta O18, delta D, and d_ln
+# region get delta O18, delta D, d_excess, and d_ln
 
 
 #-------------------------------- import data
@@ -518,7 +305,7 @@ for iisotope in ['dO18', 'dD', 'd_excess', 'd_ln']:
         
         isotopes_alltime_icores[expid[i]][iisotope][icores] = {}
         
-        for ialltime in ['daily', 'mon', 'sea', 'ann', 'mm', 'sm']:
+        for ialltime in ['daily', 'mon', 'sea', 'ann', 'mm', 'sm', 'mon no mm', 'ann no am']:
             # ialltime = 'mon'
             print('#---- ' + ialltime)
             
@@ -533,14 +320,15 @@ for iisotope in ['dO18', 'dD', 'd_excess', 'd_ln']:
                 t63_sites_indices[icores]['ilat'],
                 t63_sites_indices[icores]['ilon']]
 
+output_file = exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.isotopes_alltime_icores.pkl'
 
+if (os.path.isfile(output_file)):
+    os.remove(output_file)
 
-with open(
-    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.isotopes_alltime_icores.pkl',
-    'wb') as f:
+with open(output_file, 'wb') as f:
     pickle.dump(isotopes_alltime_icores[expid[i]], f)
 
-
+del isotopes_alltime, isotopes_alltime_icores
 
 '''
 #-------------------------------- check
@@ -585,6 +373,84 @@ for iisotope in ['dO18', 'dD', 'd_excess', 'd_ln']:
 
 
 # -----------------------------------------------------------------------------
+# region get wisoaprt at ice core sites
+
+wisoaprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
+    wisoaprt_alltime[expid[i]] = pickle.load(f)
+
+wisoaprt_alltime_icores = {}
+wisoaprt_alltime_icores[expid[i]] = {}
+
+for icores in stations_sites.Site:
+    # icores = 'EDC'
+    print('#--------' + icores)
+    wisoaprt_alltime_icores[expid[i]][icores] = {}
+    
+    for ialltime in wisoaprt_alltime[expid[i]].keys():
+        # print('#----' + ialltime)
+        if ialltime in ['daily', 'mon', 'sea', 'ann', 'mm', 'sm', 'mon no mm', 'ann no am']:
+            # ialltime = 'daily'
+            wisoaprt_alltime_icores[expid[i]][icores][ialltime] = \
+                wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1)[
+                    :,
+                    t63_sites_indices[icores]['ilat'],
+                    t63_sites_indices[icores]['ilon']]
+        elif (ialltime == 'am'):
+            wisoaprt_alltime_icores[expid[i]][icores][ialltime] = \
+                wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1)[
+                    t63_sites_indices[icores]['ilat'],
+                    t63_sites_indices[icores]['ilon']]
+
+output_file = exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_alltime_icores.pkl'
+
+if (os.path.isfile(output_file)):
+    os.remove(output_file)
+
+with open(output_file, 'wb') as f:
+    pickle.dump(wisoaprt_alltime_icores[expid[i]], f)
+
+
+del wisoaprt_alltime, wisoaprt_alltime_icores
+
+'''
+for icores in wisoaprt_alltime_icores[expid[i]].keys():
+    # icores = 'EDC'
+    print('#----------------' + icores)
+    wisoaprt_am_icores = \
+        np.round(wisoaprt_alltime_icores[expid[i]][icores][
+            'am'].sel(wisotype=1).values * seconds_per_d * 365, 1)
+    wisoaprt_annstd_icores = \
+        np.round((wisoaprt_alltime_icores[expid[i]][icores][
+            'ann'].sel(wisotype=1)  * seconds_per_d * 365
+                  ).std(ddof=1).values, 1)
+    print(str(wisoaprt_am_icores) + ' ± ' + str(wisoaprt_annstd_icores))
+
+
+#-------------------------------- check
+wisoaprt_alltime_icores = {}
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_alltime_icores.pkl', 'rb') as f:
+    wisoaprt_alltime_icores[expid[i]] = pickle.load(f)
+
+wisoaprt_alltime_icores[expid[i]]['EDC']['daily']
+
+for icores in wisoaprt_alltime_icores[expid[i]].keys():
+    # icores = 'EDC'
+    print('#----------------' + icores)
+    print('local lat:  ' + str(t63_sites_indices[icores]['lat']))
+    print('grid lat:   ' + \
+        str(np.round(wisoaprt_alltime_icores[expid[i]][icores]['am'].lat.values, 2)))
+    print('local lon:  ' + str(t63_sites_indices[icores]['lon']))
+    print('grid lon:   ' + \
+        str(wisoaprt_alltime_icores[expid[i]][icores]['am'].lon.values))
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
 # region get aprt_frc at ice core sites
 
 aprt_frc = {}
@@ -603,34 +469,36 @@ for icores in stations_sites.Site:
     
     for ialltime in aprt_frc[expid[i]]['Atlantic Ocean'].keys():
         # print('#----' + ialltime)
-        if ialltime in ['daily', 'mon', 'sea', 'ann', 'mm', 'sm']:
+        if ialltime in ['daily', 'mon', 'sea', 'ann', 'mm', 'sm', 'mon no mm', 'ann no am']:
             # ialltime = 'daily'
             aprt_frc_alltime_icores[expid[i]][icores][ialltime] = \
                 (aprt_frc[expid[i]]['Atlantic Ocean'][ialltime] + \
                     aprt_frc[expid[i]]['Indian Ocean'][ialltime] + \
                         aprt_frc[expid[i]]['Pacific Ocean'][ialltime] + \
-                            aprt_frc[expid[i]]['Southern Ocean'][ialltime]).compute()[
+                            aprt_frc[expid[i]]['Southern Ocean'][ialltime])[
                                 :,
                                 t63_sites_indices[icores]['ilat'],
-                                t63_sites_indices[icores]['ilon']]
+                                t63_sites_indices[icores]['ilon']].compute()
         elif (ialltime == 'am'):
             # ialltime = 'am'
             aprt_frc_alltime_icores[expid[i]][icores][ialltime] = \
                 (aprt_frc[expid[i]]['Atlantic Ocean'][ialltime] + \
                     aprt_frc[expid[i]]['Indian Ocean'][ialltime] + \
                         aprt_frc[expid[i]]['Pacific Ocean'][ialltime] + \
-                            aprt_frc[expid[i]]['Southern Ocean'][ialltime]).compute()[
+                            aprt_frc[expid[i]]['Southern Ocean'][ialltime])[
                                 t63_sites_indices[icores]['ilat'],
-                                t63_sites_indices[icores]['ilon']]
+                                t63_sites_indices[icores]['ilon']].compute()
 
+output_file = exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.aprt_frc_alltime_icores.pkl'
 
-with open(
-    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.aprt_frc_alltime_icores.pkl',
-    'wb') as f:
+if (os.path.isfile(output_file)):
+    os.remove(output_file)
+
+with open(output_file, 'wb') as f:
     pickle.dump(aprt_frc_alltime_icores[expid[i]], f)
 
 
-
+del aprt_frc, aprt_frc_alltime_icores
 
 '''
 for icores in aprt_frc_alltime_icores[expid[i]].keys():
@@ -660,6 +528,106 @@ for icores in aprt_frc_alltime_icores[expid[i]].keys():
     print('local lon:  ' + str(t63_sites_indices[icores]['lon']))
     print('grid lon:   ' + \
         str(aprt_frc_alltime_icores[expid[i]][icores]['am'].lon.values))
+
+
+exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+expid = [
+    'pi_600_5.0',
+    'pi_601_5.1',
+    'pi_602_5.2',
+    'pi_605_5.5',
+    'pi_606_5.6',
+    'pi_609_5.7',
+    ]
+
+import os
+for i in range(len(expid)):
+    if (os.path.isfile(exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_alltime_icores.pkl')):
+        os.remove(exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_alltime_icores.pkl')
+    if (os.path.isfile(exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.pre_weighted_var_icores.pkl')):
+        os.remove(exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.pre_weighted_var_icores.pkl')
+    if (os.path.isfile(exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.isotopes_alltime_icores.pkl')):
+        os.remove(exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.isotopes_alltime_icores.pkl')
+    if (os.path.isfile(exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.aprt_frc_alltime_icores.pkl')):
+        os.remove(exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.aprt_frc_alltime_icores.pkl')
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get temp2 at ice core sites
+
+# temp2
+temp2_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
+    temp2_alltime[expid[i]] = pickle.load(f)
+
+
+temp2_alltime_icores = {}
+temp2_alltime_icores[expid[i]] = {}
+
+for icores in stations_sites.Site:
+    # icores = 'EDC'
+    # print('#--------' + icores)
+    temp2_alltime_icores[expid[i]][icores] = {}
+    
+    for ialltime in temp2_alltime[expid[i]].keys():
+        # print('#----' + ialltime)
+        if ialltime in ['daily', 'mon', 'sea', 'ann', 'mm', 'sm', 'mon no mm', 'ann no am']:
+            # ialltime = 'mon'
+            temp2_alltime_icores[expid[i]][icores][ialltime] = \
+                temp2_alltime[expid[i]][ialltime][
+                    :,
+                    t63_sites_indices[icores]['ilat'],
+                    t63_sites_indices[icores]['ilon']]
+        elif (ialltime == 'am'):
+            temp2_alltime_icores[expid[i]][icores][ialltime] = \
+                temp2_alltime[expid[i]][ialltime][
+                    t63_sites_indices[icores]['ilat'],
+                    t63_sites_indices[icores]['ilon']]
+
+output_file = exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.temp2_alltime_icores.pkl'
+
+if (os.path.isfile(output_file)):
+    os.remove(output_file)
+
+with open(
+    output_file, 'wb') as f:
+    pickle.dump(temp2_alltime_icores[expid[i]], f)
+
+
+del temp2_alltime, temp2_alltime_icores
+
+'''
+for icores in temp2_alltime_icores[expid[i]].keys():
+    # icores = 'EDC'
+    print('#----------------' + icores)
+    temp2_am_icores = \
+        np.round(temp2_alltime_icores[expid[i]][icores]['am'].values, 1)
+    temp2_annstd_icores = \
+        np.round(
+            temp2_alltime_icores[expid[i]][icores]['ann'].std(ddof=1).values,
+            1)
+    print(str(temp2_am_icores) + ' ± ' + str(temp2_annstd_icores))
+
+
+#-------------------------------- check
+temp2_alltime_icores = {}
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.temp2_alltime_icores.pkl', 'rb') as f:
+    temp2_alltime_icores[expid[i]] = pickle.load(f)
+
+for icores in temp2_alltime_icores[expid[i]].keys():
+    # icores = 'EDC'
+    print('#----------------' + icores)
+    print('local lat:  ' + str(t63_sites_indices[icores]['lat']))
+    print('grid lat:   ' + \
+        str(np.round(temp2_alltime_icores[expid[i]][icores]['am'].lat.values, 2)))
+    print('local lon:  ' + str(t63_sites_indices[icores]['lon']))
+    print('grid lon:   ' + \
+        str(temp2_alltime_icores[expid[i]][icores]['am'].lon.values))
 
 '''
 # endregion

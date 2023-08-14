@@ -4,9 +4,8 @@
 #SBATCH --time=12:00:00
 #SBATCH -o %A_%a.out
 #SBATCH -e %A_%a.err
-#SBATCH --array=0-5
-#SBATCH --ntasks=6
-#SBATCH --mem=60GB
+#SBATCH --array=2-5
+#SBATCH --mem=120GB
 
 echo "Current time : " $(date +"%T")
 cd $WORK
@@ -33,6 +32,4 @@ echo "Current time : " $(date +"%T")
 #Xsrun  I know what I am doing
 
 # #SBATCH --cpus-per-task=36
-# #SBATCH --ntasks=1
-# #SBATCH --array=2000-2029
-# #SBATCH --account=paleodyn.paleodyn
+# #SBATCH --ntasks=6

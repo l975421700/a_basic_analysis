@@ -1,7 +1,10 @@
 
 
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_502_5.0',]
+exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+expid = [
+    # 'pi_m_502_5.0',
+    'pi_600_5.0',
+    ]
 i = 0
 
 # -----------------------------------------------------------------------------
@@ -15,6 +18,7 @@ warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
 sys.path.append('/home/users/qino')
+sys.path.append('/albedo/work/user/qigao001')
 import datetime
 
 # data analysis
@@ -133,9 +137,8 @@ with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
 
 one_degree_grid = xr.open_dataset('scratch/others/one_degree_grids_cdo.nc')
 
-with open(
-    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.t63_sites_indices.pkl',
-    'rb') as f:
+
+with open('scratch/others/pi_m_502_5.0.t63_sites_indices.pkl', 'rb') as f:
     t63_sites_indices = pickle.load(f)
 
 # endregion

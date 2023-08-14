@@ -3,9 +3,6 @@
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     'pi_600_5.0',
-    # 'pi_601_5.1',
-    # 'pi_602_5.2',
-    # 'pi_603_5.3',
     ]
 
 
@@ -13,7 +10,6 @@ expid = [
 # region import packages
 
 # management
-import glob
 import pickle
 import warnings
 warnings.filterwarnings('ignore')
@@ -29,81 +25,14 @@ dask.config.set({"array.slicing.split_large_chunks": True})
 from dask.diagnostics import ProgressBar
 pbar = ProgressBar()
 pbar.register()
-from scipy import stats
-# import xesmf as xe
-import pandas as pd
-from statsmodels.stats import multitest
-import pycircstat as circ
 import xskillscore as xs
 
-# plot
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from matplotlib.colors import BoundaryNorm
-from matplotlib import cm
-import cartopy.crs as ccrs
-plt.rcParams['pcolor.shading'] = 'auto'
-mpl.rcParams['figure.dpi'] = 600
-mpl.rc('font', family='Times New Roman', size=10)
-mpl.rcParams['axes.linewidth'] = 0.2
-plt.rcParams.update({"mathtext.fontset": "stix"})
-import matplotlib.animation as animation
-import seaborn as sns
-import cartopy.feature as cfeature
-from scipy.stats import pearsonr
-from matplotlib.ticker import AutoMinorLocator
-
-# self defined
-from a_basic_analysis.b_module.mapplot import (
-    globe_plot,
-    hemisphere_plot,
-    quick_var_plot,
-    mesh2plot,
-    framework_plot1,
-    remove_trailing_zero,
-    remove_trailing_zero_pos,
-)
-
-from a_basic_analysis.b_module.basic_calculations import (
-    mon_sea_ann,
-    regrid,
-    mean_over_ais,
-    time_weighted_mean,
-)
-
 from a_basic_analysis.b_module.namelist import (
-    month,
-    month_num,
-    month_dec,
-    month_dec_num,
-    seasons,
-    seasons_last_num,
-    hours,
-    months,
-    month_days,
-    zerok,
-    panel_labels,
     seconds_per_d,
 )
 
-from a_basic_analysis.b_module.source_properties import (
-    source_properties,
-    calc_lon_diff,
-)
-
 from a_basic_analysis.b_module.statistics import (
-    fdr_control_bh,
-    check_normality_3d,
-    check_equal_variance_3d,
-    ttest_fdr_control,
-    cplot_ttest,
     xr_par_cor,
-)
-
-from a_basic_analysis.b_module.component_plot import (
-    cplot_ice_cores,
-    plt_mesh_pars,
-    plot_t63_contourf,
 )
 
 
@@ -167,6 +96,7 @@ for i in range(len(expid)):
 
 
 temp2_alltime = {}
+
 for i in range(len(expid)):
     # i = 0
     print(str(i) + ': ' + expid[i])
@@ -175,219 +105,179 @@ for i in range(len(expid)):
         temp2_alltime[expid[i]] = pickle.load(f)
 
 
-quantile_interval  = np.arange(10, 50 + 1e-4, 10, dtype=np.int64)
-quantiles = dict(zip(
-    [str(x) + '%' for x in quantile_interval],
-    [x/100 for x in quantile_interval],
-    ))
-
-
 sam_mon = {}
-sam_posneg_ind = {}
+b_sam_mon = {}
 
 for i in range(len(expid)):
-    # i = 0
     print(str(i) + ': ' + expid[i])
     
     sam_mon[expid[i]] = xr.open_dataset(
         exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.sam_mon.nc')
     
-    sam_posneg_ind[expid[i]] = {}
-    sam_posneg_ind[expid[i]]['pos'] = (sam_mon[expid[i]].sam > sam_mon[expid[i]].sam.std(ddof = 1)).values
-    sam_posneg_ind[expid[i]]['neg'] = (sam_mon[expid[i]].sam < (-1 * sam_mon[expid[i]].sam.std(ddof = 1))).values
-
-
+    b_sam_mon[expid[i]], _ = xr.broadcast(
+        sam_mon[expid[i]].sam,
+        d_ln_alltime[expid[i]]['mon'])
 
 '''
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
-
-
 # -----------------------------------------------------------------------------
-# region get composite temp2 and isotopes
-# time to run on nodes: 0.5 hours
+# region get partial Corr. source SST and isotopes, given d018, d_ln, dD etc.
 
-composite_temp2_isotopes = {}
+par_corr_sst_isotopes2 = {}
 
 for i in range(len(expid)):
     # i = 0
     print('#-------------------------------- ' + str(i) + ': ' + expid[i])
     
-    composite_temp2_isotopes[expid[i]] = {}
+    par_corr_sst_isotopes2[expid[i]] = {}
     
-    for ivar in ['temp2']:
-        # ivar = 'temp2'
-        print('#---------------- ' + ivar)
+    for iisotopes in ['wisoaprt', 'dO18', 'dD', 'd_ln', 'd_excess',]:
+        # iisotopes = 'd_ln'
+        print('#---------------- ' + iisotopes)
         
-        composite_temp2_isotopes[expid[i]][ivar] = {}
+        par_corr_sst_isotopes2[expid[i]][iisotopes] = {}
         
-        for iisotopes in ['wisoaprt', 'dO18', 'dD', 'd_ln', 'd_excess',]:
-            # iisotopes = 'd_ln'
-            print('#-------- ' + iisotopes)
+        for ctr_iisotopes in list(set(['wisoaprt', 'dO18', 'dD', 'd_ln', 'd_excess']) - set([iisotopes])):
+            # ctr_iisotopes = 'd_ln'
+            print('#-------- ' + ctr_iisotopes)
             
-            composite_temp2_isotopes[expid[i]][ivar][iisotopes] = {}
+            par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes] = {}
             
-            for ialltime in ['mon', 'sea', 'ann', 'mon_no_mm',]:
-                # ialltime = 'ann'
+            for ialltime in ['mon', 'mon no mm', 'ann', 'ann no am']:
+                # ialltime = 'mon'
                 print('#---- ' + ialltime)
                 
-                composite_temp2_isotopes[expid[i]][ivar][iisotopes][ialltime] = {}
-                
-                if (ialltime != 'mon_no_mm'):
-                    ialltime2 = ialltime
-                elif (ialltime == 'mon_no_mm'):
-                    ialltime2 = 'mon'
-                
-                temp2var = temp2_alltime[expid[i]][ialltime2].copy()
-                
                 if (iisotopes == 'wisoaprt'):
-                    isotopevar = (wisoaprt_alltime[expid[i]][ialltime2].sel(
-                        wisotype=1) * seconds_per_d).compute()
+                    isotopevar = wisoaprt_alltime[expid[i]][ialltime].sel(
+                        wisotype=1) * seconds_per_d
                 elif (iisotopes == 'dO18'):
-                    isotopevar = (dO18_alltime[expid[i]][ialltime2]).copy()
+                    isotopevar = dO18_alltime[expid[i]][ialltime]
                 elif (iisotopes == 'dD'):
-                    isotopevar = (dD_alltime[expid[i]][ialltime2]).copy()
+                    isotopevar = dD_alltime[expid[i]][ialltime]
                 elif (iisotopes == 'd_ln'):
-                    isotopevar = (d_ln_alltime[expid[i]][ialltime2]).copy()
+                    isotopevar = d_ln_alltime[expid[i]][ialltime]
                 elif (iisotopes == 'd_excess'):
-                    isotopevar = (d_excess_alltime[expid[i]][ialltime2]).copy()
+                    isotopevar = d_excess_alltime[expid[i]][ialltime]
                 
-                if (ialltime == 'mon_no_mm'):
-                    temp2var = (temp2var.groupby('time.month') - temp2var.groupby('time.month').mean()).compute()
-                    isotopevar = (isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean()).compute()
+                if (ctr_iisotopes == 'wisoaprt'):
+                    ctr_var = wisoaprt_alltime[expid[i]][ialltime].sel(
+                        wisotype=1) * seconds_per_d
+                elif (ctr_iisotopes == 'dO18'):
+                    ctr_var = dO18_alltime[expid[i]][ialltime]
+                elif (ctr_iisotopes == 'dD'):
+                    ctr_var = dD_alltime[expid[i]][ialltime]
+                elif (ctr_iisotopes == 'd_ln'):
+                    ctr_var = d_ln_alltime[expid[i]][ialltime]
+                elif (ctr_iisotopes == 'd_excess'):
+                    ctr_var = d_excess_alltime[expid[i]][ialltime]
                 
-                for iqtl in quantiles.keys():
-                    # iqtl = '10%'
-                    print('#-- ' + iqtl + ': ' + str(quantiles[iqtl]))
+                sst_var = pre_weighted_var[expid[i]]['sst'][ialltime]
+                
+                par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes][ialltime] = {}
+                
+                par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes][ialltime]['r'] = xr.apply_ufunc(
+                        xr_par_cor,
+                        sst_var,
+                        isotopevar,
+                        ctr_var,
+                        input_core_dims=[["time"], ["time"], ["time"]],
+                        kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
+                    )
+                
+                par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes][ialltime]['p'] = xr.apply_ufunc(
+                        xr_par_cor,
+                        sst_var,
+                        isotopevar,
+                        ctr_var,
+                        input_core_dims=[["time"], ["time"], ["time"]],
+                        kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
+                    )
+                
+                par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes][ialltime]['r_significant'] = par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes][ialltime]['r'].copy()
+                
+                par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes][ialltime]['r_significant'].values[par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes][ialltime]['p'].values > 0.05] = np.nan
+                
+                # if (ialltime == 'mon'):
                     
-                    composite_temp2_isotopes[expid[i]][ivar][iisotopes][ialltime][iqtl] = np.zeros(d_ln_alltime[expid[i]]['am'].shape)
-                    
-                    for ilat in range(isotopevar.shape[1]):
-                        # ilat = 2
-                        for ilon in range(isotopevar.shape[2]):
-                            # ilon = 2
-                            
-                            var1 = temp2var[:, ilat, ilon].values
-                            var2 = isotopevar[:, ilat, ilon].values
-                            
-                            subset = (np.isfinite(var1) & np.isfinite(var2))
-                            var1 = var1[subset]
-                            var2 = var2[subset]
-                            
-                            if (len(var1) < 3):
-                                composite_temp2_isotopes[expid[i]][ivar][iisotopes][ialltime][iqtl][ilat, ilon] = np.nan
-                            else:
-                                lower_qtl = np.quantile(var1, quantiles[iqtl])
-                                upper_qtl = np.quantile(var1, 1-quantiles[iqtl])
-                                
-                                var1_pos = (var1 > upper_qtl)
-                                var1_neg = (var1 < lower_qtl)
-                                
-                                var2_posmean = np.mean(var2[var1_pos])
-                                var2_negmean = np.mean(var2[var1_neg])
-                                
-                                composite_temp2_isotopes[expid[i]][ivar][iisotopes][ialltime][iqtl][ilat, ilon] = var2_posmean - var2_negmean
+                #     par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm'] = {}
+
+                #     par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['r'] = xr.apply_ufunc(
+                #             xr_par_cor,
+                #             sst_var.groupby('time.month') - sst_var.groupby('time.month').mean(),
+                #             isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
+                #             ctr_var.groupby('time.month') - ctr_var.groupby('time.month').mean(),
+                #             input_core_dims=[["time"], ["time"], ["time"]],
+                #             kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
+                #         )
+
+                #     par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['p'] = xr.apply_ufunc(
+                #             xr_par_cor,
+                #             sst_var.groupby('time.month') - sst_var.groupby('time.month').mean(),
+                #             isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
+                #             ctr_var.groupby('time.month') - ctr_var.groupby('time.month').mean(),
+                #             input_core_dims=[["time"], ["time"], ["time"]],
+                #             kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
+                #         )
+
+                #     par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['r_significant'] = par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['r'].copy()
+
+                #     par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['r_significant'].values[par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['p'].values > 0.05] = np.nan
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.composite_temp2_isotopes.pkl', 'wb') as f:
-        pickle.dump(composite_temp2_isotopes[expid[i]], f)
+    output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sst_isotopes2.pkl'
+    
+    if (os.path.isfile(output_file)):
+        os.remove(output_file)
+    
+    with open(output_file, 'wb') as f:
+        pickle.dump(par_corr_sst_isotopes2[expid[i]], f)
 
 
 
 
 '''
 #-------------------------------- check
-composite_temp2_isotopes = {}
+i = 0
 
-for i in range(len(expid)):
-    # i = 0
-    print('#-------------------------------- ' + str(i) + ': ' + expid[i])
-    
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.composite_temp2_isotopes.pkl', 'rb') as f:
-        composite_temp2_isotopes[expid[i]] = pickle.load(f)
+par_corr_sst_isotopes2 = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sst_isotopes2.pkl', 'rb') as f:
+    par_corr_sst_isotopes2[expid[i]] = pickle.load(f)
 
-for i in range(len(expid)):
-    # i = 0
-    print('#-------------------------------- ' + str(i) + ': ' + expid[i])
-    
-    for ivar in ['temp2']:
-        # ivar = 'temp2'
-        print('#---------------- ' + ivar)
-        
-        for iqtl in ['10%']:
-            # iqtl = '10%'
-            print('#-------- ' + iqtl + ': ' + str(quantiles[iqtl]))
-            
-            for ialltime in ['mon', 'sea', 'ann', 'mon_no_mm']:
-                # ialltime = 'ann'
-                print('#---- ' + ialltime)
-                
-                for iisotopes in ['wisoaprt', 'dO18', 'dD', 'd_ln', 'd_excess', ]:
-                    # iisotopes = 'd_ln'
-                    print('#-- ' + iisotopes)
-                    
-                    if (ialltime != 'mon_no_mm'):
-                        ialltime2 = ialltime
-                    elif (ialltime == 'mon_no_mm'):
-                        ialltime2 = 'mon'
-                    
-                    temp2var = (temp2_alltime[expid[i]][ialltime2]).copy()
-                    if (iisotopes == 'wisoaprt'):
-                        isotopevar = (wisoaprt_alltime[expid[i]][ialltime2].sel(
-                            wisotype=1) * seconds_per_d).compute()
-                    elif (iisotopes == 'dO18'):
-                        isotopevar = (dO18_alltime[expid[i]][ialltime2]).copy()
-                    elif (iisotopes == 'dD'):
-                        isotopevar = (dD_alltime[expid[i]][ialltime2]).copy()
-                    elif (iisotopes == 'd_ln'):
-                        isotopevar = (d_ln_alltime[expid[i]][ialltime2]).copy()
-                    elif (iisotopes == 'd_excess'):
-                        isotopevar = (d_excess_alltime[expid[i]][ialltime2]).copy()
-                    
-                    if (ialltime == 'mon_no_mm'):
-                        temp2var = (temp2var.groupby('time.month') - temp2var.groupby('time.month').mean()).compute()
-                        isotopevar = (isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean()).compute()
-                    
-                    for ilat in np.arange(1, 96, 30):
-                        for ilon in np.arange(1, 192, 60):
-                            
-                            var1 = temp2var[:, ilat, ilon].values
-                            var2 = isotopevar[:, ilat, ilon].values
-                            
-                            subset = (np.isfinite(var1) & np.isfinite(var2))
-                            var2 = var2[subset]
-                            var1 = var1[subset]
-                            
-                            if (len(var1) < 3):
-                                result = np.nan
-                            else:
-                                lower_qtl = np.quantile(var1, quantiles[iqtl])
-                                upper_qtl = np.quantile(var1, 1-quantiles[iqtl])
-                                
-                                var1_pos = (var1 > upper_qtl)
-                                var1_neg = (var1 < lower_qtl)
-                                
-                                var2_posmean = np.mean(var2[var1_pos])
-                                var2_negmean = np.mean(var2[var1_neg])
-                                
-                                result = var2_posmean - var2_negmean
-                            
-                            # print(str(np.round(composite_temp2_isotopes[expid[i]][ivar][iisotopes][ialltime][iqtl][ilat, ilon], 2)))
-                            # print(str(np.round(result, 2)))
-                            
-                            data1 = composite_temp2_isotopes[expid[i]][ivar][iisotopes][ialltime][iqtl][ilat, ilon]
-                            data2 = result
-                            
-                            if (data1 != data2):
-                                print(data1)
-                                print(data2)
+iisotopes = 'd_ln'
+ctr_iisotopes = 'dO18'
+ialltime = 'mon'
+
+isotopevar = d_ln_alltime[expid[i]][ialltime]
+ctr_var = dO18_alltime[expid[i]][ialltime]
+sst_var = pre_weighted_var[expid[i]]['sst'][ialltime]
+
+data1 = xr.apply_ufunc(
+    xr_par_cor,
+    sst_var, isotopevar, ctr_var,
+    input_core_dims=[["time"], ["time"], ["time"]],
+    kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
+    ).values
+data2 = par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes][ialltime]['r'].values
+print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
+
+data3 = xr.apply_ufunc(
+    xr_par_cor,
+    sst_var, isotopevar, ctr_var,
+    input_core_dims=[["time"], ["time"], ["time"]],
+    kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
+    ).values
+data4 = par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes][ialltime]['p'].values
+print((data3[np.isfinite(data3)] == data4[np.isfinite(data4)]).all())
+
+data5 = data1.copy()
+data5[data3 > 0.05] = np.nan
+data6 = par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes][ialltime]['r_significant'].values
+print((data5[np.isfinite(data5)] == data6[np.isfinite(data6)]).all())
 
 
 '''
 # endregion
 # -----------------------------------------------------------------------------
-
-
-
 

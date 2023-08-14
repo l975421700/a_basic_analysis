@@ -2,11 +2,10 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_m_502_5.0',
-    'pi_600_5.0',
+    # 'pi_600_5.0',
     # 'pi_601_5.1',
     # 'pi_602_5.2',
-    # 'pi_603_5.3',
+    'pi_610_5.8',
     ]
 i = 0
 ifile_start = 120
@@ -94,7 +93,6 @@ filenames_psl_zh = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + ex
 
 exp_org_o[expid[i]]['psl_zh'] = xr.open_mfdataset(
     filenames_psl_zh[ifile_start:ifile_end],
-    # data_vars='minimal', coords='minimal', parallel=True,
     )
 
 

@@ -159,7 +159,7 @@ for icores in ['EDC',]:
         # iisotope = 'd_ln'
         print('#---------------- ' + iisotope)
         
-        for ialltime in ['mon', 'mm', 'ann',]:
+        for ialltime in ['daily', 'mon', 'mm', 'mon no mm', 'ann', 'ann no am']:
             # ['mon', 'ann',]:
             # ialltime = 'mon'
             print('#---- ' + ialltime)
@@ -279,88 +279,11 @@ xr_par_cor(sst_var, dO18_var, d_ln_var) ** 2
 
 
 # -----------------------------------------------------------------------------
-# region isotopes vs. temp2 at all times at monthly scale without mm
-
-i = 0
-
-for icores in ['EDC',]:
-    # icores = 'EDC'
-    print('#-------------------------------- ' + icores)
-    
-    for iisotope in ['dD', 'dO18', 'd_excess', 'd_ln']:
-        # iisotope = 'd_ln'
-        print('#---------------- ' + iisotope)
-        
-        for ialltime in ['mon', ]:
-            # ['mon', ]:
-            # ialltime = 'mon'
-            print('#---- ' + ialltime)
-            
-            #---------------- settings
-            
-            xdata = temp2_alltime_icores[expid[i]][icores][ialltime]
-            ydata = isotopes_alltime_icores[expid[i]][iisotope][icores][ialltime]
-            
-            xdata = xdata.groupby('time.month') - xdata.groupby('time.month').mean()
-            ydata = ydata.groupby('time.month') - ydata.groupby('time.month').mean()
-            
-            xmax_value = np.max(xdata)
-            xmin_value = np.min(xdata)
-            ymax_value = np.max(ydata)
-            ymin_value = np.min(ydata)
-            
-            output_png = 'figures/8_d-excess/8.1_controls/8.1.3_site_analysis/8.1.3.1_isotopes_temp2/8.1.3.1.0 ' + expid[i] + ' ' + icores + ' ' + ialltime + ' no mm temp2 vs. ' + iisotope + '.png'
-            
-            linearfit = linregress(x = xdata, y = ydata,)
-            
-            #---------------- plot
-            
-            fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
-            
-            ax.scatter(
-                xdata, ydata,
-                s=6, lw=0.1, facecolors='white', edgecolors='k',)
-            ax.axline(
-                (0, linearfit.intercept), slope = linearfit.slope,
-                lw=0.5, color='k')
-            plt.text(0.05, 0.9, icores, transform=ax.transAxes, color='k',)
-            
-            plt.text(
-                0.5, 0.05,
-                '$y = $' + str(np.round(linearfit.slope, 1)) + '$x$' + \
-                    '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3)),
-                transform=ax.transAxes, fontsize=6, linespacing=1.5)
-            
-            ax.set_ylabel(plot_labels[iisotope], labelpad=2)
-            ax.set_ylim(ymin_value, ymax_value)
-            ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-            
-            ax.set_xlabel('temp2 [$°C$]', labelpad=2)
-            ax.set_xlim(xmin_value, xmax_value)
-            ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-            ax.tick_params(axis='both', labelsize=8)
-            
-            ax.grid(True, which='both',
-                    linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-            fig.subplots_adjust(
-                left=0.32, right=0.95, bottom=0.25, top=0.95)
-            fig.savefig(output_png)
-
-
-
-
-'''
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
 # region source sst vs. temp2
 
 i = 0
 
-for icores in ['EDC', 'DOME F']:
+for icores in ['EDC',]:
     # ['EDC', 'DOME F']:
     # icores = 'EDC'
     # pre_weighted_var_icores[expid[i]].keys()
@@ -370,7 +293,7 @@ for icores in ['EDC', 'DOME F']:
         # ivar = 'sst'
         print('#---------------- ' + ivar)
         
-        for ialltime in ['mon', 'ann',]:
+        for ialltime in ['daily', 'mon', 'mm', 'mon no mm', 'ann', 'ann no am']:
             # ['mon', 'ann',]:
             # ialltime = 'mon'
             print('#---- ' + ialltime)

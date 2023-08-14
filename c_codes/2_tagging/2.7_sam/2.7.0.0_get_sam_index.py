@@ -113,9 +113,9 @@ psl_zh = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.psl_zh.pkl', 'rb') as f:
     psl_zh[expid[i]] = pickle.load(f)
 
-d_excess_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_alltime.pkl', 'rb') as f:
-    d_excess_alltime[expid[i]] = pickle.load(f)
+temp2_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
+    temp2_alltime[expid[i]] = pickle.load(f)
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -131,7 +131,7 @@ sam_index = get_mon_sam(lat, mslp)
 
 sam_mon = xr.Dataset(
     {'sam': (('time'), sam_index),},
-    coords={'time': d_excess_alltime[expid[i]]['mon'].time,},
+    coords={'time': temp2_alltime[expid[i]]['mon'].time,},
     )
 
 sam_mon.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.sam_mon.nc')
@@ -146,7 +146,7 @@ sam_mon.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.sam_mo
 
 
 sam_mon = xr.open_dataset(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.sam_mon.nc')
-sam_mon.sam
+sam_mon.sam.values
 '''
 # endregion
 # -----------------------------------------------------------------------------

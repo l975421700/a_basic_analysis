@@ -3,9 +3,6 @@
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     'pi_600_5.0',
-    # 'pi_601_5.1',
-    # 'pi_602_5.2',
-    # 'pi_603_5.3',
     ]
 
 
@@ -13,7 +10,6 @@ expid = [
 # region import packages
 
 # management
-import glob
 import pickle
 import warnings
 warnings.filterwarnings('ignore')
@@ -29,81 +25,14 @@ dask.config.set({"array.slicing.split_large_chunks": True})
 from dask.diagnostics import ProgressBar
 pbar = ProgressBar()
 pbar.register()
-from scipy import stats
-# import xesmf as xe
-import pandas as pd
-from statsmodels.stats import multitest
-import pycircstat as circ
 import xskillscore as xs
 
-# plot
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from matplotlib.colors import BoundaryNorm
-from matplotlib import cm
-import cartopy.crs as ccrs
-plt.rcParams['pcolor.shading'] = 'auto'
-mpl.rcParams['figure.dpi'] = 600
-mpl.rc('font', family='Times New Roman', size=10)
-mpl.rcParams['axes.linewidth'] = 0.2
-plt.rcParams.update({"mathtext.fontset": "stix"})
-import matplotlib.animation as animation
-import seaborn as sns
-import cartopy.feature as cfeature
-from scipy.stats import pearsonr
-from matplotlib.ticker import AutoMinorLocator
-
-# self defined
-from a_basic_analysis.b_module.mapplot import (
-    globe_plot,
-    hemisphere_plot,
-    quick_var_plot,
-    mesh2plot,
-    framework_plot1,
-    remove_trailing_zero,
-    remove_trailing_zero_pos,
-)
-
-from a_basic_analysis.b_module.basic_calculations import (
-    mon_sea_ann,
-    regrid,
-    mean_over_ais,
-    time_weighted_mean,
-)
-
 from a_basic_analysis.b_module.namelist import (
-    month,
-    month_num,
-    month_dec,
-    month_dec_num,
-    seasons,
-    seasons_last_num,
-    hours,
-    months,
-    month_days,
-    zerok,
-    panel_labels,
     seconds_per_d,
 )
 
-from a_basic_analysis.b_module.source_properties import (
-    source_properties,
-    calc_lon_diff,
-)
-
 from a_basic_analysis.b_module.statistics import (
-    fdr_control_bh,
-    check_normality_3d,
-    check_equal_variance_3d,
-    ttest_fdr_control,
-    cplot_ttest,
     xr_par_cor,
-)
-
-from a_basic_analysis.b_module.component_plot import (
-    cplot_ice_cores,
-    plt_mesh_pars,
-    plot_t63_contourf,
 )
 
 
@@ -218,7 +147,7 @@ for i in range(len(expid)):
             
             corr_sources_isotopes[expid[i]][ivar][iisotopes] = {}
             
-            for ialltime in ['daily', 'mon', 'sea', 'ann']:
+            for ialltime in ['daily', 'mon', 'mon no mm', 'ann', 'ann no am']:
                 # ialltime = 'ann'
                 print('#---- ' + ialltime)
                 
@@ -250,24 +179,29 @@ for i in range(len(expid)):
                 
                 corr_sources_isotopes[expid[i]][ivar][iisotopes][ialltime]['r_significant'].values[corr_sources_isotopes[expid[i]][ivar][iisotopes][ialltime]['p'].values > 0.05] = np.nan
                 
-                if (ialltime == 'mon'):
-                    corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm'] = {}
+                # if (ialltime == 'mon'):
+                #     corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm'] = {}
                     
-                    corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm']['r'] = xr.corr(
-                        isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
-                        pre_weighted_var[expid[i]][ivar][ialltime].groupby('time.month') - pre_weighted_var[expid[i]][ivar][ialltime].groupby('time.month').mean(),
-                        dim='time').compute()
+                #     corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm']['r'] = xr.corr(
+                #         isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
+                #         pre_weighted_var[expid[i]][ivar][ialltime].groupby('time.month') - pre_weighted_var[expid[i]][ivar][ialltime].groupby('time.month').mean(),
+                #         dim='time').compute()
                     
-                    corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm']['p'] = xs.pearson_r_eff_p_value(
-                        isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
-                        pre_weighted_var[expid[i]][ivar][ialltime].groupby('time.month') - pre_weighted_var[expid[i]][ivar][ialltime].groupby('time.month').mean(),
-                        dim='time').compute()
+                #     corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm']['p'] = xs.pearson_r_eff_p_value(
+                #         isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
+                #         pre_weighted_var[expid[i]][ivar][ialltime].groupby('time.month') - pre_weighted_var[expid[i]][ivar][ialltime].groupby('time.month').mean(),
+                #         dim='time').compute()
                     
-                    corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm']['r_significant'] = corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm']['r'].copy()
+                #     corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm']['r_significant'] = corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm']['r'].copy()
                     
-                    corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm']['r_significant'].values[corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm']['p'].values > 0.05] = np.nan
+                #     corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm']['r_significant'].values[corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm']['p'].values > 0.05] = np.nan
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.corr_sources_isotopes.pkl', 'wb') as f:
+    output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.corr_sources_isotopes.pkl'
+    
+    if (os.path.isfile(output_file)):
+        os.remove(output_file)
+    
+    with open(output_file, 'wb') as f:
         pickle.dump(corr_sources_isotopes[expid[i]], f)
 
 
@@ -336,7 +270,7 @@ for i in range(len(expid)):
             
             par_corr_sources_isotopes[expid[i]][ivar][iisotopes] = {}
             
-            for ialltime in ['mon',]:
+            for ialltime in ['mon', 'mon no mm', 'ann', 'ann no am']:
                 # ialltime = 'ann'
                 print('#---- ' + ialltime)
                 
@@ -376,32 +310,37 @@ for i in range(len(expid)):
                 
                 par_corr_sources_isotopes[expid[i]][ivar][iisotopes][ialltime]['r_significant'].values[par_corr_sources_isotopes[expid[i]][ivar][iisotopes][ialltime]['p'].values > 0.05] = np.nan
                 
-                if (ialltime == 'mon'):
-                    par_corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm'] = {}
+                # if (ialltime == 'mon'):
+                #     par_corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm'] = {}
                     
-                    par_corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm']['r'] = xr.apply_ufunc(
-                            xr_par_cor,
-                            isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
-                            pre_weighted_var[expid[i]][ivar][ialltime].groupby('time.month') - pre_weighted_var[expid[i]][ivar][ialltime].groupby('time.month').mean(),
-                            pre_weighted_var[expid[i]]['sst'][ialltime].groupby('time.month') - pre_weighted_var[expid[i]]['sst'][ialltime].groupby('time.month').mean(),
-                            input_core_dims=[["time"], ["time"], ["time"]],
-                            kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
-                        )
+                #     par_corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm']['r'] = xr.apply_ufunc(
+                #             xr_par_cor,
+                #             isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
+                #             pre_weighted_var[expid[i]][ivar][ialltime].groupby('time.month') - pre_weighted_var[expid[i]][ivar][ialltime].groupby('time.month').mean(),
+                #             pre_weighted_var[expid[i]]['sst'][ialltime].groupby('time.month') - pre_weighted_var[expid[i]]['sst'][ialltime].groupby('time.month').mean(),
+                #             input_core_dims=[["time"], ["time"], ["time"]],
+                #             kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
+                #         )
                     
-                    par_corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm']['p'] = xr.apply_ufunc(
-                            xr_par_cor,
-                            isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
-                            pre_weighted_var[expid[i]][ivar][ialltime].groupby('time.month') - pre_weighted_var[expid[i]][ivar][ialltime].groupby('time.month').mean(),
-                            pre_weighted_var[expid[i]]['sst'][ialltime].groupby('time.month') - pre_weighted_var[expid[i]]['sst'][ialltime].groupby('time.month').mean(),
-                            input_core_dims=[["time"], ["time"], ["time"]],
-                            kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
-                        )
+                #     par_corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm']['p'] = xr.apply_ufunc(
+                #             xr_par_cor,
+                #             isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
+                #             pre_weighted_var[expid[i]][ivar][ialltime].groupby('time.month') - pre_weighted_var[expid[i]][ivar][ialltime].groupby('time.month').mean(),
+                #             pre_weighted_var[expid[i]]['sst'][ialltime].groupby('time.month') - pre_weighted_var[expid[i]]['sst'][ialltime].groupby('time.month').mean(),
+                #             input_core_dims=[["time"], ["time"], ["time"]],
+                #             kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
+                #         )
                     
-                    par_corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm']['r_significant'] = par_corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm']['r'].copy()
+                #     par_corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm']['r_significant'] = par_corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm']['r'].copy()
                     
-                    par_corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm']['r_significant'].values[par_corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm']['p'].values > 0.05] = np.nan
+                #     par_corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm']['r_significant'].values[par_corr_sources_isotopes[expid[i]][ivar][iisotopes]['mon_no_mm']['p'].values > 0.05] = np.nan
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sources_isotopes.pkl', 'wb') as f:
+    output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sources_isotopes.pkl'
+    
+    if (os.path.isfile(output_file)):
+        os.remove(output_file)
+    
+    with open(output_file, 'wb') as f:
         pickle.dump(par_corr_sources_isotopes[expid[i]], f)
 
 
@@ -457,7 +396,7 @@ print((data5[np.isfinite(data5)] == data6[np.isfinite(data6)]).all())
 
 
 # -----------------------------------------------------------------------------
-# region get Corr. isotopes and temp2
+# region get Corr. temp2 and isotopes
 
 corr_temp2_isotopes = {}
 
@@ -473,7 +412,7 @@ for i in range(len(expid)):
         
         corr_temp2_isotopes[expid[i]][iisotopes] = {}
         
-        for ialltime in ['mon', 'sea', 'ann']:
+        for ialltime in ['daily', 'mon', 'mon no mm', 'ann', 'ann no am']:
             # ialltime = 'mon'
             print('#---- ' + ialltime)
             
@@ -490,7 +429,7 @@ for i in range(len(expid)):
                 isotopevar = d_excess_alltime[expid[i]][ialltime]
             
             temp2var = temp2_alltime[expid[i]][ialltime]
-            temp2var['time'] = isotopevar.time
+            # temp2var['time'] = isotopevar.time
             
             corr_temp2_isotopes[expid[i]][iisotopes][ialltime] = {}
             
@@ -508,24 +447,29 @@ for i in range(len(expid)):
             
             corr_temp2_isotopes[expid[i]][iisotopes][ialltime]['r_significant'].values[corr_temp2_isotopes[expid[i]][iisotopes][ialltime]['p'].values > 0.05] = np.nan
             
-            if (ialltime == 'mon'):
-                corr_temp2_isotopes[expid[i]][iisotopes]['mon_no_mm'] = {}
+            # if (ialltime == 'mon'):
+            #     corr_temp2_isotopes[expid[i]][iisotopes]['mon_no_mm'] = {}
                 
-                corr_temp2_isotopes[expid[i]][iisotopes]['mon_no_mm']['r'] = xr.corr(
-                    isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
-                    temp2var.groupby('time.month') - temp2var.groupby('time.month').mean(),
-                    dim='time').compute()
+            #     corr_temp2_isotopes[expid[i]][iisotopes]['mon_no_mm']['r'] = xr.corr(
+            #         isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
+            #         temp2var.groupby('time.month') - temp2var.groupby('time.month').mean(),
+            #         dim='time').compute()
                 
-                corr_temp2_isotopes[expid[i]][iisotopes]['mon_no_mm']['p'] = xs.pearson_r_eff_p_value(
-                    isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
-                    temp2var.groupby('time.month') - temp2var.groupby('time.month').mean(),
-                    dim='time').compute()
+            #     corr_temp2_isotopes[expid[i]][iisotopes]['mon_no_mm']['p'] = xs.pearson_r_eff_p_value(
+            #         isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
+            #         temp2var.groupby('time.month') - temp2var.groupby('time.month').mean(),
+            #         dim='time').compute()
                 
-                corr_temp2_isotopes[expid[i]][iisotopes]['mon_no_mm']['r_significant'] = corr_temp2_isotopes[expid[i]][iisotopes]['mon_no_mm']['r'].copy()
+            #     corr_temp2_isotopes[expid[i]][iisotopes]['mon_no_mm']['r_significant'] = corr_temp2_isotopes[expid[i]][iisotopes]['mon_no_mm']['r'].copy()
                 
-                corr_temp2_isotopes[expid[i]][iisotopes]['mon_no_mm']['r_significant'].values[corr_temp2_isotopes[expid[i]][iisotopes]['mon_no_mm']['p'].values > 0.05] = np.nan
+            #     corr_temp2_isotopes[expid[i]][iisotopes]['mon_no_mm']['r_significant'].values[corr_temp2_isotopes[expid[i]][iisotopes]['mon_no_mm']['p'].values > 0.05] = np.nan
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.corr_temp2_isotopes.pkl', 'wb') as f:
+    output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.corr_temp2_isotopes.pkl'
+    
+    if (os.path.isfile(output_file)):
+        os.remove(output_file)
+    
+    with open(output_file, 'wb') as f:
         pickle.dump(corr_temp2_isotopes[expid[i]], f)
 
 
@@ -587,7 +531,7 @@ for i in range(len(expid)):
             
             par_corr_temp2_isotopes2[expid[i]][iisotopes][ctr_iisotopes] = {}
             
-            for ialltime in ['mon',]:
+            for ialltime in ['mon', 'mon no mm', 'ann', 'ann no am']:
                 # ialltime = 'mon'
                 print('#---- ' + ialltime)
                 
@@ -616,7 +560,7 @@ for i in range(len(expid)):
                     ctr_var = d_excess_alltime[expid[i]][ialltime]
                 
                 temp2var = temp2_alltime[expid[i]][ialltime]
-                temp2var['time'] = isotopevar.time
+                # temp2var['time'] = isotopevar.time
                 
                 par_corr_temp2_isotopes2[expid[i]][iisotopes][ctr_iisotopes][ialltime] = {}
                 
@@ -642,33 +586,38 @@ for i in range(len(expid)):
                 
                 par_corr_temp2_isotopes2[expid[i]][iisotopes][ctr_iisotopes][ialltime]['r_significant'].values[par_corr_temp2_isotopes2[expid[i]][iisotopes][ctr_iisotopes][ialltime]['p'].values > 0.05] = np.nan
                 
-                if (ialltime == 'mon'):
+                # if (ialltime == 'mon'):
                     
-                    par_corr_temp2_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm'] = {}
+                #     par_corr_temp2_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm'] = {}
 
-                    par_corr_temp2_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['r'] = xr.apply_ufunc(
-                            xr_par_cor,
-                            temp2var.groupby('time.month') - temp2var.groupby('time.month').mean(),
-                            isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
-                            ctr_var.groupby('time.month') - ctr_var.groupby('time.month').mean(),
-                            input_core_dims=[["time"], ["time"], ["time"]],
-                            kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
-                        )
+                #     par_corr_temp2_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['r'] = xr.apply_ufunc(
+                #             xr_par_cor,
+                #             temp2var.groupby('time.month') - temp2var.groupby('time.month').mean(),
+                #             isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
+                #             ctr_var.groupby('time.month') - ctr_var.groupby('time.month').mean(),
+                #             input_core_dims=[["time"], ["time"], ["time"]],
+                #             kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
+                #         )
 
-                    par_corr_temp2_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['p'] = xr.apply_ufunc(
-                            xr_par_cor,
-                            temp2var.groupby('time.month') - temp2var.groupby('time.month').mean(),
-                            isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
-                            ctr_var.groupby('time.month') - ctr_var.groupby('time.month').mean(),
-                            input_core_dims=[["time"], ["time"], ["time"]],
-                            kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
-                        )
+                #     par_corr_temp2_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['p'] = xr.apply_ufunc(
+                #             xr_par_cor,
+                #             temp2var.groupby('time.month') - temp2var.groupby('time.month').mean(),
+                #             isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
+                #             ctr_var.groupby('time.month') - ctr_var.groupby('time.month').mean(),
+                #             input_core_dims=[["time"], ["time"], ["time"]],
+                #             kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
+                #         )
 
-                    par_corr_temp2_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['r_significant'] = par_corr_temp2_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['r'].copy()
+                #     par_corr_temp2_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['r_significant'] = par_corr_temp2_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['r'].copy()
 
-                    par_corr_temp2_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['r_significant'].values[par_corr_temp2_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['p'].values > 0.05] = np.nan
+                #     par_corr_temp2_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['r_significant'].values[par_corr_temp2_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['p'].values > 0.05] = np.nan
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_temp2_isotopes2.pkl', 'wb') as f:
+    output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_temp2_isotopes2.pkl'
+    
+    if (os.path.isfile(output_file)):
+        os.remove(output_file)
+    
+    with open(output_file, 'wb') as f:
         pickle.dump(par_corr_temp2_isotopes2[expid[i]], f)
 
 
@@ -743,7 +692,7 @@ for i in range(len(expid)):
             
             par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes] = {}
             
-            for ialltime in ['mon',]:
+            for ialltime in ['mon', 'mon no mm', 'ann', 'ann no am']:
                 # ialltime = 'mon'
                 print('#---- ' + ialltime)
                 
@@ -797,33 +746,38 @@ for i in range(len(expid)):
                 
                 par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes][ialltime]['r_significant'].values[par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes][ialltime]['p'].values > 0.05] = np.nan
                 
-                if (ialltime == 'mon'):
+                # if (ialltime == 'mon'):
                     
-                    par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm'] = {}
+                #     par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm'] = {}
 
-                    par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['r'] = xr.apply_ufunc(
-                            xr_par_cor,
-                            sst_var.groupby('time.month') - sst_var.groupby('time.month').mean(),
-                            isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
-                            ctr_var.groupby('time.month') - ctr_var.groupby('time.month').mean(),
-                            input_core_dims=[["time"], ["time"], ["time"]],
-                            kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
-                        )
+                #     par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['r'] = xr.apply_ufunc(
+                #             xr_par_cor,
+                #             sst_var.groupby('time.month') - sst_var.groupby('time.month').mean(),
+                #             isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
+                #             ctr_var.groupby('time.month') - ctr_var.groupby('time.month').mean(),
+                #             input_core_dims=[["time"], ["time"], ["time"]],
+                #             kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
+                #         )
 
-                    par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['p'] = xr.apply_ufunc(
-                            xr_par_cor,
-                            sst_var.groupby('time.month') - sst_var.groupby('time.month').mean(),
-                            isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
-                            ctr_var.groupby('time.month') - ctr_var.groupby('time.month').mean(),
-                            input_core_dims=[["time"], ["time"], ["time"]],
-                            kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
-                        )
+                #     par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['p'] = xr.apply_ufunc(
+                #             xr_par_cor,
+                #             sst_var.groupby('time.month') - sst_var.groupby('time.month').mean(),
+                #             isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
+                #             ctr_var.groupby('time.month') - ctr_var.groupby('time.month').mean(),
+                #             input_core_dims=[["time"], ["time"], ["time"]],
+                #             kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
+                #         )
 
-                    par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['r_significant'] = par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['r'].copy()
+                #     par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['r_significant'] = par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['r'].copy()
 
-                    par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['r_significant'].values[par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['p'].values > 0.05] = np.nan
+                #     par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['r_significant'].values[par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['p'].values > 0.05] = np.nan
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sst_isotopes2.pkl', 'wb') as f:
+    output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sst_isotopes2.pkl'
+    
+    if (os.path.isfile(output_file)):
+        os.remove(output_file)
+    
+    with open(output_file, 'wb') as f:
         pickle.dump(par_corr_sst_isotopes2[expid[i]], f)
 
 
@@ -897,7 +851,7 @@ for i in range(len(expid)):
             
             par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar] = {}
             
-            for ialltime in ['mon',]:
+            for ialltime in ['mon', 'mon no mm', 'ann', 'ann no am']:
                 # ialltime = 'mon'
                 print('#---- ' + ialltime)
                 
@@ -915,14 +869,14 @@ for i in range(len(expid)):
                 
                 if (ivar == 'temp2'):
                     corr_var = temp2_alltime[expid[i]][ialltime]
-                    corr_var['time'] = isotopevar.time
+                    # corr_var['time'] = isotopevar.time
                     
                     ctr_var = pre_weighted_var[expid[i]]['sst'][ialltime]
                 elif (ivar == 'sst'):
                     corr_var = pre_weighted_var[expid[i]]['sst'][ialltime]
                     
                     ctr_var = temp2_alltime[expid[i]][ialltime]
-                    ctr_var['time'] = isotopevar.time
+                    # ctr_var['time'] = isotopevar.time
                 
                 par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar][ialltime] = {}
                 
@@ -948,33 +902,38 @@ for i in range(len(expid)):
                 
                 par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar][ialltime]['r_significant'].values[par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar][ialltime]['p'].values > 0.05] = np.nan
                 
-                if (ialltime == 'mon'):
+                # if (ialltime == 'mon'):
                     
-                    par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar]['mon_no_mm'] = {}
+                #     par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar]['mon_no_mm'] = {}
 
-                    par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar]['mon_no_mm']['r'] = xr.apply_ufunc(
-                            xr_par_cor,
-                            isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
-                            corr_var.groupby('time.month') - corr_var.groupby('time.month').mean(),
-                            ctr_var.groupby('time.month') - ctr_var.groupby('time.month').mean(),
-                            input_core_dims=[["time"], ["time"], ["time"]],
-                            kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
-                        )
+                #     par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar]['mon_no_mm']['r'] = xr.apply_ufunc(
+                #             xr_par_cor,
+                #             isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
+                #             corr_var.groupby('time.month') - corr_var.groupby('time.month').mean(),
+                #             ctr_var.groupby('time.month') - ctr_var.groupby('time.month').mean(),
+                #             input_core_dims=[["time"], ["time"], ["time"]],
+                #             kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
+                #         )
 
-                    par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar]['mon_no_mm']['p'] = xr.apply_ufunc(
-                            xr_par_cor,
-                            isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
-                            corr_var.groupby('time.month') - corr_var.groupby('time.month').mean(),
-                            ctr_var.groupby('time.month') - ctr_var.groupby('time.month').mean(),
-                            input_core_dims=[["time"], ["time"], ["time"]],
-                            kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
-                        )
+                #     par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar]['mon_no_mm']['p'] = xr.apply_ufunc(
+                #             xr_par_cor,
+                #             isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
+                #             corr_var.groupby('time.month') - corr_var.groupby('time.month').mean(),
+                #             ctr_var.groupby('time.month') - ctr_var.groupby('time.month').mean(),
+                #             input_core_dims=[["time"], ["time"], ["time"]],
+                #             kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
+                #         )
 
-                    par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar]['mon_no_mm']['r_significant'] = par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar]['mon_no_mm']['r'].copy()
+                #     par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar]['mon_no_mm']['r_significant'] = par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar]['mon_no_mm']['r'].copy()
 
-                    par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar]['mon_no_mm']['r_significant'].values[par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar]['mon_no_mm']['p'].values > 0.05] = np.nan
+                #     par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar]['mon_no_mm']['r_significant'].values[par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar]['mon_no_mm']['p'].values > 0.05] = np.nan
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_isotopes_temp2_sst.pkl', 'wb') as f:
+    output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_isotopes_temp2_sst.pkl'
+    
+    if (os.path.isfile(output_file)):
+        os.remove(output_file)
+    
+    with open(output_file, 'wb') as f:
         pickle.dump(par_corr_isotopes_temp2_sst[expid[i]], f)
 
 
@@ -1081,7 +1040,12 @@ for i in range(len(expid)):
             
             corr_sam_isotopes_sources_temp2[expid[i]][ivar][ialltime]['r_significant'].values[corr_sam_isotopes_sources_temp2[expid[i]][ivar][ialltime]['p'].values > 0.05] = np.nan
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.corr_sam_isotopes_sources_temp2.pkl', 'wb') as f:
+    output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.corr_sam_isotopes_sources_temp2.pkl'
+    
+    if (os.path.isfile(output_file)):
+        os.remove(output_file)
+    
+    with open(output_file, 'wb') as f:
         pickle.dump(corr_sam_isotopes_sources_temp2[expid[i]], f)
 
 

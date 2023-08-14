@@ -17,11 +17,13 @@ echam:
             echam_bin: "${bin_dir}/${executable}"
     bin_in_work:
             echam_bin: "${executable}"
-    # namelist_dir: '/work/ollie/qigao001/esm_tools/namelists/echam/6.3.05p2-wiso/PI-CTRL/'
-    namelist_dir: '/albedo/work/user/qigao001/a_basic_analysis/g_namelists/pi1/'
+    namelist_dir: '/albedo/work/user/qigao001/a_basic_analysis/g_namelists/hist/'
     scenario: "HIST"
     res: T63
-    lresume: False
+    lresume: True
+    ini_parent_exp_id: "pi_600_5.0"
+    ini_parent_date:  "2069-12-31T23:52:30"
+    ini_parent_dir: "/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/pi_600_5.0/restart/echam/"
     with_wiso: True
     wiso_code: True
     restart_rate: 1
@@ -38,12 +40,9 @@ echam:
                     nprocar: 0
                     nprocbr: 0
                 runctl:
-                    # default_output: True
                     out_filetype: 2
-                    # putdata: [ 450, 'seconds', 'first', 0 ]
-                    # putdata: [ 1, 'hours', 'last', 0 ]
                     putdata: [ 1, 'days', 'last', 0 ]
-                    dt_stop: [ 2000, 1, 2 ]
+                    dt_stop: [ 1870, 1, 2 ]
                 radctl:
                     lrad_async: False
                 wisoctl:
@@ -87,18 +86,14 @@ echam:
     forcing_sources:
         wiso_sw_observed: "/albedo/home/mwerner/model_input/ECHAM6-wiso/PI_ctrl/T63/T63_wisosw_d.nc"
         wiso_tagmap_1: "/albedo/work/user/qigao001/startdump/tagging/tagmap/pi_6tagmap.nc"
-        # sic_1: "/albedo/work/user/qigao001/startdump/model_input/pi/alex/T63_amipsic_pcmdi_187001-189912.nc"
-        # sst_1: "/albedo/work/user/qigao001/startdump/model_input/pi/alex/T63_amipsst_pcmdi_187001-189912.nc"
+        # histaerofin: ${pool_dir}/${resolution}/aero2/${resolution}_aeropt_kinne_sw_b14_fin_@YEAR@.nc
     add_forcing_files:
         wiso_sw: wiso_sw_observed
         wiso_tagmap: wiso_tagmap_1
-        # sic: sic_1
-        # sst: sst_1
+        # aerofin: histaerofin
     forcing_in_work:
         wiso_sw: "unit.25"
         wiso_tagmap: "unit.26"
-        # sic: "unit.96"
-        # sst: "unit.20"
 
 jsbach:
     file_movements:
@@ -110,13 +105,6 @@ jsbach:
         namelist.jsbach:
             jsbach_ctl:
                 with_hd: False
-    # add_streams:
-    #     - jsbach
-    #     - js_wiso
-    #     - land
-    #     - la_wiso
-    #     - surf
-    #     - sf_wiso
 
 
 

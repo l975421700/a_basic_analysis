@@ -9,6 +9,7 @@ expid = [
     # 'pi_605_5.5',
     # 'pi_606_5.6',
     # 'pi_609_5.7',
+    # 'pi_610_5.8',
     ]
 
 
@@ -317,7 +318,7 @@ for icores in ['EDC',]:
             # ivar = 'sst'
             print('#-------- ' + ivar)
             
-            for ialltime in ['daily', 'mon', 'ann', 'mm']:
+            for ialltime in ['daily', 'mon', 'mm', 'mon no mm', 'ann', 'ann no am']:
                 # ['daily', 'mon', 'ann',]:
                 # ialltime = 'daily'
                 print('#---- ' + ialltime)
@@ -351,7 +352,10 @@ for icores in ['EDC',]:
                     lw=0.5, color='k')
                 plt.text(0.05, 0.9, icores, transform=ax.transAxes, color='k',)
                 
-                if (linearfit.intercept >= 0):
+                if (ialltime in ['mon no mm', 'ann no am']):
+                    eq_text = '$y = $' + str(np.round(linearfit.slope, 1)) + '$x$' + \
+                        '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3))
+                elif (linearfit.intercept >= 0):
                     eq_text = '$y = $' + str(np.round(linearfit.slope, 1)) + '$x + $' + \
                         str(np.round(linearfit.intercept, 1)) + \
                             '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3))
@@ -411,115 +415,6 @@ xr_par_cor(iso_var, src_var, ctl_var) ** 2
 
 
 # -----------------------------------------------------------------------------
-# region isotopes vs. source properties at monthly scale without mm
-
-i = 0
-
-for icores in ['EDC',]:
-    # icores = 'EDC'
-    print('#-------------------------------- ' + icores)
-    
-    for iisotope in ['dO18', 'dD', 'd_excess', 'd_ln']:
-        # iisotope = 'd_ln'
-        print('#---------------- ' + iisotope)
-        
-        for ivar in ['sst', 'rh2m', 'wind10']:
-            # ivar = 'sst'
-            print('#-------- ' + ivar)
-            
-            for ialltime in ['mon',]:
-                # ['daily', 'mon', 'ann',]:
-                # ialltime = 'mon'
-                print('#---- ' + ialltime)
-                
-                #---------------- settings
-                
-                xdata = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime]
-                ydata = isotopes_alltime_icores[expid[i]][iisotope][icores][ialltime]
-                # subset = (np.isfinite(xdata) & np.isfinite(ydata))
-                # xdata = xdata[subset]
-                # ydata = ydata[subset]
-                
-                xdata = xdata.groupby('time.month') - xdata.groupby('time.month').mean()
-                ydata = ydata.groupby('time.month') - ydata.groupby('time.month').mean()
-                
-                xmax_value = np.max(xdata)
-                xmin_value = np.min(xdata)
-                ymax_value = np.max(ydata)
-                ymin_value = np.min(ydata)
-                
-                output_png = 'figures/8_d-excess/8.1_controls/8.1.3_site_analysis/8.1.3.0_isotopes_sources_alltimes/8.1.3.0.0 ' + expid[i] + ' ' + icores + ' ' + ialltime + ' no mm ' + ivar + ' vs. ' + iisotope + '.png'
-                
-                linearfit = linregress(x = xdata, y = ydata,)
-                
-                #---------------- plot
-                
-                fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
-                
-                ax.scatter(
-                    xdata, ydata,
-                    s=6, lw=0.1, facecolors='white', edgecolors='k',)
-                ax.axline(
-                    (0, linearfit.intercept), slope = linearfit.slope,
-                    lw=0.5, color='k')
-                plt.text(0.05, 0.9, icores, transform=ax.transAxes, color='k',)
-                
-                plt.text(
-                    0.5, 0.05,
-                    '$y = $' + str(np.round(linearfit.slope, 1)) + '$x$' + \
-                        '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3)),
-                    transform=ax.transAxes, fontsize=6, linespacing=1.5)
-                
-                ax.set_ylabel(plot_labels[iisotope], labelpad=2)
-                ax.set_ylim(ymin_value, ymax_value)
-                ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-                
-                ax.set_xlabel(plot_labels[ivar], labelpad=2)
-                ax.set_xlim(xmin_value, xmax_value)
-                ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-                ax.tick_params(axis='both', labelsize=8)
-                
-                ax.grid(True, which='both',
-                        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-                fig.subplots_adjust(
-                    left=0.32, right=0.95, bottom=0.25, top=0.95)
-                fig.savefig(output_png)
-
-
-
-#-------- partial correlation
-
-i = 0
-icores = 'EDC'
-iisotope = 'd_ln'
-ialltime = 'mon'
-
-ivar = 'rh2m'
-ivar = 'wind10'
-ivar = 'sst'
-
-iso_var = isotopes_alltime_icores[expid[i]][iisotope][icores][ialltime]
-src_var = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime]
-ctl_var = pre_weighted_var_icores[expid[i]][icores]['sst'][ialltime]
-
-iso_var = iso_var.groupby('time.month') - iso_var.groupby('time.month').mean()
-src_var = src_var.groupby('time.month') - src_var.groupby('time.month').mean()
-ctl_var = ctl_var.groupby('time.month') - ctl_var.groupby('time.month').mean()
-
-
-xr_par_cor(iso_var, src_var, ctl_var) ** 2
-
-# (pearsonr(iso_var, src_var).statistic) ** 2
-# (pearsonr(iso_var, ctl_var).statistic) ** 2
-
-
-'''
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
 # region source SST vs. other source properties
 
 i = 0
@@ -534,7 +429,7 @@ for icores in ['EDC']:
         # ivar = 'sst'
         print('#-------- ' + ivar)
         
-        for ialltime in ['mm',]:
+        for ialltime in ['daily', 'mon', 'mm', 'mon no mm', 'ann', 'ann no am']:
             # ialltime = 'mon'
             print('#---- ' + ialltime)
             
@@ -597,87 +492,5 @@ for icores in ['EDC']:
 
 # endregion
 # -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region source SST vs. other source properties without mm
-
-
-i = 0
-
-ivar1 = 'sst'
-
-for icores in ['EDC',]:
-    # icores = 'EDC'
-    print('#-------------------------------- ' + icores)
-    
-    for ivar in ['rh2m', 'wind10']:
-        # ivar = 'sst'
-        print('#-------- ' + ivar)
-        
-        for ialltime in ['mon',]:
-            # ialltime = 'mon'
-            print('#---- ' + ialltime)
-            
-            xdata = pre_weighted_var_icores[expid[i]][icores][ivar1][ialltime]
-            ydata = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime]
-            # subset = (np.isfinite(xdata) & np.isfinite(ydata))
-            # xdata = xdata[subset]
-            # ydata = ydata[subset]
-            
-            xdata = xdata.groupby('time.month') - xdata.groupby('time.month').mean()
-            ydata = ydata.groupby('time.month') - ydata.groupby('time.month').mean()
-            
-            xmax_value = np.max(xdata)
-            xmin_value = np.min(xdata)
-            ymax_value = np.max(ydata)
-            ymin_value = np.min(ydata)
-            
-            output_png = 'figures/8_d-excess/8.1_controls/8.1.3_site_analysis/8.1.3.0_isotopes_sources_alltimes/8.1.3.0.1 ' + expid[i] + ' ' + icores + ' ' + ialltime + ' no mm ' + ivar1 + ' vs. ' + ivar + '.png'
-            
-            linearfit = linregress(x = xdata, y = ydata,)
-            
-            #---------------- plot
-            
-            fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
-            
-            ax.scatter(
-                xdata, ydata,
-                s=6, lw=0.1, facecolors='white', edgecolors='k',)
-            ax.axline(
-                (0, linearfit.intercept), slope = linearfit.slope,
-                lw=0.5, color='k')
-            plt.text(0.05, 0.9, icores, transform=ax.transAxes, color='k',)
-            
-            plt.text(
-                0.5, 0.05,
-                '$y = $' + str(np.round(linearfit.slope, 1)) + '$x$' + \
-                    '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3)),
-                transform=ax.transAxes, fontsize=6, linespacing=1.5)
-            
-            ax.set_ylabel(plot_labels[ivar], labelpad=2)
-            ax.set_ylim(ymin_value, ymax_value)
-            ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-            
-            ax.set_xlabel(plot_labels[ivar1], labelpad=2)
-            ax.set_xlim(xmin_value, xmax_value)
-            ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-            ax.tick_params(axis='both', labelsize=8)
-            
-            ax.grid(True, which='both',
-                    linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-            fig.subplots_adjust(
-                left=0.32, right=0.95, bottom=0.25, top=0.95)
-            fig.savefig(output_png)
-
-
-
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-
-
 
 

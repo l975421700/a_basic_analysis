@@ -1,3 +1,4 @@
+#SBATCH --time=12:00:00
 
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
@@ -5,10 +6,10 @@ expid = [
     'pi_600_5.0',
     # 'pi_601_5.1',
     # 'pi_602_5.2',
-    # 'pi_603_5.3',
     # 'pi_605_5.5',
     # 'pi_606_5.6',
     # 'pi_609_5.7',
+    # 'pi_610_5.8',
     ]
 
 
@@ -16,7 +17,6 @@ expid = [
 # region import packages
 
 # management
-import glob
 import pickle
 import warnings
 warnings.filterwarnings('ignore')
@@ -25,89 +25,15 @@ import sys  # print(sys.path)
 sys.path.append('/albedo/work/user/qigao001')
 
 # data analysis
-import numpy as np
 import xarray as xr
 import dask
 dask.config.set({"array.slicing.split_large_chunks": True})
 from dask.diagnostics import ProgressBar
 pbar = ProgressBar()
 pbar.register()
-from scipy import stats
-# import xesmf as xe
-import pandas as pd
-from statsmodels.stats import multitest
-import pycircstat as circ
-import xskillscore as xs
-from scipy.stats import pearsonr
-import statsmodels.api as sm
-from scipy.stats import linregress
-
-# plot
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from matplotlib.colors import BoundaryNorm
-from matplotlib import cm
-import cartopy.crs as ccrs
-plt.rcParams['pcolor.shading'] = 'auto'
-mpl.rcParams['figure.dpi'] = 600
-mpl.rc('font', family='Times New Roman', size=10)
-mpl.rcParams['axes.linewidth'] = 0.2
-plt.rcParams.update({"mathtext.fontset": "stix"})
-import matplotlib.animation as animation
-import seaborn as sns
-import cartopy.feature as cfeature
-
-# self defined
-from a_basic_analysis.b_module.mapplot import (
-    globe_plot,
-    hemisphere_plot,
-    quick_var_plot,
-    mesh2plot,
-    framework_plot1,
-    remove_trailing_zero,
-    remove_trailing_zero_pos,
-)
-
-from a_basic_analysis.b_module.basic_calculations import (
-    mon_sea_ann,
-    regrid,
-    mean_over_ais,
-    time_weighted_mean,
-)
-
-from a_basic_analysis.b_module.namelist import (
-    month,
-    month_num,
-    month_dec,
-    month_dec_num,
-    seasons,
-    seasons_last_num,
-    hours,
-    months,
-    month_days,
-    zerok,
-    panel_labels,
-    seconds_per_d,
-)
-
-from a_basic_analysis.b_module.source_properties import (
-    source_properties,
-    calc_lon_diff,
-)
 
 from a_basic_analysis.b_module.statistics import (
-    fdr_control_bh,
-    check_normality_3d,
-    check_equal_variance_3d,
-    ttest_fdr_control,
-    cplot_ttest,
     xr_regression_y_x1,
-)
-
-from a_basic_analysis.b_module.component_plot import (
-    cplot_ice_cores,
-    plt_mesh_pars,
-    plot_t63_contourf,
 )
 
 
@@ -194,8 +120,8 @@ for i in range(len(expid)):
         
         regression_sst_d_AIS[expid[i]][iisotope] = {}
         
-        for ialltime in ['daily', 'mon', 'ann',]:
-            # ialltime = 'mon'
+        for ialltime in ['daily', 'mon', 'mon no mm', 'ann', 'ann no am',]:
+            # ialltime = 'ann no am'
             print('#-------- ' + ialltime)
             
             regression_sst_d_AIS[expid[i]][iisotope][ialltime] = {}
@@ -208,7 +134,7 @@ for i in range(len(expid)):
             src_var = pre_weighted_var[expid[i]][ivar][ialltime]
             
             for ioutput in ['rsquared', 'RMSE', 'slope', 'intercept']:
-                # ioutput = 'RMSE'
+                # ioutput = 'rsquared'
                 print('#---- ' + ioutput)
                 
                 regression_sst_d_AIS[expid[i]][iisotope][ialltime][ioutput] = \
@@ -220,34 +146,39 @@ for i in range(len(expid)):
                         dask = 'allowed', vectorize = True,
                     )
         
-        print('#-------- mon no mm')
+        # print('#-------- mon no mm')
         
-        regression_sst_d_AIS[expid[i]][iisotope]['mon no mm'] = {}
+        # regression_sst_d_AIS[expid[i]][iisotope]['mon no mm'] = {}
         
-        if (iisotope == 'd_ln'):
-            iso_var = d_ln_alltime[expid[i]]['mon'].groupby('time.month') - \
-                d_ln_alltime[expid[i]]['mon'].groupby('time.month').mean()
-        elif (iisotope == 'd_excess'):
-            iso_var = d_excess_alltime[expid[i]]['mon'].groupby('time.month')-\
-                d_excess_alltime[expid[i]]['mon'].groupby('time.month').mean()
+        # if (iisotope == 'd_ln'):
+        #     iso_var = d_ln_alltime[expid[i]]['mon'].groupby('time.month') - \
+        #         d_ln_alltime[expid[i]]['mon'].groupby('time.month').mean()
+        # elif (iisotope == 'd_excess'):
+        #     iso_var = d_excess_alltime[expid[i]]['mon'].groupby('time.month')-\
+        #         d_excess_alltime[expid[i]]['mon'].groupby('time.month').mean()
         
-        src_var=pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month')-\
-            pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month').mean()
+        # src_var=pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month')-\
+        #     pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month').mean()
         
-        for ioutput in ['rsquared', 'RMSE', 'slope', 'intercept']:
-            # ioutput = 'RMSE'
-            print('#---- ' + ioutput)
+        # for ioutput in ['rsquared', 'RMSE', 'slope', 'intercept']:
+        #     # ioutput = 'RMSE'
+        #     print('#---- ' + ioutput)
             
-            regression_sst_d_AIS[expid[i]][iisotope]['mon no mm'][ioutput] = \
-                xr.apply_ufunc(
-                    xr_regression_y_x1,
-                    src_var, iso_var,
-                    input_core_dims=[['time'], ['time']],
-                    kwargs={'output': ioutput},
-                    dask = 'allowed', vectorize = True,
-                )
+        #     regression_sst_d_AIS[expid[i]][iisotope]['mon no mm'][ioutput] = \
+        #         xr.apply_ufunc(
+        #             xr_regression_y_x1,
+        #             src_var, iso_var,
+        #             input_core_dims=[['time'], ['time']],
+        #             kwargs={'output': ioutput},
+        #             dask = 'allowed', vectorize = True,
+        #         )
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.regression_sst_d_AIS.pkl', 'wb') as f:
+    output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.regression_sst_d_AIS.pkl'
+    
+    if (os.path.isfile(output_file)):
+        os.remove(output_file)
+    
+    with open(output_file, 'wb') as f:
         pickle.dump(regression_sst_d_AIS[expid[i]], f)
 
 
@@ -322,7 +253,7 @@ for i in range(len(expid)):
         
         regression_temp2_delta_AIS[expid[i]][iisotope] = {}
         
-        for ialltime in ['mon', 'ann',]:
+        for ialltime in ['daily', 'mon', 'mon no mm', 'ann', 'ann no am',]:
             # ialltime = 'mon'
             print('#-------- ' + ialltime)
             
@@ -334,7 +265,7 @@ for i in range(len(expid)):
                 iso_var = dD_alltime[expid[i]][ialltime]
             
             temp2_var = temp2_alltime[expid[i]][ialltime]
-            temp2_var['time'] = iso_var['time']
+            # temp2_var['time'] = iso_var['time']
             
             for ioutput in ['rsquared', 'RMSE', 'slope', 'intercept']:
                 # ioutput = 'RMSE'
@@ -349,34 +280,39 @@ for i in range(len(expid)):
                         dask = 'allowed', vectorize = True,
                     )
         
-        print('#-------- mon no mm')
+        # print('#-------- mon no mm')
         
-        regression_temp2_delta_AIS[expid[i]][iisotope]['mon no mm'] = {}
+        # regression_temp2_delta_AIS[expid[i]][iisotope]['mon no mm'] = {}
         
-        if (iisotope == 'dO18'):
-            iso_var = dO18_alltime[expid[i]]['mon'].groupby('time.month') - \
-                dO18_alltime[expid[i]]['mon'].groupby('time.month').mean()
-        elif (iisotope == 'dD'):
-            iso_var = dD_alltime[expid[i]]['mon'].groupby('time.month')-\
-                dD_alltime[expid[i]]['mon'].groupby('time.month').mean()
+        # if (iisotope == 'dO18'):
+        #     iso_var = dO18_alltime[expid[i]]['mon'].groupby('time.month') - \
+        #         dO18_alltime[expid[i]]['mon'].groupby('time.month').mean()
+        # elif (iisotope == 'dD'):
+        #     iso_var = dD_alltime[expid[i]]['mon'].groupby('time.month')-\
+        #         dD_alltime[expid[i]]['mon'].groupby('time.month').mean()
         
-        temp2_var=temp2_alltime[expid[i]]['mon'].groupby('time.month')-\
-            temp2_alltime[expid[i]]['mon'].groupby('time.month').mean()
+        # temp2_var=temp2_alltime[expid[i]]['mon'].groupby('time.month')-\
+        #     temp2_alltime[expid[i]]['mon'].groupby('time.month').mean()
         
-        for ioutput in ['rsquared', 'RMSE', 'slope', 'intercept']:
-            # ioutput = 'RMSE'
-            print('#---- ' + ioutput)
+        # for ioutput in ['rsquared', 'RMSE', 'slope', 'intercept']:
+        #     # ioutput = 'RMSE'
+        #     print('#---- ' + ioutput)
             
-            regression_temp2_delta_AIS[expid[i]][iisotope]['mon no mm'][ioutput] = \
-                xr.apply_ufunc(
-                    xr_regression_y_x1,
-                    temp2_var, iso_var,
-                    input_core_dims=[['time'], ['time']],
-                    kwargs={'output': ioutput},
-                    dask = 'allowed', vectorize = True,
-                )
+        #     regression_temp2_delta_AIS[expid[i]][iisotope]['mon no mm'][ioutput] = \
+        #         xr.apply_ufunc(
+        #             xr_regression_y_x1,
+        #             temp2_var, iso_var,
+        #             input_core_dims=[['time'], ['time']],
+        #             kwargs={'output': ioutput},
+        #             dask = 'allowed', vectorize = True,
+        #         )
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.regression_temp2_delta_AIS.pkl', 'wb') as f:
+    output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.regression_temp2_delta_AIS.pkl'
+    
+    if (os.path.isfile(output_file)):
+        os.remove(output_file)
+    
+    with open(output_file, 'wb') as f:
         pickle.dump(regression_temp2_delta_AIS[expid[i]], f)
 
 

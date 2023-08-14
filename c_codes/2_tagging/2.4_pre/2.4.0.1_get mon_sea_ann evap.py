@@ -2,15 +2,13 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_m_416_4.9',
-    # 'pi_m_502_5.0',
     # 'pi_600_5.0',
     # 'pi_601_5.1',
     # 'pi_602_5.2',
-    # 'pi_603_5.3',
     # 'pi_605_5.5',
-    # 'pi_606_5.6',
-    'pi_609_5.7',
+    'pi_606_5.6',
+    # 'pi_609_5.7',
+    # 'pi_610_5.8',
     ]
 i = 0
 
@@ -101,7 +99,6 @@ filenames_sf_wiso = sorted(glob.glob(
     exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_sf_wiso.nc'))
 exp_org_o[expid[i]]['sf_wiso'] = xr.open_mfdataset(
     filenames_sf_wiso[ifile_start:ifile_end],
-    # data_vars='minimal', coords='minimal', parallel=True,
     )
 
 

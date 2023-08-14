@@ -2,14 +2,8 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_m_502_5.0',
-    'pi_600_5.0',
-    # 'pi_601_5.1',
-    # 'pi_602_5.2',
-    # 'pi_603_5.3',
-    # 'pi_605_5.5',
-    # 'pi_606_5.6',
-    # 'pi_609_5.7',
+    # 'pi_600_5.0',
+    'pi_601_5.1',
     ]
 i=0
 
@@ -19,26 +13,18 @@ output_dir = exp_odir + expid[i] + '/analysis/echam/'
 # region import packages
 
 # management
-import glob
 import warnings
 warnings.filterwarnings('ignore')
-# import sys  # print(sys.path)
-# sys.path.append('/work/ollie/qigao001')
+import os
 
 # data analysis
-import numpy as np
-import xarray as xr
 import dask
 dask.config.set({"array.slicing.split_large_chunks": True})
 import pickle
 
 from a_basic_analysis.b_module.source_properties import (
-    source_properties,
     sincoslon_2_lon,
-)
-
-from a_basic_analysis.b_module.basic_calculations import (
-    mon_sea_ann,
+    calc_lon_diff,
 )
 
 from dask.diagnostics import ProgressBar
@@ -60,16 +46,62 @@ with open(output_dir + expid[i] + '.pre_weighted_coslon.pkl', 'rb') as f:
 
 pre_weighted_lon = {}
 
-for ialltime in pre_weighted_sinlon.keys():
+for ialltime in ['daily', 'mon', 'mm', 'sea', 'sm', 'ann', 'am']:
     print(ialltime)
     
     pre_weighted_lon[ialltime] = sincoslon_2_lon(
         pre_weighted_sinlon[ialltime], pre_weighted_coslon[ialltime]
     )
 
-with open(output_dir + expid[i] + '.pre_weighted_lon.pkl', 'wb') as f:
+#-------- monthly without monthly mean
+pre_weighted_lon['mon no mm'] = calc_lon_diff(
+    pre_weighted_lon['mon'].groupby('time.month'),
+    pre_weighted_lon['mon'].groupby('time.month').mean(skipna=True),)
+
+#-------- annual without annual mean
+pre_weighted_lon['ann no am'] = calc_lon_diff(
+    pre_weighted_lon['ann'],
+    pre_weighted_lon['ann'].mean(dim='time', skipna=True),)
+
+output_file = output_dir + expid[i] + '.pre_weighted_lon.pkl'
+
+if (os.path.isfile(output_file)):
+    os.remove(output_file)
+
+with open(output_file, 'wb') as f:
     pickle.dump(pre_weighted_lon, f)
 
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region copy output
+
+import shutil
+
+# src_exp = 'pi_600_5.0'
+src_exp = 'pi_601_5.1'
+
+expid = [
+    'pi_602_5.2',
+    'pi_605_5.5',
+    'pi_606_5.6',
+    'pi_609_5.7',
+    # 'pi_610_5.8',
+    ]
+
+for i in range(len(expid)):
+    print('#-------- ' + expid[i])
+    
+    input_file = exp_odir + src_exp + '/analysis/echam/' + src_exp + '.pre_weighted_lon.pkl'
+    
+    output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lon.pkl'
+    
+    if (os.path.isfile(output_file)):
+        os.remove(output_file)
+    
+    shutil.copy2(input_file, output_file)
+
+# endregion
+# -----------------------------------------------------------------------------

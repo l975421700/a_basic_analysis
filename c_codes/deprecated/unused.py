@@ -1,6 +1,553 @@
 
 
 # -----------------------------------------------------------------------------
+# region isotopes vs. source properties at monthly scale without mm
+
+i = 0
+
+for icores in ['EDC',]:
+    # icores = 'EDC'
+    print('#-------------------------------- ' + icores)
+    
+    for iisotope in ['dO18', 'dD', 'd_excess', 'd_ln']:
+        # iisotope = 'd_ln'
+        print('#---------------- ' + iisotope)
+        
+        for ivar in ['sst', 'rh2m', 'wind10']:
+            # ivar = 'sst'
+            print('#-------- ' + ivar)
+            
+            for ialltime in ['mon',]:
+                # ['daily', 'mon', 'ann',]:
+                # ialltime = 'mon'
+                print('#---- ' + ialltime)
+                
+                #---------------- settings
+                
+                xdata = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime]
+                ydata = isotopes_alltime_icores[expid[i]][iisotope][icores][ialltime]
+                # subset = (np.isfinite(xdata) & np.isfinite(ydata))
+                # xdata = xdata[subset]
+                # ydata = ydata[subset]
+                
+                xdata = xdata.groupby('time.month') - xdata.groupby('time.month').mean()
+                ydata = ydata.groupby('time.month') - ydata.groupby('time.month').mean()
+                
+                xmax_value = np.max(xdata)
+                xmin_value = np.min(xdata)
+                ymax_value = np.max(ydata)
+                ymin_value = np.min(ydata)
+                
+                output_png = 'figures/8_d-excess/8.1_controls/8.1.3_site_analysis/8.1.3.0_isotopes_sources_alltimes/8.1.3.0.0 ' + expid[i] + ' ' + icores + ' ' + ialltime + ' no mm ' + ivar + ' vs. ' + iisotope + '.png'
+                
+                linearfit = linregress(x = xdata, y = ydata,)
+                
+                #---------------- plot
+                
+                fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
+                
+                ax.scatter(
+                    xdata, ydata,
+                    s=6, lw=0.1, facecolors='white', edgecolors='k',)
+                ax.axline(
+                    (0, linearfit.intercept), slope = linearfit.slope,
+                    lw=0.5, color='k')
+                plt.text(0.05, 0.9, icores, transform=ax.transAxes, color='k',)
+                
+                plt.text(
+                    0.5, 0.05,
+                    '$y = $' + str(np.round(linearfit.slope, 1)) + '$x$' + \
+                        '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3)),
+                    transform=ax.transAxes, fontsize=6, linespacing=1.5)
+                
+                ax.set_ylabel(plot_labels[iisotope], labelpad=2)
+                ax.set_ylim(ymin_value, ymax_value)
+                ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+                
+                ax.set_xlabel(plot_labels[ivar], labelpad=2)
+                ax.set_xlim(xmin_value, xmax_value)
+                ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+                ax.tick_params(axis='both', labelsize=8)
+                
+                ax.grid(True, which='both',
+                        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+                fig.subplots_adjust(
+                    left=0.32, right=0.95, bottom=0.25, top=0.95)
+                fig.savefig(output_png)
+
+
+
+#-------- partial correlation
+
+i = 0
+icores = 'EDC'
+iisotope = 'd_ln'
+ialltime = 'mon'
+
+ivar = 'rh2m'
+ivar = 'wind10'
+ivar = 'sst'
+
+iso_var = isotopes_alltime_icores[expid[i]][iisotope][icores][ialltime]
+src_var = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime]
+ctl_var = pre_weighted_var_icores[expid[i]][icores]['sst'][ialltime]
+
+iso_var = iso_var.groupby('time.month') - iso_var.groupby('time.month').mean()
+src_var = src_var.groupby('time.month') - src_var.groupby('time.month').mean()
+ctl_var = ctl_var.groupby('time.month') - ctl_var.groupby('time.month').mean()
+
+
+xr_par_cor(iso_var, src_var, ctl_var) ** 2
+
+# (pearsonr(iso_var, src_var).statistic) ** 2
+# (pearsonr(iso_var, ctl_var).statistic) ** 2
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region source SST vs. other source properties without mm
+
+
+i = 0
+
+ivar1 = 'sst'
+
+for icores in ['EDC',]:
+    # icores = 'EDC'
+    print('#-------------------------------- ' + icores)
+    
+    for ivar in ['rh2m', 'wind10']:
+        # ivar = 'sst'
+        print('#-------- ' + ivar)
+        
+        for ialltime in ['mon',]:
+            # ialltime = 'mon'
+            print('#---- ' + ialltime)
+            
+            xdata = pre_weighted_var_icores[expid[i]][icores][ivar1][ialltime]
+            ydata = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime]
+            # subset = (np.isfinite(xdata) & np.isfinite(ydata))
+            # xdata = xdata[subset]
+            # ydata = ydata[subset]
+            
+            xdata = xdata.groupby('time.month') - xdata.groupby('time.month').mean()
+            ydata = ydata.groupby('time.month') - ydata.groupby('time.month').mean()
+            
+            xmax_value = np.max(xdata)
+            xmin_value = np.min(xdata)
+            ymax_value = np.max(ydata)
+            ymin_value = np.min(ydata)
+            
+            output_png = 'figures/8_d-excess/8.1_controls/8.1.3_site_analysis/8.1.3.0_isotopes_sources_alltimes/8.1.3.0.1 ' + expid[i] + ' ' + icores + ' ' + ialltime + ' no mm ' + ivar1 + ' vs. ' + ivar + '.png'
+            
+            linearfit = linregress(x = xdata, y = ydata,)
+            
+            #---------------- plot
+            
+            fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
+            
+            ax.scatter(
+                xdata, ydata,
+                s=6, lw=0.1, facecolors='white', edgecolors='k',)
+            ax.axline(
+                (0, linearfit.intercept), slope = linearfit.slope,
+                lw=0.5, color='k')
+            plt.text(0.05, 0.9, icores, transform=ax.transAxes, color='k',)
+            
+            plt.text(
+                0.5, 0.05,
+                '$y = $' + str(np.round(linearfit.slope, 1)) + '$x$' + \
+                    '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3)),
+                transform=ax.transAxes, fontsize=6, linespacing=1.5)
+            
+            ax.set_ylabel(plot_labels[ivar], labelpad=2)
+            ax.set_ylim(ymin_value, ymax_value)
+            ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+            
+            ax.set_xlabel(plot_labels[ivar1], labelpad=2)
+            ax.set_xlim(xmin_value, xmax_value)
+            ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+            ax.tick_params(axis='both', labelsize=8)
+            
+            ax.grid(True, which='both',
+                    linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+            fig.subplots_adjust(
+                left=0.32, right=0.95, bottom=0.25, top=0.95)
+            fig.savefig(output_png)
+
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region isotopes vs. temp2 at all times at monthly scale without mm
+
+i = 0
+
+for icores in ['EDC',]:
+    # icores = 'EDC'
+    print('#-------------------------------- ' + icores)
+    
+    for iisotope in ['dD', 'dO18', 'd_excess', 'd_ln']:
+        # iisotope = 'd_ln'
+        print('#---------------- ' + iisotope)
+        
+        for ialltime in ['mon', ]:
+            # ['mon', ]:
+            # ialltime = 'mon'
+            print('#---- ' + ialltime)
+            
+            #---------------- settings
+            
+            xdata = temp2_alltime_icores[expid[i]][icores][ialltime]
+            ydata = isotopes_alltime_icores[expid[i]][iisotope][icores][ialltime]
+            
+            xdata = xdata.groupby('time.month') - xdata.groupby('time.month').mean()
+            ydata = ydata.groupby('time.month') - ydata.groupby('time.month').mean()
+            
+            xmax_value = np.max(xdata)
+            xmin_value = np.min(xdata)
+            ymax_value = np.max(ydata)
+            ymin_value = np.min(ydata)
+            
+            output_png = 'figures/8_d-excess/8.1_controls/8.1.3_site_analysis/8.1.3.1_isotopes_temp2/8.1.3.1.0 ' + expid[i] + ' ' + icores + ' ' + ialltime + ' no mm temp2 vs. ' + iisotope + '.png'
+            
+            linearfit = linregress(x = xdata, y = ydata,)
+            
+            #---------------- plot
+            
+            fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
+            
+            ax.scatter(
+                xdata, ydata,
+                s=6, lw=0.1, facecolors='white', edgecolors='k',)
+            ax.axline(
+                (0, linearfit.intercept), slope = linearfit.slope,
+                lw=0.5, color='k')
+            plt.text(0.05, 0.9, icores, transform=ax.transAxes, color='k',)
+            
+            plt.text(
+                0.5, 0.05,
+                '$y = $' + str(np.round(linearfit.slope, 1)) + '$x$' + \
+                    '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3)),
+                transform=ax.transAxes, fontsize=6, linespacing=1.5)
+            
+            ax.set_ylabel(plot_labels[iisotope], labelpad=2)
+            ax.set_ylim(ymin_value, ymax_value)
+            ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+            
+            ax.set_xlabel('temp2 [$°C$]', labelpad=2)
+            ax.set_xlim(xmin_value, xmax_value)
+            ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+            ax.tick_params(axis='both', labelsize=8)
+            
+            ax.grid(True, which='both',
+                    linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+            fig.subplots_adjust(
+                left=0.32, right=0.95, bottom=0.25, top=0.95)
+            fig.savefig(output_png)
+
+
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get mon_sea_ann aprt_geo7 frac over AIS original
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_geo7_spave.pkl', 'rb') as f:
+    aprt_geo7_spave = pickle.load(f)
+
+geo_regions = [
+    'NHland', 'SHland', 'Antarctica',
+    'NHocean', 'NHseaice', 'SHocean', 'SHseaice']
+wisotypes = {'NHland': 16, 'SHland': 17, 'Antarctica': 18,
+             'NHocean': 19, 'NHseaice': 20, 'SHocean': 21, 'SHseaice': 22}
+
+aprt_frc_AIS_alltime = {}
+
+
+for imask in aprt_geo7_spave.keys():
+    # imask = 'AIS'
+    print(imask)
+    
+    aprt_frc_AIS_alltime[imask] = {}
+    
+    for ialltime in aprt_geo7_spave[imask].keys():
+        # ialltime = 'mm'
+        print(ialltime)
+        
+        aprt_AIS_ialltime = aprt_geo7_spave[imask][ialltime].sum(dim='wisotype').values
+        
+        aprt_frc_AIS_alltime[imask][ialltime] = {}
+        
+        if ialltime in ['mon', 'sea', 'ann']:
+            time = aprt_geo7_spave[imask][ialltime].time
+        elif ialltime in ['mm']:
+            time = aprt_geo7_spave[imask]['mm'].month
+        elif ialltime in ['sm']:
+            time = aprt_geo7_spave[imask]['sm'].season
+        elif ialltime in ['am']:
+            time = ['am']
+        
+        aprt_frc_AIS_alltime[imask][ialltime]['Open ocean'] = \
+            pd.DataFrame(data={
+                'time': time,
+                'frc_AIS': (aprt_geo7_spave[imask][ialltime].sel(
+                    wisotype=[
+                        wisotypes['NHocean'], wisotypes['NHseaice'],
+                        wisotypes['SHocean'],
+                        ]).sum(dim='wisotype').values / aprt_AIS_ialltime) * 100
+                })
+        
+        aprt_frc_AIS_alltime[imask][ialltime]['SH sea ice'] = \
+            pd.DataFrame(data={
+                'time': time,
+                'frc_AIS': (aprt_geo7_spave[imask][ialltime].sel(
+                    wisotype=[
+                        wisotypes['NHocean'], wisotypes['NHseaice'],
+                        wisotypes['SHocean'], wisotypes['SHseaice'],
+                        ]).sum(dim='wisotype').values / aprt_AIS_ialltime) * 100
+                })
+        
+        aprt_frc_AIS_alltime[imask][ialltime]['Land excl. Antarctica'] = \
+            pd.DataFrame(data={
+                'time': time,
+                'frc_AIS': (aprt_geo7_spave[imask][ialltime].sel(
+                    wisotype=[
+                        wisotypes['NHocean'], wisotypes['NHseaice'],
+                        wisotypes['SHocean'], wisotypes['SHseaice'],
+                        wisotypes['NHland'], wisotypes['SHland'],
+                        ]).sum(dim='wisotype').values / aprt_AIS_ialltime) * 100
+                })
+        
+        aprt_frc_AIS_alltime[imask][ialltime]['Antarctica'] = \
+            pd.DataFrame(data={
+                'time': time,
+                'frc_AIS': (aprt_geo7_spave[imask][ialltime].sel(
+                    wisotype=[
+                        wisotypes['NHocean'], wisotypes['NHseaice'],
+                        wisotypes['SHocean'], wisotypes['SHseaice'],
+                        wisotypes['NHland'], wisotypes['SHland'],
+                        wisotypes['Antarctica'],
+                        ]).sum(dim='wisotype').values / aprt_AIS_ialltime) * 100
+                })
+        
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc_AIS_alltime.pkl', 'wb') as f:
+    pickle.dump(aprt_frc_AIS_alltime, f)
+
+
+'''
+#-------------------------------- check initial mm calculation passed
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc_AIS_alltime.pkl', 'rb') as f:
+    aprt_frc_AIS_alltime = pickle.load(f)
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_geo7_spave.pkl', 'rb') as f:
+    aprt_geo7_spave = pickle.load(f)
+
+geo_regions = [
+    'NHland', 'SHland', 'Antarctica',
+    'NHocean', 'NHseaice', 'SHocean', 'SHseaice']
+wisotypes = {'NHland': 16, 'SHland': 17, 'Antarctica': 18,
+             'NHocean': 19, 'NHseaice': 20, 'SHocean': 21, 'SHseaice': 22}
+
+aprt_frc_AIS = {}
+
+
+for imask in aprt_geo7_spave.keys():
+    # imask = 'EAIS'
+    print(imask)
+    
+    aprt_mm_AIS = aprt_geo7_spave[imask]['mm'].sum(dim='wisotype').values
+    
+    aprt_frc_AIS[imask] = {}
+    
+    aprt_frc_AIS[imask]['Open ocean'] = pd.DataFrame(data={
+        'Month': month,
+        'frc_AIS': (aprt_geo7_spave[imask]['mm'].sel(
+            wisotype=[
+                wisotypes['NHocean'], wisotypes['NHseaice'],
+                wisotypes['SHocean'],
+                ]).sum(dim='wisotype').values / aprt_mm_AIS) * 100
+        })
+    
+    aprt_frc_AIS[imask]['SH sea ice'] = pd.DataFrame(data={
+        'Month': month,
+        'frc_AIS': (aprt_geo7_spave[imask]['mm'].sel(
+            wisotype=[
+                wisotypes['NHocean'], wisotypes['NHseaice'],
+                wisotypes['SHocean'], wisotypes['SHseaice'],
+                ]).sum(dim='wisotype').values / aprt_mm_AIS) * 100
+        })
+    
+    aprt_frc_AIS[imask]['Land excl. Antarctica'] = pd.DataFrame(data={
+        'Month': month,
+        'frc_AIS': (aprt_geo7_spave[imask]['mm'].sel(
+            wisotype=[
+                wisotypes['NHocean'], wisotypes['NHseaice'],
+                wisotypes['SHocean'], wisotypes['SHseaice'],
+                wisotypes['NHland'], wisotypes['SHland'],
+                ]).sum(dim='wisotype').values / aprt_mm_AIS) * 100
+        })
+    
+    aprt_frc_AIS[imask]['Antarctica'] = pd.DataFrame(data={
+        'Month': month,
+        'frc_AIS': (aprt_geo7_spave[imask]['mm'].sel(
+            wisotype=[
+                wisotypes['NHocean'], wisotypes['NHseaice'],
+                wisotypes['SHocean'], wisotypes['SHseaice'],
+                wisotypes['NHland'], wisotypes['SHland'],
+                wisotypes['Antarctica'],
+                ]).sum(dim='wisotype').values / aprt_mm_AIS) * 100
+        })
+
+for imask in aprt_frc_AIS_alltime.keys():
+    # imask = 'AIS'
+    print(imask)
+    for isource in aprt_frc_AIS_alltime[imask]['mm'].keys():
+        # isource = 'Open ocean'
+        print(isource)
+        print((aprt_frc_AIS_alltime[imask]['mm'][isource].frc_AIS.values == aprt_frc_AIS[imask][isource].frc_AIS.values).all())
+
+#-------------------------------- check 'mm'
+
+#-------- import data
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_geo7_spave.pkl', 'rb') as f:
+    aprt_geo7_spave = pickle.load(f)
+
+geo_regions = [
+    'NHland', 'SHland', 'Antarctica',
+    'NHocean', 'NHseaice', 'SHocean', 'SHseaice']
+wisotypes = {'NHland': 16, 'SHland': 17, 'Antarctica': 18,
+             'NHocean': 19, 'NHseaice': 20, 'SHocean': 21, 'SHseaice': 22}
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc_AIS_alltime.pkl', 'rb') as f:
+    aprt_frc_AIS_alltime = pickle.load(f)
+
+imask = 'AIS'
+iregion = 'Open ocean'
+res1 = aprt_frc_AIS_alltime[imask]['mm'][iregion].frc_AIS.values
+
+res2 = (aprt_geo7_spave[imask]['mm'].sel(
+    wisotype=slice(19, 21)).sum(dim='wisotype').values / \
+        aprt_geo7_spave[imask]['mm'].sum(dim='wisotype').values) * 100
+(res1 == res2).all()
+
+
+iregion = 'SH sea ice'
+res1 = aprt_frc_AIS_alltime[imask]['mm'][iregion].frc_AIS.values
+
+res2 = (aprt_geo7_spave[imask]['mm'].sel(
+    wisotype=slice(19, 22)).sum(dim='wisotype').values / \
+        aprt_geo7_spave[imask]['mm'].sum(dim='wisotype').values) * 100
+(res1 == res2).all()
+
+iregion = 'Land excl. Antarctica'
+res1 = aprt_frc_AIS_alltime[imask]['mm'][iregion].frc_AIS.values
+
+res2 = (aprt_geo7_spave[imask]['mm'].sel(
+    wisotype=[16, 17, 19, 20, 21, 22]).sum(dim='wisotype').values / \
+        aprt_geo7_spave[imask]['mm'].sum(dim='wisotype').values) * 100
+(res1 == res2).all()
+np.max(abs(res1 - res2))
+
+iregion = 'Antarctica'
+aprt_frc_AIS_alltime[imask]['mm'][iregion].frc_AIS.values
+
+
+
+aprt_frc_AIS_alltime[imask]['mm']['SH sea ice'].frc_AIS - aprt_frc_AIS_alltime[imask]['mm']['Open ocean'].frc_AIS
+aprt_frc_AIS_alltime[imask]['mm']['Land excl. Antarctica'].frc_AIS - aprt_frc_AIS_alltime[imask]['mm']['SH sea ice'].frc_AIS
+(aprt_frc_AIS_alltime[imask]['mm']['Antarctica'].frc_AIS - aprt_frc_AIS_alltime[imask]['mm']['Land excl. Antarctica'].frc_AIS).values
+aprt_geo7_spave['AIS']['mm'].sel(wisotype=18).values / aprt_geo7_spave['AIS']['mm'].sum(dim='wisotype').values * 100
+
+aprt_geo7_spave['AIS']['mm'].sel(wisotype=20).values / aprt_geo7_spave['AIS']['mm'].sum(dim='wisotype').values
+
+#-------------------------------- check 'ann'
+
+#-------- import data
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_geo7_spave.pkl', 'rb') as f:
+    aprt_geo7_spave = pickle.load(f)
+
+geo_regions = [
+    'NHland', 'SHland', 'Antarctica',
+    'NHocean', 'NHseaice', 'SHocean', 'SHseaice']
+wisotypes = {'NHland': 16, 'SHland': 17, 'Antarctica': 18,
+             'NHocean': 19, 'NHseaice': 20, 'SHocean': 21, 'SHseaice': 22}
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc_AIS_alltime.pkl', 'rb') as f:
+    aprt_frc_AIS_alltime = pickle.load(f)
+
+imask = 'AIS'
+iregion = 'Open ocean'
+res1 = aprt_frc_AIS_alltime[imask]['ann'][iregion].frc_AIS.values
+
+res2 = (aprt_geo7_spave[imask]['ann'].sel(
+    wisotype=slice(19, 21)).sum(dim='wisotype').values / \
+        aprt_geo7_spave[imask]['ann'].sum(dim='wisotype').values) * 100
+(res1 == res2).all()
+
+
+iregion = 'SH sea ice'
+res1 = aprt_frc_AIS_alltime[imask]['ann'][iregion].frc_AIS.values
+
+res2 = (aprt_geo7_spave[imask]['ann'].sel(
+    wisotype=slice(19, 22)).sum(dim='wisotype').values / \
+        aprt_geo7_spave[imask]['ann'].sum(dim='wisotype').values) * 100
+(res1 == res2).all()
+
+iregion = 'Land excl. Antarctica'
+res1 = aprt_frc_AIS_alltime[imask]['ann'][iregion].frc_AIS.values
+
+res2 = (aprt_geo7_spave[imask]['ann'].sel(
+    wisotype=[16, 17, 19, 20, 21, 22]).sum(dim='wisotype').values / \
+        aprt_geo7_spave[imask]['ann'].sum(dim='wisotype').values) * 100
+(res1 == res2).all()
+np.max(abs(res1 - res2))
+
+iregion = 'Antarctica'
+aprt_frc_AIS_alltime[imask]['ann'][iregion].frc_AIS.values
+
+
+# SH sea ice
+(aprt_frc_AIS_alltime[imask]['ann']['SH sea ice'].frc_AIS - \
+    aprt_frc_AIS_alltime[imask]['ann']['Open ocean'].frc_AIS).values
+
+# other land
+(aprt_frc_AIS_alltime[imask]['ann']['Land excl. Antarctica'].frc_AIS - \
+    aprt_frc_AIS_alltime[imask]['ann']['SH sea ice'].frc_AIS).values
+
+# Antarctica
+(aprt_frc_AIS_alltime[imask]['ann']['Antarctica'].frc_AIS - \
+    aprt_frc_AIS_alltime[imask]['ann']['Land excl. Antarctica'].frc_AIS).values
+
+aprt_geo7_spave['AIS']['ann'].sel(wisotype=18).values / \
+    aprt_geo7_spave['AIS']['ann'].sum(dim='wisotype').values * 100
+
+# # NH sea ice
+# aprt_geo7_spave['AIS']['ann'].sel(wisotype=20).values / \
+#     aprt_geo7_spave['AIS']['ann'].sum(dim='wisotype').values
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
 # region extract simulations for obserations bilinear interpolation
 
 
