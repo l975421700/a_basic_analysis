@@ -1,7 +1,10 @@
 
 
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_502_5.0',]
+exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+expid = [
+    # 'pi_m_502_5.0',
+    'pi_600_5.0',
+    ]
 i = 0
 
 # -----------------------------------------------------------------------------
@@ -14,7 +17,7 @@ import warnings
 warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
-# sys.path.append('/work/ollie/qigao001')
+sys.path.append('/albedo/work/user/qigao001')
 
 # data analysis
 import numpy as np
@@ -110,8 +113,8 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.contributions2
 
 ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.contributions2AIS_aprt.pkl', 'rb') as f:
-    contributions2AIS_aprt = pickle.load(f)
+# with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.contributions2AIS_aprt.pkl', 'rb') as f:
+#     contributions2AIS_aprt = pickle.load(f)
 
 
 # endregion
@@ -126,12 +129,14 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=0, cm_max=1, cm_interval1=0.1, cm_interval2=0.2, cmap='Blues',
     reversed=False)
 
-for isite in ten_sites_loc.Site:
+for isite in ['EDC']:
     # isite = 'EDC'
     # isite = 'Rothera'
+    # ten_sites_loc.Site
     print('#-------- ' + isite)
     
-    output_png = 'figures/6_awi/6.1_echam6/6.1.10_pre_sources/6.1.10.0 ' + expid[i] + ' source contributions to aprt at ' + isite + '.png'
+    # output_png = 'figures/6_awi/6.1_echam6/6.1.10_pre_sources/6.1.10.0 ' + expid[i] + ' source contributions to aprt at ' + isite + '.png'
+    output_png = 'figures/1_study_area/1.2.0 ' + expid[i] + ' source contributions to aprt at ' + isite + '.png'
     
     fig, ax = hemisphere_plot(northextent=-20, figsize=np.array([5.8, 7]) / 2.54,)
     
@@ -139,43 +144,25 @@ for isite in ten_sites_loc.Site:
     isitelon = ten_sites_loc.lon[ten_sites_loc.Site == isite].values[0]
     cplot_ice_cores(isitelon, isitelat, ax, edgecolors = 'red')
     
+    plt_data = (contributions2site_aprt[isite] * 1000).compute()
+    plt_data.values[plt_data.values == 0] = np.nan
+    
     plt1 = ax.pcolormesh(
         contributions2site_aprt[isite].lon,
         contributions2site_aprt[isite].lat,
-        contributions2site_aprt[isite] * 1000,
+        plt_data,
         norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-    
-    # plt1 = ax.contourf(
-    #     contributions2site_aprt[isite].lon,
-    #     contributions2site_aprt[isite].lat,
-    #     contributions2site_aprt[isite] * 1000,
-    #     levels = pltlevel, extend='max',
-    #     norm=pltnorm, cmap=pltcmp,transform=ccrs.PlateCarree(),)
-    
-    # plt1 = plot_t63_contourf(
-    #     contributions2site_aprt[isite].lon.where(
-    #         contributions2site_aprt[isite].lon < 180,
-    #         other=contributions2site_aprt[isite].lon - 360),
-    #     contributions2site_aprt[isite].lat,
-    #     contributions2site_aprt[isite] * 1000,
-    #     ax, pltlevel, 'max', pltnorm, pltcmp, ccrs.PlateCarree())
     
     cbar = fig.colorbar(
         plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
         orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
         pad=0.02, fraction=0.2,
         )
-    cbar.ax.set_xlabel('Contributions to precipitation\nat ' + isite + ' [‰]', linespacing=1.5)
+    cbar.ax.set_xlabel(
+        'Contributions to precipitation\nat ' + isite + ' [‰]',
+        linespacing=1.5)
     cbar.ax.tick_params(labelsize=8)
     fig.savefig(output_png)
-
-
-
-
-
-
-
-
 
 
 
@@ -184,14 +171,13 @@ for isite in ten_sites_loc.Site:
 isite = 'EDC'
 contributions2site_aprt[isite].sum()
 
-
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region plot source contributions to aprt at sites
+# region plot source contributions to aprt over AIS
 
 grid_contributions = contributions2AIS_aprt.sum(dim=['lat_t63', 'lon_t63'])
 

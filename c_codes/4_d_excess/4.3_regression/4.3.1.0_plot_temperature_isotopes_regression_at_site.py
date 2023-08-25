@@ -145,6 +145,7 @@ for i in range(len(expid)):
 isotopes_alltime_icores = {}
 temp2_alltime_icores = {}
 pre_weighted_var_icores = {}
+wisoaprt_alltime_icores = {}
 
 for i in range(len(expid)):
     print(i)
@@ -160,6 +161,19 @@ for i in range(len(expid)):
     with open(
         exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.pre_weighted_var_icores.pkl', 'rb') as f:
         pre_weighted_var_icores[expid[i]] = pickle.load(f)
+    
+    with open(
+        exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_alltime_icores.pkl', 'rb') as f:
+        wisoaprt_alltime_icores[expid[i]] = pickle.load(f)
+
+
+aprt_frc_alltime_icores = {}
+for i in range(len(expid)):
+    print(i)
+    
+    with open(
+        exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.aprt_frc_alltime_icores.pkl', 'rb') as f:
+        aprt_frc_alltime_icores[expid[i]] = pickle.load(f)
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -182,7 +196,7 @@ for i in range(len(expid)):
             # icores = 'EDC'
             print('#-------- ' + icores)
             
-            for ialltime in ['daily', 'mon', 'mm', 'mon no mm', 'ann',]:
+            for ialltime in ['daily', 'mon', 'mm', 'mon no mm', 'ann', 'ann no am']:
                 # ialltime = 'mon'
                 print('#---- ' + ialltime)
                 
@@ -191,10 +205,12 @@ for i in range(len(expid)):
                 RMSE = regression_sst_d[expid[i]][iisotope][icores][ialltime]['RMSE']
                 rec_src = regression_sst_d[expid[i]][iisotope][icores][ialltime]['predicted_y']
                 
-                if (ialltime in ['daily', 'mon', 'mm', 'ann',]):
-                    sim_src = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime]
-                elif (ialltime == 'mon no mm'):
-                    sim_src = pre_weighted_var_icores[expid[i]][icores][ivar]['mon'].groupby('time.month') - pre_weighted_var_icores[expid[i]][icores][ivar]['mon'].groupby('time.month').mean(dim='time')
+                sim_src = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime]
+                
+                # if (ialltime in ['daily', 'mon', 'mm', 'ann',]):
+                #     sim_src = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime]
+                # elif (ialltime == 'mon no mm'):
+                #     sim_src = pre_weighted_var_icores[expid[i]][icores][ivar]['mon'].groupby('time.month') - pre_weighted_var_icores[expid[i]][icores][ivar]['mon'].groupby('time.month').mean(dim='time')
                 
                 subset = np.isfinite(rec_src) & np.isfinite(sim_src)
                 rec_src = rec_src[subset]
@@ -216,7 +232,11 @@ for i in range(len(expid)):
                 ax.axline((0, 0), slope = 1, lw=0.5, color='k')
                 plt.text(0.05, 0.9, icores, transform=ax.transAxes, color='k',)
                 
-                if (params[0] > 0):
+                if (ialltime in ['mon no mm', 'ann no am']):
+                    eq_text = plot_labels_no_unit[ivar] + ' = ' + str(np.round(params[1], 2)) + plot_labels_no_unit[iisotope] + \
+                            '\n$R^2 = $' + str(np.round(rsquared, 2)) + \
+                                '\n$RMSE = $' + str(np.round(RMSE, 1))
+                elif (params[0] > 0):
                     eq_text = plot_labels_no_unit[ivar] + ' = ' + str(np.round(params[1], 2)) + plot_labels_no_unit[iisotope] + ' + ' + \
                         str(np.round(params[0], 1)) + \
                             '\n$R^2 = $' + str(np.round(rsquared, 2)) + \
@@ -281,7 +301,7 @@ for i in range(len(expid)):
     # i = 0
     print('#-------------------------------- ' + str(i) + ': ' + expid[i])
     
-    for iisotope in ['d_ln', 'd_excess']:
+    for iisotope in ['d_excess',]:
         # iisotope = 'd_ln'
         print('#---------------- ' + iisotope)
         
@@ -289,7 +309,7 @@ for i in range(len(expid)):
             # icores = 'EDC'
             print('#-------- ' + icores)
             
-            for ialltime in ['daily', 'mon', 'mm', 'mon no mm', 'ann',]:
+            for ialltime in ['daily', 'mon', 'mm', 'mon no mm', 'ann', 'ann no am']:
                 # ialltime = 'mon'
                 print('#---- ' + ialltime)
                 
@@ -298,10 +318,12 @@ for i in range(len(expid)):
                 RMSE = regression_sst_d_dD[expid[i]][iisotope][icores][ialltime]['RMSE']
                 rec_src = regression_sst_d_dD[expid[i]][iisotope][icores][ialltime]['predicted_y']
                 
-                if (ialltime in ['daily', 'mon', 'mm', 'ann',]):
-                    sim_src = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime]
-                elif (ialltime == 'mon no mm'):
-                    sim_src = pre_weighted_var_icores[expid[i]][icores][ivar]['mon'].groupby('time.month') - pre_weighted_var_icores[expid[i]][icores][ivar]['mon'].groupby('time.month').mean(dim='time')
+                sim_src = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime]
+                
+                # if (ialltime in ['daily', 'mon', 'mm', 'ann',]):
+                #     sim_src = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime]
+                # elif (ialltime == 'mon no mm'):
+                #     sim_src = pre_weighted_var_icores[expid[i]][icores][ivar]['mon'].groupby('time.month') - pre_weighted_var_icores[expid[i]][icores][ivar]['mon'].groupby('time.month').mean(dim='time')
                 
                 subset = np.isfinite(rec_src) & np.isfinite(sim_src)
                 rec_src = rec_src[subset]
@@ -323,7 +345,12 @@ for i in range(len(expid)):
                 ax.axline((0, 0), slope = 1, lw=0.5, color='k')
                 plt.text(0.05, 0.9, icores, transform=ax.transAxes, color='k',)
                 
-                if (params[0] > 0):
+                if (ialltime in ['mon no mm', 'ann no am']):
+                    eq_text = plot_labels_no_unit[ivar] + ' = ' + str(np.round(params[1], 2)) + plot_labels_no_unit[iisotope] + ' + ' + \
+                        str(np.round(params[2], 3)) + plot_labels_no_unit['dD'] + \
+                            '\n$R^2 = $' + str(np.round(rsquared, 2)) + \
+                                '\n$RMSE = $' + str(np.round(RMSE, 1))
+                elif (params[0] > 0):
                     eq_text = plot_labels_no_unit[ivar] + ' = ' + str(np.round(params[1], 2)) + plot_labels_no_unit[iisotope] + ' + ' + \
                         str(np.round(params[2], 3)) + plot_labels_no_unit['dD'] + ' + ' + \
                         str(np.round(params[0], 1)) + \
@@ -381,7 +408,7 @@ for i in range(len(expid)):
     # i = 0
     print('#-------------------------------- ' + str(i) + ': ' + expid[i])
     
-    for iisotope in ['dD', 'dO18']:
+    for iisotope in ['dD',]:
         # iisotope = 'dD'
         print('#---------------- ' + iisotope)
         
@@ -389,7 +416,7 @@ for i in range(len(expid)):
             # icores = 'EDC'
             print('#-------- ' + icores)
             
-            for ialltime in ['mon', 'mm', 'mon no mm', 'ann',]:
+            for ialltime in ['daily', 'mon', 'mm', 'mon no mm', 'ann', 'ann no am']:
                 # ialltime = 'mon'
                 print('#---- ' + ialltime)
                 
@@ -398,10 +425,12 @@ for i in range(len(expid)):
                 RMSE = regression_temp2_delta[expid[i]][iisotope][icores][ialltime]['RMSE']
                 rec_src = regression_temp2_delta[expid[i]][iisotope][icores][ialltime]['predicted_y']
                 
-                if (ialltime in ['mon', 'mm', 'ann',]):
-                    sim_src = temp2_alltime_icores[expid[i]][icores][ialltime]
-                elif (ialltime == 'mon no mm'):
-                    sim_src = temp2_alltime_icores[expid[i]][icores]['mon'].groupby('time.month') - temp2_alltime_icores[expid[i]][icores]['mon'].groupby('time.month').mean(dim='time')
+                sim_src = temp2_alltime_icores[expid[i]][icores][ialltime]
+                
+                # if (ialltime in ['mon', 'mm', 'ann',]):
+                #     sim_src = temp2_alltime_icores[expid[i]][icores][ialltime]
+                # elif (ialltime == 'mon no mm'):
+                #     sim_src = temp2_alltime_icores[expid[i]][icores]['mon'].groupby('time.month') - temp2_alltime_icores[expid[i]][icores]['mon'].groupby('time.month').mean(dim='time')
                 
                 subset = np.isfinite(rec_src) & np.isfinite(sim_src)
                 rec_src = rec_src[subset]
@@ -423,7 +452,11 @@ for i in range(len(expid)):
                 ax.axline((0, 0), slope = 1, lw=0.5, color='k')
                 plt.text(0.05, 0.9, icores, transform=ax.transAxes, color='k',)
                 
-                if (params[0] > 0):
+                if (ialltime in ['mon no mm', 'ann no am']):
+                    eq_text = 'temp2 = ' + str(np.round(params[1], 2)) + plot_labels_no_unit[iisotope] + \
+                            '\n$R^2 = $' + str(np.round(rsquared, 2)) + \
+                                '\n$RMSE = $' + str(np.round(RMSE, 1))
+                elif (params[0] > 0):
                     eq_text = 'temp2 = ' + str(np.round(params[1], 2)) + plot_labels_no_unit[iisotope] + ' + ' + \
                         str(np.round(params[0], 1)) + \
                             '\n$R^2 = $' + str(np.round(rsquared, 2)) + \
@@ -479,7 +512,7 @@ for i in range(len(expid)):
     # i = 0
     print('#-------------------------------- ' + str(i) + ': ' + expid[i])
     
-    for iisotope in ['d_ln', 'd_excess']:
+    for iisotope in ['d_ln',]:
         # iisotope = 'd_ln'
         print('#---------------- ' + iisotope)
         
@@ -487,7 +520,7 @@ for i in range(len(expid)):
             # icores = 'EDC'
             print('#-------- ' + icores)
             
-            for ialltime in ['mon', 'mm', 'mon no mm', 'ann',]:
+            for ialltime in ['daily', 'mon', 'mm', 'mon no mm', 'ann', 'ann no am']:
                 # ialltime = 'mon'
                 print('#---- ' + ialltime)
                 
@@ -496,10 +529,12 @@ for i in range(len(expid)):
                 RMSE = regression_temp2_delta_d[expid[i]][isotope1][iisotope][icores][ialltime]['RMSE']
                 rec_src = regression_temp2_delta_d[expid[i]][isotope1][iisotope][icores][ialltime]['predicted_y']
                 
-                if (ialltime in ['daily', 'mon', 'mm', 'ann',]):
-                    sim_src = temp2_alltime_icores[expid[i]][icores][ialltime]
-                elif (ialltime == 'mon no mm'):
-                    sim_src = temp2_alltime_icores[expid[i]][icores]['mon'].groupby('time.month') - temp2_alltime_icores[expid[i]][icores]['mon'].groupby('time.month').mean(dim='time')
+                sim_src = temp2_alltime_icores[expid[i]][icores][ialltime]
+                
+                # if (ialltime in ['daily', 'mon', 'mm', 'ann',]):
+                #     sim_src = temp2_alltime_icores[expid[i]][icores][ialltime]
+                # elif (ialltime == 'mon no mm'):
+                #     sim_src = temp2_alltime_icores[expid[i]][icores]['mon'].groupby('time.month') - temp2_alltime_icores[expid[i]][icores]['mon'].groupby('time.month').mean(dim='time')
                 
                 subset = np.isfinite(rec_src) & np.isfinite(sim_src)
                 rec_src = rec_src[subset]
@@ -521,7 +556,12 @@ for i in range(len(expid)):
                 ax.axline((0, 0), slope = 1, lw=0.5, color='k')
                 plt.text(0.05, 0.9, icores, transform=ax.transAxes, color='k',)
                 
-                if (params[0] > 0):
+                if (ialltime in ['mon no mm', 'ann no am']):
+                    eq_text = 'temp2 = ' + str(np.round(params[1], 2)) + plot_labels_no_unit['dD'] + ' + ' + \
+                        str(np.round(params[2], 3)) + plot_labels_no_unit[iisotope] + \
+                            '\n$R^2 = $' + str(np.round(rsquared, 2)) + \
+                                '\n$RMSE = $' + str(np.round(RMSE, 1))
+                elif (params[0] > 0):
                     eq_text = 'temp2 = ' + str(np.round(params[1], 2)) + plot_labels_no_unit['dD'] + ' + ' + \
                         str(np.round(params[2], 3)) + plot_labels_no_unit[iisotope] + ' + ' + \
                         str(np.round(params[0], 1)) + \
@@ -569,4 +609,178 @@ for i in range(len(expid)):
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot reconstructed source SST based on d_ln / d_xs, controlling aprt_frc, wisoaprt
+
+# frc_threshold = 80
+wisoaprt_threshold = 0.5
+
+ivar = 'sst'
+
+for i in range(len(expid)):
+    # i = 0
+    print('#-------------------------------- ' + str(i) + ': ' + expid[i])
+    
+    for iisotope in ['d_ln',]:
+        # iisotope = 'd_ln'
+        # ['d_ln', 'd_excess']
+        print('#---------------- ' + iisotope)
+        
+        for icores in ['EDC',]:
+            # icores = 'EDC'
+            print('#-------- ' + icores)
+            
+            for ialltime in ['daily']:
+                # ialltime = 'mon'
+                # ['daily', 'mon', 'mm', 'mon no mm', 'ann', 'ann no am']
+                print('#---- ' + ialltime)
+                
+                src_var = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime]
+                iso_var = isotopes_alltime_icores[expid[i]][iisotope][icores][ialltime]
+                # aprt_frc = aprt_frc_alltime_icores[expid[i]][icores][ialltime]
+                wisoaprt_var = wisoaprt_alltime_icores[expid[i]][icores][ialltime]
+                # subset = (np.isfinite(src_var) & np.isfinite(iso_var)) & (aprt_frc >= frc_threshold)
+                subset = (np.isfinite(src_var) & np.isfinite(iso_var)) & (wisoaprt_var >= (wisoaprt_threshold / 2.628e6))
+                src_var = src_var[subset]
+                iso_var = iso_var[subset]
+                
+                ols_fit = sm.OLS(
+                    src_var.values,
+                    sm.add_constant(iso_var.values),
+                    ).fit()
+                
+                params = ols_fit.params
+                rsquared = ols_fit.rsquared
+                predicted_y = ols_fit.params[0] + ols_fit.params[1] * iso_var
+                RMSE = np.sqrt(np.average(np.square(predicted_y - src_var)))
+                
+                # params = regression_sst_d[expid[i]][iisotope][icores][ialltime]['params']
+                # rsquared = regression_sst_d[expid[i]][iisotope][icores][ialltime]['rsquared']
+                # RMSE = regression_sst_d[expid[i]][iisotope][icores][ialltime]['RMSE']
+                # rec_src = regression_sst_d[expid[i]][iisotope][icores][ialltime]['predicted_y']
+                
+                xymax = np.max(np.concatenate((src_var, predicted_y)))
+                xymin = np.min(np.concatenate((src_var, predicted_y)))
+                
+                # output_png = 'figures/8_d-excess/8.1_controls/8.1.6_regression_analysis/8.1.6.0_sst_d/8.1.6.0.0 ' + expid[i] + ' ' + icores + ' ' + ialltime + ' sim vs. rec source ' + ivar + ' using '+ iisotope + '_frc' + str(frc_threshold) + '.png'
+                output_png = 'figures/8_d-excess/8.1_controls/8.1.6_regression_analysis/8.1.6.0_sst_d/8.1.6.0.0 ' + expid[i] + ' ' + icores + ' ' + ialltime + ' sim vs. rec source ' + ivar + ' using '+ iisotope + '_aprt' + str(wisoaprt_threshold) + '.png'
+                
+                fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
+                
+                ax.scatter(
+                    src_var, predicted_y,
+                    s=6, lw=0.1, facecolors='white', edgecolors='k',)
+                ax.axline((0, 0), slope = 1, lw=0.5, color='k')
+                plt.text(0.05, 0.9, icores, transform=ax.transAxes, color='k',)
+                
+                if (ialltime in ['mon no mm', 'ann no am']):
+                    eq_text = plot_labels_no_unit[ivar] + ' = ' + str(np.round(params[1], 2)) + plot_labels_no_unit[iisotope] + \
+                            '\n$R^2 = $' + str(np.round(rsquared, 2)) + \
+                                '\n$RMSE = $' + str(np.round(RMSE, 1))
+                elif (params[0] > 0):
+                    eq_text = plot_labels_no_unit[ivar] + ' = ' + str(np.round(params[1], 2)) + plot_labels_no_unit[iisotope] + ' + ' + \
+                        str(np.round(params[0], 1)) + \
+                            '\n$R^2 = $' + str(np.round(rsquared, 2)) + \
+                                '\n$RMSE = $' + str(np.round(RMSE, 1))
+                elif (params[0] < 0):
+                    eq_text = plot_labels_no_unit[ivar] + ' = ' + str(np.round(params[1], 2)) + plot_labels_no_unit[iisotope] + ' ' + \
+                        str(np.round(params[0], 1)) + \
+                            '\n$R^2 = $' + str(np.round(rsquared, 2)) + \
+                                '\n$RMSE = $' + str(np.round(RMSE, 1))
+                elif (params[0] == 0):
+                    eq_text = plot_labels_no_unit[ivar] + ' = ' + str(np.round(params[1], 2)) + plot_labels_no_unit[iisotope] + \
+                            '\n$R^2 = $' + str(np.round(rsquared, 2)) + \
+                                '\n$RMSE = $' + str(np.round(RMSE, 1))
+                
+                plt.text(
+                    0.1, 0.05, eq_text,
+                    transform=ax.transAxes, fontsize=6, linespacing=1.5)
+                
+                ax.set_xlabel(
+                    'Simulated ' + plot_labels[ivar],
+                    labelpad=2, fontsize=8)
+                ax.set_xlim(xymin, xymax)
+                ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+                
+                ax.set_ylabel(
+                    'Derived ' + plot_labels[ivar],
+                    labelpad=2, fontsize=8)
+                ax.set_ylim(xymin, xymax)
+                ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+                ax.tick_params(axis='both', labelsize=8)
+                
+                ax.grid(True, which='both',
+                        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+                fig.subplots_adjust(
+                    left=0.32, right=0.95, bottom=0.25, top=0.95)
+                fig.savefig(output_png)
+
+
+
+
+'''
+                linearfit = linregress(x = src_var, y = iso_var,)
+                ols_fit = sm.OLS(
+                    iso_var.values,
+                    sm.add_constant(src_var.values),
+                    ).fit()
+                print(ols_fit.summary())
+                print("R2: ", ols_fit.rsquared)
+                pearsonr(src_var, iso_var).statistic **2
+                
+                linearfit = linregress(x = iso_var, y = src_var,)
+                print(linearfit)
+                ols_fit = sm.OLS(
+                    src_var.values,
+                    sm.add_constant(iso_var.values),
+                    ).fit()
+                print(ols_fit.summary())
+                print("R2: ", ols_fit.rsquared)
+                pearsonr(iso_var, src_var).statistic **2
+                # 2.4664 * 0.3082
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region detailed regression analysis, source SST vs. d_ln
+
+icores = 'EDML'
+# 'EDC', 'DOME F', 'Vostok', 'EDML',
+
+i = 0
+ivar = 'sst'
+iisotope = 'd_ln'
+ialltime = 'ann no am'
+
+src_var = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime]
+iso_var = isotopes_alltime_icores[expid[i]][iisotope][icores][ialltime]
+subset = (np.isfinite(src_var) & np.isfinite(iso_var))
+src_var = src_var[subset]
+iso_var = iso_var[subset]
+
+ols_fit = sm.OLS(
+    src_var.values,
+    sm.add_constant(iso_var.values),
+    ).fit()
+
+params = ols_fit.params
+rsquared = ols_fit.rsquared
+predicted_y = ols_fit.params[0] + ols_fit.params[1] * iso_var
+RMSE = np.sqrt(np.average(np.square(predicted_y - src_var)))
+
+print(np.round(rsquared, 2))
+print(np.round(RMSE, 2))
+print(ols_fit.summary())
+
+# slope: 0.3082 (95% interval: 0.263 to 0.354)
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
 

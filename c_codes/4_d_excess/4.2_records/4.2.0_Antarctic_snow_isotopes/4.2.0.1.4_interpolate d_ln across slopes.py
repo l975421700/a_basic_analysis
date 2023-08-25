@@ -126,6 +126,7 @@ from a_basic_analysis.b_module.component_plot import (
 
 
 Antarctic_snow_isotopes_sim_grouped = {}
+Antarctic_snow_isotopes_sim_grouped_all = {}
 
 for i in range(len(expid)):
     # i = 0
@@ -133,6 +134,9 @@ for i in range(len(expid)):
     
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.Antarctic_snow_isotopes_sim_grouped.pkl', 'rb') as f:
         Antarctic_snow_isotopes_sim_grouped[expid[i]] = pickle.load(f)
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.Antarctic_snow_isotopes_sim_grouped_all.pkl', 'rb') as f:
+        Antarctic_snow_isotopes_sim_grouped_all[expid[i]] = pickle.load(f)
 
 
 
@@ -151,7 +155,8 @@ interpolated_dln = {}
 for ivalue in range(len(Si_factor_values)):
     print('#-------- ' + str(ivalue) + ': ' + str(np.round(Si_factor_values[ivalue], 4)))
     
-    No_record = len(Antarctic_snow_isotopes_sim_grouped['pi_600_5.0'].index)
+    # No_record = len(Antarctic_snow_isotopes_sim_grouped['pi_600_5.0'].index)
+    No_record = len(Antarctic_snow_isotopes_sim_grouped_all['pi_600_5.0'].index)
     interpolated_dln[str(ivalue)] = np.zeros(No_record)
     
     for irecord in range(No_record):
@@ -161,9 +166,12 @@ for ivalue in range(len(Si_factor_values)):
             Si_factor_values[ivalue],
             np.array([0.002, 0.0045, 0.006]),
             np.array([
-                Antarctic_snow_isotopes_sim_grouped['pi_606_5.6']['d_ln_sim'][irecord],
-                Antarctic_snow_isotopes_sim_grouped['pi_600_5.0']['d_ln_sim'][irecord],
-                Antarctic_snow_isotopes_sim_grouped['pi_609_5.7']['d_ln_sim'][irecord],
+                # Antarctic_snow_isotopes_sim_grouped['pi_606_5.6']['d_ln_sim'][irecord],
+                # Antarctic_snow_isotopes_sim_grouped['pi_600_5.0']['d_ln_sim'][irecord],
+                # Antarctic_snow_isotopes_sim_grouped['pi_609_5.7']['d_ln_sim'][irecord],
+                Antarctic_snow_isotopes_sim_grouped_all['pi_606_5.6']['d_ln_sim'][irecord],
+                Antarctic_snow_isotopes_sim_grouped_all['pi_600_5.0']['d_ln_sim'][irecord],
+                Antarctic_snow_isotopes_sim_grouped_all['pi_609_5.7']['d_ln_sim'][irecord],
                 ]),
             )
 
@@ -195,7 +203,8 @@ stats.describe(diff2 / diff1)
 # -----------------------------------------------------------------------------
 # region plot interpolated d_ln
 
-output_png = 'figures/8_d-excess/8.1_controls/8.1.7_parameterisation/8.1.7.0.0 pi_60_069 interpolated d_ln across factor values.png'
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.7_parameterisation/8.1.7.0.0 pi_60_069 interpolated d_ln across factor values.png'
+output_png = 'figures/8_d-excess/8.1_controls/8.1.7_parameterisation/8.1.7.0.0 pi_60_069 interpolated d_ln across factor values_all_grouped.png'
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
 
@@ -266,12 +275,15 @@ RMSE = np.zeros(len(Si_factor_values))
 for ivalue in range(len(Si_factor_values)):
     print('#-------- ' + str(ivalue) + ': ' + str(np.round(Si_factor_values[ivalue], 4)))
     
+    subset = np.isfinite(interpolated_dln[str(ivalue)]) & np.isfinite(Antarctic_snow_isotopes_sim_grouped_all['pi_600_5.0']['d_ln'])
+    
     RMSE[ivalue] = np.sqrt(np.average(np.square(
-        interpolated_dln[str(ivalue)] - \
-            Antarctic_snow_isotopes_sim_grouped['pi_600_5.0']['d_ln']
+        interpolated_dln[str(ivalue)][subset] - \
+            Antarctic_snow_isotopes_sim_grouped_all['pi_600_5.0']['d_ln'][subset]
+            # Antarctic_snow_isotopes_sim_grouped['pi_600_5.0']['d_ln']
     )))
 
-output_png = 'figures/8_d-excess/8.1_controls/8.1.7_parameterisation/8.1.7.0.0 pi_60_069 interpolated d_ln across factor values RMSE.png'
+output_png = 'figures/8_d-excess/8.1_controls/8.1.7_parameterisation/8.1.7.0.0 pi_60_069 interpolated d_ln across factor values RMSE_all_grouped.png'
 
 marker='o'
 linewidth=1

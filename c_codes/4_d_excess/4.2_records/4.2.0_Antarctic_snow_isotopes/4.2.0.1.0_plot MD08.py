@@ -1,5 +1,9 @@
 
 
+exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+expid = ['pi_600_5.0',]
+i = 0
+
 # -----------------------------------------------------------------------------
 # region import packages
 
@@ -111,6 +115,16 @@ Antarctic_snow_isotopes = pd.read_csv(
 
 # len(np.unique(Antarctic_snow_isotopes['Sample label']))
 
+Antarctic_snow_isotopes_sim_grouped = {}
+Antarctic_snow_isotopes_sim_grouped_all = {}
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.Antarctic_snow_isotopes_sim_grouped.pkl', 'rb') as f:
+    Antarctic_snow_isotopes_sim_grouped[expid[i]] = pickle.load(f)
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.Antarctic_snow_isotopes_sim_grouped_all.pkl', 'rb') as f:
+    Antarctic_snow_isotopes_sim_grouped_all[expid[i]] = pickle.load(f)
+
+
 '''
 ['Latitude', 'Longitude', 'Sample label',
 'δD [‰ SMOW] (Calculated average/mean values)',
@@ -161,6 +175,15 @@ np.isfinite(delta_D).sum()
 # -----------------------------------------------------------------------------
 # region spatial distribution of delta_D and delta 018
 
+values, counts = np.unique(Antarctic_snow_isotopes['Reference'], return_counts=True)
+sort = np.argsort(counts)
+counts = counts[sort[::-1]]
+values = values[sort[::-1]]
+
+ivalue = 5
+
+subset = (Antarctic_snow_isotopes['Reference'] == values[ivalue])
+
 output_png = 'figures/8_d-excess/8.0_records/8.0.3_isotopes/8.0.3.0 Antarctic snow isotopes, delta_D, Masson-Delmotte et al., 2008.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
@@ -170,10 +193,10 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
 fig, ax = hemisphere_plot(northextent=-60)
 
 plt_scatter = ax.scatter(
-    Antarctic_snow_isotopes['Longitude'],
-    Antarctic_snow_isotopes['Latitude'],
+    Antarctic_snow_isotopes['Longitude'][subset],
+    Antarctic_snow_isotopes['Latitude'][subset],
     s=8,
-    c=Antarctic_snow_isotopes['δD [‰ SMOW] (Calculated average/mean values)'],
+    c=Antarctic_snow_isotopes['δD [‰ SMOW] (Calculated average/mean values)'][subset],
     edgecolors='k', linewidths=0.1,
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
@@ -184,6 +207,10 @@ cbar = fig.colorbar(
 cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel('$\delta D$ [‰ SMOW]\nMasson-Delmotte et al. (2008)', linespacing=1.5)
 fig.savefig(output_png)
+
+print(values[ivalue])
+
+
 
 
 output_png = 'figures/8_d-excess/8.0_records/8.0.3_isotopes/8.0.3.0 Antarctic snow isotopes, delta_O18, Masson-Delmotte et al., 2008.png'
@@ -222,20 +249,30 @@ np.nanmin(Antarctic_snow_isotopes['δD [‰ SMOW] (Calculated average/mean value
 # -----------------------------------------------------------------------------
 # region spatial distribution of deteurium excess
 
+values, counts = np.unique(Antarctic_snow_isotopes['Reference'], return_counts=True)
+sort = np.argsort(counts)
+counts = counts[sort[::-1]]
+values = values[sort[::-1]]
+
+# 2, 3, 5, 8
+ivalue = 6
+
+subset = (Antarctic_snow_isotopes['Reference'] == values[ivalue])
+
 ln_dD = 1000 * np.log(1 + Antarctic_snow_isotopes['δD [‰ SMOW] (Calculated average/mean values)'] / 1000)
 ln_d18O = 1000 * np.log(1 + Antarctic_snow_isotopes['δ18O H2O [‰ SMOW] (Calculated average/mean values)'] / 1000)
 
 d_ln = ln_dD - 8.47 * ln_d18O + 0.0285 * (ln_d18O ** 2)
 
-subset = (
-    np.isfinite(Antarctic_snow_isotopes['Longitude']) & \
-        np.isfinite(Antarctic_snow_isotopes['Latitude']) & \
-            np.isfinite(Antarctic_snow_isotopes['δD [‰ SMOW] (Calculated average/mean values)']) & \
-                Antarctic_snow_isotopes['δ18O H2O [‰ SMOW] (Calculated average/mean values)'] & \
-                    np.isfinite(Antarctic_snow_isotopes['Acc rate [cm/a] (Calculated)']) & \
-                        np.isfinite(Antarctic_snow_isotopes['t [°C]'])
-)
-subset.sum()
+# subset = (
+#     np.isfinite(Antarctic_snow_isotopes['Longitude']) & \
+#         np.isfinite(Antarctic_snow_isotopes['Latitude']) & \
+#             np.isfinite(Antarctic_snow_isotopes['δD [‰ SMOW] (Calculated average/mean values)']) & \
+#                 Antarctic_snow_isotopes['δ18O H2O [‰ SMOW] (Calculated average/mean values)'] & \
+#                     np.isfinite(Antarctic_snow_isotopes['Acc rate [cm/a] (Calculated)']) & \
+#                         np.isfinite(Antarctic_snow_isotopes['t [°C]'])
+# )
+# subset.sum()
 
 output_png = 'figures/8_d-excess/8.0_records/8.0.3_isotopes/8.0.3.0 Antarctic snow isotopes, d_ln, Masson-Delmotte et al., 2008.png'
 
@@ -261,6 +298,9 @@ cbar.ax.tick_params(labelsize=8)
 cbar.ax.set_xlabel('$d_{ln}$ [‰ SMOW]\nMasson-Delmotte et al. (2008)', linespacing=1.5)
 fig.savefig(output_png)
 
+
+print(values[ivalue])
+print(subset.sum())
 
 
 

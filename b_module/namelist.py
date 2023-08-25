@@ -96,6 +96,8 @@ plot_labels = {
     'pressure': 'pressure [$hPa$]',
     'wind_speed': 'wind speed [$m \; s^{-1}$]',
     'wisoaprt': 'precipitation [$mm \; day^{-1}$]',
+    'temperature': 'temp2 [$°C$]',
+    'accumulation': 'accumulation [$cm \; year^{-1}$]',
 }
 
 plot_labels_no_unit = {
@@ -133,6 +135,8 @@ expid_colours = {
     'pi_609_5.7': 'tab:purple',
     
     'pi_603_5.3': 'tab:brown',
+    
+    'pi_610_5.8': 'grey',
 }
 
 

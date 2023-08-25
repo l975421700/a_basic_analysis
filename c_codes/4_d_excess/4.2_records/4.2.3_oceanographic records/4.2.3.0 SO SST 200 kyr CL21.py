@@ -103,36 +103,51 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
+SO_SST_200kyr = pd.read_csv(
+    'data_sources/ice_core_records/SO_SST/Chandler-Langebroek_2021_SST-anom-stats.tab',
+    sep='\t', header=0, skiprows=25,)
 
-ATS_800kyr = pd.read_csv(
-    'data_sources/Parrenin_2013/datasets/ATS.tab',
-    sep='\t', header=0, skiprows=11,)
+SO_SST_200kyr = SO_SST_200kyr.rename(columns={
+    'Age [ka BP]': 'age',
+    'NOBS [#] (Number of records, annual SST)': 'nobs_ann',
+    'SST anomaly [°C] (Mean annual SST anomaly, rela...)': 'ann_SST',
+    'SST anomaly std dev [±] (Annual SST anomaly)': 'ann_SST_std',
+    'CI (95% CI, annual SST anomaly, degC)': 'ann_SST_CI',
+    'NOBS [#] (Number of records, summer (JF...)': 'nobs_jfm',
+    'SST anomaly [°C] (Mean summer (JFM) SST anomaly...)': 'jfm_SST',
+   'SST anomaly std dev [±] (Summer (JFM) SST anomaly)': 'jfm_SST_std',
+   'CI (95% CI, summer (JFM) SST anom...)': 'jfm_SST_CI',
+})
 
+
+'''
+SO_SST_200kyr.columns
+'''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region plot ATS of past 800,000 years
+# region plot SO SST of past 140 kyr
 
 
-output_png = 'figures/8_d-excess/8.0_records/8.0.1_ice cores/8.0.1.0 ATS of past 800,000 years.png'
+output_png = 'figures/8_d-excess/8.0_records/8.0.1_ice cores/8.0.1.0 SO SST of past 140 kyr.png'
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([16, 6]) / 2.54)
 
 ax.plot(
-    ATS_800kyr['Age [ka BP]'].values,
-    ATS_800kyr['T cal [°C]'].values,
+    SO_SST_200kyr['age'].values,
+    SO_SST_200kyr['ann_SST'].values,
     c='k', lw=0.3, ls='-')
 
-ax.set_ylabel('Temperature anomalies [$°C$]')
-ax.set_ylim(-11, 5)
-ax.set_yticks(np.arange(-10, 4 + 1e-4, 2))
+ax.set_ylabel('SO SST anomalies [$°C$]')
+# ax.set_ylim(-11, 5)
+# ax.set_yticks(np.arange(-10, 4 + 1e-4, 2))
 ax.yaxis.set_minor_locator(AutoMinorLocator(2))
 
 ax.set_xlabel('Age before 1950 [kyr]')
-ax.set_xlim(0, 800)
-ax.set_xticks(np.arange(0, 800 + 1e-4, 100))
+ax.set_xlim(0, 140)
+ax.set_xticks(np.arange(0, 140 + 1e-4, 10))
 ax.xaxis.set_minor_locator(AutoMinorLocator(2))
 
 # ax.spines[['right', 'top']].set_visible(False)
@@ -145,5 +160,4 @@ fig.savefig(output_png, dpi=600)
 
 # endregion
 # -----------------------------------------------------------------------------
-
 

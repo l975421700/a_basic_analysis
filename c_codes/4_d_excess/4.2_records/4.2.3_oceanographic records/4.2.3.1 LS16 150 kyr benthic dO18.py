@@ -103,39 +103,46 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
+LS16_dO18_150kyr = pd.read_excel(
+    'data_sources/ice_core_records/benthic_d018/LS16/palo20372-sup-0005-ds03.xlsx',
+    sheet_name='LS16 d18O stacks w lag', header=0, skiprows=6, nrows=301,)
 
-ATS_800kyr = pd.read_csv(
-    'data_sources/Parrenin_2013/datasets/ATS.tab',
-    sep='\t', header=0, skiprows=11,)
+LS16_dO18_150kyr = LS16_dO18_150kyr.rename(columns={
+    'Age (kyr)': 'age',
+})
 
+
+'''
+'''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region plot ATS of past 800,000 years
+# region plot global benthic dO18 of past 140 kyr
 
 
-output_png = 'figures/8_d-excess/8.0_records/8.0.1_ice cores/8.0.1.0 ATS of past 800,000 years.png'
+output_png = 'figures/8_d-excess/8.0_records/8.0.1_ice cores/8.0.1.0 global benthic dO18 of past 140 kyr.png'
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([16, 6]) / 2.54)
 
 ax.plot(
-    ATS_800kyr['Age [ka BP]'].values,
-    ATS_800kyr['T cal [°C]'].values,
+    LS16_dO18_150kyr['age'].values,
+    LS16_dO18_150kyr['Global'].values,
     c='k', lw=0.3, ls='-')
 
-ax.set_ylabel('Temperature anomalies [$°C$]')
-ax.set_ylim(-11, 5)
-ax.set_yticks(np.arange(-10, 4 + 1e-4, 2))
+ax.set_ylabel('Global benthic $\delta^{18}O$ [$‰$]')
+# ax.set_ylim(-11, 5)
+# ax.set_yticks(np.arange(-10, 4 + 1e-4, 2))
 ax.yaxis.set_minor_locator(AutoMinorLocator(2))
 
 ax.set_xlabel('Age before 1950 [kyr]')
-ax.set_xlim(0, 800)
-ax.set_xticks(np.arange(0, 800 + 1e-4, 100))
+ax.set_xlim(0, 140)
+ax.set_xticks(np.arange(0, 140 + 1e-4, 10))
 ax.xaxis.set_minor_locator(AutoMinorLocator(2))
 
 # ax.spines[['right', 'top']].set_visible(False)
+ax.invert_yaxis()
 
 ax.grid(True, which='both',
         linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
@@ -145,5 +152,3 @@ fig.savefig(output_png, dpi=600)
 
 # endregion
 # -----------------------------------------------------------------------------
-
-

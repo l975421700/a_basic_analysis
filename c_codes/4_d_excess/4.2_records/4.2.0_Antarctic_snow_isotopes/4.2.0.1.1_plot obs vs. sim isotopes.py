@@ -2,12 +2,13 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'pi_600_5.0',
-    'pi_601_5.1',
-    'pi_602_5.2',
-    'pi_605_5.5',
-    'pi_606_5.6',
-    'pi_609_5.7',
+    # 'pi_601_5.1',
+    # 'pi_602_5.2',
+    # 'pi_605_5.5',
+    # 'pi_606_5.6',
+    # 'pi_609_5.7',
+    # 'pi_600_5.0',
+    'pi_610_5.8',
     
     # 'pi_603_5.3',
     ]
@@ -132,14 +133,15 @@ for i in range(len(expid)):
     
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.Antarctic_snow_isotopes_simulations.pkl', 'rb') as f:
         Antarctic_snow_isotopes_simulations[expid[i]] = pickle.load(f)
+
+
+'''
     
     # Antarctic_snow_isotopes_simulations[expid[i]] = \
     #     Antarctic_snow_isotopes_simulations[expid[i]].dropna(
     #         subset=['lat', 'lon', 'temperature', 'accumulation', 'dD', 'dO18',],
     #         ignore_index=True)
 
-
-'''
 Antarctic_snow_isotopes_simulations[expid[i]].columns
 '''
 # endregion
@@ -152,6 +154,7 @@ Antarctic_snow_isotopes_simulations[expid[i]].columns
 
 for iisotopes in ['dO18', 'dD', 'd_ln', 'd_excess',]:
     # iisotopes = 'd_ln'
+    # 'dO18', 'dD', 'd_ln', 'd_excess',
     print('#-------- ' + iisotopes)
     
     output_png = 'figures/8_d-excess/8.0_records/8.0.3_isotopes/8.0.3.0_sim_vs_obs/8.0.3.0.0 pi_60_6 observed vs. simulated ' + iisotopes + '.png'
@@ -192,9 +195,11 @@ for iisotopes in ['dO18', 'dD', 'd_ln', 'd_excess',]:
                             ', $RMSE = $' + str(np.round(RMSE, 1))
         
         plt.text(
-            0.2, 0.35 - i * 0.06, eq_text,
-            transform=ax.transAxes, fontsize=10,
-            color=expid_colours[expid[i]], ha='left')
+            0.32, 0.24 - i * 0.045, eq_text,
+            transform=ax.transAxes, fontsize=8,
+            color=expid_colours[expid[i]], ha='left',
+            # backgroundcolor='white', linespacing=0,
+            )
     
     xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
     xylim_min = np.min(xylim)
@@ -349,7 +354,7 @@ for iisotopes in ['d_ln',]:
     
     fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
     
-    for i in range(1):
+    for i in [i]:
         print(str(i) + ': ' + expid[i])
         
         xdata = Antarctic_snow_isotopes_simulations[expid[i]][iisotopes]
