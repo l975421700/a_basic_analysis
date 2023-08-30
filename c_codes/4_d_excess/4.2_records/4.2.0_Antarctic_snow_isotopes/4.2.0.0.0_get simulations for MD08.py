@@ -2,13 +2,13 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_600_5.0',
+    'pi_600_5.0',
     # 'pi_601_5.1',
     # 'pi_602_5.2',
     # 'pi_605_5.5',
     # 'pi_606_5.6',
     # 'pi_609_5.7',
-    'pi_610_5.8',
+    # 'pi_610_5.8',
     ]
 
 
@@ -56,7 +56,7 @@ dO18_alltime = {}
 dD_alltime = {}
 d_ln_alltime = {}
 d_excess_alltime = {}
-temp2_alltime = {}
+tsurf_alltime = {}
 
 
 for i in range(len(expid)):
@@ -80,8 +80,8 @@ for i in range(len(expid)):
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_alltime.pkl', 'rb') as f:
         d_excess_alltime[expid[i]] = pickle.load(f)
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
-        temp2_alltime[expid[i]] = pickle.load(f)
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.tsurf_alltime.pkl', 'rb') as f:
+        tsurf_alltime[expid[i]] = pickle.load(f)
 
 lon = d_ln_alltime[expid[0]]['am'].lon
 lat = d_ln_alltime[expid[0]]['am'].lat
@@ -153,7 +153,7 @@ for i in range(len(expid)):
         print('#-------- ' + var_name)
         
         if (var_name == 'temperature'):
-            ivar = temp2_alltime[expid[i]]['am']
+            ivar = tsurf_alltime[expid[i]]['am']
         elif (var_name == 'accumulation'):
             ivar = ((wisoaprt_alltime[expid[i]]['am'].sel(wisotype=1) + wisoevap_alltime[expid[i]]['am'].sel(wisotype=1))  * seconds_per_d / 10 * 365).compute()
         elif (var_name == 'dD'):

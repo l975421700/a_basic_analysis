@@ -3,12 +3,11 @@
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     'pi_600_5.0',
-    # 'pi_601_5.1',
-    # 'pi_602_5.2',
-    # 'pi_603_5.3',
-    # 'pi_605_5.5',
-    # 'pi_606_5.6',
-    # 'pi_609_5.7',
+    'pi_601_5.1',
+    'pi_602_5.2',
+    'pi_605_5.5',
+    'pi_606_5.6',
+    'pi_609_5.7',
     ]
 
 
@@ -196,8 +195,9 @@ for i in range(len(expid)):
             # icores = 'EDC'
             print('#-------- ' + icores)
             
-            for ialltime in ['daily', 'mon', 'mm', 'mon no mm', 'ann', 'ann no am']:
+            for ialltime in ['ann no am']:
                 # ialltime = 'mon'
+                # 'daily', 'mon', 'mm', 'mon no mm', 'ann', 'ann no am'
                 print('#---- ' + ialltime)
                 
                 params = regression_sst_d[expid[i]][iisotope][icores][ialltime]['params']
@@ -215,6 +215,8 @@ for i in range(len(expid)):
                 subset = np.isfinite(rec_src) & np.isfinite(sim_src)
                 rec_src = rec_src[subset]
                 sim_src = sim_src[subset]
+                
+                print(len(rec_src))
                 
                 # print(np.round(pearsonr(rec_src, sim_src).statistic ** 2, 3))
                 # print(np.round(rsquared, 3))
@@ -720,7 +722,23 @@ for i in range(len(expid)):
 
 
 
+
 '''
+#-------- check excluded wisoaprt
+i = 0
+icores = 'EDC'
+ialltime = 'daily'
+wisoaprt_threshold = 1
+
+total_sum = wisoaprt_alltime_icores[expid[i]][icores][ialltime].values.sum()
+threshold_sum = wisoaprt_alltime_icores[expid[i]][icores][ialltime].where(
+    wisoaprt_alltime_icores[expid[i]][icores][ialltime] >= (wisoaprt_threshold / 2.628e6),
+    0).sum()
+excluded_frc = np.round((total_sum - threshold_sum).values / total_sum * 100, 1)
+print('Excluded pre in this threshold: ' + str(excluded_frc) + '%')
+
+
+
                 linearfit = linregress(x = src_var, y = iso_var,)
                 ols_fit = sm.OLS(
                     iso_var.values,
@@ -749,13 +767,13 @@ for i in range(len(expid)):
 # -----------------------------------------------------------------------------
 # region detailed regression analysis, source SST vs. d_ln
 
-icores = 'EDML'
+icores = 'EDC'
 # 'EDC', 'DOME F', 'Vostok', 'EDML',
-
-i = 0
 ivar = 'sst'
 iisotope = 'd_ln'
 ialltime = 'ann no am'
+
+i = 5
 
 src_var = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime]
 iso_var = isotopes_alltime_icores[expid[i]][iisotope][icores][ialltime]
@@ -778,6 +796,16 @@ print(np.round(RMSE, 2))
 print(ols_fit.summary())
 
 # slope: 0.3082 (95% interval: 0.263 to 0.354)
+
+for i in range(len(expid)):
+    # i = 0
+    print('#-------------------------------- ' + str(i) + ': ' + expid[i])
+    
+    print(np.round(regression_sst_d[expid[i]]['d_ln'][icores]['ann no am']['rsquared'], 2))
+    print(np.round(regression_sst_d[expid[i]]['d_ln'][icores]['ann no am']['RMSE'], 2))
+    print(np.round(regression_sst_d[expid[i]]['d_ln'][icores]['ann no am']['params'][1], 2))
+
+
 
 # endregion
 # -----------------------------------------------------------------------------

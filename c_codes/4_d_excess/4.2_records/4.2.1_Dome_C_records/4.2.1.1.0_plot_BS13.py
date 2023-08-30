@@ -45,59 +45,11 @@ import seaborn as sns
 import cartopy.feature as cfeature
 from matplotlib.ticker import AutoMinorLocator
 
-# self defined
-from a_basic_analysis.b_module.mapplot import (
-    globe_plot,
-    hemisphere_plot,
-    quick_var_plot,
-    mesh2plot,
-    framework_plot1,
-    remove_trailing_zero,
-    remove_trailing_zero_pos,
-)
-
-from a_basic_analysis.b_module.basic_calculations import (
-    mon_sea_ann,
-    regrid,
-    mean_over_ais,
-    time_weighted_mean,
-)
-
 from a_basic_analysis.b_module.namelist import (
-    month,
-    month_num,
-    month_dec,
-    month_dec_num,
-    seasons,
-    seasons_last_num,
-    hours,
-    months,
-    month_days,
-    zerok,
-    panel_labels,
     seconds_per_d,
     monthini,
     plot_labels,
-)
-
-from a_basic_analysis.b_module.source_properties import (
-    source_properties,
-    calc_lon_diff,
-)
-
-from a_basic_analysis.b_module.statistics import (
-    fdr_control_bh,
-    check_normality_3d,
-    check_equal_variance_3d,
-    ttest_fdr_control,
-    cplot_ttest,
-    xr_par_cor,
-)
-
-from a_basic_analysis.b_module.component_plot import (
-    cplot_ice_cores,
-    plt_mesh_pars,
-    plot_t63_contourf,
+    expid_labels,
 )
 
 
@@ -162,7 +114,12 @@ bs13_dc_records['daily'].columns
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'pi_600_5.0',
+    # 'pi_600_5.0',
+    # 'pi_601_5.1',
+    # 'pi_602_5.2',
+    # 'pi_605_5.5',
+    # 'pi_606_5.6',
+    'pi_609_5.7',
     ]
 
 isotopes_alltime_icores = {}
@@ -205,8 +162,8 @@ for ialltime in ['mm', ]:
     # 'daily', 'mon',
     print(ialltime)
     
-    for ivar in ['d_excess', 'd_ln',]:
-        # ivar = 'dO18'
+    for ivar in ['temp2', 'wisoaprt', 'dD', 'dO18', 'd_excess', 'd_ln']:
+        # ivar = 'd_ln'
         # 'temp2', 'wisoaprt', 'dD', 'dO18', 'd_excess', 'd_ln'
         # ['temp2', 'wisoaprt', 'dD', 'dO18', 'd_excess', 'd_ln', 'pressure', 'wind_speed']
         print(ivar)
@@ -238,13 +195,19 @@ for ialltime in ['mm', ]:
             sim_y = temp2_alltime_icores[expid[i]][icores][ialltime].values
             sim_y_am = temp2_alltime_icores[expid[i]][icores]['am'].values
             legend_loc = 'upper center'
+            
+            sim_y_mon_std = temp2_alltime_icores[expid[i]][icores]['mon'].groupby('time.month').std(ddof=1).values
         elif (ivar == 'wisoaprt'):
+            # ivar = 'wisoaprt'
             obs_y = bs13_dc_records[ialltime][ivar].values
             obs_y_am = bs13_dc_records['am'][ivar]
             sim_y = wisoaprt_alltime_icores[expid[i]][icores][ialltime].values * seconds_per_d
             sim_y_am = wisoaprt_alltime_icores[expid[i]][icores]['am'].values * seconds_per_d
             legend_loc = 'lower center'
+            
+            sim_y_mon_std = wisoaprt_alltime_icores[expid[i]][icores]['mon'].groupby('time.month').std(ddof=1).values * seconds_per_d
         elif (ivar == 'dD'):
+            # ivar = 'dD'
             obs_y = bs13_dc_records['daily'].dropna(subset=ivar).groupby(bs13_dc_records['daily'].dropna(subset=ivar)['date'].dt.month).apply(lambda x: np.average(x.dD, weights=x.wisoaprt)).values
             obs_y_am = np.average(
                 bs13_dc_records['daily'][ivar][np.isfinite(bs13_dc_records['daily'][ivar])],
@@ -253,7 +216,10 @@ for ialltime in ['mm', ]:
             sim_y = isotopes_alltime_icores[expid[i]][ivar][icores][ialltime].values
             sim_y_am = isotopes_alltime_icores[expid[i]][ivar][icores]['am'].values
             legend_loc = 'upper center'
+            
+            sim_y_mon_std = isotopes_alltime_icores[expid[i]][ivar][icores]['mon'].groupby('time.month').std(ddof=1).values
         elif (ivar == 'dO18'):
+            # ivar = 'dO18'
             obs_y = bs13_dc_records['daily'].dropna(subset=ivar).groupby(bs13_dc_records['daily'].dropna(subset=ivar)['date'].dt.month).apply(lambda x: np.average(x.dO18, weights=x.wisoaprt)).values
             obs_y_am = np.average(
                 bs13_dc_records['daily'][ivar][np.isfinite(bs13_dc_records['daily'][ivar])],
@@ -262,6 +228,8 @@ for ialltime in ['mm', ]:
             sim_y = isotopes_alltime_icores[expid[i]][ivar][icores][ialltime].values
             sim_y_am = isotopes_alltime_icores[expid[i]][ivar][icores]['am'].values
             legend_loc = 'upper center'
+            
+            sim_y_mon_std = isotopes_alltime_icores[expid[i]][ivar][icores]['mon'].groupby('time.month').std(ddof=1).values
         elif (ivar in ['d_excess', 'd_ln']):
             obs_dD = bs13_dc_records['daily'].dropna(subset='dD').groupby(bs13_dc_records['daily'].dropna(subset='dD')['date'].dt.month).apply(lambda x: np.average(x.dD, weights=x.wisoaprt)).values
             obs_dD_am = np.average(
@@ -288,11 +256,13 @@ for ialltime in ['mm', ]:
             sim_y = isotopes_alltime_icores[expid[i]][ivar][icores][ialltime].values
             sim_y_am = isotopes_alltime_icores[expid[i]][ivar][icores]['am'].values
             legend_loc = 'upper center'
+            
+            sim_y_mon_std = isotopes_alltime_icores[expid[i]][ivar][icores]['mon'].groupby('time.month').std(ddof=1).values
         
         rsquared = pearsonr(obs_y, sim_y).statistic ** 2
         RMSE = np.sqrt(np.average(np.square(obs_y - sim_y)))
         
-        output_png = 'figures/8_d-excess/8.0_records/8.0.4_dome_c/8.0.4.0.0 Dome C ' + ialltime + ' record of ' + ivar + '.png'
+        output_png = 'figures/8_d-excess/8.0_records/8.0.4_dome_c/8.0.4.0.0 ' + expid[i] + ' Dome C ' + ialltime + ' record of ' + ivar + '.png'
         
         fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
         
@@ -310,6 +280,11 @@ for ialltime in ['mm', ]:
         )
         ax.axhline(sim_y_am, linewidth=linewidth, color='tab:orange',)
         
+        ax.fill_between(
+            xdata, sim_y - sim_y_mon_std, sim_y + sim_y_mon_std,
+            color='tab:orange', alpha=0.5,
+        )
+        
         ax.set_xticks(xticks)
         ax.set_xticklabels(xlabels)
         plt.xticks(rotation=rotation)
@@ -320,7 +295,7 @@ for ialltime in ['mm', ]:
         ax.legend(
             handles=[plt1, plt2],
             labels=['Stenni et al. (2016)',
-             '$PI_{control}: \; R^2 = ' + str(np.round(rsquared, 2)) + \
+            expid_labels[expid[i]] + '$: \; R^2 = ' + str(np.round(rsquared, 2)) + \
                  '; \; RMSE = ' + str(np.round(RMSE, 1)) + ' $'],
             loc=legend_loc, fontsize=8
         )

@@ -3,13 +3,13 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_600_5.0',
+    'pi_600_5.0',
     # 'pi_601_5.1',
     # 'pi_602_5.2',
     # 'pi_605_5.5',
     # 'pi_606_5.6',
     # 'pi_609_5.7',
-    'pi_610_5.8',
+    # 'pi_610_5.8',
     ]
 i = 0
 
@@ -634,3 +634,78 @@ for icores in temp2_alltime_icores[expid[i]].keys():
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region get tsurf at ice core sites
+
+tsurf_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.tsurf_alltime.pkl', 'rb') as f:
+    tsurf_alltime[expid[i]] = pickle.load(f)
+
+
+tsurf_alltime_icores = {}
+tsurf_alltime_icores[expid[i]] = {}
+
+for icores in stations_sites.Site:
+    # icores = 'EDC'
+    # print('#--------' + icores)
+    tsurf_alltime_icores[expid[i]][icores] = {}
+    
+    for ialltime in tsurf_alltime[expid[i]].keys():
+        # print('#----' + ialltime)
+        if ialltime in ['mon', 'sea', 'ann', 'mm', 'sm', 'mon no mm', 'ann no am']:
+            # ialltime = 'mon'
+            tsurf_alltime_icores[expid[i]][icores][ialltime] = \
+                tsurf_alltime[expid[i]][ialltime][
+                    :,
+                    t63_sites_indices[icores]['ilat'],
+                    t63_sites_indices[icores]['ilon']]
+        elif (ialltime == 'am'):
+            tsurf_alltime_icores[expid[i]][icores][ialltime] = \
+                tsurf_alltime[expid[i]][ialltime][
+                    t63_sites_indices[icores]['ilat'],
+                    t63_sites_indices[icores]['ilon']]
+
+output_file = exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.tsurf_alltime_icores.pkl'
+
+if (os.path.isfile(output_file)):
+    os.remove(output_file)
+
+with open(
+    output_file, 'wb') as f:
+    pickle.dump(tsurf_alltime_icores[expid[i]], f)
+
+
+del tsurf_alltime, tsurf_alltime_icores
+
+'''
+for icores in tsurf_alltime_icores[expid[i]].keys():
+    # icores = 'EDC'
+    print('#----------------' + icores)
+    tsurf_am_icores = \
+        np.round(tsurf_alltime_icores[expid[i]][icores]['am'].values, 1)
+    tsurf_annstd_icores = \
+        np.round(
+            tsurf_alltime_icores[expid[i]][icores]['ann'].std(ddof=1).values,
+            1)
+    print(str(tsurf_am_icores) + ' ± ' + str(tsurf_annstd_icores))
+
+
+#-------------------------------- check
+tsurf_alltime_icores = {}
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.tsurf_alltime_icores.pkl', 'rb') as f:
+    tsurf_alltime_icores[expid[i]] = pickle.load(f)
+
+for icores in tsurf_alltime_icores[expid[i]].keys():
+    # icores = 'EDC'
+    print('#----------------' + icores)
+    print('local lat:  ' + str(t63_sites_indices[icores]['lat']))
+    print('grid lat:   ' + \
+        str(np.round(tsurf_alltime_icores[expid[i]][icores]['am'].lat.values, 2)))
+    print('local lon:  ' + str(t63_sites_indices[icores]['lon']))
+    print('grid lon:   ' + \
+        str(tsurf_alltime_icores[expid[i]][icores]['am'].lon.values))
+
+'''
+# endregion
+# -----------------------------------------------------------------------------

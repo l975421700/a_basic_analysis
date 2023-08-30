@@ -7,8 +7,8 @@ expid = [
     # 'pi_605_5.5',
     # 'pi_606_5.6',
     # 'pi_609_5.7',
-    # 'pi_600_5.0',
-    'pi_610_5.8',
+    'pi_600_5.0',
+    # 'pi_610_5.8',
     
     # 'pi_603_5.3',
     ]
@@ -60,58 +60,16 @@ from matplotlib.ticker import AutoMinorLocator
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
-    globe_plot,
     hemisphere_plot,
-    quick_var_plot,
-    mesh2plot,
-    framework_plot1,
-    remove_trailing_zero,
-    remove_trailing_zero_pos,
-)
-
-from a_basic_analysis.b_module.basic_calculations import (
-    mon_sea_ann,
-    regrid,
-    mean_over_ais,
-    time_weighted_mean,
-    find_ilat_ilon_general,
-    find_multi_gridvalue_at_site,
 )
 
 from a_basic_analysis.b_module.namelist import (
-    month,
-    month_num,
-    month_dec,
-    month_dec_num,
-    seasons,
-    seasons_last_num,
-    hours,
-    months,
-    month_days,
-    zerok,
-    panel_labels,
-    seconds_per_d,
     plot_labels,
     expid_colours,
     expid_labels,
 )
 
-from a_basic_analysis.b_module.source_properties import (
-    source_properties,
-    calc_lon_diff,
-)
-
-from a_basic_analysis.b_module.statistics import (
-    fdr_control_bh,
-    check_normality_3d,
-    check_equal_variance_3d,
-    ttest_fdr_control,
-    cplot_ttest,
-    xr_par_cor,
-)
-
 from a_basic_analysis.b_module.component_plot import (
-    cplot_ice_cores,
     plt_mesh_pars,
     plot_t63_contourf,
 )
@@ -336,7 +294,7 @@ for i in range(len(expid)):
 
 i = 0
 
-for ivar in ['d_ln', ]:
+for ivar in ['temperature', ]:
     # ivar = 'd_ln'
     # 'temperature', 'accumulation', 'dD', 'dO18', 'd_excess', 'd_ln',
     print('#-------- ' + ivar)

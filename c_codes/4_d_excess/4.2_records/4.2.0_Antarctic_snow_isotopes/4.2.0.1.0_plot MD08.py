@@ -255,24 +255,25 @@ counts = counts[sort[::-1]]
 values = values[sort[::-1]]
 
 # 2, 3, 5, 8
-ivalue = 6
+ivalue = 8
 
 subset = (Antarctic_snow_isotopes['Reference'] == values[ivalue])
 
-ln_dD = 1000 * np.log(1 + Antarctic_snow_isotopes['δD [‰ SMOW] (Calculated average/mean values)'] / 1000)
-ln_d18O = 1000 * np.log(1 + Antarctic_snow_isotopes['δ18O H2O [‰ SMOW] (Calculated average/mean values)'] / 1000)
-
-d_ln = ln_dD - 8.47 * ln_d18O + 0.0285 * (ln_d18O ** 2)
 
 # subset = (
 #     np.isfinite(Antarctic_snow_isotopes['Longitude']) & \
 #         np.isfinite(Antarctic_snow_isotopes['Latitude']) & \
 #             np.isfinite(Antarctic_snow_isotopes['δD [‰ SMOW] (Calculated average/mean values)']) & \
-#                 Antarctic_snow_isotopes['δ18O H2O [‰ SMOW] (Calculated average/mean values)'] & \
-#                     np.isfinite(Antarctic_snow_isotopes['Acc rate [cm/a] (Calculated)']) & \
-#                         np.isfinite(Antarctic_snow_isotopes['t [°C]'])
+#                 np.isfinite(Antarctic_snow_isotopes['δ18O H2O [‰ SMOW] (Calculated average/mean values)']) # & \
+#             #         np.isfinite(Antarctic_snow_isotopes['Acc rate [cm/a] (Calculated)']) & \
+#             #             np.isfinite(Antarctic_snow_isotopes['t [°C]'])
 # )
-# subset.sum()
+
+
+ln_dD = 1000 * np.log(1 + Antarctic_snow_isotopes['δD [‰ SMOW] (Calculated average/mean values)'] / 1000)
+ln_d18O = 1000 * np.log(1 + Antarctic_snow_isotopes['δ18O H2O [‰ SMOW] (Calculated average/mean values)'] / 1000)
+
+d_ln = ln_dD - 8.47 * ln_d18O + 0.0285 * (ln_d18O ** 2)
 
 output_png = 'figures/8_d-excess/8.0_records/8.0.3_isotopes/8.0.3.0 Antarctic snow isotopes, d_ln, Masson-Delmotte et al., 2008.png'
 

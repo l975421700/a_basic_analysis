@@ -96,7 +96,7 @@ plot_labels = {
     'pressure': 'pressure [$hPa$]',
     'wind_speed': 'wind speed [$m \; s^{-1}$]',
     'wisoaprt': 'precipitation [$mm \; day^{-1}$]',
-    'temperature': 'temp2 [$°C$]',
+    'temperature': 'surface temperature [$°C$]',
     'accumulation': 'accumulation [$cm \; year^{-1}$]',
 }
 
