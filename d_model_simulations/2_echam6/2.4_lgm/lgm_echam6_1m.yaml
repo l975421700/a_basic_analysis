@@ -3,26 +3,28 @@ general:
     compute_time: "00:30:00"
     initial_date: "2000-01-01"
     final_date: "2000-02-01"
-    model_dir: "/work/ollie/qigao001/model_codes/echam-6.3.05p2-wiso/"
-    base_dir: "/work/ollie/qigao001/output/echam-6.3.05p2-wiso/lgm/"
+    model_dir: "/albedo/work/user/qigao001/model_codes/echam-6.3.05p2-wiso/"
+    base_dir: "/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/"
     nmonth: 1
     nyear: 0
     use_venv: False
+    account: paleodyn.paleodyn
 
 echam:
     version: "6.3.05p2-wiso"
-    executable: echam6_0720_4.9_ndd12
+    executable: echam6_230519_5.0
+    # executable: echam6_0720_4.9_ndd12
     bin_sources:
             echam_bin: "${bin_dir}/${executable}"
     bin_in_work:
             echam_bin: "${executable}"
-    namelist_dir: '/work/ollie/qigao001/a_basic_analysis/g_namelists/pi/'
+    # namelist_dir: '/work/ollie/qigao001/a_basic_analysis/g_namelists/pi/'
     scenario: "PALEO"
     res: T63
-    lresume: 1
-    ini_parent_exp_id: "lgm-50"
-    ini_parent_date:  "2229-12-31T23:52:30"
-    ini_parent_dir: "/work/ollie/qigao001/startdump/restart/restart_lgm-50/echam/"
+    lresume: True
+    ini_parent_exp_id: "pi_600_5.0"
+    ini_parent_date:  "2069-12-31T23:52:30"
+    ini_parent_dir: "/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/pi_600_5.0/restart/echam/"
     with_wiso: True
     wiso_code: True
     restart_rate: 1
@@ -43,8 +45,8 @@ echam:
                     out_filetype: 2
                     # putdata: [ 450, 'seconds', 'first', 0 ]
                     # putdata: [ 6, 'hours', 'last', 0 ]
-                    # putdata: [ 1, 'days', 'last', 0 ]
-                    # dt_stop: [ 2000, 1, 2 ]
+                    putdata: [ 1, 'days', 'last', 0 ]
+                    dt_stop: [ 2000, 1, 2 ]
                     l_orbvsop87: False
                 radctl:
                     CO2VMR: 190.0e-6
@@ -57,7 +59,7 @@ echam:
                     lrad_async: False
                 wisoctl:
                     lwiso: True
-                    lwiso_rerun: False
+                    lwiso_rerun: ${lresume}
                     nwiso: 28
                     ntag: 0
                     ntag1: 0
@@ -94,27 +96,27 @@ echam:
         input:
             all_directions: "link"
     forcing_sources:
-        wiso_sw_observed: "/work/ollie/qigao001/startdump/model_input/lgm/lgm-50/wisosw_d.echam.2200_2229.lgm-50_t63_bias_corrected.nc"
-        wiso_tagmap_1: "/work/ollie/qigao001/startdump/tagging/tagmap/pi_6tagmap_2.nc"
-        sic_1: "/work/ollie/qigao001/startdump/model_input/lgm/lgm-50/sic.fesom.2200_2229.lgm-50_t63_bias_corrected.nc"
-        sst_1: "/work/ollie/qigao001/startdump/model_input/lgm/lgm-50/sst.fesom.2200_2229.lgm-50_t63_bias_corrected.nc"
+        # wiso_sw_observed: "/albedo/work/user/qigao001/startdump/model_input/lgm/lgm-50/wisosw_d.echam.2200_2229.lgm-50_t63_bias_corrected.nc"
+        wiso_tagmap_1: "/albedo/work/user/qigao001/startdump/tagging/tagmap/pi_6tagmap.nc"
+        # sic_1: "/work/ollie/qigao001/startdump/model_input/lgm/lgm-50/sic.fesom.2200_2229.lgm-50_t63_bias_corrected.nc"
+        # sst_1: "/work/ollie/qigao001/startdump/model_input/lgm/lgm-50/sst.fesom.2200_2229.lgm-50_t63_bias_corrected.nc"
     add_forcing_files:
-        wiso_sw: wiso_sw_observed
+        # wiso_sw: wiso_sw_observed
         wiso_tagmap: wiso_tagmap_1
-        sic: sic_1
-        sst: sst_1
+        # sic: sic_1
+        # sst: sst_1
     forcing_in_work:
-        wiso_sw: "unit.25"
+        # wiso_sw: "unit.25"
         wiso_tagmap: "unit.26"
-        sic: "unit.96"
-        sst: "unit.20"
-    input_sources:
-        jansurf: '/work/ollie/qigao001/startdump/model_input/lgm/lgm-50/T63CORE2_jan_surf.nc'
-        vltclim: '/work/ollie/qigao001/startdump/model_input/lgm/lgm-50/T63CORE2_VLTCLIM.nc'
-        vgratclim: '/work/ollie/qigao001/startdump/model_input/lgm/lgm-50/T63CORE2_VGRATCLIM.nc'
+        # sic: "unit.96"
+        # sst: "unit.20"
+    # input_sources:
+    #     jansurf: '/work/ollie/qigao001/startdump/model_input/lgm/lgm-50/T63CORE2_jan_surf.nc'
+    #     vltclim: '/work/ollie/qigao001/startdump/model_input/lgm/lgm-50/T63CORE2_VLTCLIM.nc'
+    #     vgratclim: '/work/ollie/qigao001/startdump/model_input/lgm/lgm-50/T63CORE2_VGRATCLIM.nc'
 
 jsbach:
-    namelist_dir: "/work/ollie/qigao001/esm_tools/namelists/jsbach/3.20/PALEO/no_dynveg/"
+    # namelist_dir: "/work/ollie/qigao001/esm_tools/namelists/jsbach/3.20/PALEO/no_dynveg/"
     file_movements:
         forcing:
             all_directions: "link"
@@ -124,15 +126,8 @@ jsbach:
         namelist.jsbach:
             jsbach_ctl:
                 with_hd: False
-    input_sources:
-        jsbach_1850: "/work/ollie/qigao001/startdump/model_input/lgm/lgm-50/jsbach_T63CORE2_11tiles_5layers_natural-veg.GLAC1D_21k.nc"
-    # add_streams:
-    #     - jsbach
-    #     - js_wiso
-    #     - land
-    #     - la_wiso
-    #     - surf
-    #     - sf_wiso
+    # input_sources:
+    #     jsbach_1850: "/work/ollie/qigao001/startdump/model_input/lgm/lgm-50/jsbach_T63CORE2_11tiles_5layers_natural-veg.GLAC1D_21k.nc"
 
 
 

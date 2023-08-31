@@ -2,7 +2,7 @@ general:
     setup_name: "echam"
     compute_time: "00:30:00"
     initial_date: "1870-01-01"
-    final_date: "1870-02-01"
+    final_date: "2015-01-01"
     model_dir: "/albedo/work/user/qigao001/model_codes/echam-6.3.05p2-wiso/"
     base_dir: "/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/"
     nmonth: 1
@@ -41,8 +41,8 @@ echam:
                     nprocbr: 0
                 runctl:
                     out_filetype: 2
-                    putdata: [ 1, 'days', 'last', 0 ]
-                    dt_stop: [ 1870, 1, 2 ]
+                    # putdata: [ 1, 'days', 'last', 0 ]
+                    # dt_stop: [ 1870, 1, 2 ]
                 radctl:
                     lrad_async: False
                 wisoctl:
@@ -86,11 +86,9 @@ echam:
     forcing_sources:
         wiso_sw_observed: "/albedo/home/mwerner/model_input/ECHAM6-wiso/PI_ctrl/T63/T63_wisosw_d.nc"
         wiso_tagmap_1: "/albedo/work/user/qigao001/startdump/tagging/tagmap/pi_6tagmap.nc"
-        # histaerofin: ${pool_dir}/${resolution}/aero2/${resolution}_aeropt_kinne_sw_b14_fin_@YEAR@.nc
     add_forcing_files:
         wiso_sw: wiso_sw_observed
         wiso_tagmap: wiso_tagmap_1
-        # aerofin: histaerofin
     forcing_in_work:
         wiso_sw: "unit.25"
         wiso_tagmap: "unit.26"

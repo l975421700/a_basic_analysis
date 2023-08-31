@@ -3,11 +3,11 @@
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     'pi_600_5.0',
-    'pi_601_5.1',
-    'pi_602_5.2',
-    'pi_605_5.5',
-    'pi_606_5.6',
-    'pi_609_5.7',
+    # 'pi_601_5.1',
+    # 'pi_602_5.2',
+    # 'pi_605_5.5',
+    # 'pi_606_5.6',
+    # 'pi_609_5.7',
     ]
 
 
@@ -56,6 +56,8 @@ import matplotlib.animation as animation
 import seaborn as sns
 import cartopy.feature as cfeature
 from matplotlib.ticker import AutoMinorLocator
+import mpl_scatter_density
+from matplotlib.colors import LinearSegmentedColormap
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -173,6 +175,9 @@ for i in range(len(expid)):
     with open(
         exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.aprt_frc_alltime_icores.pkl', 'rb') as f:
         aprt_frc_alltime_icores[expid[i]] = pickle.load(f)
+
+with open('scratch/others/pi_m_502_5.0.t63_sites_indices.pkl', 'rb') as f:
+    t63_sites_indices = pickle.load(f)
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -616,10 +621,51 @@ for i in range(len(expid)):
 # -----------------------------------------------------------------------------
 # region plot reconstructed source SST based on d_ln / d_xs, controlling aprt_frc, wisoaprt
 
-# frc_threshold = 80
-wisoaprt_threshold = 0.5
-
 ivar = 'sst'
+scatter_size = 1
+
+# frc_threshold = 80
+wisoaprt_threshold = 0.05
+
+# pltlevel = np.array([0.05, 0.1, 0.5, 1, 2, 4, 8,])
+# pltticks = np.array([0.05, 0.1, 0.5, 1, 2, 4, 8,])
+# pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+# pltcmp = cm.get_cmap('viridis', len(pltlevel)-1).reversed()
+
+ivar1 = 'd_excess'
+if (ivar1 == 'dO18'):
+    pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+        cm_min = -80, cm_max = -40, cm_interval1 = 4, cm_interval2 = 8,
+        cmap = 'viridis_r',)
+elif (ivar1 == 'dD'):
+    pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+        cm_min = -500, cm_max = -300, cm_interval1 = 20, cm_interval2 = 40,
+        cmap = 'viridis_r',)
+elif (ivar1 == 'd_ln'):
+    pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+        cm_min = -20, cm_max = 20, cm_interval1 = 4, cm_interval2 = 8,
+        cmap = 'viridis_r',)
+elif (ivar1 == 'd_excess'):
+    pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+        cm_min = -20, cm_max = 20, cm_interval1 = 4, cm_interval2 = 8,
+        cmap = 'viridis_r',)
+elif (ivar1 == 'sst'):
+    pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+        cm_min = 0, cm_max = 24, cm_interval1 = 2, cm_interval2 = 4,
+        cmap = 'viridis_r',)
+elif (ivar1 == 'rh2m'):
+    pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+        cm_min = 70, cm_max = 90, cm_interval1 = 2, cm_interval2 = 4,
+        cmap = 'viridis_r',)
+elif (ivar1 == 'lat'):
+    pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+        cm_min = -60, cm_max = -20, cm_interval1 = 4, cm_interval2 = 8,
+        cmap = 'viridis_r',)
+elif (ivar1 == 'wind10'):
+    pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+        cm_min = 4, cm_max = 16, cm_interval1 = 1, cm_interval2 = 2,
+        cmap = 'viridis_r',)
+
 
 for i in range(len(expid)):
     # i = 0
@@ -639,14 +685,18 @@ for i in range(len(expid)):
                 # ['daily', 'mon', 'mm', 'mon no mm', 'ann', 'ann no am']
                 print('#---- ' + ialltime)
                 
-                src_var = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime]
-                iso_var = isotopes_alltime_icores[expid[i]][iisotope][icores][ialltime]
+                src_var = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime].copy()
+                iso_var = isotopes_alltime_icores[expid[i]][iisotope][icores][ialltime].copy()
                 # aprt_frc = aprt_frc_alltime_icores[expid[i]][icores][ialltime]
-                wisoaprt_var = wisoaprt_alltime_icores[expid[i]][icores][ialltime]
+                wisoaprt_var = wisoaprt_alltime_icores[expid[i]][icores][ialltime].copy()
                 # subset = (np.isfinite(src_var) & np.isfinite(iso_var)) & (aprt_frc >= frc_threshold)
                 subset = (np.isfinite(src_var) & np.isfinite(iso_var)) & (wisoaprt_var >= (wisoaprt_threshold / 2.628e6))
                 src_var = src_var[subset]
                 iso_var = iso_var[subset]
+                
+                # color_var = wisoaprt_var[subset] * 2.628e6
+                # color_var = pre_weighted_var_icores[expid[i]][icores][ivar1][ialltime][subset]
+                color_var = isotopes_alltime_icores[expid[i]][ivar1][icores][ialltime][subset]
                 
                 ols_fit = sm.OLS(
                     src_var.values,
@@ -658,22 +708,21 @@ for i in range(len(expid)):
                 predicted_y = ols_fit.params[0] + ols_fit.params[1] * iso_var
                 RMSE = np.sqrt(np.average(np.square(predicted_y - src_var)))
                 
-                # params = regression_sst_d[expid[i]][iisotope][icores][ialltime]['params']
-                # rsquared = regression_sst_d[expid[i]][iisotope][icores][ialltime]['rsquared']
-                # RMSE = regression_sst_d[expid[i]][iisotope][icores][ialltime]['RMSE']
-                # rec_src = regression_sst_d[expid[i]][iisotope][icores][ialltime]['predicted_y']
-                
                 xymax = np.max(np.concatenate((src_var, predicted_y)))
                 xymin = np.min(np.concatenate((src_var, predicted_y)))
                 
                 # output_png = 'figures/8_d-excess/8.1_controls/8.1.6_regression_analysis/8.1.6.0_sst_d/8.1.6.0.0 ' + expid[i] + ' ' + icores + ' ' + ialltime + ' sim vs. rec source ' + ivar + ' using '+ iisotope + '_frc' + str(frc_threshold) + '.png'
-                output_png = 'figures/8_d-excess/8.1_controls/8.1.6_regression_analysis/8.1.6.0_sst_d/8.1.6.0.0 ' + expid[i] + ' ' + icores + ' ' + ialltime + ' sim vs. rec source ' + ivar + ' using '+ iisotope + '_aprt' + str(wisoaprt_threshold) + '.png'
+                # output_png = 'figures/8_d-excess/8.1_controls/8.1.6_regression_analysis/8.1.6.0_sst_d/8.1.6.0.0 ' + expid[i] + ' ' + icores + ' ' + ialltime + ' sim vs. rec source ' + ivar + ' using '+ iisotope + '_aprt' + str(wisoaprt_threshold) + '.png'
+                output_png = 'figures/8_d-excess/8.1_controls/8.1.6_regression_analysis/8.1.6.0_sst_d/8.1.6.0.0 ' + expid[i] + ' ' + icores + ' ' + ialltime + ' sim vs. rec source ' + ivar + ' using '+ iisotope + '_color_' + str(ivar1) + '.png'
                 
-                fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
+                fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 5]) / 2.54)
                 
-                ax.scatter(
+                plt_scatter = ax.scatter(
                     src_var, predicted_y,
-                    s=6, lw=0.1, facecolors='white', edgecolors='k',)
+                    s=scatter_size, lw=0.1,
+                    c= color_var, norm=pltnorm, cmap=pltcmp,
+                    # facecolors='white', edgecolors='k',
+                    )
                 ax.axline((0, 0), slope = 1, lw=0.5, color='k')
                 plt.text(0.05, 0.9, icores, transform=ax.transAxes, color='k',)
                 
@@ -713,10 +762,22 @@ for i in range(len(expid)):
                 ax.yaxis.set_minor_locator(AutoMinorLocator(2))
                 ax.tick_params(axis='both', labelsize=8)
                 
+                cbar = fig.colorbar(
+                    plt_scatter, ax=ax,
+                    orientation="horizontal",shrink=1.4,aspect=30,
+                    anchor=(1, -3), extend='both',
+                    pad=0.25, fraction=0.03,
+                    ticks=pltticks, format=remove_trailing_zero_pos, )
+                cbar.ax.tick_params(labelsize=8)
+                cbar.ax.set_xlabel(
+                    # 'Precipitation [$mm \; day^{-1}$]',
+                    plot_labels[ivar1],
+                    fontsize=8, linespacing=1.5)
+                
                 ax.grid(True, which='both',
                         linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
                 fig.subplots_adjust(
-                    left=0.32, right=0.95, bottom=0.25, top=0.95)
+                    left=0.32, right=0.95, bottom=0.22, top=0.95)
                 fig.savefig(output_png)
 
 
@@ -773,7 +834,7 @@ ivar = 'sst'
 iisotope = 'd_ln'
 ialltime = 'ann no am'
 
-i = 5
+i = 0
 
 src_var = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime]
 iso_var = isotopes_alltime_icores[expid[i]][iisotope][icores][ialltime]
@@ -811,4 +872,199 @@ for i in range(len(expid)):
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region daily wisoaprt vs. isotopes
+
+i = 0
+icores = 'EDC'
+ialltime = 'daily'
+
+xticks = np.array([0.01, 0.1, 1, 10, 100])
+xticklabels = np.array(['0.01', '0.1', '1', '10', '100'])
+
+white_viridis = LinearSegmentedColormap.from_list('white_viridis', [
+    (0, '#ffffff'),
+    (1e-20, '#440053'),
+    (0.2, '#404388'),
+    (0.4, '#2a788e'),
+    (0.6, '#21a784'),
+    (0.8, '#78d151'),
+    (1, '#fde624'),
+], N=256)
+
+
+for iisotope in ['d_ln', 'd_excess', 'dO18', 'dD']:
+    # iisotope = 'd_ln'
+    # 'd_ln', 'd_excess', 'dO18', 'dD'
+    print('#---------------- ' + iisotope)
+    
+    aprt_var = wisoaprt_alltime_icores[expid[i]][icores][ialltime] * 2.628e6
+    iso_var = isotopes_alltime_icores[expid[i]][iisotope][icores][ialltime]
+    
+    subset = np.isfinite(aprt_var) & np.isfinite(iso_var)
+    
+    aprt_var = aprt_var[subset]
+    iso_var = iso_var[subset]
+    
+    output_png = 'figures/8_d-excess/8.1_controls/8.1.6_regression_analysis/8.1.6.0_sst_d/8.1.6.0.1 ' + expid[i] + ' ' + icores + ' ' + ialltime + ' wisoaprt vs. '+ iisotope + '.png'
+    
+    # fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
+    fig = plt.figure(figsize=np.array([4.4, 4]) / 2.54,)
+    ax = fig.add_subplot(1, 1, 1, projection='scatter_density')
+    
+    ax.scatter_density(
+        aprt_var, iso_var,
+        cmap=white_viridis)
+    # ax.scatter(
+    #     aprt_var, iso_var,
+    #     s=1, lw=0.1, facecolors='white', edgecolors='k', alpha=0.5)
+    plt.text(0.7, 0.05, icores, transform=ax.transAxes, color='k',)
+    
+    ax.set_xlabel(plot_labels['wisoaprt'], labelpad=2, fontsize=8)
+    ax.set_xscale('log')
+    ax.set_xticks(xticks)
+    ax.set_xticklabels(xticklabels)
+    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.axvline(0.05, lw=0.5)
+    ax.axvline(0.5, lw=0.5, ls='--')
+    
+    ax.set_ylabel(plot_labels[iisotope], labelpad=2, fontsize=8)
+    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.tick_params(axis='both', labelsize=8)
+    
+    ax.grid(True, which='both',
+            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+    fig.subplots_adjust(
+        left=0.32, right=0.95, bottom=0.25, top=0.95)
+    fig.savefig(output_png)
+
+
+
+
+'''
+np.nanmax(wisoaprt_alltime_icores[expid[i]][icores][ialltime] * 2.628e6)
+np.nanmin(wisoaprt_alltime_icores[expid[i]][icores][ialltime] * 2.628e6)
+np.nanmax(wisoaprt_alltime_icores[expid[i]][icores][ialltime])
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot daily source SST vs. d_ln / d_xs, colored by source rh2m, wind10, lat, lon
+
+ivar = 'sst'
+scatter_size = 1
+
+ivar1 = 'rh2m'
+if (ivar1 == 'rh2m'):
+    pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+        cm_min = 70, cm_max = 90, cm_interval1 = 2, cm_interval2 = 4,
+        cmap = 'viridis_r',)
+elif (ivar1 == 'wind10'):
+    pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+        cm_min = 6, cm_max = 16, cm_interval1 = 1, cm_interval2 = 2,
+        cmap = 'viridis_r',)
+elif (ivar1 == 'lat'):
+    pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+        cm_min = -60, cm_max = -20, cm_interval1 = 4, cm_interval2 = 8,
+        cmap = 'viridis_r',)
+elif (ivar1 == 'lon'):
+    pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+        cm_min = -180, cm_max = 180, cm_interval1 = 30, cm_interval2 = 60,
+        cmap = 'twilight',)
+elif (ivar1 == 'distance'):
+    pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+        cm_min = 20, cm_max = 60, cm_interval1 = 4, cm_interval2 = 8,
+        cmap = 'viridis_r',)
+elif (ivar1 == 'wisoaprt'):
+    pltlevel = np.array([0.05, 0.1, 0.25, 0.5, 0.75, 1, 2, 4,])
+    pltticks = np.array([0.05, 0.1, 0.25, 0.5, 0.75, 1, 2, 4,])
+    pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+    pltcmp = cm.get_cmap('viridis', len(pltlevel)-1).reversed()
+
+
+for i in range(len(expid)):
+    # i = 0
+    print('#-------------------------------- ' + str(i) + ': ' + expid[i])
+    
+    for iisotope in ['d_ln',]:
+        # iisotope = 'd_ln'
+        # ['d_ln', 'd_excess']
+        print('#---------------- ' + iisotope)
+        
+        for icores in ['Rothera',]:
+            # icores = 'EDC'
+            print('#-------- ' + icores)
+            
+            for ialltime in ['daily']:
+                # ialltime = 'mon'
+                # ['daily', 'mon', 'mm', 'mon no mm', 'ann', 'ann no am']
+                print('#---- ' + ialltime)
+                
+                src_var = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime].copy()
+                iso_var = isotopes_alltime_icores[expid[i]][iisotope][icores][ialltime].copy()
+                # wisoaprt_var = wisoaprt_alltime_icores[expid[i]][icores][ialltime].copy()
+                
+                subset = (np.isfinite(src_var) & np.isfinite(iso_var))
+                #  & (wisoaprt_var <= (2 / 2.628e6))
+                src_var = src_var[subset]
+                iso_var = iso_var[subset]
+                
+                color_var = pre_weighted_var_icores[expid[i]][icores][ivar1][ialltime][subset]
+                if (ivar1 == 'lon'):
+                    color_var = calc_lon_diff(
+                        color_var,
+                        t63_sites_indices[icores]['lon'],
+                    )
+                elif (ivar1 == 'distance'):
+                    color_var = color_var / 100
+                
+                # color_var = wisoaprt_alltime_icores[expid[i]][icores][ialltime][subset] * 2.628e6
+                
+                output_png = 'figures/8_d-excess/8.1_controls/8.1.6_regression_analysis/8.1.6.0_sst_d/8.1.6.0.2 ' + expid[i] + ' ' + icores + ' ' + ialltime + ' source ' + ivar + ' vs. '+ iisotope + '_color_' + ivar1 + '.png'
+                
+                fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 5]) / 2.54)
+                
+                plt_scatter = ax.scatter(
+                    src_var, iso_var,
+                    s=scatter_size, lw=0.1,
+                    c=color_var, norm=pltnorm, cmap=pltcmp,
+                    # facecolors='white', edgecolors='k',
+                    )
+                plt.text(0.05, 0.9, icores, transform=ax.transAxes, color='k',)
+                
+                ax.set_xlabel(plot_labels[ivar], labelpad=2, fontsize=8)
+                ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+                
+                ax.set_ylabel(plot_labels[iisotope], labelpad=2, fontsize=8)
+                ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+                ax.tick_params(axis='both', labelsize=8)
+                
+                cbar = fig.colorbar(
+                    plt_scatter, ax=ax,
+                    orientation="horizontal",shrink=1.4,aspect=30,
+                    anchor=(1, -3), extend='both',
+                    pad=0.25, fraction=0.03,
+                    ticks=pltticks, format=remove_trailing_zero_pos, )
+                cbar.ax.tick_params(labelsize=8)
+                cbar.ax.set_xlabel(
+                    # 'Precipitation [$mm \; day^{-1}$]',
+                    plot_labels[ivar1],
+                    fontsize=8, linespacing=1.5)
+                
+                ax.grid(True, which='both',
+                        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+                fig.subplots_adjust(
+                    left=0.32, right=0.95, bottom=0.22, top=0.95)
+                fig.savefig(output_png)
+
+
+
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
 

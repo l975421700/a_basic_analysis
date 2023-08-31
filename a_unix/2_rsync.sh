@@ -10,8 +10,6 @@ rsync -avzP albedo:/albedo/work/user/qigao001/figures /Users/gao/OneDrive\ -\ Un
 
 rsync -avzLP /albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/* xfer1:/gws/nopw/j04/bas_palaeoclim/qino/output/echam-6.3.05p2-wiso/pi/ &
 
-rsync -avzLP xfer1:/gws/nopw/j04/bas_palaeoclim/qino/output/echam-6.3.05p2-wiso/pi/pi_600_5.0 /albedo/work/user/qigao001/output/echam-6.3.05p2-wiso/pi/ &
-
 
 #-------------------------------- backup jasmin to lacie
 
