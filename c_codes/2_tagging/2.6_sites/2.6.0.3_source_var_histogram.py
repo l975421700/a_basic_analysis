@@ -19,7 +19,7 @@ warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
 sys.path.append('/work/ollie/qigao001')
-os.chdir('/work/ollie/qigao001/')
+# os.chdir('/work/ollie/qigao001/')
 # data analysis
 import numpy as np
 import xarray as xr
@@ -36,7 +36,7 @@ from statsmodels.stats import multitest
 import pycircstat as circ
 from scipy.stats import circstd
 from scipy.stats import pearsonr
-import pingouin as pg
+# import pingouin as pg
 
 # plot
 import matplotlib as mpl
@@ -130,6 +130,12 @@ with open(
     'rb') as f:
     t63_sites_indices = pickle.load(f)
 
+wisoaprt_epe_st = {}
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_epe_st.pkl',
+    'rb') as f:
+    wisoaprt_epe_st[expid[i]] = pickle.load(f)
+
 '''
 wisoaprt_alltime_icores = {}
 with open(
@@ -146,8 +152,9 @@ with open(
 
 ivar = 'lat'
 
-for isite in stations_sites.Site:
+for isite in ['DOME F']: # stations_sites.Site:
     # isite = 'EDC'
+    # isite = 'DOME F'
     print(isite)
     
     output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.0_' + ivar + '/histgram/6.1.3 ' + expid[i] + ' histogram of daily source ' + ivar + ' at ' + isite + '.png'
@@ -167,6 +174,8 @@ for isite in stations_sites.Site:
         binwidth=1,
         )
     # ? shall we use weights?
+    
+    
     
     ax.axvline(
         pre_weighted_var_icores[expid[i]][isite][ivar]['am'],

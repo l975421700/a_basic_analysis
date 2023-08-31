@@ -116,6 +116,12 @@ ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.contributions2AIS_aprt.pkl', 'rb') as f:
 #     contributions2AIS_aprt = pickle.load(f)
 
+ocean_aprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_aprt_alltime.pkl', 'rb') as f:
+    ocean_aprt_alltime[expid[i]] = pickle.load(f)
+
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -179,9 +185,9 @@ contributions2site_aprt[isite].sum()
 # -----------------------------------------------------------------------------
 # region plot source contributions to aprt over AIS
 
-grid_contributions = contributions2AIS_aprt.sum(dim=['lat_t63', 'lon_t63'])
+grid_contributions = contributions2AIS_aprt.sum(dim=['lat_t63', 'lon_t63']).compute()
 
-grid_contributions = grid_contributions / grid_contributions.sum()
+grid_contributions = (grid_contributions / grid_contributions.sum().compute()).compute()
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=0, cm_max=0.5, cm_interval1=0.05, cm_interval2=0.1, cmap='Blues',
@@ -211,6 +217,22 @@ fig.savefig(output_png)
 
 '''
 '''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region check total amount
+
+
+data1 = contributions2AIS_aprt.sum(dim=['lat_1deg', 'lon_1deg'])
+
+data2 = ocean_aprt_alltime[expid[i]]['am'].sel(var_names='lat') * 18262
+
+np.max(abs((data1.values[echam6_t63_ais_mask['mask']['AIS']] - data2.values[echam6_t63_ais_mask['mask']['AIS']]) / data2.values[echam6_t63_ais_mask['mask']['AIS']]))
+
+ocean_aprt_alltime[expid[i]]['daily']
+
 # endregion
 # -----------------------------------------------------------------------------
 
