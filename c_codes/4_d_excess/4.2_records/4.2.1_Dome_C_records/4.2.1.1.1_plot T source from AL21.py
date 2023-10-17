@@ -1,10 +1,5 @@
 
 
-expid = [
-    'pi_600_5.0',
-    ]
-
-
 # -----------------------------------------------------------------------------
 # region import packages
 
@@ -77,9 +72,9 @@ from a_basic_analysis.b_module.namelist import (
     months,
     month_days,
     zerok,
+    panel_labels,
     seconds_per_d,
     plot_labels,
-    plot_labels_no_unit,
 )
 
 from a_basic_analysis.b_module.source_properties import (
@@ -110,17 +105,6 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-with open('data_sources/ice_core_records/isotopes_EDC_800kyr_AICC.pkl',
-          'rb') as f:
-    isotopes_EDC_800kyr_AICC = pickle.load(f)
-
-# remove the anomalous spike
-
-isotopes_EDC_800kyr_AICC = isotopes_EDC_800kyr_AICC.drop(
-    index=np.argmin(isotopes_EDC_800kyr_AICC['d_ln'])
-    ).reset_index(drop=True)
-
-
 AL21_T_source = pd.read_excel(
     'data_sources/ice_core_records/Landais_et_al_2021/data_figure_2.xlsx',
     header=0, usecols = [
@@ -129,60 +113,7 @@ AL21_T_source = pd.read_excel(
 
 
 '''
-isotopes_EDC_800kyr_AICC.iloc[np.argmin(isotopes_EDC_800kyr_AICC['d_ln'])]
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region slope for temperature reconstructions
-
-
-expid_slope = {}
-expid_slope['pi_600_5.0'] = {
-    'EDC': [0.3082, 0.263, 0.354],
-}
-
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region reconstruct moisture source SST
-
-i = 0
-icores = 'EDC'
-
-d_ln_2k = np.mean(isotopes_EDC_800kyr_AICC['d_ln'][
-    isotopes_EDC_800kyr_AICC['age'] <= 0.15])
-
-delta_d_ln = isotopes_EDC_800kyr_AICC['d_ln'] - d_ln_2k
-
-
-tem_rec = {}
-tem_rec[expid[i]] = {}
-tem_rec[expid[i]][icores] = {}
-
-tem_rec[expid[i]][icores]['delta_T_source'] = {}
-
-tem_rec[expid[i]][icores]['delta_T_source']['mean'] = \
-    expid_slope[expid[i]][icores][0] * delta_d_ln
-tem_rec[expid[i]][icores]['delta_T_source']['low'] = \
-    expid_slope[expid[i]][icores][1] * delta_d_ln
-tem_rec[expid[i]][icores]['delta_T_source']['high'] = \
-    expid_slope[expid[i]][icores][2] * delta_d_ln
-
-
-(isotopes_EDC_800kyr_AICC['age'] <= 2).sum()
-(isotopes_EDC_800kyr_AICC['age'] <= 0.15).sum()
-
-
-'''
-np.mean(isotopes_EDC_800kyr_AICC['d_ln'][isotopes_EDC_800kyr_AICC['age'] <= 0.15])
-np.mean(isotopes_EDC_800kyr_AICC['d_ln'][isotopes_EDC_800kyr_AICC['age'] <= 2])
-np.mean(delta_d_ln[isotopes_EDC_800kyr_AICC['age'] <= 2])
+AL21_T_source.columns
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -191,31 +122,19 @@ np.mean(delta_d_ln[isotopes_EDC_800kyr_AICC['age'] <= 2])
 # -----------------------------------------------------------------------------
 # region plot moisture source SST
 
-# xaxis_max = 800
-# xaxis_interval = 100
-xaxis_max = 140
-xaxis_interval = 10
+xaxis_max = 800
+xaxis_interval = 100
+# xaxis_max = 140
+# xaxis_interval = 10
 
-output_png = 'figures/8_d-excess/8.0_records/8.0.2_reconstructions/8.0.2.0 ' + expid[i] + ' ' + icores + ' T_source reconstructions of past ' + str(xaxis_max) + ' kyr on AICC.png'
+output_png = 'figures/8_d-excess/8.0_records/8.0.2_reconstructions/8.0.2.0 AL21 EDC T_source reconstructions of past ' + str(xaxis_max) + ' kyr on AICC.png'
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([16, 6]) / 2.54)
 
 ax.plot(
-    isotopes_EDC_800kyr_AICC['age'].values,
-    tem_rec[expid[i]][icores]['delta_T_source']['mean'].values,
-    c='k', lw=0.3, ls='-', alpha=0.5,)
-
-# ax.fill_between(
-#     isotopes_EDC_800kyr_AICC['age'].values,
-#     tem_rec[expid[i]][icores]['delta_T_source']['low'].values,
-#     tem_rec[expid[i]][icores]['delta_T_source']['high'].values,
-#     # alpha=0.2,
-# )
-
-ax.plot(
     AL21_T_source['age AICC2012 EDC ka'].values,
     AL21_T_source['Dtsource (EDC)'].values,
-    c='red', lw=0.3, ls='-', alpha=0.5,)
+    c='k', lw=0.3, ls='-')
 
 ax.set_ylabel(plot_labels['sst'])
 ax.yaxis.set_minor_locator(AutoMinorLocator(2))
@@ -226,7 +145,6 @@ ax.set_xlim(0, xaxis_max)
 ax.set_xticks(np.arange(0, xaxis_max + 1e-4, xaxis_interval))
 ax.xaxis.set_minor_locator(AutoMinorLocator(2))
 
-# ax.spines[['right', 'top']].set_visible(False)
 ax.grid(True, which='both',
         linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
 fig.subplots_adjust(left=0.12, right=0.97, bottom=0.18, top=0.97)

@@ -3,13 +3,15 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'pi_600_5.0',
+    # 'pi_600_5.0',
     # 'pi_601_5.1',
     # 'pi_602_5.2',
     # 'pi_605_5.5',
     # 'pi_606_5.6',
     # 'pi_609_5.7',
     # 'pi_610_5.8',
+    # 'hist_700_5.0',
+    'nudged_701_5.0',
     ]
 
 
@@ -121,7 +123,7 @@ for i in range(len(expid)):
         regression_sst_d_AIS[expid[i]][iisotope] = {}
         
         for ialltime in ['daily', 'mon', 'mon no mm', 'ann', 'ann no am',]:
-            # ialltime = 'ann no am'
+            # ialltime = 'mon'
             print('#-------- ' + ialltime)
             
             regression_sst_d_AIS[expid[i]][iisotope][ialltime] = {}
@@ -145,7 +147,6 @@ for i in range(len(expid)):
                         kwargs={'output': ioutput},
                         dask = 'allowed', vectorize = True,
                     )
-        
         # print('#-------- mon no mm')
         
         # regression_sst_d_AIS[expid[i]][iisotope]['mon no mm'] = {}

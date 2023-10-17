@@ -2,13 +2,15 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'pi_600_5.0',
+    # 'pi_600_5.0',
+    # 'hist_700_5.0',
+    'nudged_701_5.0',
     ]
 i=0
 
 
-ifile_start = 120
-ifile_end   = 840
+ifile_start = 12 #0 #120
+ifile_end   = 516 #1740 #840
 
 
 # -----------------------------------------------------------------------------
@@ -21,6 +23,7 @@ import warnings
 warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
+sys.path.append('/albedo/work/user/qigao001')
 
 # data analysis
 import numpy as np

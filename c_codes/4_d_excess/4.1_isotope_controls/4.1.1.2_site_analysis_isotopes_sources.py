@@ -2,7 +2,7 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'pi_600_5.0',
+    # 'pi_600_5.0',
     # 'pi_601_5.1',
     # 'pi_602_5.2',
     # 'pi_603_5.3',
@@ -10,6 +10,7 @@ expid = [
     # 'pi_606_5.6',
     # 'pi_609_5.7',
     # 'pi_610_5.8',
+    'hist_700_5.0',
     ]
 
 
@@ -124,6 +125,7 @@ from a_basic_analysis.b_module.component_plot import (
 isotopes_alltime_icores = {}
 pre_weighted_var_icores = {}
 wisoaprt_alltime_icores = {}
+temp2_alltime_icores = {}
 
 for i in range(len(expid)):
     print(i)
@@ -139,6 +141,10 @@ for i in range(len(expid)):
     with open(
         exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_alltime_icores.pkl', 'rb') as f:
         wisoaprt_alltime_icores[expid[i]] = pickle.load(f)
+    
+    with open(
+        exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.temp2_alltime_icores.pkl', 'rb') as f:
+        temp2_alltime_icores[expid[i]] = pickle.load(f)
 
 aprt_frc_alltime_icores = {}
 for i in range(len(expid)):
@@ -623,6 +629,141 @@ np.std(aprt_frc_alltime_icores[expid[i]][icores]['daily'].values)
 
 aprt_frc_alltime_icores[expid[i]][icores]['ann'].values
 aprt_frc_alltime_icores[expid[i]][icores]['ann no am'].values
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot daily time series of temp2/aprt, source SST/rh2m, dD/dln
+
+icores = 'EDC'
+ialltime = 'daily'
+
+istartday = 3000
+# istartday = np.where(isotopes_alltime_icores[expid[i]]['d_ln'][icores][ialltime] == np.nanmin(isotopes_alltime_icores[expid[i]]['d_ln'][icores][ialltime]))[0][0] - 7
+iendday   = istartday + 15
+
+ts_temp2 = temp2_alltime_icores[expid[i]][icores][ialltime][istartday:iendday]
+ts_aprt = wisoaprt_alltime_icores[expid[i]][icores][ialltime][istartday:iendday] * seconds_per_d
+
+ts_dln = isotopes_alltime_icores[expid[i]]['d_ln'][icores][ialltime][istartday:iendday]
+ts_dD = isotopes_alltime_icores[expid[i]]['dD'][icores][ialltime][istartday:iendday]
+ts_dO18 = isotopes_alltime_icores[expid[i]]['dO18'][icores][ialltime][istartday:iendday]
+
+ts_sst = pre_weighted_var_icores[expid[i]][icores]['sst'][ialltime][istartday:iendday]
+ts_rh2m = pre_weighted_var_icores[expid[i]][icores]['rh2m'][ialltime][istartday:iendday]
+ts_wind10 = pre_weighted_var_icores[expid[i]][icores]['wind10'][ialltime][istartday:iendday]
+
+start_time = temp2_alltime_icores[expid[i]][icores][ialltime][istartday].time.values
+end_time = temp2_alltime_icores[expid[i]][icores][ialltime][iendday-1].time.values
+
+output_png = 'figures/8_d-excess/8.1_controls/8.1.3_site_analysis/8.1.3.2_daily_timeseries/8.1.3.2.0 ' + expid[i] + ' ' + icores + ' daily timeseries startday_' + str(istartday) + '.png'
+
+fig, axs = plt.subplots(7, 1, figsize=np.array([15, 20]) / 2.54, sharex=True)
+
+# 1st row
+axs[0].scatter(np.arange(1, 15.5, 1), ts_temp2)
+
+axs[0].set_ylabel('temp2\n[$°C$]', labelpad=2)
+# axs[0].set_ylim(-76, -19)
+# axs[0].set_yticks(np.arange(-70, -20 + 1e-4, 10))
+axs[0].yaxis.set_minor_locator(AutoMinorLocator(2))
+
+# 2nd row
+axs[1].scatter(np.arange(1, 15.5, 1), ts_aprt)
+
+axs[1].set_ylabel('Precipitation\n[$mm \; day^{-1}$]', labelpad=2)
+axs[1].set_ylim(0.0016, 2.8)
+axs[1].set_yscale('log')
+axs[1].set_yticks(np.array([0.01, 0.1, 1,]))
+axs[1].set_yticklabels(np.array([0.01, 0.1, 1,]))
+axs[1].yaxis.set_minor_locator(AutoMinorLocator(2))
+
+# 3rd row
+axs[2].scatter(np.arange(1, 15.5, 1), ts_dln)
+
+axs[2].set_ylabel('$d_{ln}$\n[$‰$]', labelpad=2)
+# axs[2].set_ylim(-100, 100)
+# axs[2].set_yticks(np.arange(-100, 100 + 1e-4, 40))
+axs[2].yaxis.set_minor_locator(AutoMinorLocator(2))
+
+# 4th row
+axs[3].scatter(np.arange(1, 15.5, 1), ts_dD)
+
+axs[3].set_ylabel('$\delta D$\n[$‰$]', labelpad=2)
+# axs[3].set_ylim(-830, -132)
+# axs[3].set_yticks(np.arange(-800, -200 + 1e-4, 100))
+axs[3].yaxis.set_minor_locator(AutoMinorLocator(2))
+
+# 5th row
+axs[4].scatter(np.arange(1, 15.5, 1), ts_sst)
+
+axs[4].set_ylabel('Source SST\n[$°C$]', labelpad=2)
+# axs[4].set_ylim(0, 26)
+# axs[4].set_yticks(np.arange(2, 24 + 1e-4, 4))
+axs[4].yaxis.set_minor_locator(AutoMinorLocator(2))
+
+# 6th row
+axs[5].scatter(np.arange(1, 15.5, 1), ts_rh2m)
+
+axs[5].set_ylabel('Source rh2m\n[$\%$]', labelpad=2)
+# axs[5].set_ylim(64, 91)
+# axs[5].set_yticks(np.arange(66, 88 + 1e-4, 4))
+axs[5].yaxis.set_minor_locator(AutoMinorLocator(2))
+
+# 7th row
+axs[6].scatter(np.arange(1, 15.5, 1), ts_wind10)
+
+axs[6].set_ylabel('Source wind10\n[$m \; s^{-1}$]', labelpad=2)
+# axs[6].set_ylim(6, 18)
+# axs[6].set_yticks(np.arange(8, 18 + 1e-4, 2))
+axs[6].yaxis.set_minor_locator(AutoMinorLocator(2))
+
+axs[6].set_xlabel('Date starting from ' + str(start_time)[:10], labelpad=2)
+axs[6].set_xlim(0.5, 15.5)
+axs[6].set_xticks(np.arange(1, 15.5, 1))
+# axs[6].tick_params(axis='both', labelsize=8)
+
+for irow in range(7):
+    axs[irow].grid(
+        True, which='both',
+        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+
+fig.subplots_adjust(left=0.14, right=0.97, bottom=0.06, top=0.98)
+fig.savefig(output_png)
+
+
+
+
+
+
+
+
+
+'''
+temp2: [-76, -19]; [-70, -60, -50, -40, -30, -20]
+aprt: [0.0016, 2.8]; [0.01, 0.1, 1,]
+d_ln: [-630, 100]; [-600, -500, -400, -300, -200, -100, 0, 100]
+dD: [-830, -132]; [-800, -700, -600, -500, -400, -300, -200]
+
+sst: [0, 26], np.arange(2, 26, 2)
+rh2m: [64, 91], np.arange(66, 92, 4)
+wind10: [6, 18], np.arange(8, 18, 2)
+
+stats.describe(temp2_alltime_icores[expid[i]][icores][ialltime])
+stats.describe(wisoaprt_alltime_icores[expid[i]][icores][ialltime] * seconds_per_d)
+
+stats.describe(isotopes_alltime_icores[expid[i]]['d_ln'][icores][ialltime], nan_policy='omit')
+stats.describe(isotopes_alltime_icores[expid[i]]['dD'][icores][ialltime], nan_policy='omit')
+
+stats.describe(pre_weighted_var_icores[expid[i]][icores]['sst'][ialltime], nan_policy='omit')
+stats.describe(pre_weighted_var_icores[expid[i]][icores]['rh2m'][ialltime], nan_policy='omit')
+stats.describe(pre_weighted_var_icores[expid[i]][icores]['wind10'][ialltime], nan_policy='omit')
+
+2e-8 * seconds_per_d = 0.001728
+0.05 / 2.628e6 * seconds_per_d = 0.00164
 
 '''
 # endregion

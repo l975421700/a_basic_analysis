@@ -2,13 +2,15 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'pi_600_5.0',
+    # 'pi_600_5.0',
     # 'pi_601_5.1',
     # 'pi_602_5.2',
     # 'pi_605_5.5',
     # 'pi_606_5.6',
     # 'pi_609_5.7',
     # 'pi_610_5.8',
+    # 'hist_700_5.0',
+    'nudged_701_5.0',
     ]
 
 
@@ -56,7 +58,7 @@ dO18_alltime = {}
 dD_alltime = {}
 d_ln_alltime = {}
 d_excess_alltime = {}
-tsurf_alltime = {}
+# tsurf_alltime = {}
 
 
 for i in range(len(expid)):
@@ -80,8 +82,8 @@ for i in range(len(expid)):
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_alltime.pkl', 'rb') as f:
         d_excess_alltime[expid[i]] = pickle.load(f)
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.tsurf_alltime.pkl', 'rb') as f:
-        tsurf_alltime[expid[i]] = pickle.load(f)
+    # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.tsurf_alltime.pkl', 'rb') as f:
+    #     tsurf_alltime[expid[i]] = pickle.load(f)
 
 lon = d_ln_alltime[expid[0]]['am'].lon
 lat = d_ln_alltime[expid[0]]['am'].lat
@@ -148,7 +150,8 @@ for i in range(len(expid)):
     
     Antarctic_snow_isotopes_simulations[expid[i]] = Antarctic_snow_isotopes.copy()
     
-    for var_name in ['temperature', 'accumulation', 'dD', 'dD_std', 'dO18', 'dO18_std', 'd_excess', 'd_excess_std', 'd_ln', 'd_ln_std']:
+    for var_name in ['accumulation', 'dD', 'dD_std', 'dO18', 'dO18_std', 'd_excess', 'd_excess_std', 'd_ln', 'd_ln_std']:
+        # 'temperature', 
         # var_name = 'd_ln'
         print('#-------- ' + var_name)
         

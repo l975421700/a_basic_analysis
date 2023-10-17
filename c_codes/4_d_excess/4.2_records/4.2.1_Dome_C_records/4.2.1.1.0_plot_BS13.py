@@ -102,6 +102,11 @@ bs13_dc_records['mm'] = bs13_dc_records['daily'].groupby(
 bs13_dc_records['am'] = bs13_dc_records['daily'].mean()
 
 
+dln_no_nan = bs13_dc_records['daily']['d_ln'].values[np.isfinite()]
+np.argmin(bs13_dc_records['daily']['d_ln'].values)
+
+
+
 '''
 bs13_dc_records['daily'].columns
 '''

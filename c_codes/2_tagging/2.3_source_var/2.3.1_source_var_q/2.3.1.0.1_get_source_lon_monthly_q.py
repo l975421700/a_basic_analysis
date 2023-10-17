@@ -1,9 +1,10 @@
 
 
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_m_416_4.9',
-    'pi_m_502_5.0',
+    # 'pi_m_502_5.0',
+    'nudged_701_5.0',
     ]
 i=0
 
@@ -11,11 +12,12 @@ i=0
 # region import packages
 
 # management
+import os
 import glob
 import warnings
 warnings.filterwarnings('ignore')
 import sys  # print(sys.path)
-sys.path.append('/work/ollie/qigao001')
+sys.path.append('/albedo/work/user/qigao001')
 
 # data analysis
 import numpy as np
@@ -25,12 +27,8 @@ dask.config.set({"array.slicing.split_large_chunks": True})
 import pickle
 
 from a_basic_analysis.b_module.source_properties import (
-    source_properties,
     sincoslon_2_lon,
-)
-
-from a_basic_analysis.b_module.basic_calculations import (
-    mon_sea_ann,
+    calc_lon_diff,
 )
 
 from dask.diagnostics import ProgressBar
@@ -42,7 +40,7 @@ pbar.register()
 
 
 # -----------------------------------------------------------------------------
-# region import data can estimate lon
+# region estimate lon
 
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_weighted_sinlon.pkl', 'rb') as f:
     q_weighted_sinlon = pickle.load(f)
@@ -52,7 +50,7 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_weighted_cos
 
 q_weighted_lon = {}
 
-for ialltime in q_weighted_sinlon.keys():
+for ialltime in ['mon', 'mm', 'sea', 'sm', 'ann', 'am']:
     print(ialltime)
     
     q_weighted_lon[ialltime] = sincoslon_2_lon(
@@ -60,9 +58,24 @@ for ialltime in q_weighted_sinlon.keys():
         var_name='q_weighted_lon',
     )
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_weighted_lon.pkl',
-          'wb') as f:
+#-------- monthly without monthly mean
+q_weighted_lon['mon no mm'] = calc_lon_diff(
+    q_weighted_lon['mon'].groupby('time.month'),
+    q_weighted_lon['mon'].groupby('time.month').mean(skipna=True),)
+
+#-------- annual without annual mean
+q_weighted_lon['ann no am'] = calc_lon_diff(
+    q_weighted_lon['ann'],
+    q_weighted_lon['ann'].mean(dim='time', skipna=True),)
+
+output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_weighted_lon.pkl'
+
+if (os.path.isfile(output_file)):
+    os.remove(output_file)
+
+with open(output_file, 'wb') as f:
     pickle.dump(q_weighted_lon, f)
+
 
 
 

@@ -1,14 +1,16 @@
+#SBATCH --time=00:30:00
 
 
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_m_416_4.9',
-    'pi_m_502_5.0',
+    # 'pi_m_502_5.0',
+    'nudged_701_5.0',
     ]
 i = 0
 
-ifile_start = 120
-ifile_end =   720
+ifile_start = 12 #0 #120
+ifile_end   = 516 #1740 #840
 
 ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
 
@@ -17,10 +19,10 @@ ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
 # min_sf    = 268.15
 # max_sf    = 318.15
 
-var_name  = 'lat'
-itag      = 5
-min_sf    = -90
-max_sf    = 90
+# var_name  = 'lat'
+# itag      = 5
+# min_sf    = -90
+# max_sf    = 90
 
 # var_name  = 'rh2m'
 # itag      = 8
@@ -51,7 +53,8 @@ import glob
 import warnings
 warnings.filterwarnings('ignore')
 import sys  # print(sys.path)
-sys.path.append('/work/ollie/qigao001')
+sys.path.append('/albedo/work/user/qigao001')
+import os
 
 # data analysis
 import numpy as np
@@ -112,7 +115,7 @@ fl_wiso_q_plev = sorted(glob.glob(
 
 exp_out_wiso_q_plev = xr.open_mfdataset(
     fl_wiso_q_plev[ifile_start:ifile_end],
-    data_vars='minimal', coords='minimal', parallel=True)
+    )
 
 
 '''
@@ -195,7 +198,7 @@ var_scaled_q_alltime = mon_sea_ann(var_monthly=var_scaled_q)
 
 q_weighted_var = {}
 
-for ialltime in ocean_q_alltime.keys():
+for ialltime in ['mon', 'mm', 'sea', 'sm', 'ann', 'am']:
     print(ialltime)
     
     q_weighted_var[ialltime] = source_properties(
@@ -206,11 +209,19 @@ for ialltime in ocean_q_alltime.keys():
         prefix = 'q_weighted_', threshold = 0,
     )
 
-with open(
-    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_weighted_' + var_name + '.pkl',
-          'wb') as f:
-    pickle.dump(q_weighted_var, f)
+#-------- monthly without monthly mean
+q_weighted_var['mon no mm'] = (q_weighted_var['mon'].groupby('time.month') - q_weighted_var['mon'].groupby('time.month').mean(skipna=True)).compute()
 
+#-------- annual without annual mean
+q_weighted_var['ann no am'] = (q_weighted_var['ann'] - q_weighted_var['ann'].mean(dim='time', skipna=True)).compute()
+
+output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_weighted_' + var_name + '.pkl'
+
+if (os.path.isfile(output_file)):
+    os.remove(output_file)
+
+with open(output_file, 'wb') as f:
+    pickle.dump(q_weighted_var, f)
 
 
 '''

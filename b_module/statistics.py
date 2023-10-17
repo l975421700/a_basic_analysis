@@ -437,7 +437,7 @@ def xr_regression_y_x1(y, x, output = 'RMSE'):
     x_sub = x[subset]
     y_sub = y[subset]
     
-    if (len(x_sub) == 0):
+    if (len(x_sub) < 12):
         return(np.nan)
     else:
         ols_fit = sm.OLS(y_sub, sm.add_constant(x_sub), ).fit()

@@ -2,10 +2,11 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'pi_600_5.0',
-    'pi_601_5.1',
-    'pi_602_5.2',
-    'pi_603_5.3',
+    # 'pi_600_5.0',
+    # 'pi_601_5.1',
+    # 'pi_602_5.2',
+    # 'pi_603_5.3',
+    'nudged_701_5.0',
     ]
 i = 0
 
@@ -30,79 +31,6 @@ dask.config.set({"array.slicing.split_large_chunks": True})
 from dask.diagnostics import ProgressBar
 pbar = ProgressBar()
 pbar.register()
-from scipy import stats
-import xesmf as xe
-import pandas as pd
-from statsmodels.stats import multitest
-import pycircstat as circ
-
-# plot
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from matplotlib.colors import BoundaryNorm
-from matplotlib import cm
-import cartopy.crs as ccrs
-plt.rcParams['pcolor.shading'] = 'auto'
-mpl.rcParams['figure.dpi'] = 600
-mpl.rc('font', family='Times New Roman', size=10)
-mpl.rcParams['axes.linewidth'] = 0.2
-plt.rcParams.update({"mathtext.fontset": "stix"})
-import matplotlib.animation as animation
-import seaborn as sns
-import cartopy.feature as cfeature
-
-# self defined
-from a_basic_analysis.b_module.mapplot import (
-    globe_plot,
-    hemisphere_plot,
-    quick_var_plot,
-    mesh2plot,
-    framework_plot1,
-    remove_trailing_zero,
-    remove_trailing_zero_pos,
-)
-
-from a_basic_analysis.b_module.basic_calculations import (
-    mon_sea_ann,
-    regrid,
-    mean_over_ais,
-    time_weighted_mean,
-)
-
-from a_basic_analysis.b_module.namelist import (
-    month,
-    month_num,
-    month_dec,
-    month_dec_num,
-    seasons,
-    seasons_last_num,
-    hours,
-    months,
-    month_days,
-    zerok,
-    panel_labels,
-    seconds_per_d,
-)
-
-from a_basic_analysis.b_module.source_properties import (
-    source_properties,
-    calc_lon_diff,
-)
-
-from a_basic_analysis.b_module.statistics import (
-    fdr_control_bh,
-    check_normality_3d,
-    check_equal_variance_3d,
-    ttest_fdr_control,
-    cplot_ttest,
-)
-
-from a_basic_analysis.b_module.component_plot import (
-    cplot_ice_cores,
-    plt_mesh_pars,
-    plot_t63_contourf,
-)
-
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -130,13 +58,24 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_q_alltime.p
 d_excess_q_alltime = {}
 d_excess_q_alltime[expid[i]] = {}
 
-for ialltime in dO18_q_alltime[expid[i]].keys():
+for ialltime in ['mon', 'mm', 'sea', 'sm', 'ann', 'am']:
     print(ialltime)
     
     d_excess_q_alltime[expid[i]][ialltime] = \
         dD_q_alltime[expid[i]][ialltime] - 8 * dO18_q_alltime[expid[i]][ialltime]
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_q_alltime.pkl', 'wb') as f:
+#-------- monthly without monthly mean
+d_excess_q_alltime[expid[i]]['mon no mm'] = (d_excess_q_alltime[expid[i]]['mon'].groupby('time.month') - d_excess_q_alltime[expid[i]]['mon'].groupby('time.month').mean(skipna=True)).compute()
+
+#-------- annual without annual mean
+d_excess_q_alltime[expid[i]]['ann no am'] = (d_excess_q_alltime[expid[i]]['ann'] - d_excess_q_alltime[expid[i]]['ann'].mean(dim='time', skipna=True)).compute()
+
+output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_q_alltime.pkl'
+
+if (os.path.isfile(output_file)):
+    os.remove(output_file)
+
+with open(output_file, 'wb') as f:
     pickle.dump(d_excess_q_alltime[expid[i]], f)
 
 
@@ -167,12 +106,12 @@ cc
 
 
 # -----------------------------------------------------------------------------
-# region get d-excess, logarithmic definition
+# region get d_ln
 
 d_ln_q_alltime = {}
 d_ln_q_alltime[expid[i]] = {}
 
-for ialltime in dO18_q_alltime[expid[i]].keys():
+for ialltime in ['mon', 'mm', 'sea', 'sm', 'ann', 'am']:
     print(ialltime)
     # ialltime = 'sm'
     
@@ -182,9 +121,19 @@ for ialltime in dO18_q_alltime[expid[i]].keys():
     d_ln_q_alltime[expid[i]][ialltime] = \
         ln_dD - 8.47 * ln_d18O + 0.0285 * (ln_d18O ** 2)
 
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_q_alltime.pkl', 'wb') as f:
-    pickle.dump(d_ln_q_alltime[expid[i]], f)
+#-------- monthly without monthly mean
+d_ln_q_alltime[expid[i]]['mon no mm'] = (d_ln_q_alltime[expid[i]]['mon'].groupby('time.month') - d_ln_q_alltime[expid[i]]['mon'].groupby('time.month').mean(skipna=True)).compute()
 
+#-------- annual without annual mean
+d_ln_q_alltime[expid[i]]['ann no am'] = (d_ln_q_alltime[expid[i]]['ann'] - d_ln_q_alltime[expid[i]]['ann'].mean(dim='time', skipna=True)).compute()
+
+output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_q_alltime.pkl'
+
+if (os.path.isfile(output_file)):
+    os.remove(output_file)
+
+with open(output_file, 'wb') as f:
+    pickle.dump(d_ln_q_alltime[expid[i]], f)
 
 
 

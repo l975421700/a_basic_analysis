@@ -1,4 +1,15 @@
 
+import xarray as xr
+import numpy as np
+
+ncfile1 = xr.open_dataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/nudged_701_5.0/unknown/nudged_701_5.0_198002.01_wiso_q_6h.nc')
+ncfile2 = xr.open_dataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/nudged_701_5.0/unknown/nudged_701_5.0_198002.01_wiso_q_6h_mon.nc')
+
+(ncfile1.q16o[:, -1].values == ncfile2.q16o[:, 0].values).all()
+
+(ncfile1.q16o.mean(dim='time').values == ncfile2.q16o[0].values).all()
+
+np.max(abs(ncfile1.q16o.mean(dim='time').values - ncfile2.q16o[0].values))
 
 
 def regional_plot(
