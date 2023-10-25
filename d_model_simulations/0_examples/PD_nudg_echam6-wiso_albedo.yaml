@@ -2,10 +2,10 @@ general:
     setup_name: "echam"
     version: "6.3.05p2-wiso"
     compute_time: "00:30:00"
-    initial_date: "2000-01-01"
-    final_date: "2021-01-31"
-    model_dir: "/albedo/home/mwerner/codes/echam-6.3.05p2-wiso/"
-    base_dir: "/albedo/home/mwerner/work2/echam6-wiso-nudging/T63L47"
+    initial_date: "2022-01-01"
+    final_date: "2022-12-31"
+    model_dir: "/albedo/home/acauquoi/esm_tools/echam-6.3.05p2-wiso/"
+    base_dir: "/albedo/work/user/acauquoi/echam6-wiso/experiments/"
     nmonth: 1
     nyear: 0
     with_wiso: True
@@ -17,12 +17,12 @@ echam:
     scenario: "HIST"
     dataset: r0007
     res: T63
-    lresume: False
+    lresume: True
     restart_rate: 1
     restart_unit: "months"
-    ini_parent_date: 19991231
+    ini_parent_date: 20211231
     ini_parent_exp_id: "NUDGING_ERA5_T63L47_v1.2"
-    ini_parent_dir: "/albedo/home/mwerner/work2/echam6-wiso-nudging/T63L47/NUDGING_ERA5_T63L47_acauquoin/restart/echam6/"
+    ini_parent_dir: "/albedo/work/projects/paleo_work/acauquoi/mpi-esm-wiso/echam6/experiments/NUDGING_ERA5_T63L47_v1.2/restart/echam6/"
 
     add_namelist_changes:
         namelist.echam:
@@ -54,6 +54,8 @@ echam:
                 nsstinc: 0
                 lnudgcli: False
                 lnudgini: False
+            simpleplumesctl:
+                fix_yr: 2016
 
     file_movements:
         forcing:
@@ -68,19 +70,27 @@ echam:
           - ozonec
           - sst
           - sic
+          - ozone
+          - volcir
+          - volcsw
+          - MAC-SP
 
     forcing_sources:
 
         # water isotope forcing file
-        wiso_sw_observed: "/albedo/home/mwerner/model_input/ECHAM6-wiso/PI_ctrl/T63/T63_wisosw_d.nc"
+        wiso_sw_observed: "/albedo/home/acauquoi/esm_tools/echam-6.3.05p2-wiso/input/iniwiso/T63_wisosw_d.nc"
             
         # ERA5 forcing files        
         era5_atm: "/albedo/work/projects/paleo_work/paleodyn_from_work_ollie_projects/paleodyn/nudging/ERA5/atmos/T63/era5${echam.res}${echam.levels}_${echam.current_date!syear}${echam.current_date!smonth}.nc"        
-        sst: "/albedo/work/projects/paleo_work/paleodyn_from_work_ollie_projects/paleodyn/nudging/ERA5/sea/T63/T63_era5sst_1979.nc"    
-        sic: "/albedo/work/projects/paleo_work/paleodyn_from_work_ollie_projects/paleodyn/nudging/ERA5/sea/T63/T63_era5sic_1979.nc"
+        sst: "/albedo/work/user/acauquoi/nudging/ERA5/sea/T63/T63_era5sst_@YEAR@.nc"
+        sic: "/albedo/work/user/acauquoi/nudging/ERA5/sea/T63/T63_era5sic_@YEAR@.nc"
         
-        # further ECHAM6 forcing files
+        # further ECHAM6 forcing files (no files for the year after 2014)
         greenhouse_gases: "/albedo/work/projects/p_pool_echam6/greenhouse.nc"
+        ozone: "/albedo/work/projects/p_pool_echam6/input/r0007/T63/ozone/T63_ozone_historical_2014.nc"
+        volcir: "/albedo/work/projects/p_pool_echam6/input/r0007/T63/volcano_aerosols/strat_aerosol_ir_T63_2014.nc"
+        volcsw: "/albedo/work/projects/p_pool_echam6/input/r0007/T63/volcano_aerosols/strat_aerosol_sw_T63_2014.nc"
+        MAC-SP: "/albedo/pool/ECHAM6/input/r0007/MAC-SP.nc"
 
     add_forcing_files:
         wiso_sw: wiso_sw_observed
@@ -92,6 +102,10 @@ echam:
         sic: sic
         
         greenhouse_gases: greenhouse_gases
+        ozone: ozone
+        volcir: volcir
+        volcsw: volcsw
+        MAC-SP: MAC-SP
 
     forcing_in_work:
         wiso_sw: "unit.25"
@@ -106,13 +120,13 @@ echam:
 
     add_forcing_additional_information:
         sst:
+            - need_2years_before
             - need_year_before
             - need_year_after
-            - need_2years_after
         sic:
+            - need_2years_before
             - need_year_before
             - need_year_after
-            - need_2years_after
 
     add_streams: #put these output files into output directory instead of "unknown"
       - nudg
@@ -190,8 +204,8 @@ jsbach:
           - LU_trans
           
     forcing_sources:
-        landuse_transition: "/albedo/work/projects/p_pool_jsbach3/T63/New_Hampshire_LCC/hist/LUH_transitions_T63_@YEAR@.nc"
-        landuse_harvest:    "/albedo/work/projects/p_pool_jsbach3/T63/New_Hampshire_LCC/hist/LUH_harvest_T63_@YEAR@.nc"
+        landuse_transition: "/albedo/work/projects/p_pool_jsbach3/T63/New_Hampshire_LCC/hist/LUH_transitions_T63_2010.nc"
+        landuse_harvest:    "/albedo/work/projects/p_pool_jsbach3/T63/New_Hampshire_LCC/hist/LUH_harvest_T63_2010.nc"
     add_forcing_files:
         landuse_transition: landuse_transition
         landuse_harvest:    landuse_harvest

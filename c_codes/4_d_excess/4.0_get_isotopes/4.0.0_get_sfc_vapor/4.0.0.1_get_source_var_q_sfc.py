@@ -32,15 +32,15 @@ ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
 # min_sf    = 0
 # max_sf    = 28
 
-var_name  = 'sinlon'
-itag      = 11
-min_sf    = -1
-max_sf    = 1
-
-# var_name  = 'coslon'
-# itag      = 12
+# var_name  = 'sinlon'
+# itag      = 11
 # min_sf    = -1
 # max_sf    = 1
+
+var_name  = 'coslon'
+itag      = 12
+min_sf    = -1
+max_sf    = 1
 
 
 # -----------------------------------------------------------------------------
@@ -177,22 +177,19 @@ with open(output_file, 'wb') as f:
     pickle.dump(q_sfc_weighted_var, f)
 
 
+
+
 '''
 #-------------------------------- check calculation of q_weighted_var
 
 with open(
-    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_weighted_' + var_name + '.pkl',
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_sfc_weighted_' + var_name + '.pkl',
           'rb') as f:
-    q_weighted_var = pickle.load(f)
+    q_sfc_weighted_var = pickle.load(f)
 
-
-fl_wiso_q_plev = sorted(glob.glob(
-    exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_wiso_q_plev.nc'
-        ))
-
-ifile = -30
-print(fl_wiso_q_plev[ifile_start:ifile_end][ifile])
-ncfile2 = xr.open_dataset(fl_wiso_q_plev[ifile_start:ifile_end][ifile])
+filenames_wiso_q_6h_sfc = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso_q_6h_sfc.nc'))
+ifile = -1
+ncfile2 = xr.open_dataset(filenames_wiso_q_6h_sfc[ifile_start:ifile_end][ifile])
 
 ocean_q = (ncfile2['q_' + str_ind1] + \
     ncfile2['q_' + str_ind2] + \
@@ -200,37 +197,34 @@ ocean_q = (ncfile2['q_' + str_ind1] + \
             ncfile2['xl_' + str_ind2] + \
                 ncfile2['xi_' + str_ind1] + \
                     ncfile2['xi_' + str_ind2]
-        ).compute()
+        ).sel(lev=47).compute()
 var_scaled_q = (ncfile2['q_' + str_ind1] + \
     ncfile2['xl_' + str_ind1] + \
         ncfile2['xi_' + str_ind1]
-        ).compute()
+        ).sel(lev=47).compute()
 
-plev = 0
-ilat = 45
-ilon = 90
-
-sq = var_scaled_q[0, plev, ilat, ilon].values
-oq = ocean_q[0, plev, ilat, ilon].values
-q_var_new = (sq / oq) * (max_sf - min_sf) + min_sf
-
-if (var_name == 'sst'):
-    q_var_new = q_var_new - 273.15
-
-if (var_name == 'rh2m'):
-    q_var_new = q_var_new * 100
-
-q_var = q_weighted_var['mon'][ifile, plev, ilat, ilon].values
-
-print(q_var)
-print(q_var_new)
+data1 = q_sfc_weighted_var['6h'][-124:].values
+data2 = source_properties(
+    var_scaled_q,
+    ocean_q,
+    min_sf, max_sf,
+    var_name,
+    prefix = 'q_sfc_weighted_', threshold = 0,
+).values
+print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
 
 
+data1 = q_sfc_weighted_var['mon'][-1].values
+data2 = source_properties(
+    var_scaled_q.resample({'time': '1d'}).mean(skipna=False).resample({'time': '1M'}).mean(skipna=False),
+    ocean_q.resample({'time': '1d'}).mean(skipna=False).resample({'time': '1M'}).mean(skipna=False),
+    min_sf, max_sf,
+    var_name,
+    prefix = 'q_sfc_weighted_', threshold = 0,
+).values
+print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
 
 
-stats.describe(ocean_q, axis=None, nan_policy='omit')
-stats.describe(
-    ocean_q.sel(plev=slice(1e+5, 2e+4)), axis=None, nan_policy='omit')
 '''
 # endregion
 # -----------------------------------------------------------------------------

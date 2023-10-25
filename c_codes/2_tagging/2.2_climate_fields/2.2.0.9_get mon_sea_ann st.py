@@ -6,12 +6,13 @@ expid = [
     # 'pi_600_5.0',
     # 'pi_601_5.1',
     # 'pi_602_5.2',
-    'pi_603_5.3',
+    # 'pi_603_5.3',
+    'nudged_701_5.0',
     ]
 i = 0
 
-ifile_start = 120
-ifile_end =   360
+ifile_start = 12 #0 #120
+ifile_end   = 516 #1740 #840
 
 
 # -----------------------------------------------------------------------------
@@ -86,6 +87,7 @@ from a_basic_analysis.b_module.source_properties import (
 # -----------------------------------------------------------------------------
 
 
+# st_plev
 # -----------------------------------------------------------------------------
 # region import output
 
@@ -137,5 +139,21 @@ data2 = exp_org_o[expid[i]]['st_plev'].st.values
 # -----------------------------------------------------------------------------
 
 
+# st_ml
+# -----------------------------------------------------------------------------
+# region import output
 
+era5_forcing = xr.open_dataset('/albedo/work/projects/paleo_work/paleodyn_from_work_ollie_projects/paleodyn/nudging/ERA5/atmos/T63/era5T63L47_201012.nc')
+era5_forcing = xr.open_dataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/nudged_701_5.0/forcing/echam/ndg201012.nc')
+
+echam6_output = xr.open_dataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/nudged_701_5.0/unknown/nudged_701_5.0_201012.01_sp_1m.nc')
+
+bias = era5_forcing['t'].sel(lev=47).mean(dim='time').values - echam6_output['st'].sel(lev=47)[0].values
+
+print(np.mean(abs(bias)))
+print(np.max(bias))
+
+bias = era5_forcing['t'].sel(lev=47).mean(dim='time') - echam6_output['st'].sel(lev=47)[0]
+# endregion
+# -----------------------------------------------------------------------------
 

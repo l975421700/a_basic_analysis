@@ -141,12 +141,8 @@ with open(output_file, 'wb') as f:
 #-------------------------------- check
 
 d_ln_q_alltime = {}
-
-for i in range(len(expid)):
-    print(str(i) + ': ' + expid[i])
-    
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_q_alltime.pkl', 'rb') as f:
-        d_ln_q_alltime[expid[i]] = pickle.load(f)
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_q_alltime.pkl', 'rb') as f:
+    d_ln_q_alltime[expid[i]] = pickle.load(f)
 
 dO18_q_alltime = {}
 dD_q_alltime = {}

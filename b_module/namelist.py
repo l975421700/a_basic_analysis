@@ -83,8 +83,10 @@ marker_recs = {'EC': 'o', 'JH': 's', 'DC': 'v', 'MC': '^'}
 
 plot_labels = {
     'dO18': '$\delta^{18}O$ [$‰$]',
+    'd18O': '$\delta^{18}O$ [$‰$]',
     'dD': '$\delta D$ [$‰$]',
     'd_excess': '$d_{xs}$ [$‰$]',
+    'd_xs': '$d_{xs}$ [$‰$]',
     'd_ln': '$d_{ln}$ [$‰$]',
     'lat': 'Source latitude [$°\;S$]',
     'lon': 'Source longitude [$°$]',
@@ -98,13 +100,18 @@ plot_labels = {
     'wisoaprt': 'Precipitation [$mm \; day^{-1}$]',
     'temperature': 'Surface temperature [$°C$]',
     'accumulation': 'Accumulation [$cm \; year^{-1}$]',
+    't_air': 'Air temperature [$°C$]',
+    't_3m': 'Air temperature [$°C$]',
+    'q': 'Specific humidity [$g/kg$]',
 }
 
 plot_labels_no_unit = {
     'wisoaprt': 'Precipitation',
     'dO18': '$\delta^{18}O$',
+    'd18O': '$\delta^{18}O$',
     'dD': '$\delta D$',
     'd_excess': '$d_{xs}$',
+    'd_xs': '$d_{xs}$',
     'd_ln': '$d_{ln}$',
     'lat': 'Source latitude',
     'lon': 'Source longitude',
@@ -113,6 +120,8 @@ plot_labels_no_unit = {
     'wind10': 'Source wind10',
     'distance': 'Source-sink distance',
     'temp2': 'temp2',
+    't_air': 'Air temperature',
+    'q': 'Specific humidity',
 }
 
 expid_labels = {

@@ -1,9 +1,13 @@
+# salloc --account=paleodyn.paleodyn --time=00:30:00 --nodes=1 --mem=120GB
+# source ${HOME}/miniconda3/bin/activate deepice
+# ipython
 
 
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_m_416_4.9',
-    'pi_m_502_5.0',
+    # 'pi_m_502_5.0',
+    'nudged_701_5.0',
     ]
 i = 0
 
@@ -418,6 +422,7 @@ am_zm_q = q_plev[expid[i]]['am'].mean(dim='lon') * 1000
 am_zm_tpot = theta_e_alltime['am'].mean(dim='lon') - zerok
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.5_source_var_q/6.1.5.0_lat/6.1.5.0 ' + expid[i] + ' q_weighted_lat am zm_SH.png'
+output_png = 'figures/trial.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=-60, cm_max=0, cm_interval1=2.5, cm_interval2=5, cmap='viridis',

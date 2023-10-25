@@ -1,9 +1,8 @@
+#SBATCH --time=00:30:00
 
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_m_416_4.9',
-    # 'pi_m_502_5.0',
     'nudged_701_5.0',
     ]
 i = 0
@@ -108,61 +107,16 @@ exp_out_wiso_q_1m['q_' + str_ind1]
 # region import data
 
 
-fl_wiso_q_plev = sorted(glob.glob(
-    exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_wiso_q_plev.nc'
-        ))
+exp_org_o = {}
+exp_org_o[expid[i]] = {}
 
-exp_out_wiso_q_plev = xr.open_mfdataset(
-    fl_wiso_q_plev[ifile_start:ifile_end],
+filenames_wiso_q_6h_sfc = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso_q_6h_sfc.nc'))
+exp_org_o[expid[i]]['wiso_q_6h_sfc'] = xr.open_mfdataset(
+    filenames_wiso_q_6h_sfc[ifile_start:ifile_end],
     )
 
 
 '''
-#-------- check with echam output with p level q
-
-fl_wiso_q_plev = sorted(glob.glob(
-    exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_wiso_q_plev.nc'
-        ))
-fl_uvq_plev = sorted(glob.glob(
-    exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_uvq_plev.nc'
-        ))
-
-ifile = -1
-print(fl_uvq_plev[ifile_start:ifile_end][ifile])
-print(fl_wiso_q_plev[ifile_start:ifile_end][ifile])
-ncfile = xr.open_dataset(fl_uvq_plev[ifile_start:ifile_end][ifile])
-ncfile2 = xr.open_dataset(fl_wiso_q_plev[ifile_start:ifile_end][ifile])
-
-(ncfile.q.values[np.isfinite(ncfile.q.values)] == ncfile2.q16o.values[np.isfinite(ncfile2.q16o.values)]).all()
-np.max(abs(ncfile.q.values[np.isfinite(ncfile.q.values)] - ncfile2.q16o.values[np.isfinite(ncfile2.q16o.values)]))
-test = ncfile.q.values[np.isfinite(ncfile.q.values)] - ncfile2.q16o.values[np.isfinite(ncfile2.q16o.values)]
-wheremax = np.where(test == np.max(abs(test)))
-
-print(test[wheremax])
-print(np.max(abs(test)))
-ncfile.q.values[np.isfinite(ncfile.q.values)][wheremax]
-ncfile2.q16o.values[np.isfinite(ncfile2.q16o.values)][wheremax]
-
-
-
-
-#-------- check with echam output with model level q
-
-fl_gl_1m = sorted(glob.glob(
-    exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_gl_1m.nc'
-        ))
-
-ifile = -1
-fl_wiso_q_1m[ifile_start:ifile_end][ifile]
-fl_gl_1m[ifile_start:ifile_end][ifile]
-ncfile = xr.open_dataset(fl_gl_1m[ifile_start:ifile_end][ifile])
-
-(ncfile.xi.squeeze().values == exp_out_wiso_q_1m.xi16o[ifile, ].values).all()
-# np.max(abs(ncfile.xi.squeeze().values - exp_out_wiso_q_1m.xi16o[ifile, ].values))
-
-ncfile2 = xr.open_dataset(fl_wiso_q_1m[ifile_start:ifile_end][ifile])
-(ncfile2.xi_24.squeeze().values == exp_out_wiso_q_1m.xi_24[ifile, ].values).all()
-
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -174,53 +128,53 @@ ncfile2 = xr.open_dataset(fl_wiso_q_1m[ifile_start:ifile_end][ifile])
 
 #-------- aggregate atmospheric water
 
-ocean_q = (exp_out_wiso_q_plev['q_' + str_ind1] + \
-    exp_out_wiso_q_plev['q_' + str_ind2] + \
-        exp_out_wiso_q_plev['xl_' + str_ind1] + \
-            exp_out_wiso_q_plev['xl_' + str_ind2] + \
-                exp_out_wiso_q_plev['xi_' + str_ind1] + \
-                    exp_out_wiso_q_plev['xi_' + str_ind2]
-        ).compute()
+ocean_q = (exp_org_o[expid[i]]['wiso_q_6h_sfc']['q_' + str_ind1] + \
+    exp_org_o[expid[i]]['wiso_q_6h_sfc']['q_' + str_ind2] + \
+        exp_org_o[expid[i]]['wiso_q_6h_sfc']['xl_' + str_ind1] + \
+            exp_org_o[expid[i]]['wiso_q_6h_sfc']['xl_' + str_ind2] + \
+                exp_org_o[expid[i]]['wiso_q_6h_sfc']['xi_' + str_ind1] + \
+                    exp_org_o[expid[i]]['wiso_q_6h_sfc']['xi_' + str_ind2]
+        ).sel(lev=47).compute()
 
-var_scaled_q = (exp_out_wiso_q_plev['q_' + str_ind1] + \
-    exp_out_wiso_q_plev['xl_' + str_ind1] + \
-        exp_out_wiso_q_plev['xi_' + str_ind1]
-        ).compute()
+var_scaled_q = (exp_org_o[expid[i]]['wiso_q_6h_sfc']['q_' + str_ind1] + \
+    exp_org_o[expid[i]]['wiso_q_6h_sfc']['xl_' + str_ind1] + \
+        exp_org_o[expid[i]]['wiso_q_6h_sfc']['xi_' + str_ind1]
+        ).sel(lev=47).compute()
 
 
 #-------- mon_sea_ann
 
-ocean_q_alltime = mon_sea_ann(var_monthly=ocean_q)
-var_scaled_q_alltime = mon_sea_ann(var_monthly=var_scaled_q)
+ocean_q_alltime = mon_sea_ann(var_6hourly=ocean_q)
+var_scaled_q_alltime = mon_sea_ann(var_6hourly=var_scaled_q)
 
 #-------- q-weighted var
 
-q_weighted_var = {}
+q_sfc_weighted_var = {}
 
-for ialltime in ['mon', 'mm', 'sea', 'sm', 'ann', 'am']:
+for ialltime in ['6h', 'daily', 'mon', 'mm', 'sea', 'sm', 'ann', 'am']:
     print(ialltime)
     
-    q_weighted_var[ialltime] = source_properties(
+    q_sfc_weighted_var[ialltime] = source_properties(
         var_scaled_q_alltime[ialltime],
         ocean_q_alltime[ialltime],
         min_sf, max_sf,
         var_name,
-        prefix = 'q_weighted_', threshold = 0,
+        prefix = 'q_sfc_weighted_', threshold = 0,
     )
 
 #-------- monthly without monthly mean
-q_weighted_var['mon no mm'] = (q_weighted_var['mon'].groupby('time.month') - q_weighted_var['mon'].groupby('time.month').mean(skipna=True)).compute()
+q_sfc_weighted_var['mon no mm'] = (q_sfc_weighted_var['mon'].groupby('time.month') - q_sfc_weighted_var['mon'].groupby('time.month').mean(skipna=True)).compute()
 
 #-------- annual without annual mean
-q_weighted_var['ann no am'] = (q_weighted_var['ann'] - q_weighted_var['ann'].mean(dim='time', skipna=True)).compute()
+q_sfc_weighted_var['ann no am'] = (q_sfc_weighted_var['ann'] - q_sfc_weighted_var['ann'].mean(dim='time', skipna=True)).compute()
 
-output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_weighted_' + var_name + '.pkl'
+output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_sfc_weighted_' + var_name + '.pkl'
 
 if (os.path.isfile(output_file)):
     os.remove(output_file)
 
 with open(output_file, 'wb') as f:
-    pickle.dump(q_weighted_var, f)
+    pickle.dump(q_sfc_weighted_var, f)
 
 
 '''

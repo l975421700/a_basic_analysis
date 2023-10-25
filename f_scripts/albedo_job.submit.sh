@@ -4,13 +4,13 @@
 #SBATCH --time=12:00:00
 #SBATCH -o %A.out
 #SBATCH -e %A.err
-#SBATCH --mem=120GB
+#SBATCH --mem=240GB
 
 echo "Current time : " $(date +"%T")
 cd $WORK
 source ${HOME}/miniconda3/bin/activate deepice
 
-python /albedo/work/user/qigao001/a_basic_analysis/f_scripts/1_py_scripts/srun0.py
+python /albedo/work/user/qigao001/a_basic_analysis/f_scripts/1_py_scripts/srun3.py
 
 echo "Current time : " $(date +"%T")
 

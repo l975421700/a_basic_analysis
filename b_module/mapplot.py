@@ -1397,3 +1397,128 @@ ax_org=None
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region hemisphere_conic_plot
+
+
+import numpy as np
+
+def hemisphere_conic_plot(
+    ax_org=None,
+    lat_min=-77, lat_max=-25, lon_min=10, lon_max=160,
+    lon_interval=30, lat_interval=10,
+    lat_min_tick = -70, lon_min_tick = 10,
+    figsize=np.array([8.8, 5.8]) / 2.54,
+    fm_left=0.04, fm_right=0.96, fm_bottom=0.12, fm_top=0.99,
+    add_atlas=True, atlas_color='black', lw=0.25,
+    add_grid=True, grid_color='gray', add_grid_labels=False,
+    gl_xlabelsize=0, gl_ylabelsize=6,
+    ):
+    '''
+    ----Input
+    
+    ----output
+    
+    ----function dependence
+    
+    '''
+    
+    import matplotlib.pyplot as plt
+    import cartopy.crs as ccrs
+    import cartopy.feature as cfeature
+    import matplotlib.path as mpath
+    import warnings
+    warnings.filterwarnings('ignore')
+    from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
+    
+    if (lat_min < 0):
+        standard_parallels=(-33, -45)
+        cutoff=30
+    elif (lat_max > 0):
+        standard_parallels=(33, 45)
+        cutoff=-30
+    
+    projections = ccrs.LambertConformal(
+        central_longitude=(lon_min + lon_max)/2,
+        central_latitude=(lat_min + lat_max)/2,
+        cutoff=cutoff, standard_parallels=standard_parallels,)
+    
+    if (ax_org is None):
+        fig, ax = plt.subplots(
+            1, 1, figsize=figsize,
+            subplot_kw={'projection': projections},)
+    else:
+        ax = ax_org
+    
+    boundaries = mpath.Path(
+        list(zip(np.linspace(lon_min,lon_max, 20), np.full(20, lat_max))) + \
+        list(zip(np.full(20, lon_max), np.linspace(lat_max, lat_min, 20))) + \
+        list(zip(np.linspace(lon_max, lon_min, 20), np.full(20, lat_min))) + \
+        list(zip(np.full(20, lon_min), np.linspace(lat_min, lat_max, 20)))
+    )
+    ax.set_boundary(boundaries, transform=ccrs.PlateCarree())
+    ax.set_extent((lon_min, lon_max, lat_min, lat_max), crs=ccrs.PlateCarree())
+    
+    if add_atlas:
+        coastline = cfeature.NaturalEarthFeature(
+            'physical', 'coastline', '10m', edgecolor=atlas_color,
+            facecolor='none', lw=lw)
+        borders = cfeature.NaturalEarthFeature(
+            'cultural', 'admin_0_boundary_lines_land', '10m',
+            edgecolor=atlas_color, facecolor='none', lw=lw)
+        ax.add_feature(coastline, zorder=3)
+        ax.add_feature(borders, zorder=3)
+    
+    if add_grid:
+        ticklabel = ticks_labels(
+            lon_min_tick, lon_max, lat_min_tick, lat_max,
+            lon_interval, lat_interval)
+        gl = ax.gridlines(
+            crs=ccrs.PlateCarree(), linewidth=lw*1.2, zorder=3,
+            draw_labels=add_grid_labels,
+            color=grid_color, linestyle='--',
+            xlocs=ticklabel[0], ylocs=ticklabel[2], rotate_labels=True,
+            xformatter=LongitudeFormatter(degree_symbol='° '),
+            yformatter=LatitudeFormatter(degree_symbol='° '),
+            xpadding=3, ypadding=3,)
+        gl.xlabel_style = {'size': gl_xlabelsize,}
+        gl.ylabel_style = {'size': gl_ylabelsize,}
+    
+    if (ax_org is None):
+        fig.subplots_adjust(
+            left=fm_left, right=fm_right, bottom=fm_bottom, top=fm_top)
+    
+    if (ax_org is None):
+        return fig, ax
+    else:
+        return ax
+
+
+'''
+#-------------------------------- check
+
+fig, ax = hemisphere_conic_plot(
+    lat_min=59, lat_max=84, lon_min=-75, lon_max=-10,
+    lon_interval=10, lat_interval=5,
+    lat_min_tick = 60, lon_min_tick = -70,
+    add_grid_labels=True,)
+
+fig.savefig('figures/trial.png')
+
+
+fig, ax = hemisphere_conic_plot(add_grid_labels=True,)
+
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
+cplot_ice_cores(
+    lon=ten_sites_loc.lon[ten_sites_loc['Site']=='EDC'],
+    lat=ten_sites_loc.lat[ten_sites_loc['Site']=='EDC'],
+    ax=ax, s=12,)
+
+fig.savefig('figures/trial.png')
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+

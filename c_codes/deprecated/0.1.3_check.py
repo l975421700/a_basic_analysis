@@ -1,15 +1,25 @@
 
 import xarray as xr
 import numpy as np
+import pickle
 
-ncfile1 = xr.open_dataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/nudged_701_5.0/unknown/nudged_701_5.0_198002.01_wiso_q_6h.nc')
-ncfile2 = xr.open_dataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/nudged_701_5.0/unknown/nudged_701_5.0_198002.01_wiso_q_6h_mon.nc')
+exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+expid = [
+    'nudged_701_5.0',
+    ]
+i = 0
 
-(ncfile1.q16o[:, -1].values == ncfile2.q16o[:, 0].values).all()
+dD_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_q_sfc_alltime.pkl', 'rb') as f:
+    dD_q_sfc_alltime[expid[i]] = pickle.load(f)
 
-(ncfile1.q16o.mean(dim='time').values == ncfile2.q16o[0].values).all()
+dD_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_alltime.pkl', 'rb') as f:
+    dD_alltime[expid[i]] = pickle.load(f)
 
-np.max(abs(ncfile1.q16o.mean(dim='time').values - ncfile2.q16o[0].values))
+dD_q_sfc_alltime[expid[i]]['am'].to_netcdf('scratch/test/test0.nc')
+dD_alltime[expid[i]]['am'].to_netcdf('scratch/test/test1.nc')
+
 
 
 def regional_plot(

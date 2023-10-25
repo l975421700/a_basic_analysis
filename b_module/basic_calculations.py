@@ -82,7 +82,7 @@ def time_weighted_mean(ds):
 # region Function to calculate monthly/seasonal/annual (mean) values
 
 def mon_sea_ann(
-    var_daily = None, var_monthly = None,
+    var_daily = None, var_monthly = None, var_6hourly = None,
     lcopy = True, seasons = 'Q-FEB',
     ):
     '''
@@ -119,6 +119,16 @@ def mon_sea_ann(
             var_alltime['mon'] = var_monthly.copy()
         else:
             var_alltime['mon'] = var_monthly
+        
+    elif not var_6hourly is None:
+        if lcopy:
+            var_alltime['6h'] = var_6hourly.copy()
+        else:
+            var_alltime['6h'] = var_6hourly
+        
+        var_alltime['daily'] = var_6hourly.resample({'time': '1d'}).mean(skipna=False).compute()
+        
+        var_alltime['mon'] = var_alltime['daily'].resample({'time': '1M'}).mean(skipna=False).compute()
     
     #-------- seasonal
     if (seasons == 'Q-FEB'):
@@ -1119,6 +1129,67 @@ def find_multi_gridvalue_at_site_interpn(
     return(gridvalues)
 
 
+#-------------------------------- find grid value at site time
+
+def find_gridvalue_at_site_time(
+    stime, slat, slon,
+    time, lat, lon,
+    gridded_data):
+    '''
+    #-------- Input
+    stime: site time, Timestamp
+    slat: site latitude, scalar
+    slon: site longitude, scalar
+    
+    time: time, datetime64[ns]
+    lat:  latitude, 1d or 2d array
+    lon:  longitude, 1d or 2d array
+    
+    gridded_data: 3d array
+    '''
+    
+    import numpy as np
+    
+    if (np.isnan(slat) | np.isnan(slon)):
+        gridvalue = np.nan
+    else:
+        itime = np.argmin(abs(stime.asm8 - time))
+        
+        if (lon.ndim == 2):
+            ilat, ilon = find_ilat_ilon_general(slat, slon, lat, lon)
+        elif (lon.ndim == 1):
+            ilat, ilon = find_ilat_ilon(slat, slon, lat, lon)
+        
+        gridvalue = gridded_data[itime, ilat, ilon]
+    
+    return(gridvalue)
+
+
+def find_multi_gridvalue_at_site_time(
+    times, latitudes, longitudes,
+    time, lat, lon, gridded_data):
+    '''
+    #-------- Input
+    latitudes: 1d array
+    longitudes: 1d array
+    
+    lat: 1d or 2d array
+    lon: 1d or 2d array
+    
+    gridded_data: 2d array
+    '''
+    
+    import numpy as np
+    
+    gridvalues = np.zeros(len(latitudes))
+    
+    for i in range(len(latitudes)):
+        gridvalues[i] = find_gridvalue_at_site_time(
+            times[i], latitudes[i], longitudes[i],
+            time, lat, lon,
+            gridded_data)
+    
+    return(gridvalues)
 
 
 '''
@@ -1271,6 +1342,71 @@ print((result1[np.isfinite(result1)] == result2[np.isfinite(result2)]).all())
 #             d_ln_alltime[expid[i]]['am'].values,
 #             method='nearest'
 #         )
+
+#-------------------------------- check find_gridvalue_at_site_time
+
+find_gridvalue_at_site_time(
+    NK16_Australia_Syowa['1d']['time'][0],
+    NK16_Australia_Syowa['1d']['lat'][0],
+    NK16_Australia_Syowa['1d']['lon'][0],
+    d_ln_q_sfc_alltime[expid[i]]['daily'].time.values,
+    d_ln_q_sfc_alltime[expid[i]]['daily'].lat.values,
+    d_ln_q_sfc_alltime[expid[i]]['daily'].lon.values,
+    d_ln_q_sfc_alltime[expid[i]]['daily'].values
+)
+
+stime = NK16_Australia_Syowa['1d']['time'][0]
+slat = NK16_Australia_Syowa['1d']['lat'][0]
+slon = NK16_Australia_Syowa['1d']['lon'][0]
+
+itime = np.argmin(abs(stime.asm8 - d_ln_q_sfc_alltime[expid[i]]['daily'].time).values)
+ilat, ilon = find_ilat_ilon(
+    slat, slon,
+    d_ln_q_sfc_alltime[expid[i]]['daily'].lat.values,
+    d_ln_q_sfc_alltime[expid[i]]['daily'].lon.values)
+
+d_ln_q_sfc_alltime[expid[i]]['daily'][itime, ilat, ilon]
+
+
+#-------------------------------- check find_multi_gridvalue_at_site_time
+
+ires = 100
+res1 = find_multi_gridvalue_at_site_time(
+    NK16_Australia_Syowa['1d']['time'],
+    NK16_Australia_Syowa['1d']['lat'],
+    NK16_Australia_Syowa['1d']['lon'],
+    d_ln_q_sfc_alltime[expid[i]]['daily']['time'].values,
+    d_ln_q_sfc_alltime[expid[i]]['daily']['lat'].values,
+    d_ln_q_sfc_alltime[expid[i]]['daily']['lon'].values,
+    d_ln_q_sfc_alltime[expid[i]]['daily'].values,
+)[ires]
+
+
+res2 = find_gridvalue_at_site_time(
+    NK16_Australia_Syowa['1d']['time'][ires],
+    NK16_Australia_Syowa['1d']['lat'][ires],
+    NK16_Australia_Syowa['1d']['lon'][ires],
+    d_ln_q_sfc_alltime[expid[i]]['daily']['time'].values,
+    d_ln_q_sfc_alltime[expid[i]]['daily']['lat'].values,
+    d_ln_q_sfc_alltime[expid[i]]['daily']['lon'].values,
+    d_ln_q_sfc_alltime[expid[i]]['daily'].values,
+)
+
+stime = NK16_Australia_Syowa['1d']['time'][ires]
+slat = NK16_Australia_Syowa['1d']['lat'][ires]
+slon = NK16_Australia_Syowa['1d']['lon'][ires]
+
+itime = np.argmin(abs(stime.asm8 - d_ln_q_sfc_alltime[expid[i]]['daily'].time).values)
+ilat, ilon = find_ilat_ilon(
+    slat, slon,
+    d_ln_q_sfc_alltime[expid[i]]['daily'].lat.values,
+    d_ln_q_sfc_alltime[expid[i]]['daily'].lon.values)
+
+res3 = d_ln_q_sfc_alltime[expid[i]]['daily'][itime, ilat, ilon].values
+
+print(res1); print(res2); print(res3)
+
+
 
 '''
 # endregion

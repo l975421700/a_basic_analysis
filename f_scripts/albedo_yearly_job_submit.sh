@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH -p mpp
-# #SBATCH --qos=12h
-#SBATCH --time=00:30:00
+#SBATCH --qos=12h
+#SBATCH --time=12:00:00
 #SBATCH -o %A_%a.out
 #SBATCH -e %A_%a.err
-#SBATCH --array=0-5
+#SBATCH --array=1-2
 # #SBATCH --mem=120GB
 
 echo "Current time : " $(date +"%T")

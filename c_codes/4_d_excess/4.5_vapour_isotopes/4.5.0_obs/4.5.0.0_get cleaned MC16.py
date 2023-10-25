@@ -23,80 +23,6 @@ pbar.register()
 from scipy import stats
 # import xesmf as xe
 import pandas as pd
-from statsmodels.stats import multitest
-import pycircstat as circ
-import xskillscore as xs
-
-# plot
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from matplotlib.colors import BoundaryNorm
-from matplotlib import cm
-import cartopy.crs as ccrs
-plt.rcParams['pcolor.shading'] = 'auto'
-mpl.rcParams['figure.dpi'] = 600
-mpl.rc('font', family='Times New Roman', size=10)
-mpl.rcParams['axes.linewidth'] = 0.2
-plt.rcParams.update({"mathtext.fontset": "stix"})
-import matplotlib.animation as animation
-import seaborn as sns
-import cartopy.feature as cfeature
-from scipy.stats import pearsonr
-from matplotlib.ticker import AutoMinorLocator
-
-# self defined
-from a_basic_analysis.b_module.mapplot import (
-    globe_plot,
-    hemisphere_plot,
-    quick_var_plot,
-    mesh2plot,
-    framework_plot1,
-    remove_trailing_zero,
-    remove_trailing_zero_pos,
-)
-
-from a_basic_analysis.b_module.basic_calculations import (
-    mon_sea_ann,
-    regrid,
-    mean_over_ais,
-    time_weighted_mean,
-)
-
-from a_basic_analysis.b_module.namelist import (
-    month,
-    month_num,
-    month_dec,
-    month_dec_num,
-    seasons,
-    seasons_last_num,
-    hours,
-    months,
-    month_days,
-    zerok,
-    panel_labels,
-    seconds_per_d,
-)
-
-from a_basic_analysis.b_module.source_properties import (
-    source_properties,
-    calc_lon_diff,
-)
-
-from a_basic_analysis.b_module.statistics import (
-    fdr_control_bh,
-    check_normality_3d,
-    check_equal_variance_3d,
-    ttest_fdr_control,
-    cplot_ttest,
-    xr_par_cor,
-)
-
-from a_basic_analysis.b_module.component_plot import (
-    cplot_ice_cores,
-    plt_mesh_pars,
-    plot_t63_contourf,
-)
-
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -109,8 +35,7 @@ MC16_Dome_C = {}
 
 MC16_Dome_C['1h'] = pd.read_excel(
     'data_sources/water_isotopes/MC16/Dataset_ACP2016-8.xlsx',
-    sheet_name='Picarro', header=0, skiprows=11,
-)
+    sheet_name='Picarro', header=0, skiprows=11,)
 
 MC16_Dome_C['1h'] = MC16_Dome_C['1h'].rename(columns={
     'Date time (UTC)': 'time',
@@ -119,16 +44,18 @@ MC16_Dome_C['1h'] = MC16_Dome_C['1h'].rename(columns={
     'δD (‰)': 'dD',
     'T 3m (°C)': 't_3m',
     'T surf (°C)': 't_surf'
-}).drop(columns='d-excess (‰)')
+    }).drop(columns='d-excess (‰)')
 
+MC16_Dome_C['1h'] = MC16_Dome_C['1h'][:-7]
 MC16_Dome_C['1h']['time'] = MC16_Dome_C['1h']['time'].dt.round('H')
 
+MC16_Dome_C['1h']['q'] = MC16_Dome_C['1h']['humidity'] * 18.01528 / (28.9645 * 1e6)
 
 # 6h
-MC16_Dome_C['6h'] = MC16_Dome_C['1h'].resample('6h', on='time').mean()[:-1].reset_index()
+MC16_Dome_C['6h'] = MC16_Dome_C['1h'].resample('6h', on='time').mean().reset_index()
 
 # 1d
-MC16_Dome_C['1d'] = MC16_Dome_C['1h'].resample('1d', on='time').mean()[:-1].reset_index()
+MC16_Dome_C['1d'] = MC16_Dome_C['1h'].resample('1d', on='time').mean().reset_index()
 
 
 for ialltime in ['1h', '6h', '1d']:
@@ -157,12 +84,22 @@ with open(output_file, 'wb') as f:
     pickle.dump(MC16_Dome_C, f)
 
 
-'''
+
 
 #------------------------- import data
 with open('data_sources/water_isotopes/MC16/MC16_Dome_C.pkl', 'rb') as f:
     MC16_Dome_C = pickle.load(f)
 
+iind = np.argmax(MC16_Dome_C['1h']['d_ln'])
+
+MC16_Dome_C['1h']['d_ln'][iind]
+MC16_Dome_C['1h']['d_xs'][iind]
+MC16_Dome_C['1h']['dD'][iind]
+MC16_Dome_C['1h']['d18O'][iind]
+MC16_Dome_C['1h']['humidity'][iind]
+
+
+'''
 #------------------------- check statistics
 
 stats.describe(MC16_Dome_C['1d']['d_xs'])
@@ -172,6 +109,7 @@ stats.describe(MC16_Dome_C['1d']['d18O'])
 stats.describe(MC16_Dome_C['1d']['dD'])
 stats.describe(MC16_Dome_C['1d']['t_3m'])
 stats.describe(MC16_Dome_C['1d']['t_surf'])
+stats.describe(MC16_Dome_C['1d']['q'])
 
 #------------------------ check dxs
 for ialltime in ['1h', '6h', '1d']:
@@ -199,26 +137,26 @@ MC16_Dome_C['1h']['dD'][:24].mean()
 
 d18O_weighted = MC16_Dome_C['1h'].set_index('humidity', append=True).resample(
     '6h', on='time').apply(
-        lambda x: np.average(x, weights=x.index.get_level_values(1)))[:-1]
+        lambda x: np.average(x, weights=x.index.get_level_values(1)))
 
 np.nanmax(abs((MC16_Dome_C['6h']['d18O'].values - d18O_weighted['d18O'].values) / MC16_Dome_C['6h']['d18O']))
 
 d18O_weighted = MC16_Dome_C['1h'].set_index('humidity', append=True).resample(
     '1d', on='time').apply(
-        lambda x: np.average(x, weights=x.index.get_level_values(1)))[:-1]
+        lambda x: np.average(x, weights=x.index.get_level_values(1)))
 
 np.nanmax(abs((MC16_Dome_C['1d']['d18O'].values - d18O_weighted['d18O'].values) / MC16_Dome_C['1d']['d18O']))
 
 
 dD_weighted = MC16_Dome_C['1h'].set_index('humidity', append=True).resample(
     '6h', on='time').apply(
-        lambda x: np.average(x, weights=x.index.get_level_values(1)))[:-1]
+        lambda x: np.average(x, weights=x.index.get_level_values(1)))
 
 np.nanmax(abs((MC16_Dome_C['6h']['dD'].values - dD_weighted['dD'].values) / MC16_Dome_C['6h']['dD']))
 
 dD_weighted = MC16_Dome_C['1h'].set_index('humidity', append=True).resample(
     '1d', on='time').apply(
-        lambda x: np.average(x, weights=x.index.get_level_values(1)))[:-1]
+        lambda x: np.average(x, weights=x.index.get_level_values(1)))
 
 np.nanmax(abs((MC16_Dome_C['1d']['dD'].values - dD_weighted['dD'].values) / MC16_Dome_C['1d']['dD']))
 
