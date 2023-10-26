@@ -6,7 +6,7 @@ c.retrieve(
     'reanalysis-era5-single-levels',
     {
         'product_type': 'reanalysis',
-        'variable': 'vertical_integral_of_northward_water_vapour_flux',
+        'variable': 'sea_ice_cover',
         'year': [
             '2013', '2014', '2015',
             '2016', '2017', '2018',
@@ -44,4 +44,4 @@ c.retrieve(
         ],
         'format': 'netcdf',
     },
-    'scratch/ERA5/IVT/ERA5_hourly_IVT_v_2013_2022.nc')
+    'scratch/ERA5/SIC/ERA5_hourly_SIC_2013_2022.nc')

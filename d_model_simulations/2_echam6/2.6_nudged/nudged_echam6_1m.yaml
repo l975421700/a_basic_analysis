@@ -2,8 +2,8 @@ general:
     setup_name: "echam"
     version: "6.3.05p2-wiso"
     compute_time: "00:30:00"
-    initial_date: "1980-01-01"
-    final_date: "2023-01-01"
+    initial_date: "1979-01-01"
+    final_date: "1979-04-01"
     model_dir: "/albedo/work/user/qigao001/model_codes/echam-6.3.05p2-wiso/"
     base_dir: "/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/"
     nmonth: 1
@@ -18,7 +18,7 @@ echam:
             echam_bin: "${bin_dir}/${executable}"
     bin_in_work:
             echam_bin: "${executable}"
-    # namelist_dir: '/albedo/work/user/qigao001/a_basic_analysis/g_namelists/nudged/'
+    namelist_dir: '/albedo/work/user/qigao001/a_basic_analysis/g_namelists/nudged/'
     scenario: "HIST"
     # dataset: r0007
     res: T63
@@ -120,8 +120,8 @@ echam:
 
         # ERA5 forcing files
         era5_atm: "/albedo/work/projects/paleo_work/paleodyn_from_work_ollie_projects/paleodyn/nudging/ERA5/atmos/T63/era5${echam.res}${echam.levels}_${echam.current_date!syear}${echam.current_date!smonth}.nc"
-        sst: "/albedo/work/projects/paleo_work/paleodyn_from_work_ollie_projects/paleodyn/nudging/ERA5/sea/T63/T63_era5sst_@YEAR@.nc"
-        sic: "/albedo/work/projects/paleo_work/paleodyn_from_work_ollie_projects/paleodyn/nudging/ERA5/sea/T63/T63_era5sic_@YEAR@.nc"
+        sst: "/albedo/work/projects/paleo_work/paleodyn_from_work_ollie_projects/paleodyn/nudging/ERA5/sea/T63/T63_era5sst_${echam.current_date!syear}.nc"
+        sic: "/albedo/work/projects/paleo_work/paleodyn_from_work_ollie_projects/paleodyn/nudging/ERA5/sea/T63/T63_era5sic_${echam.current_date!syear}.nc"
         
         # further ECHAM6 forcing files
         greenhouse_gases: "/albedo/work/projects/p_pool_echam6/input/r0008/greenhouse_ssp245.nc"

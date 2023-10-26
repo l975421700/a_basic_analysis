@@ -4,7 +4,7 @@
 #SBATCH --time=12:00:00
 #SBATCH -o %A_%a.out
 #SBATCH -e %A_%a.err
-#SBATCH --array=1-2
+#SBATCH --array=0-3
 # #SBATCH --mem=120GB
 
 echo "Current time : " $(date +"%T")

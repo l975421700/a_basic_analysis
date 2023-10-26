@@ -1,121 +1,47 @@
+import cdsapi
 
+c = cdsapi.Client()
 
-# -----------------------------------------------------------------------------
-# region import packages
-
-# management
-import glob
-import pickle
-import warnings
-warnings.filterwarnings('ignore')
-import os
-import sys  # print(sys.path)
-sys.path.append('/albedo/work/user/qigao001')
-
-# data analysis
-import numpy as np
-import xarray as xr
-import dask
-dask.config.set({"array.slicing.split_large_chunks": True})
-from dask.diagnostics import ProgressBar
-pbar = ProgressBar()
-pbar.register()
-from scipy import stats
-import xesmf as xe
-import pandas as pd
-from metpy.interpolate import cross_section
-from statsmodels.stats import multitest
-import pycircstat as circ
-from scipy.stats import pearsonr
-from scipy.stats import linregress
-
-# plot
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from matplotlib.colors import BoundaryNorm
-from matplotlib import cm
-import cartopy.crs as ccrs
-plt.rcParams['pcolor.shading'] = 'auto'
-mpl.rcParams['figure.dpi'] = 600
-mpl.rc('font', family='Times New Roman', size=10)
-mpl.rcParams['axes.linewidth'] = 0.2
-plt.rcParams.update({"mathtext.fontset": "stix"})
-import matplotlib.animation as animation
-import seaborn as sns
-import cartopy.feature as cfeature
-from matplotlib.ticker import AutoMinorLocator
-from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
-import matplotlib.path as mpath
-
-# self defined
-from a_basic_analysis.b_module.mapplot import (
-    globe_plot,
-    hemisphere_plot,
-    quick_var_plot,
-    mesh2plot,
-    framework_plot1,
-    remove_trailing_zero,
-    remove_trailing_zero_pos,
-    ticks_labels,
-    hemisphere_conic_plot,
-)
-
-from a_basic_analysis.b_module.basic_calculations import (
-    mon_sea_ann,
-)
-
-from a_basic_analysis.b_module.namelist import (
-    month,
-    month_num,
-    month_dec,
-    month_dec_num,
-    seasons,
-    seasons_last_num,
-    hours,
-    months,
-    month_days,
-    zerok,
-    panel_labels,
-    plot_labels,
-)
-
-from a_basic_analysis.b_module.source_properties import (
-    source_properties,
-    calc_lon_diff,
-)
-
-from a_basic_analysis.b_module.statistics import (
-    fdr_control_bh,
-    check_normality_3d,
-    check_equal_variance_3d,
-    ttest_fdr_control,
-)
-
-from a_basic_analysis.b_module.component_plot import (
-    cplot_ice_cores,
-    plt_mesh_pars,
-)
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region import data
-
-ERA5_hourly_temp2_2013_2022 = xr.open_dataset('scratch/ERA5/temp2/ERA5_hourly_temp2_2013_2022.nc', chunks={'time': 720})
-
-ERA5_daily_temp2_2013_2022 = ERA5_hourly_temp2_2013_2022.t2m.resample(time='1d').mean().compute()
-
-ERA5_daily_temp2_2013_2022.to_netcdf('scratch/ERA5/temp2/ERA5_daily_temp2_2013_2022.nc')
-
-
-
-
-'''
-# ERA5_hourly_temp2_2013_2022.t2m[0:48].resample(time='1d').mean().compute()
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
+c.retrieve(
+    'reanalysis-era5-single-levels',
+    {
+        'product_type': 'reanalysis',
+        'variable': 'sea_surface_temperature',
+        'year': [
+            '2013', '2014', '2015',
+            '2016', '2017', '2018',
+            '2019', '2020', '2021',
+            '2022',
+        ],
+        'month': [
+            '01', '02', '03',
+            '04', '05', '06',
+            '07', '08', '09',
+            '10', '11', '12',
+        ],
+        'day': [
+            '01', '02', '03',
+            '04', '05', '06',
+            '07', '08', '09',
+            '10', '11', '12',
+            '13', '14', '15',
+            '16', '17', '18',
+            '19', '20', '21',
+            '22', '23', '24',
+            '25', '26', '27',
+            '28', '29', '30',
+            '31',
+        ],
+        'time': [
+            '00:00', '01:00', '02:00',
+            '03:00', '04:00', '05:00',
+            '06:00', '07:00', '08:00',
+            '09:00', '10:00', '11:00',
+            '12:00', '13:00', '14:00',
+            '15:00', '16:00', '17:00',
+            '18:00', '19:00', '20:00',
+            '21:00', '22:00', '23:00',
+        ],
+        'format': 'netcdf',
+    },
+    'scratch/ERA5/SST/ERA5_hourly_SST_2013_2022.nc')

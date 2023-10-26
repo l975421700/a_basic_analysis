@@ -1,54 +1,47 @@
+import cdsapi
 
+c = cdsapi.Client()
 
-# -----------------------------------------------------------------------------
-# region import packages
-
-# management
-import glob
-import pickle
-import warnings
-warnings.filterwarnings('ignore')
-import os
-import sys  # print(sys.path)
-sys.path.append('/albedo/work/user/qigao001')
-
-# data analysis
-import numpy as np
-import xarray as xr
-import dask
-dask.config.set({"array.slicing.split_large_chunks": True})
-from dask.diagnostics import ProgressBar
-pbar = ProgressBar()
-pbar.register()
-
-from a_basic_analysis.b_module.basic_calculations import (
-    mon_sea_ann,
-)
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region get mon_sea_ann data
-
-ERA5_daily_temp2_2013_2022 = xr.open_dataset('scratch/ERA5/temp2/ERA5_daily_temp2_2013_2022.nc', chunks={'time': 720})
-
-ERA5_temp2_2013_2022_alltime = mon_sea_ann(
-    var_daily=ERA5_daily_temp2_2013_2022.t2m, lcopy=False)
-
-
-output_file = 'scratch/ERA5/temp2/ERA5_temp2_2013_2022_alltime.nc'
-
-if (os.path.isfile(output_file)):
-    os.remove(output_file)
-
-with open(output_file, 'wb') as f:
-    pickle.dump(ERA5_temp2_2013_2022_alltime, f)
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-
-
+c.retrieve(
+    'reanalysis-era5-single-levels',
+    {
+        'product_type': 'reanalysis',
+        'variable': 'surface_pressure',
+        'year': [
+            '2013', '2014', '2015',
+            '2016', '2017', '2018',
+            '2019', '2020', '2021',
+            '2022',
+        ],
+        'month': [
+            '01', '02', '03',
+            '04', '05', '06',
+            '07', '08', '09',
+            '10', '11', '12',
+        ],
+        'day': [
+            '01', '02', '03',
+            '04', '05', '06',
+            '07', '08', '09',
+            '10', '11', '12',
+            '13', '14', '15',
+            '16', '17', '18',
+            '19', '20', '21',
+            '22', '23', '24',
+            '25', '26', '27',
+            '28', '29', '30',
+            '31',
+        ],
+        'time': [
+            '00:00', '01:00', '02:00',
+            '03:00', '04:00', '05:00',
+            '06:00', '07:00', '08:00',
+            '09:00', '10:00', '11:00',
+            '12:00', '13:00', '14:00',
+            '15:00', '16:00', '17:00',
+            '18:00', '19:00', '20:00',
+            '21:00', '22:00', '23:00',
+        ],
+        'format': 'netcdf',
+    },
+    'scratch/ERA5/prs_sfc/ERA5_hourly_prs_sfc_2013_2022.nc')

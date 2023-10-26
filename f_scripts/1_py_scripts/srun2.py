@@ -6,7 +6,7 @@ c.retrieve(
     'reanalysis-era5-single-levels',
     {
         'product_type': 'reanalysis',
-        'variable': 'vertical_integral_of_eastward_water_vapour_flux',
+        'variable': '2m_dewpoint_temperature',
         'year': [
             '2013', '2014', '2015',
             '2016', '2017', '2018',
@@ -44,4 +44,4 @@ c.retrieve(
         ],
         'format': 'netcdf',
     },
-    'scratch/ERA5/IVT/ERA5_hourly_IVT_u_2013_2022.nc')
+    'scratch/ERA5/t2m_dew/ERA5_hourly_t2m_dew_2013_2022.nc')
