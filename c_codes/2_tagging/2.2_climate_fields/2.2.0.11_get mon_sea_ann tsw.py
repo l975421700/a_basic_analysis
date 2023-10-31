@@ -1,12 +1,12 @@
 
 
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'pi_m_502_5.0',
+    'nudged_701_5.0',
     ]
 i = 0
-ifile_start = 120
-ifile_end   = 720
+ifile_start = 12
+ifile_end   = 516
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -18,7 +18,7 @@ import warnings
 warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
-sys.path.append('/work/ollie/qigao001')
+sys.path.append('/albedo/work/user/qigao001')
 
 # data analysis
 import numpy as np
@@ -28,35 +28,6 @@ dask.config.set({"array.slicing.split_large_chunks": True})
 from dask.diagnostics import ProgressBar
 pbar = ProgressBar()
 pbar.register()
-from scipy import stats
-import xesmf as xe
-import pandas as pd
-from metpy.interpolate import cross_section
-
-# plot
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from matplotlib.colors import BoundaryNorm
-from matplotlib import cm
-import cartopy.crs as ccrs
-plt.rcParams['pcolor.shading'] = 'auto'
-mpl.rcParams['figure.dpi'] = 600
-mpl.rc('font', family='Times New Roman', size=10)
-mpl.rcParams['axes.linewidth'] = 0.2
-plt.rcParams.update({"mathtext.fontset": "stix"})
-import matplotlib.animation as animation
-import seaborn as sns
-
-# self defined
-from a_basic_analysis.b_module.mapplot import (
-    globe_plot,
-    hemisphere_plot,
-    quick_var_plot,
-    mesh2plot,
-    framework_plot1,
-    remove_trailing_zero,
-    remove_trailing_zero_pos,
-)
 
 from a_basic_analysis.b_module.basic_calculations import (
     mon_sea_ann,
@@ -64,20 +35,7 @@ from a_basic_analysis.b_module.basic_calculations import (
 )
 
 from a_basic_analysis.b_module.namelist import (
-    month,
-    month_num,
-    month_dec_num,
-    month_dec,
-    seasons,
-    hours,
-    months,
-    month_days,
     zerok,
-)
-
-from a_basic_analysis.b_module.source_properties import (
-    source_properties,
-    calc_lon_diff,
 )
 
 # endregion
@@ -126,12 +84,12 @@ test['mm'] = test['mon'].groupby('time.month').mean(skipna=True).compute()
 test['sm'] = test['sea'].groupby('time.season').mean(skipna=True).compute()
 test['am'] = test['ann'].mean(dim='time', skipna=True).compute()
 
-(tsw_alltime[expid[i]]['mon'].values[np.isfinite(tsw_alltime[expid[i]]['mon'].values)] == test['mon'].values[np.isfinite(test['mon'].values)]).all()
-(tsw_alltime[expid[i]]['sea'].values[np.isfinite(tsw_alltime[expid[i]]['sea'].values)] == test['sea'].values[np.isfinite(test['sea'].values)]).all()
-(tsw_alltime[expid[i]]['ann'].values[np.isfinite(tsw_alltime[expid[i]]['ann'].values)] == test['ann'].values[np.isfinite(test['ann'].values)]).all()
-(tsw_alltime[expid[i]]['mm'].values[np.isfinite(tsw_alltime[expid[i]]['mm'].values)] == test['mm'].values[np.isfinite(test['mm'].values)]).all()
-(tsw_alltime[expid[i]]['sm'].values[np.isfinite(tsw_alltime[expid[i]]['sm'].values)] == test['sm'].values[np.isfinite(test['sm'].values)]).all()
-(tsw_alltime[expid[i]]['am'].values[np.isfinite(tsw_alltime[expid[i]]['am'].values)] == test['am'].values[np.isfinite(test['am'].values)]).all()
+print((tsw_alltime[expid[i]]['mon'].values[np.isfinite(tsw_alltime[expid[i]]['mon'].values)] == test['mon'].values[np.isfinite(test['mon'].values)]).all())
+print((tsw_alltime[expid[i]]['sea'].values[np.isfinite(tsw_alltime[expid[i]]['sea'].values)] == test['sea'].values[np.isfinite(test['sea'].values)]).all())
+print((tsw_alltime[expid[i]]['ann'].values[np.isfinite(tsw_alltime[expid[i]]['ann'].values)] == test['ann'].values[np.isfinite(test['ann'].values)]).all())
+print((tsw_alltime[expid[i]]['mm'].values[np.isfinite(tsw_alltime[expid[i]]['mm'].values)] == test['mm'].values[np.isfinite(test['mm'].values)]).all())
+print((tsw_alltime[expid[i]]['sm'].values[np.isfinite(tsw_alltime[expid[i]]['sm'].values)] == test['sm'].values[np.isfinite(test['sm'].values)]).all())
+print((tsw_alltime[expid[i]]['am'].values[np.isfinite(tsw_alltime[expid[i]]['am'].values)] == test['am'].values[np.isfinite(test['am'].values)]).all())
 
 
 '''
@@ -139,4 +97,39 @@ test['am'] = test['ann'].mean(dim='time', skipna=True).compute()
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region calculate mon_sea_ann seaice
+
+seaice_alltime = {}
+seaice_alltime[expid[i]] = mon_sea_ann(var_monthly=exp_org_o[expid[i]]['g3b_1m'].seaice)
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.seaice_alltime.pkl', 'wb') as f:
+    pickle.dump(seaice_alltime[expid[i]], f)
+
+
+'''
+#-------------------------------- check
+seaice_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.seaice_alltime.pkl', 'rb') as f:
+    seaice_alltime[expid[i]] = pickle.load(f)
+
+test = {}
+test['mon'] = (exp_org_o[expid[i]]['g3b_1m'].seaice).compute().copy()
+test['sea'] = (exp_org_o[expid[i]]['g3b_1m'].seaice).resample({'time': 'Q-FEB'}).map(time_weighted_mean)[1:-1].compute()
+test['ann'] = (exp_org_o[expid[i]]['g3b_1m'].seaice).resample({'time': '1Y'}).map(time_weighted_mean).compute()
+test['mm'] = test['mon'].groupby('time.month').mean(skipna=True).compute()
+test['sm'] = test['sea'].groupby('time.season').mean(skipna=True).compute()
+test['am'] = test['ann'].mean(dim='time', skipna=True).compute()
+
+(seaice_alltime[expid[i]]['mon'].values[np.isfinite(seaice_alltime[expid[i]]['mon'].values)] == test['mon'].values[np.isfinite(test['mon'].values)]).all()
+(seaice_alltime[expid[i]]['sea'].values[np.isfinite(seaice_alltime[expid[i]]['sea'].values)] == test['sea'].values[np.isfinite(test['sea'].values)]).all()
+(seaice_alltime[expid[i]]['ann'].values[np.isfinite(seaice_alltime[expid[i]]['ann'].values)] == test['ann'].values[np.isfinite(test['ann'].values)]).all()
+(seaice_alltime[expid[i]]['mm'].values[np.isfinite(seaice_alltime[expid[i]]['mm'].values)] == test['mm'].values[np.isfinite(test['mm'].values)]).all()
+(seaice_alltime[expid[i]]['sm'].values[np.isfinite(seaice_alltime[expid[i]]['sm'].values)] == test['sm'].values[np.isfinite(test['sm'].values)]).all()
+(seaice_alltime[expid[i]]['am'].values[np.isfinite(seaice_alltime[expid[i]]['am'].values)] == test['am'].values[np.isfinite(test['am'].values)]).all()
+
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
 

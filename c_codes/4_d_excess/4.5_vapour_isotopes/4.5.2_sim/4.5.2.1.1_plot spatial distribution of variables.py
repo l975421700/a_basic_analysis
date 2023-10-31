@@ -251,6 +251,181 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q',
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region plot am relative source latitude
+
+q_sfc_weighted_var = {}
+q_sfc_weighted_var[expid[i]] = {}
+
+for src_var in ['lat',]:
+    print('#--------------------------------' + src_var)
+    src_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_sfc_weighted_' + src_var + '.pkl'
+    print(src_file)
+    
+    with open(src_file, 'rb') as f:
+        q_sfc_weighted_var[expid[i]][src_var] = pickle.load(f)
+
+lon = q_sfc_weighted_var[expid[i]][src_var]['am'].lon
+lat = q_sfc_weighted_var[expid[i]][src_var]['am'].lat
+
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
+
+output_png = 'figures/8_d-excess/8.3_vapour/8.3.1_sim/8.3.1.0.1 ' + expid[i] + ' am_sfc relative source latitude.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-4, cm_max=12, cm_interval1=2, cm_interval2=4, cmap='BrBG',
+    asymmetric=True,)
+
+fig, ax = hemisphere_plot(
+    northextent=-20, figsize=np.array([5.8, 7.3]) / 2.54,)
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
+
+plt_mesh = plot_t63_contourf(
+    lon, lat, q_sfc_weighted_var[expid[i]][src_var]['am'] - lat, ax,
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    plt_mesh, ax=ax, aspect=30, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+    pad=0.05,
+    )
+cbar.ax.tick_params(labelsize=7)
+cbar.ax.set_xlabel('Annual mean surface relative Source latitude [$°$]', linespacing=1.5, size=7)
+
+fig.savefig(output_png)
 
 
 
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot am relative source sst
+
+tsw_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.tsw_alltime.pkl', 'rb') as f:
+    tsw_alltime[expid[i]] = pickle.load(f)
+
+q_sfc_weighted_var = {}
+q_sfc_weighted_var[expid[i]] = {}
+
+for src_var in ['sst',]:
+    print('#--------------------------------' + src_var)
+    src_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_sfc_weighted_' + src_var + '.pkl'
+    print(src_file)
+    
+    with open(src_file, 'rb') as f:
+        q_sfc_weighted_var[expid[i]][src_var] = pickle.load(f)
+
+lon = q_sfc_weighted_var[expid[i]][src_var]['am'].lon
+lat = q_sfc_weighted_var[expid[i]][src_var]['am'].lat
+
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
+
+output_png = 'figures/8_d-excess/8.3_vapour/8.3.1_sim/8.3.1.0.1 ' + expid[i] + ' am_sfc relative source sst.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-2, cm_max=8, cm_interval1=2, cm_interval2=2, cmap='BrBG',
+    asymmetric=True,)
+
+fig, ax = hemisphere_plot(
+    northextent=-20, figsize=np.array([5.8, 7.3]) / 2.54,)
+cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
+
+plt_mesh = plot_t63_contourf(
+    lon, lat, q_sfc_weighted_var[expid[i]][src_var]['am'] - tsw_alltime[expid[i]]['am'], ax,
+    pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+
+ax.add_feature(
+    cfeature.LAND, color='white', zorder=2, edgecolor=None,lw=0)
+
+cbar = fig.colorbar(
+    plt_mesh, ax=ax, aspect=30, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+    pad=0.05,
+    )
+cbar.ax.tick_params(labelsize=7)
+cbar.ax.set_xlabel('Annual mean surface relative Source SST [$°\;C$]', linespacing=1.5, size=7)
+
+fig.savefig(output_png)
+
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot am contributions of each region to q
+
+q_geo7_sfc_frc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_geo7_sfc_frc_alltime.pkl', 'rb') as f:
+    q_geo7_sfc_frc_alltime[expid[i]] = pickle.load(f)
+
+lon = q_geo7_sfc_frc_alltime[expid[i]]['am'].lon
+lat = q_geo7_sfc_frc_alltime[expid[i]]['am'].lat
+
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
+
+for iregion in q_geo7_sfc_frc_alltime[expid[i]]['am'].geo_regions.values:
+    # iregion = 'Open Ocean'
+    print('#-------------------------------- ' + iregion)
+    
+    output_png = 'figures/8_d-excess/8.3_vapour/8.3.1_sim/8.3.1.1_region_contributions/8.3.1.1.0 ' + expid[i] + ' am_sfc ' + iregion + ' contributions.png'
+    
+    if (iregion in ['AIS', 'Land excl. AIS', 'SH seaice']):
+        cm_min = 0
+        cm_max = 40
+        cm_interval1 = 5
+        cm_interval2 = 10
+        cmap = 'magma'
+        reverse = True
+        expand = 'max'
+    if (iregion in ['Open Ocean']):
+        cm_min = 40
+        cm_max = 100
+        cm_interval1 = 5
+        cm_interval2 = 10
+        cmap = 'viridis'
+        reverse = True
+        expand = 'min'
+    if (iregion in ['Pacific Ocean', 'Southern Ocean', 'Indian Ocean', 'Atlantic Ocean',]):
+        cm_min = 0
+        cm_max = 100
+        cm_interval1 = 10
+        cm_interval2 = 20
+        cmap = 'cividis'
+        reverse = True
+        expand = 'neither'
+    
+    var = q_geo7_sfc_frc_alltime[expid[i]]['am'].sel(
+        geo_regions=iregion, lat=slice(-17, -90))
+    pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+        cm_min=cm_min, cm_max=cm_max,
+        cm_interval1=cm_interval1, cm_interval2=cm_interval2,
+        cmap=cmap, reversed=reverse)
+    
+    fig, ax = hemisphere_plot(
+        northextent=-20, figsize=np.array([5.8, 7.3]) / 2.54,)
+    cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
+    
+    plt_mesh = plot_t63_contourf(
+        lon, lat.sel(lat=slice(-17, -90)), var, ax,
+        pltlevel, expand, pltnorm, pltcmp, ccrs.PlateCarree(),)
+    
+    cbar = fig.colorbar(
+        plt_mesh, ax=ax, aspect=30, format=remove_trailing_zero_pos,
+        orientation="horizontal", shrink=0.9, ticks=pltticks, extend=expand,
+        pad=0.05,
+        )
+    cbar.ax.tick_params(labelsize=7)
+    cbar.ax.set_xlabel('Contribution to surface q from ' + iregion + ' [$\%$]', linespacing=1.5, size=8)
+    
+    fig.savefig(output_png)
+
+
+# endregion
+# -----------------------------------------------------------------------------

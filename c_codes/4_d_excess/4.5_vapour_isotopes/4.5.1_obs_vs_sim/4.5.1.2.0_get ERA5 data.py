@@ -1,5 +1,14 @@
 
 
+#SBATCH --time=00:30:00
+#SBATCH --mem=240GB
+
+
+# salloc --account=paleodyn.paleodyn --qos=12h --time=12:00:00 --nodes=1 --mem=120GB
+# source ${HOME}/miniconda3/bin/activate deepice
+# ipython
+
+
 # -----------------------------------------------------------------------------
 # region import packages
 
@@ -30,14 +39,13 @@ from a_basic_analysis.b_module.basic_calculations import (
 
 
 # -----------------------------------------------------------------------------
-# region get daily data from hourly data
+# region get daily temp2 from hourly temp2
 
 ERA5_hourly_temp2_2013_2022 = xr.open_dataset('scratch/ERA5/temp2/ERA5_hourly_temp2_2013_2022.nc', chunks={'time': 720})
 
 ERA5_daily_temp2_2013_2022 = ERA5_hourly_temp2_2013_2022.t2m.resample(time='1d').mean().compute()
 
 ERA5_daily_temp2_2013_2022.to_netcdf('scratch/ERA5/temp2/ERA5_daily_temp2_2013_2022.nc')
-
 
 
 
@@ -49,15 +57,11 @@ ERA5_daily_temp2_2013_2022 = xr.open_dataset('scratch/ERA5/temp2/ERA5_daily_temp
 ERA5_hourly_temp2_2013_2022 = xr.open_dataset('scratch/ERA5/temp2/ERA5_hourly_temp2_2013_2022.nc', chunks={'time': 720})
 
 (ERA5_hourly_temp2_2013_2022.t2m[-24:].mean(dim='time').values == ERA5_daily_temp2_2013_2022.t2m[-1].values).all()
-
-# ERA5_hourly_temp2_2013_2022.t2m[0:48].resample(time='1d').mean().compute()
 '''
 # endregion
 # -----------------------------------------------------------------------------
-
-
 # -----------------------------------------------------------------------------
-# region get mon_sea_ann data
+# region get mon_sea_ann temp2
 
 ERA5_daily_temp2_2013_2022 = xr.open_dataset('scratch/ERA5/temp2/ERA5_daily_temp2_2013_2022.nc', chunks={'time': 720})
 
@@ -65,7 +69,7 @@ ERA5_temp2_2013_2022_alltime = mon_sea_ann(
     var_daily=ERA5_daily_temp2_2013_2022.t2m, lcopy=False)
 
 
-output_file = 'scratch/ERA5/temp2/ERA5_temp2_2013_2022_alltime.nc'
+output_file = 'scratch/ERA5/temp2/ERA5_temp2_2013_2022_alltime.pkl'
 
 if (os.path.isfile(output_file)):
     os.remove(output_file)
@@ -76,15 +80,196 @@ with open(output_file, 'wb') as f:
 
 
 '''
-with open('scratch/ERA5/temp2/ERA5_temp2_2013_2022_alltime.nc', 'rb') as f:
+#-------------------------------- check
+
+with open('scratch/ERA5/temp2/ERA5_temp2_2013_2022_alltime.pkl', 'rb') as f:
     ERA5_temp2_2013_2022_alltime = pickle.load(f)
 
+ERA5_daily_temp2_2013_2022 = xr.open_dataset('scratch/ERA5/temp2/ERA5_daily_temp2_2013_2022.nc', chunks={'time': 720})
 
-
+itime = 200
+data1 = ERA5_temp2_2013_2022_alltime['daily'][itime].values
+data2 = ERA5_daily_temp2_2013_2022.t2m[itime].values
+(data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all()
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region get daily SST from hourly SST
+
+ERA5_hourly_SST_2013_2022 = xr.open_dataset('scratch/ERA5/SST/ERA5_hourly_SST_2013_2022.nc', chunks={'time': 720})
+
+ERA5_daily_SST_2013_2022 = ERA5_hourly_SST_2013_2022.sst.resample(time='1d').mean().compute()
+
+ERA5_daily_SST_2013_2022.to_netcdf('scratch/ERA5/SST/ERA5_daily_SST_2013_2022.nc')
+
+
+
+
+'''
+#-------------------------------- check
+ERA5_daily_SST_2013_2022 = xr.open_dataset('scratch/ERA5/SST/ERA5_daily_SST_2013_2022.nc', chunks={'time': 720})
+
+ERA5_hourly_SST_2013_2022 = xr.open_dataset('scratch/ERA5/SST/ERA5_hourly_SST_2013_2022.nc', chunks={'time': 720})
+
+data1 = ERA5_hourly_SST_2013_2022.sst[-24:].mean(dim='time').values
+data2 = ERA5_daily_SST_2013_2022.sst[-1].values
+
+(data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all()
+'''
+# endregion
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# region get mon_sea_ann SST
+
+ERA5_daily_SST_2013_2022 = xr.open_dataset('scratch/ERA5/SST/ERA5_daily_SST_2013_2022.nc', chunks={'time': 720})
+
+ERA5_SST_2013_2022_alltime = mon_sea_ann(
+    var_daily=ERA5_daily_SST_2013_2022.sst, lcopy=False)
+
+
+output_file = 'scratch/ERA5/SST/ERA5_SST_2013_2022_alltime.pkl'
+
+if (os.path.isfile(output_file)):
+    os.remove(output_file)
+
+with open(output_file, 'wb') as f:
+    pickle.dump(ERA5_SST_2013_2022_alltime, f)
+
+
+
+'''
+#-------------------------------- check
+
+with open('scratch/ERA5/SST/ERA5_SST_2013_2022_alltime.pkl', 'rb') as f:
+    ERA5_SST_2013_2022_alltime = pickle.load(f)
+
+ERA5_daily_SST_2013_2022 = xr.open_dataset('scratch/ERA5/SST/ERA5_daily_SST_2013_2022.nc', chunks={'time': 720})
+
+itime = 200
+data1 = ERA5_SST_2013_2022_alltime['daily'][itime].values
+data2 = ERA5_daily_SST_2013_2022.sst[itime].values
+(data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all()
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get daily SIC from hourly SIC
+
+ERA5_hourly_SIC_2013_2022 = xr.open_dataset('scratch/ERA5/SIC/ERA5_hourly_SIC_2013_2022.nc', chunks={'time': 720})
+
+ERA5_daily_SIC_2013_2022 = ERA5_hourly_SIC_2013_2022.siconc.resample(time='1d').mean().compute()
+
+ERA5_daily_SIC_2013_2022.to_netcdf('scratch/ERA5/SIC/ERA5_daily_SIC_2013_2022.nc')
+
+
+
+
+'''
+#-------------------------------- check
+ERA5_daily_SIC_2013_2022 = xr.open_dataset('scratch/ERA5/SIC/ERA5_daily_SIC_2013_2022.nc', chunks={'time': 720})
+
+ERA5_hourly_SIC_2013_2022 = xr.open_dataset('scratch/ERA5/SIC/ERA5_hourly_SIC_2013_2022.nc', chunks={'time': 720})
+
+data1 = ERA5_hourly_SIC_2013_2022.siconc[-24:].mean(dim='time').values
+data2 = ERA5_daily_SIC_2013_2022.siconc[-1].values
+
+(data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all()
+'''
+# endregion
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# region get mon_sea_ann SIC
+
+ERA5_daily_SIC_2013_2022 = xr.open_dataset('scratch/ERA5/SIC/ERA5_daily_SIC_2013_2022.nc', chunks={'time': 720})
+
+ERA5_SIC_2013_2022_alltime = mon_sea_ann(
+    var_daily=ERA5_daily_SIC_2013_2022.siconc, lcopy=False)
+
+
+output_file = 'scratch/ERA5/SIC/ERA5_SIC_2013_2022_alltime.pkl'
+
+if (os.path.isfile(output_file)):
+    os.remove(output_file)
+
+with open(output_file, 'wb') as f:
+    pickle.dump(ERA5_SIC_2013_2022_alltime, f)
+
+
+
+'''
+#-------------------------------- check
+
+with open('scratch/ERA5/SIC/ERA5_SIC_2013_2022_alltime.pkl', 'rb') as f:
+    ERA5_SIC_2013_2022_alltime = pickle.load(f)
+
+ERA5_daily_SIC_2013_2022 = xr.open_dataset('scratch/ERA5/SIC/ERA5_daily_SIC_2013_2022.nc', chunks={'time': 720})
+
+itime = 200
+data1 = ERA5_SIC_2013_2022_alltime['daily'][itime].values
+data2 = ERA5_daily_SIC_2013_2022.siconc[itime].values
+(data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all()
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get daily prs_sfc from hourly prs_sfc
+
+ERA5_hourly_prs_sfc_2013_2022 = xr.open_dataset('scratch/ERA5/prs_sfc/ERA5_hourly_prs_sfc_2013_2022.nc', chunks={'time': 720})
+
+ERA5_daily_prs_sfc_2013_2022 = ERA5_hourly_prs_sfc_2013_2022.sp.resample(time='1d').mean().compute()
+
+ERA5_daily_prs_sfc_2013_2022.to_netcdf('scratch/ERA5/prs_sfc/ERA5_daily_prs_sfc_2013_2022.nc')
+
+
+
+
+'''
+#-------------------------------- check
+ERA5_daily_prs_sfc_2013_2022 = xr.open_dataset('scratch/ERA5/prs_sfc/ERA5_daily_prs_sfc_2013_2022.nc', chunks={'time': 720})
+
+ERA5_hourly_prs_sfc_2013_2022 = xr.open_dataset('scratch/ERA5/prs_sfc/ERA5_hourly_prs_sfc_2013_2022.nc', chunks={'time': 720})
+
+data1 = ERA5_hourly_prs_sfc_2013_2022.sp[-24:].mean(dim='time').values
+data2 = ERA5_daily_prs_sfc_2013_2022.sp[-1].values
+
+(data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all()
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get daily t2m_dew from hourly t2m_dew
+
+ERA5_hourly_t2m_dew_2013_2022 = xr.open_dataset('scratch/ERA5/t2m_dew/ERA5_hourly_t2m_dew_2013_2022.nc', chunks={'time': 720})
+
+ERA5_daily_t2m_dew_2013_2022 = ERA5_hourly_t2m_dew_2013_2022.d2m.resample(time='1d').mean().compute()
+
+ERA5_daily_t2m_dew_2013_2022.to_netcdf('scratch/ERA5/t2m_dew/ERA5_daily_t2m_dew_2013_2022.nc')
+
+
+
+
+'''
+#-------------------------------- check
+ERA5_daily_t2m_dew_2013_2022 = xr.open_dataset('scratch/ERA5/t2m_dew/ERA5_daily_t2m_dew_2013_2022.nc', chunks={'time': 720})
+
+ERA5_hourly_t2m_dew_2013_2022 = xr.open_dataset('scratch/ERA5/t2m_dew/ERA5_hourly_t2m_dew_2013_2022.nc', chunks={'time': 720})
+
+data1 = ERA5_hourly_t2m_dew_2013_2022.d2m[-24:].mean(dim='time').values
+data2 = ERA5_daily_t2m_dew_2013_2022.d2m[-1].values
+
+(data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all()
+'''
+# endregion
+# -----------------------------------------------------------------------------
 
 
 

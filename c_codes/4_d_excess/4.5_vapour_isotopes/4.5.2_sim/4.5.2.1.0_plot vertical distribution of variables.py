@@ -289,3 +289,185 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q',
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region SH plot am contribution of each region to zm atmospheric humidity
+
+q_geo7_alltiime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_geo7_alltiime.pkl', 'rb') as f:
+    q_geo7_alltiime[expid[i]] = pickle.load(f)
+
+lat = q_geo7_alltiime[expid[i]]['am'].lat
+plevs = q_geo7_alltiime[expid[i]]['am'].plev
+
+q_geo7_alltiime[expid[i]]['am_zm'] = q_geo7_alltiime[expid[i]]['am'].mean(dim='lon').compute()
+
+for iregion in ['AIS', 'Land excl. AIS', 'Atlantic Ocean',
+                'Indian Ocean', 'Pacific Ocean', 'SH seaice',
+                'Southern Ocean', 'Open Ocean',]:
+    # iregion = 'Open Ocean'
+    print('#-------------------------------- ' + iregion)
+    
+    if (iregion in ['AIS', 'Land excl. AIS', 'SH seaice',]):
+        cm_min = 0
+        cm_max = 30
+        cm_interval1 = 5
+        cm_interval2 = 10
+        cmap = 'magma'
+        reverse = True
+        expand = 'max'
+    if (iregion in ['Open Ocean']):
+        cm_min = 60
+        cm_max = 100
+        cm_interval1 = 5
+        cm_interval2 = 10
+        cmap = 'viridis'
+        reverse = True
+        expand = 'min'
+    if (iregion in ['Pacific Ocean', 'Southern Ocean', 'Indian Ocean', 'Atlantic Ocean',]):
+        cm_min = 0
+        cm_max = 50
+        cm_interval1 = 5
+        cm_interval2 = 10
+        cmap = 'cividis'
+        reverse = True
+        expand = 'max'
+    
+    var = (q_geo7_alltiime[expid[i]]['am_zm'].sel(geo_regions=iregion) / \
+        q_geo7_alltiime[expid[i]]['am_zm'].sel(geo_regions='Sum') * 100
+        ).sel(lat=slice(3, -90), plev=slice(1e+5, 2e+4))
+    
+    pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+        cm_min=cm_min, cm_max=cm_max,
+        cm_interval1=cm_interval1, cm_interval2=cm_interval2,
+        cmap=cmap, reversed=reverse)
+    
+    output_png = 'figures/8_d-excess/8.3_vapour/8.3.1_sim/8.3.1.1_region_contributions/8.3.1.1.0 ' + expid[i] + ' am_zm_SH ' + iregion + ' contributions.png'
+    
+    fig, ax = plt.subplots(1, 1, figsize=np.array([13.2, 8.8]) / 2.54)
+    plt_mesh = ax.contourf(
+        lat.sel(lat=slice(3, -90)),
+        plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
+        var,
+        norm=pltnorm, cmap=pltcmp, levels=pltlevel, extend=expand,)
+    
+    ax.set_xticks(np.arange(0, -90 - 1e-4, -10))
+    ax.set_xlim(0, -88.57)
+    ax.xaxis.set_major_formatter(LatitudeFormatter(degree_symbol='° '))
+    
+    ax.invert_yaxis()
+    ax.set_ylim(1000, 200)
+    ax.set_yticks(np.arange(1000, 200 - 1e-4, -100))
+    ax.set_ylabel('Pressure [$hPa$]')
+    
+    ax.grid(True, lw=0.5, c='gray', alpha=0.5, linestyle='--',)
+    
+    cbar = fig.colorbar(
+        plt_mesh, ax=ax, aspect=25, format=remove_trailing_zero_pos,
+        orientation="horizontal", shrink=0.8, ticks=pltticks,
+        pad=0.1, fraction=0.04, anchor=(0.5, -1),
+        )
+    
+    cbar.ax.set_xlabel('Contribution to zonal-averaged annual mean q from ' + iregion + ' [$\%$]',)
+    
+    fig.subplots_adjust(left=0.12, right=0.88, bottom=0.14, top=0.98)
+    fig.savefig(output_png)
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region NH plot am contribution of each region to zm atmospheric humidity
+
+q_geo7_alltiime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_geo7_alltiime.pkl', 'rb') as f:
+    q_geo7_alltiime[expid[i]] = pickle.load(f)
+
+lat = q_geo7_alltiime[expid[i]]['am'].lat
+plevs = q_geo7_alltiime[expid[i]]['am'].plev
+
+q_geo7_alltiime[expid[i]]['am_zm'] = q_geo7_alltiime[expid[i]]['am'].mean(dim='lon').compute()
+
+for iregion in ['Land excl. AIS', 'Atlantic Ocean',
+                'Indian Ocean', 'Pacific Ocean',
+                'Open Ocean',]:
+    # iregion = 'AIS'
+    print('#-------------------------------- ' + iregion)
+    
+    if (iregion in ['Land excl. AIS',]):
+        cm_min = 0
+        cm_max = 50
+        cm_interval1 = 5
+        cm_interval2 = 10
+        cmap = 'magma'
+        reverse = True
+        expand = 'max'
+    if (iregion in ['Open Ocean']):
+        cm_min = 50
+        cm_max = 100
+        cm_interval1 = 5
+        cm_interval2 = 10
+        cmap = 'viridis'
+        reverse = True
+        expand = 'min'
+    if (iregion in ['Pacific Ocean', 'Indian Ocean', 'Atlantic Ocean',]):
+        cm_min = 0
+        cm_max = 50
+        cm_interval1 = 5
+        cm_interval2 = 10
+        cmap = 'cividis'
+        reverse = True
+        expand = 'max'
+    
+    var = (q_geo7_alltiime[expid[i]]['am_zm'].sel(geo_regions=iregion) / \
+        q_geo7_alltiime[expid[i]]['am_zm'].sel(geo_regions='Sum') * 100
+        ).sel(lat=slice(90, -3), plev=slice(1e+5, 2e+4))
+    
+    pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+        cm_min=cm_min, cm_max=cm_max,
+        cm_interval1=cm_interval1, cm_interval2=cm_interval2,
+        cmap=cmap, reversed=reverse)
+    
+    output_png = 'figures/8_d-excess/8.3_vapour/8.3.1_sim/8.3.1.1_region_contributions/8.3.1.1.0 ' + expid[i] + ' am_zm_NH ' + iregion + ' contributions.png'
+    
+    fig, ax = plt.subplots(1, 1, figsize=np.array([13.2, 8.8]) / 2.54)
+    plt_mesh = ax.contourf(
+        lat.sel(lat=slice(90, -3)),
+        plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
+        var,
+        norm=pltnorm, cmap=pltcmp, levels=pltlevel, extend=expand,)
+    
+    # ax.set_xticks(np.arange(0, -90 - 1e-4, -10))
+    # ax.set_xlim(0, -88.57)
+    ax.set_xticks(np.arange(90, 0 - 1e-4, -10))
+    ax.set_xlim(88.57, 0)
+    ax.xaxis.set_major_formatter(LatitudeFormatter(degree_symbol='° '))
+    
+    ax.invert_yaxis()
+    ax.set_ylim(1000, 200)
+    ax.set_yticks(np.arange(1000, 200 - 1e-4, -100))
+    ax.set_ylabel('Pressure [$hPa$]')
+    
+    ax.grid(True, lw=0.5, c='gray', alpha=0.5, linestyle='--',)
+    
+    cbar = fig.colorbar(
+        plt_mesh, ax=ax, aspect=25, format=remove_trailing_zero_pos,
+        orientation="horizontal", shrink=0.8, ticks=pltticks,
+        pad=0.1, fraction=0.04, anchor=(0.5, -1),
+        )
+    
+    cbar.ax.set_xlabel('Contributions to zonal-averaged annual mean q from ' + iregion + ' [$\%$]',)
+    
+    fig.subplots_adjust(left=0.12, right=0.88, bottom=0.14, top=0.98)
+    fig.savefig(output_png)
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+
+

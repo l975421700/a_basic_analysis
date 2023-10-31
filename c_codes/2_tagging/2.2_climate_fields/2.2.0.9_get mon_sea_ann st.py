@@ -139,21 +139,3 @@ data2 = exp_org_o[expid[i]]['st_plev'].st.values
 # -----------------------------------------------------------------------------
 
 
-# st_ml
-# -----------------------------------------------------------------------------
-# region import output
-
-era5_forcing = xr.open_dataset('/albedo/work/projects/paleo_work/paleodyn_from_work_ollie_projects/paleodyn/nudging/ERA5/atmos/T63/era5T63L47_201003.nc')
-# era5_forcing = xr.open_dataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/nudged_701_5.0/forcing/echam/ndg201012.nc')
-
-echam6_output = xr.open_dataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/nudged_701_5.0/unknown/nudged_701_5.0_201003.01_sp_1m.nc')
-
-bias = era5_forcing['t'].sel(lev=47).mean(dim='time').values - echam6_output['st'].sel(lev=47)[0].values
-
-print(np.mean(abs(bias)))
-print(np.max(bias))
-
-
-# endregion
-# -----------------------------------------------------------------------------
-
