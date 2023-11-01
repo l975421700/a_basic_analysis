@@ -279,19 +279,6 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
 
 '''
 
-BJ19_polarstern_1d_sim_SH = BJ19_polarstern_1d_sim[expid[i]][
-    BJ19_polarstern_1d_sim[expid[i]]['lat'] < 0
-]
-
-fig, ax = globe_plot(add_grid_labels=False)
-
-ax.scatter(
-    BJ19_polarstern_1d_sim_SH['lon'],
-    BJ19_polarstern_1d_sim_SH['lat'],
-    marker='o', facecolor='none', edgecolors='black', s=4, lw=0.2,
-    transform=ccrs.PlateCarree(),
-)
-fig.savefig('figures/test/trial.png')
 
 '''
 # endregion
@@ -299,8 +286,17 @@ fig.savefig('figures/test/trial.png')
 
 
 # -----------------------------------------------------------------------------
-# region map
+# region plot data distribution
 
+fig, ax = globe_plot(add_grid_labels=False)
+
+ax.scatter(
+    BJ19_polarstern_1d_sim[expid[i]]['lon'],
+    BJ19_polarstern_1d_sim[expid[i]]['lat'],
+    marker='x', s=4, lw=0.2,
+    transform=ccrs.PlateCarree(),
+)
+fig.savefig('figures/test/trial.png')
 
 
 # endregion

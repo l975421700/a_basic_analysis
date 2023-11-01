@@ -367,6 +367,104 @@ fig.savefig(output_png)
 
 
 # -----------------------------------------------------------------------------
+# region plot sm and am temp2 diff, based on temp2_alltime2
+
+temp2_alltime2 = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime2.pkl', 'rb') as f:
+    temp2_alltime2[expid[i]] = pickle.load(f)
+
+temp2_alltime_13_22 = mon_sea_ann(
+    var_monthly=temp2_alltime2[expid[i]]['mon'][-120:,])
+
+output_png = 'figures/8_d-excess/8.3_vapour/8.3.1_sim/8.3.1.0_sim_era5/8.3.1.0.0 ECHAM6_ERA5 am_sm temp2 differences based on temp2_alltime2.png'
+cbar_label = 'Differences in temp2 between ECHAM6 nudged simulation and ERA5 [$°C$]'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-4, cm_max=4, cm_interval1=1, cm_interval2=1, cmap='RdBu',)
+
+nrow = 1
+ncol = 5
+fm_bottom = 2.5 / (5.8*nrow + 2)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2.5]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.05, 'wspace': 0.05},)
+
+ipanel=0
+for jcol in range(ncol):
+    axs[jcol] = hemisphere_plot(northextent=-60, ax_org = axs[jcol])
+    # cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
+    plt.text(
+        0.05, 0.975, panel_labels[ipanel],
+        transform=axs[jcol].transAxes,
+        ha='center', va='center', rotation='horizontal')
+    ipanel += 1
+
+#-------- differences
+plt_data = regrid(temp2_alltime_13_22['sm'].sel(season='DJF')) - regrid(ERA5_temp2_2013_2022_alltime['sm'].sel(season='DJF') - zerok)
+plt1 = axs[0].contourf(
+    plt_data.lon, plt_data.lat, plt_data,
+    levels = pltlevel, extend='both',
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+plt_data = regrid(temp2_alltime_13_22['sm'].sel(season='MAM')) - regrid(ERA5_temp2_2013_2022_alltime['sm'].sel(season='MAM') - zerok)
+axs[1].contourf(
+    plt_data.lon, plt_data.lat, plt_data,
+    levels = pltlevel, extend='both',
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+plt_data = regrid(temp2_alltime_13_22['sm'].sel(season='JJA')) - regrid(ERA5_temp2_2013_2022_alltime['sm'].sel(season='JJA') - zerok)
+axs[2].contourf(
+    plt_data.lon, plt_data.lat, plt_data,
+    levels = pltlevel, extend='both',
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+plt_data = regrid(temp2_alltime_13_22['sm'].sel(season='SON')) - regrid(ERA5_temp2_2013_2022_alltime['sm'].sel(season='SON') - zerok)
+axs[3].contourf(
+    plt_data.lon, plt_data.lat, plt_data,
+    levels = pltlevel, extend='both',
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+plt_data = regrid(temp2_alltime_13_22['am']) - regrid(ERA5_temp2_2013_2022_alltime['am'] - zerok)
+axs[4].contourf(
+    plt_data.lon, plt_data.lat, plt_data,
+    levels = pltlevel, extend='both',
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+plt.text(
+    0.5, 1.05, 'DJF', transform=axs[0].transAxes,
+    ha='center', va='center', rotation='horizontal')
+plt.text(
+    0.5, 1.05, 'MAM', transform=axs[1].transAxes,
+    ha='center', va='center', rotation='horizontal')
+plt.text(
+    0.5, 1.05, 'JJA', transform=axs[2].transAxes,
+    ha='center', va='center', rotation='horizontal')
+plt.text(
+    0.5, 1.05, 'SON', transform=axs[3].transAxes,
+    ha='center', va='center', rotation='horizontal')
+plt.text(
+    0.5, 1.05, 'Annual mean', transform=axs[4].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+cbar = fig.colorbar(
+    plt1, ax=axs,
+    orientation="horizontal",shrink=0.5,aspect=40,
+    anchor=(0.5, 1), ticks=pltticks, format=remove_trailing_zero_pos, )
+cbar.ax.set_xlabel(cbar_label, linespacing=2)
+
+fig.subplots_adjust(
+    left=0.01, right = 0.99, bottom = fm_bottom * 0.8, top = 0.94)
+fig.savefig(output_png)
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
 # region plot sm and am SST diff
 
 tsw_alltime = {}

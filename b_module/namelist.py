@@ -103,6 +103,7 @@ plot_labels = {
     't_air': 'Air temperature [$°C$]',
     't_3m': 'Air temperature [$°C$]',
     'q': 'Specific humidity [$g/kg$]',
+    'pre': 'Precipitation [$mm \; day^{-1}$]',
 }
 
 plot_labels_no_unit = {

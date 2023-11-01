@@ -28,13 +28,13 @@ from dask.diagnostics import ProgressBar
 pbar = ProgressBar()
 pbar.register()
 from scipy import stats
-import xesmf as xe
+# import xesmf as xe
 import pandas as pd
-from metpy.interpolate import cross_section
 from statsmodels.stats import multitest
 import pycircstat as circ
-from scipy.stats import pearsonr
+import xskillscore as xs
 from scipy.stats import linregress
+from scipy.stats import pearsonr
 
 # plot
 import matplotlib as mpl
@@ -51,57 +51,14 @@ import matplotlib.animation as animation
 import seaborn as sns
 import cartopy.feature as cfeature
 from matplotlib.ticker import AutoMinorLocator
-from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
-import matplotlib.path as mpath
-
-# self defined
-from a_basic_analysis.b_module.mapplot import (
-    globe_plot,
-    hemisphere_plot,
-    quick_var_plot,
-    mesh2plot,
-    framework_plot1,
-    remove_trailing_zero,
-    remove_trailing_zero_pos,
-    ticks_labels,
-    hemisphere_conic_plot,
-)
-
-from a_basic_analysis.b_module.basic_calculations import (
-    mon_sea_ann,
-)
 
 from a_basic_analysis.b_module.namelist import (
-    month,
-    month_num,
-    month_dec,
-    month_dec_num,
-    seasons,
-    seasons_last_num,
-    hours,
-    months,
-    month_days,
-    zerok,
-    panel_labels,
+    seconds_per_d,
+    monthini,
     plot_labels,
+    expid_labels,
 )
 
-from a_basic_analysis.b_module.source_properties import (
-    source_properties,
-    calc_lon_diff,
-)
-
-from a_basic_analysis.b_module.statistics import (
-    fdr_control_bh,
-    check_normality_3d,
-    check_equal_variance_3d,
-    ttest_fdr_control,
-)
-
-from a_basic_analysis.b_module.component_plot import (
-    cplot_ice_cores,
-    plt_mesh_pars,
-)
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -110,23 +67,24 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-IT20_ACE_1d_sim = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.IT20_ACE_1d_sim.pkl', 'rb') as f:
-    IT20_ACE_1d_sim[expid[i]] = pickle.load(f)
+with open('data_sources/Dome_C_records/BS13_Dome_C.pkl', 'rb') as f:
+    BS13_Dome_C = pickle.load(f)
 
+isotopes_alltime_icores = {}
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.isotopes_alltime_icores.pkl', 'rb') as f:
+    isotopes_alltime_icores[expid[i]] = pickle.load(f)
 
+temp2_alltime_icores = {}
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.temp2_alltime_icores.pkl', 'rb') as f:
+    temp2_alltime_icores[expid[i]] = pickle.load(f)
 
-'''
-#---------------- check correlation
-for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
-    # var_name = 'd_ln'
-    print('#-------- ' + var_name)
-    
-    subset = np.isfinite(IT20_ACE_1d_sim[expid[i]][var_name]) & np.isfinite(IT20_ACE_1d_sim[expid[i]][var_name + '_sim'])
-    
-    print(np.round(pearsonr(IT20_ACE_1d_sim[expid[i]][var_name][subset], IT20_ACE_1d_sim[expid[i]][var_name + '_sim'][subset], ).statistic ** 2, 3))
+wisoaprt_alltime_icores = {}
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_alltime_icores.pkl', 'rb') as f:
+    wisoaprt_alltime_icores[expid[i]] = pickle.load(f)
 
-'''
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -134,35 +92,57 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
 # -----------------------------------------------------------------------------
 # region Q-Q plot
 
-for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
-    # var_name = 'q'
-    print('#-------- ' + var_name)
+for ivar in ['dD', 'd18O', 'd_xs', 'd_ln', 'pre', 'temp2', ]:
+    # ivar = 'temp2'
+    print('#-------------------------------- ' + ivar)
     
-    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.3_IT20/8.3.0.3.0 ' + expid[i] + ' IT20 observed vs. simulated daily ' + var_name + '.png'
+    if (ivar == 'dD'):
+        xdata = BS13_Dome_C['mon'][ivar].values
+        xdata_am = BS13_Dome_C['am'][ivar]
+        ydata = isotopes_alltime_icores[expid[i]][ivar]['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+        ydata_am = np.nanmean(ydata)
+    elif (ivar == 'd18O'):
+        xdata = BS13_Dome_C['mon'][ivar].values
+        xdata_am = BS13_Dome_C['am'][ivar]
+        ydata = isotopes_alltime_icores[expid[i]]['dO18']['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+        ydata_am = np.nanmean(ydata)
+    elif (ivar == 'd_xs'):
+        xdata = BS13_Dome_C['mon'][ivar].values
+        xdata_am = BS13_Dome_C['am'][ivar]
+        ydata = isotopes_alltime_icores[expid[i]]['d_excess']['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+        ydata_am = np.nanmean(ydata)
+    elif (ivar == 'd_ln'):
+        xdata = BS13_Dome_C['mon'][ivar].values
+        xdata_am = BS13_Dome_C['am'][ivar]
+        ydata = isotopes_alltime_icores[expid[i]][ivar]['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+        ydata_am = np.nanmean(ydata)
+    elif (ivar == 'pre'):
+        xdata = BS13_Dome_C['mon'][ivar].values
+        xdata_am = BS13_Dome_C['am'][ivar]
+        ydata = wisoaprt_alltime_icores[expid[i]]['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31')) * seconds_per_d
+        ydata_am = np.nanmean(ydata)
+    elif (ivar == 'temp2'):
+        xdata = BS13_Dome_C['mon'][ivar].values
+        xdata_am = BS13_Dome_C['am'][ivar]
+        ydata = temp2_alltime_icores[expid[i]]['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+        ydata_am = np.nanmean(ydata)
     
-    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
-    
-    xdata = IT20_ACE_1d_sim[expid[i]][var_name]
-    ydata = IT20_ACE_1d_sim[expid[i]][var_name + '_sim']
-    subset = (np.isfinite(xdata) & np.isfinite(ydata))
+    subset = np.isfinite(xdata) & np.isfinite(ydata)
     xdata = xdata[subset]
     ydata = ydata[subset]
     
-    if (var_name == 'q'):
-        xdata = xdata * 1000
-        ydata = ydata * 1000
+    print(pearsonr(xdata, ydata).statistic ** 2)
+    
+    output_png = 'figures/8_d-excess/8.0_records/8.0.4_dome_c/8.0.4.0_sim_obs/8.0.4.0.0 ' + expid[i] + ' BS13 observed vs. simulated mon ' + ivar + '.png'
+    
+    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
     
     RMSE = np.sqrt(np.average(np.square(xdata - ydata)))
     
-    sns.scatterplot(
-        x=xdata, y=ydata,
-        s=12,
-        # marker="o",
-    )
+    sns.scatterplot(x=xdata, y=ydata, s=12,)
     
     linearfit = linregress(x = xdata, y = ydata,)
-    ax.axline(
-        (0, linearfit.intercept), slope = linearfit.slope, lw=1,)
+    ax.axline((0, linearfit.intercept), slope = linearfit.slope, lw=1,)
     
     if (linearfit.intercept >= 0):
         eq_text = '$y = $' + \
@@ -177,9 +157,7 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
                     ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
                         ', $RMSE = $' + str(np.round(RMSE, 1))
     
-    plt.text(
-        0.32, 0.15, eq_text,
-        transform=ax.transAxes, fontsize=8, ha='left')
+    plt.text(0.32, 0.15, eq_text, transform=ax.transAxes, fontsize=8, ha='left')
     
     xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
     xylim_min = np.min(xylim)
@@ -190,9 +168,9 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
     ax.axline((0, 0), slope = 1, lw=1, color='grey', alpha=0.5)
     
     ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-    ax.set_xlabel('Observed '  + plot_labels[var_name], labelpad=6)
+    ax.set_xlabel('Observed '  + plot_labels[ivar], labelpad=6)
     ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-    ax.set_ylabel('Simulated ' + plot_labels[var_name], labelpad=6)
+    ax.set_ylabel('Simulated ' + plot_labels[ivar], labelpad=6)
     
     ax.grid(True, which='both',
             linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
@@ -201,24 +179,7 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
     fig.savefig(output_png)
 
 
-
 # endregion
 # -----------------------------------------------------------------------------
 
 
-# -----------------------------------------------------------------------------
-# region plot data distribution
-
-fig, ax = globe_plot(add_grid_labels=False)
-
-ax.scatter(
-    IT20_ACE_1d_sim[expid[i]]['lon'],
-    IT20_ACE_1d_sim[expid[i]]['lat'],
-    marker='x', s=4, lw=0.2,
-    transform=ccrs.PlateCarree(),
-)
-fig.savefig('figures/test/trial1.png')
-
-
-# endregion
-# -----------------------------------------------------------------------------
