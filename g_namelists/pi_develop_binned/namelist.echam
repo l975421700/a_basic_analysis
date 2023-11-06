@@ -1,0 +1,317 @@
+&runctl
+    dt_start = 2285, 12, 31, 23, 52, 30
+    dt_stop = 6699, 12, 31, 23, 52, 30
+    putrerun = 12, 'months', 'last', 0
+    lfractional_mask = .false.
+    lresume = .true.
+    out_datapath = './'
+    out_expname = 'E280'
+    rerun_filetype = 4
+    delta_time = 450
+    putdata = 1, 'months', 'last', 0
+    nproma = 8
+    npromar = 8
+    lcouple = .true.
+    getocean = 1, 'days', 'last', 0
+    putocean = 1, 'days', 'last', 0
+    lcouple_co2 = .true.
+    default_output = .false.
+/
+&wisoctl
+    lwiso = .false.
+    lwiso_rerun = .false.
+    nwiso = 0
+    ntagtyp = 4, 4, 4, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+/
+&parctl
+    nproca = 24
+    nprocb = 24
+    nprocar = 24
+    nprocbr = 24
+
+/
+&submodelctl
+    lmethox = .true.
+/
+&submdiagctl
+    vphysc_lpost = .false.
+/
+&set_stream
+    stream = 'accw'
+    lpost = 0
+/
+&set_stream
+    stream = 'accw_wiso'
+    lpost = 0
+/
+&set_stream
+    stream = 'co2'
+    lpost = 0
+/
+&set_stream
+    stream = 'ma'
+    lpost = 0
+/
+&set_stream
+    stream = 'js_wiso'
+    lpost = 0
+/
+&set_stream
+    stream = 'jsbach'
+    lpost = 0
+/
+&set_stream
+    stream = 'la_wiso'
+    lpost = 0
+/
+&set_stream
+    stream = 'land'
+    lpost = 0
+/
+&set_stream
+    stream = 'veg'
+    lpost = 0
+/
+&set_stream
+    stream = 'yasso'
+    lpost = 0
+/
+&radctl
+    iaero = 3
+    io3 = 4
+    isolrad = 6
+    ich4 = 3
+    in2o = 3
+    co2vmr = 284.3169860840e-06
+    ch4vmr = 808.2490234375e-09
+    n2ovmr = 273.0210571289e-09
+    yr_perp = 1850
+    lrad_async = .true.
+    lrestart_from_old = .false.
+/
+!-------------------------------- sf_wiso stream
+&set_stream
+    stream = 'sf_wiso'
+    lpost = 1
+/
+&set_stream_element
+    stream = 'sf_wiso'
+    name = 'wisoevap'
+    lpost = 1
+/
+!-------------------------------- wiso stream
+&set_stream
+    stream = 'wiso'
+    interval = 1, 'days', 'last', 0
+    lpost = 1
+/
+!---------------- variables not output in wiso stream
+&set_stream_element
+    stream = 'wiso'
+    name = 'wisoevap'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'wiso'
+    name = 'tagmap'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'wiso'
+    name = 'ztag_fac_water'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'wiso'
+    name = 'ztag_fac_ice'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'wiso'
+    name = 'ztag_fac_land'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'wiso'
+    name = 'wisows'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'wiso'
+    name = 'wisosn'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'wiso'
+    name = 'wisoaprs'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'wiso'
+    name = 'wisoxivi'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'wiso'
+    name = 'wisoevapiac'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'wiso'
+    name = 'wisoevapwac'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'wiso'
+    name = 'wisoevaplac'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'wiso'
+    name = 'wisowl'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'wiso'
+    name = 'wisogld'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'wiso'
+    name = 'wisoqvi'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'wiso'
+    name = 'wisoxlvi'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'wiso'
+    name = 'wisosnc'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'wiso'
+    name = 'wisosw_d'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'wiso'
+    name = 'wisoapmeb'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'wiso'
+    name = 'snglac'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'wiso'
+    name = 'wisosnglac'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'wiso'
+    name = 'snsic'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'wiso'
+    name = 'wisosnsic'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'wiso'
+    name = 'wisosi_d'
+    lpost = 0
+/
+!-------------------------------- echam stream
+&mvstreamctl
+    interval = 1, 'months', 'last', 0
+    target = 'sp_1m'
+    source = 'sp'
+    variables = 'st:mean', 'svo:mean', 'sd:mean'
+/
+&mvstreamctl
+    interval = 1, 'months', 'last', 0
+    target = 'gl_1m'
+    source = 'gl'
+    variables = 'q:mean', 'xl:mean', 'xi:mean'
+/
+&mvstreamctl
+    interval = 1, 'months', 'last', 0
+    target = 'g3b_1m'
+    source = 'g3b'
+    variables = 'q2m:mean', 'rh2m:mean', 'aps:mean', 'seaice:mean',
+                'relhum:mean', 'tsw:mean'
+/
+
+!-------------------------------- trace RHsst
+
+&set_stream
+    stream = 'surf'
+    lpost = 1
+/
+&set_stream_element
+    stream = 'surf'
+    name = 'zqsw'
+    lpost = 1
+/
+&set_stream_element
+    stream = 'surf'
+    name = 'zqklevw'
+    lpost = 1
+/
+&set_stream_element
+    stream = 'surf'
+    name = 'pevapw'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'surf'
+    name = 'jsswniracc'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'surf'
+    name = 'jsswvisacc'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'surf'
+    name = 'jsswdifniracc'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'surf'
+    name = 'jsswdifvisacc'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'surf'
+    name = 'longwave_down_acc'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'surf'
+    name = 'az0lh'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'surf'
+    name = 'az0'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'surf'
+    name = 'jsswparacc'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'surf'
+    name = 'jsswdifparacc'
+    lpost = 0
+/
+
+

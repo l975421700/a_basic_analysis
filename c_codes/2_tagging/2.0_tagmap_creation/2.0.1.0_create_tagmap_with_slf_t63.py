@@ -14,7 +14,6 @@ import xarray as xr
 import dask
 dask.config.set({"array.slicing.split_large_chunks": False})
 from scipy import stats
-import xesmf as xe
 import pandas as pd
 
 # plot
@@ -30,24 +29,7 @@ mpl.rcParams['axes.linewidth'] = 0.2
 plt.rcParams.update({"mathtext.fontset": "stix"})
 from matplotlib.path import Path
 
-# self defined
-from a_basic_analysis.b_module.mapplot import (
-    globe_plot,
-    hemisphere_plot,
-    quick_var_plot,
-    mesh2plot,
-)
-
-from a_basic_analysis.b_module.basic_calculations import (
-    mon_sea_ann_average,
-)
-
 from a_basic_analysis.b_module.namelist import (
-    month,
-    seasons,
-    hours,
-    months,
-    month_days,
     zerok,
 )
 
@@ -58,26 +40,29 @@ from a_basic_analysis.b_module.namelist import (
 # -----------------------------------------------------------------------------
 # region import data
 
+#-------------------------------- get model output from the 1st time step
+t63_1st_output = xr.open_dataset('/albedo/work/user/qigao001/albedo_scratch/output/echam-6.3.05p2-wiso/pi/pi_1d_800_5.0/unknown/pi_1d_800_5.0_200001.01_echam.nc')
+t63_1st_surf = xr.open_dataset('/albedo/work/user/qigao001/albedo_scratch/output/echam-6.3.05p2-wiso/pi/pi_1d_800_5.0/outdata/echam/pi_1d_800_5.0_200001.01_surf.nc')
+
 #-------------------------------- get land sea mask
+T63GR15_jan_surf = xr.open_dataset('/albedo/work/user/qigao001/albedo_scratch/output/echam-6.3.05p2-wiso/pi/pi_1d_800_5.0/input/echam/unit.24')
 
-# T63 slm and slf
-T63GR15_jan_surf = xr.open_dataset(
-    '/work/ollie/pool/ECHAM6/input/r0007/T63/T63GR15_jan_surf.nc')
-
-# trimmed slm
-esacci_echam6_t63_trim = xr.open_dataset(
-    'startdump/tagging/tagmap/auxiliaries/sst_mon_ESACCI-2.1_198201_201612_am_rg_echam6_t63_slm_trim.nc')
-lon = esacci_echam6_t63_trim.lon.values
-lat = esacci_echam6_t63_trim.lat.values
-analysed_sst = esacci_echam6_t63_trim.analysed_sst.values
-
-# 1 means land
-t63_slf = T63GR15_jan_surf.SLF.values
 # 1 means land
 t63_slm = T63GR15_jan_surf.SLM.values
-# True means land
-# t63_slm_trimmed = np.isnan(analysed_sst)
 
+lon = t63_1st_output.lon.values
+lat = t63_1st_output.lat.values
+
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region create geo tagmap
 
 #-------------------------------- get ocean basin divisions
 
@@ -103,26 +88,6 @@ atlantic_mask = atlantic_mask1 | atlantic_mask2
 pacific_mask = pacific_path.contains_points(coors).reshape(lon2.shape)
 indiano_mask = indiano_path.contains_points(coors).reshape(lon2.shape)
 
-
-#-------------------------------- get model output from the 1st time step
-t63_1st_output = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/pi_d_500_wiso/unknown/pi_d_500_wiso_200001.01_echam.nc')
-
-
-'''
-
-np.min(t63_slf[t63_slm == 1])
-np.max(t63_slf[t63_slm == 0])
-
-(atlantic_mask | pacific_mask | indiano_mask).all()
-(atlantic_mask & pacific_mask & indiano_mask).any()
-
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region create geo tagmap
 
 ntag = 7
 
@@ -182,6 +147,8 @@ pi_geo_tagmap.to_netcdf('startdump/tagging/tagmap/pi_geo_tagmap.nc',)
 6. SH sea ice, <= 50° S
 7. SO open ocean, <= 50° S
 
+(atlantic_mask | pacific_mask | indiano_mask).all()
+(atlantic_mask & pacific_mask & indiano_mask).any()
 
 pi_geo_tagmap = xr.open_dataset('startdump/tagging/tagmap/pi_geo_tagmap.nc')
 test = xr.open_dataset('startdump/tagging/archived/pi_geo_tagmap.nc')
@@ -542,9 +509,11 @@ lon2[7, 73]
 
 
 # -----------------------------------------------------------------------------
-# region pi_6tagmap: combine six tagmaps for scaled approach
+# region create pi_6tagmap and pi_7tagmap
 
 ! cdo merge -sellevel,1/6 'startdump/tagging/tagmap/pi_lat_tagmap.nc' -sellevel,4/6 'startdump/tagging/tagmap/pi_tsw_tagmap.nc' -sellevel,4/6 'startdump/tagging/tagmap/pi_rh2m_tagmap.nc' -sellevel,4/6 'startdump/tagging/tagmap/pi_wind10_tagmap.nc' -sellevel,4/10 'startdump/tagging/tagmap/pi_geo_tagmap.nc' -sellevel,4/9 'startdump/tagging/tagmap/pi_sincoslon_tagmap.nc' 'startdump/tagging/tagmap/pi_6tagmap.nc'
+
+! cdo merge 'startdump/tagging/tagmap/pi_6tagmap.nc' -sellevel,4/6 'startdump/tagging/tagmap/pi_RHsst_tagmap.nc' 'startdump/tagging/tagmap/pi_7tagmap.nc'
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -583,6 +552,124 @@ for j in np.arange(5, len(latbins)+4):
 pi_binned_lat_tagmap.to_netcdf('startdump/tagging/tagmap/pi_binned_lat_tagmap.nc',)
 
 '''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region create RHsst scaled tagmap pi_RHsst_tagmap
+
+minRHsst = 0
+maxRHsst = 1.4
+
+ntag = 3
+
+pi_RHsst_tagmap = xr.Dataset(
+    {"tagmap": (
+        ("level", "lat", "lon"),
+        np.zeros((ntag+3, len(lat), len(lon)), dtype=np.double)),
+     },
+    coords={
+        "level": np.arange(1, ntag+3+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
+    }
+)
+
+pi_RHsst_tagmap.tagmap.sel(level=slice(1, 3))[:] = 1
+
+# land or sea ice
+pi_RHsst_tagmap.tagmap.sel(level=4).values[
+    (t63_slm == 1) | (t63_1st_output.seaice[0,].values > 0)] = 1
+
+# water, scaled sst
+pi_RHsst_tagmap.tagmap.sel(level=5).values[
+    (t63_slm == 0) & (t63_1st_output.seaice[0,].values < 1)] = np.clip(
+        ((t63_1st_surf.zqklevw / t63_1st_surf.zqsw)[0,].values - minRHsst) / \
+            (maxRHsst - minRHsst), 0, 1)[
+                (t63_slm == 0) & (t63_1st_output.seaice[0,].values < 1)]
+
+pi_RHsst_tagmap.tagmap.sel(level=5).values[np.isnan(pi_RHsst_tagmap.tagmap.sel(level=5).values)] = 0
+
+# complementary set
+pi_RHsst_tagmap.tagmap.sel(level=6).values[
+    (t63_slm == 0) & (t63_1st_output.seaice[0,].values < 1)] = \
+        1 - pi_RHsst_tagmap.tagmap.sel(level=5).values[
+        (t63_slm == 0) & (t63_1st_output.seaice[0,].values < 1)]
+
+pi_RHsst_tagmap.to_netcdf('startdump/tagging/tagmap/pi_RHsst_tagmap.nc',)
+
+
+
+
+'''
+#-------------------------------- check
+
+pi_RHsst_tagmap = xr.open_dataset('startdump/tagging/tagmap/pi_RHsst_tagmap.nc',)
+np.min(pi_RHsst_tagmap.tagmap).values >= 0
+np.max(pi_RHsst_tagmap.tagmap).values <= 1
+
+i = 70
+j = 60
+((t63_1st_surf.zqklevw / t63_1st_surf.zqsw)[0, i, j].values - 0) / 1.4
+pi_RHsst_tagmap.tagmap[4, i, j].values
+
+#-------------------------------- check 2
+pi_RHsst_tagmap.tagmap.sel(level=4).values[7, 73]
+pi_RHsst_tagmap.tagmap.sel(level=5).values[7, 73]
+pi_RHsst_tagmap.tagmap.sel(level=6).values[7, 73]
+t63_1st_output.seaice[0,].values[7, 73]
+t63_slm[7, 73]
+
+
+
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region create RHsst binned tagmap pi_binned_RHsst_tagmap
+
+RHsstbins = np.concatenate((np.arange(0, 1.401, 0.05), np.array([2])))
+ntag = len(RHsstbins) # 30
+
+pi_binned_RHsst_tagmap = xr.Dataset(
+    {"tagmap": (
+        ("level", "lat", "lon"),
+        np.zeros((ntag+3, len(lat), len(lon)), dtype=np.double)),
+     },
+    coords={
+        "level": np.arange(1, ntag+3+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
+    }
+)
+
+pi_binned_RHsst_tagmap.tagmap.sel(level=slice(1, 3))[:] = 1
+
+# land or sea ice
+pi_binned_RHsst_tagmap.tagmap.sel(level=4).values[
+    (t63_slm == 1) | (t63_1st_output.seaice[0,].values > 0)] = 1
+
+# binned RHsst
+for j in np.arange(5, len(RHsstbins)+4):
+    pi_binned_RHsst_tagmap.tagmap.sel(level=j).values[
+        (t63_slm == 0) & (t63_1st_output.seaice[0,].values < 1) & \
+            ((t63_1st_surf.zqklevw / t63_1st_surf.zqsw)[0,].values > RHsstbins[j-5]) & \
+                ((t63_1st_surf.zqklevw / t63_1st_surf.zqsw)[0,].values <= RHsstbins[j-4])] = 1
+
+pi_binned_RHsst_tagmap.to_netcdf('startdump/tagging/tagmap/pi_binned_RHsst_tagmap.nc',)
+
+
+
+'''
+(t63_1st_surf.zqklevw / t63_1st_surf.zqsw).to_netcdf('scratch/test/test0.nc')
+
+# np.nanmax(t63_1st_surf.zqklevw / t63_1st_surf.zqsw)
+np.nanmin(t63_1st_surf.zqklevw / t63_1st_surf.zqsw)
 '''
 # endregion
 # -----------------------------------------------------------------------------

@@ -2,13 +2,14 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'pi_600_5.0',
-    'pi_610_5.8',
+    'pi_1d_800_5.0',
+    'pi_1d_801_6.0',
+    'pi_1d_802_6.1',
     ]
 
 ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
-ifile_start = 720
-ifile_end = 840
+ifile_start = 0
+ifile_end = 1
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -77,6 +78,7 @@ for i in range(len(expid)):
     filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '*.01_echam.nc'))
     filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '*.01_wiso.nc'))
     filenames_sf_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '*.01_sf_wiso.nc'))
+    filenames_surf = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*.01_surf.nc'))
     exp_org_o[expid[i]]['echam'] = xr.open_mfdataset(
         filenames_echam[ifile_start:ifile_end],
         )
@@ -85,6 +87,9 @@ for i in range(len(expid)):
         )
     exp_org_o[expid[i]]['sf_wiso'] = xr.open_mfdataset(
         filenames_sf_wiso[ifile_start:ifile_end],
+        )
+    exp_org_o[expid[i]]['surf'] = xr.open_mfdataset(
+        filenames_surf[ifile_start:ifile_end],
         )
 
 '''
@@ -1078,11 +1083,10 @@ exp_org_o[expid[i]]['wiso'].xi16o[i3[0], level[ij[0]]-1, i4[0], i5[0]].values
 # region check bit identity
 
 i = 0
-j = 1
+j = 2
 print(expid[i] + '  vs.  ' + expid[j])
 
-
-#-------------------------------- normal climate variables
+#-------------------------------- echam variables
 
 (exp_org_o[expid[i]]['echam'].evap == exp_org_o[expid[j]]['echam'].evap).all().values
 (exp_org_o[expid[i]]['echam'].aprl == exp_org_o[expid[j]]['echam'].aprl).all().values
@@ -1094,21 +1098,21 @@ print(expid[i] + '  vs.  ' + expid[j])
 
 #-------------------------------- wiso variables
 
-(exp_org_o[expid[i]]['wiso'].wisoaprl[:, 3:] == exp_org_o[expid[j]]['wiso'].wisoaprl[:, 3:]).all().values
-(exp_org_o[expid[i]]['wiso'].wisoaprc[:, 3:] == exp_org_o[expid[j]]['wiso'].wisoaprc[:, 3:]).all().values
+(exp_org_o[expid[i]]['wiso'].wisoaprl[:, 0:3] == exp_org_o[expid[j]]['wiso'].wisoaprl[:, 0:3]).all().values
+(exp_org_o[expid[i]]['wiso'].wisoaprc[:, 0:3] == exp_org_o[expid[j]]['wiso'].wisoaprc[:, 0:3]).all().values
 
-(exp_org_o[expid[i]]['wiso'].wisoaprl[:, 0] == exp_org_o[expid[j]]['wiso'].wisoaprl[:, 0]).all().values
-(exp_org_o[expid[i]]['wiso'].wisoaprc[:, 0] == exp_org_o[expid[j]]['wiso'].wisoaprc[:, 0]).all().values
-
-
-np.max(abs((exp_org_o[expid[i]]['wiso'].wisoaprl[:, :3].values - exp_org_o[expid[j]]['wiso'].wisoaprl[:, :3].values) / exp_org_o[expid[i]]['wiso'].wisoaprl[:, :3].values))
-np.nanmax(abs((exp_org_o[expid[i]]['wiso'].wisoaprc[:, :3].values - exp_org_o[expid[j]]['wiso'].wisoaprc[:, :3].values) / exp_org_o[expid[i]]['wiso'].wisoaprc[:, :3].values))
-
+# np.max(abs((exp_org_o[expid[i]]['wiso'].wisoaprl[:, :3].values - exp_org_o[expid[j]]['wiso'].wisoaprl[:, :3].values) / exp_org_o[expid[i]]['wiso'].wisoaprl[:, :3].values))
+# np.nanmax(abs((exp_org_o[expid[i]]['wiso'].wisoaprc[:, :3].values - exp_org_o[expid[j]]['wiso'].wisoaprc[:, :3].values) / exp_org_o[expid[i]]['wiso'].wisoaprc[:, :3].values))
 
 #-------------------------------- sf_wiso variables
 
-(exp_org_o[expid[i]]['sf_wiso'].wisoevap[-12:, 3:] == exp_org_o[expid[j]]['sf_wiso'].wisoevap[-12:, 3:]).all().values
-(exp_org_o[expid[i]]['sf_wiso'].wisoevap[-12:, 0] == exp_org_o[expid[j]]['sf_wiso'].wisoevap[-12:, 0]).all().values
+(exp_org_o[expid[i]]['sf_wiso'].wisoevap[:, 0:3] == exp_org_o[expid[j]]['sf_wiso'].wisoevap[:, 0:3]).all().values
+
+#-------------------------------- surf variables
+
+(exp_org_o[expid[i]]['surf'].zqklevw[:] == exp_org_o[expid[j]]['surf'].zqklevw[:]).all().values
+(exp_org_o[expid[i]]['surf'].zqsw[:] == exp_org_o[expid[j]]['surf'].zqsw[:]).all().values
+
 
 
 '''

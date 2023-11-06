@@ -205,3 +205,15 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region plot station location
+
+fig, ax = hemisphere_plot(northextent=-60)
+
+cplot_ice_cores(CB19_DDU_1d_sim[expid[i]]['lon'][0], CB19_DDU_1d_sim[expid[i]]['lat'][0], ax=ax, s=50, marker='*', edgecolors='b')
+
+fig.savefig('figures/test/trial.png')
+
+# endregion
+# -----------------------------------------------------------------------------

@@ -167,3 +167,23 @@ test['am'] = test['ann'].mean(dim='time', skipna=True).compute()
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region check two calculations
+
+temp2_alltime2 = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime2.pkl', 'rb') as f:
+    temp2_alltime2[expid[i]] = pickle.load(f)
+
+temp2_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
+    temp2_alltime[expid[i]] = pickle.load(f)
+
+for ialltime in temp2_alltime2[expid[i]].keys():
+    print(ialltime)
+    
+    print(np.max(abs(temp2_alltime2[expid[i]][ialltime].values - temp2_alltime[expid[i]][ialltime].values)))
+
+# endregion
+# -----------------------------------------------------------------------------
+

@@ -79,12 +79,15 @@ with open(output_file, 'wb') as f:
 
 
 
-'''
 #-------------------------------- check
 
 with open('scratch/ERA5/temp2/ERA5_temp2_2013_2022_alltime.pkl', 'rb') as f:
     ERA5_temp2_2013_2022_alltime = pickle.load(f)
 
+ERA5_temp2_2013_2022_alltime['am'].to_netcdf('scratch/ERA5/temp2/ERA5_am_temp2_2013_2022.nc')
+ERA5_temp2_2013_2022_alltime['sm'].to_netcdf('scratch/ERA5/temp2/ERA5_sm_temp2_2013_2022.nc')
+
+'''
 ERA5_daily_temp2_2013_2022 = xr.open_dataset('scratch/ERA5/temp2/ERA5_daily_temp2_2013_2022.nc', chunks={'time': 720})
 
 itime = 200

@@ -1,8 +1,9 @@
 
 
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_d_501_5.0',]
-ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
+exp_odir = '/albedo/work/user/qigao001/albedo_scratch/output/echam-6.3.05p2-wiso/pi/'
+expid = ['pi_1d_802_6.1',]
+# ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0,  3, 0]
+ntags = [0, 0, 0, 0, 0,   0, 0, 0, 0, 0,   0, 0, 0, 0,  0, 30]
 kwiso2 = 3
 
 # -----------------------------------------------------------------------------
@@ -70,64 +71,32 @@ for i in range(len(expid)):
     
     filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '*.01_echam.nc'))
     filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '*.01_wiso.nc'))
-    exp_org_o[expid[i]]['echam'] = xr.open_mfdataset(filenames_echam, data_vars='minimal', coords='minimal', parallel=True)
-    exp_org_o[expid[i]]['wiso'] = xr.open_mfdataset(filenames_wiso, data_vars='minimal', coords='minimal', parallel=True)
-
-# T63 slm and slf
-T63GR15_jan_surf = xr.open_dataset(
-    '/work/ollie/pool/ECHAM6/input/r0007/T63/T63GR15_jan_surf.nc')
-
-# trimmed slm
-esacci_echam6_t63_trim = xr.open_dataset(
-    'startdump/tagging/tagmap/auxiliaries/sst_mon_ESACCI-2.1_198201_201612_am_rg_echam6_t63_slm_trim.nc')
-lon = esacci_echam6_t63_trim.lon.values
-lat = esacci_echam6_t63_trim.lat.values
-analysed_sst = esacci_echam6_t63_trim.analysed_sst.values
-
-# 1 means land
-t63_slf = T63GR15_jan_surf.SLF.values
-# 1 means land
-t63_slm = T63GR15_jan_surf.SLM.values
-# True means land
-t63_slm_trimmed = np.isnan(analysed_sst)
-
-#-------------------------------- get ocean basin divisions
-
-lon2, lat2 = np.meshgrid(lon, lat)
-coors = np.hstack((lon2.reshape(-1, 1), lat2.reshape(-1, 1)))
-
-atlantic_path1 = Path([
-    (0, 90), (100, 90), (100, 30), (20, 30), (20, -90), (0, -90), (0, 90)])
-atlantic_path2 = Path([
-    (360, 90), (360, -90), (290, -90), (290, 8), (279, 8), (270, 15),
-    (260, 20), (260, 90), (360, 90)])
-pacific_path = Path([
-    (100, 90), (260, 90), (260, 20), (270, 15), (279, 8), (290, 8), (290, -90),
-    (140, -90), (140, -30), (130, -30), (130, -10), (100, 0), (100, 30),
-    (100, 90)])
-indiano_path = Path([
-    (100, 30), (100, 0), (130, -10), (130, -30), (140, -30), (140, -90),
-    (20, -90), (20, 30), (100, 30)])
-
-atlantic_mask1 = atlantic_path1.contains_points(coors, radius = -0.5).reshape(lon2.shape)
-atlantic_mask2 = atlantic_path2.contains_points(coors).reshape(lon2.shape)
-atlantic_mask = atlantic_mask1 | atlantic_mask2
-pacific_mask = pacific_path.contains_points(coors).reshape(lon2.shape)
-indiano_mask = indiano_path.contains_points(coors).reshape(lon2.shape)
+    filenames_surf = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*.01_surf.nc'))
+    exp_org_o[expid[i]]['echam'] = xr.open_mfdataset(filenames_echam)
+    exp_org_o[expid[i]]['wiso'] = xr.open_mfdataset(filenames_wiso)
+    exp_org_o[expid[i]]['surf'] = xr.open_mfdataset(filenames_surf)
 
 
-#-------------------------------- get model output from the 1st time step
-t63_1st_output = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/pi_d_500_wiso/unknown/pi_d_500_wiso_200001.01_echam.nc')
+lon = exp_org_o[expid[i]]['echam'].lon.values
+lat = exp_org_o[expid[i]]['echam'].lat.values
 
-# broadcast lat/lon
-lat3 = np.broadcast_to(lat[None, :, None],
-                       exp_org_o[expid[i]]['echam'].seaice.shape)
-lon3 = np.broadcast_to(lon[None, None, :],
-                       exp_org_o[expid[i]]['echam'].seaice.shape)
 slm3 = exp_org_o[expid[i]]['echam'].slm.values
 seaice3 = exp_org_o[expid[i]]['echam'].seaice.values
 
+zqklevw = exp_org_o[expid[i]]['surf'].zqklevw.values
+zqsw = exp_org_o[expid[i]]['surf'].zqsw.values
+
+# broadcast lat/lon
+lat3 = np.broadcast_to(lat[None, :, None], seaice3.shape)
+lon3 = np.broadcast_to(lon[None, None, :], seaice3.shape)
+
 '''
+# T63 slm and slf
+T63GR15_jan_surf = xr.open_dataset('/albedo/work/user/qigao001/albedo_scratch/output/echam-6.3.05p2-wiso/pi/pi_1d_801_6.0/input/echam/unit.24')
+
+# 1 means land
+t63_slm = T63GR15_jan_surf.SLM.values
+
 pi_6tagmap = xr.open_dataset('startdump/tagging/tagmap/pi_6tagmap.nc')
 '''
 # endregion
@@ -439,6 +408,28 @@ np.max(abs(ptagmap.tagmap.values - exp_org_o[expid[i]]['wiso'].tagmap.sel(
 # -----------------------------------------------------------------------------
 # region check pi_geo_tagmap
 
+lon2, lat2 = np.meshgrid(lon, lat)
+coors = np.hstack((lon2.reshape(-1, 1), lat2.reshape(-1, 1)))
+
+atlantic_path1 = Path([
+    (0, 90), (100, 90), (100, 30), (20, 30), (20, -90), (0, -90), (0, 90)])
+atlantic_path2 = Path([
+    (360, 90), (360, -90), (290, -90), (290, 8), (279, 8), (270, 15),
+    (260, 20), (260, 90), (360, 90)])
+pacific_path = Path([
+    (100, 90), (260, 90), (260, 20), (270, 15), (279, 8), (290, 8), (290, -90),
+    (140, -90), (140, -30), (130, -30), (130, -10), (100, 0), (100, 30),
+    (100, 90)])
+indiano_path = Path([
+    (100, 30), (100, 0), (130, -10), (130, -30), (140, -30), (140, -90),
+    (20, -90), (20, 30), (100, 30)])
+
+atlantic_mask1 = atlantic_path1.contains_points(coors, radius = -0.5).reshape(lon2.shape)
+atlantic_mask2 = atlantic_path2.contains_points(coors).reshape(lon2.shape)
+atlantic_mask = atlantic_mask1 | atlantic_mask2
+pacific_mask = pacific_path.contains_points(coors).reshape(lon2.shape)
+indiano_mask = indiano_path.contains_points(coors).reshape(lon2.shape)
+
 kstart = 15
 
 ptagmap = xr.Dataset(
@@ -486,6 +477,55 @@ ptagmap.tagmap.sel(level=7).values[
 #---- check
 (ptagmap.tagmap.values == exp_org_o[expid[i]]['wiso'].tagmap.sel(
     wisotype=slice(16, 22))).all().values
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region check scale of tagmap based on RHsst
+
+itag      = 14
+kstart = kwiso2 + sum(ntags[:itag])
+
+minRHsst = 0
+maxRHsst = 1.4
+
+ptagmap = xr.Dataset(
+    {"tagmap": (
+        ("time", "level", "lat", "lon"),
+        np.zeros((len(exp_org_o[expid[i]]['wiso'].tagmap.time),
+                  3, len(lat), len(lon)),
+                 dtype=np.double)),
+     },
+    coords={
+        "time": exp_org_o[expid[i]]['wiso'].tagmap.time.values,
+        "level": np.arange(1, 3+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
+    }
+)
+
+# land and sea ice
+ptagmap.tagmap.sel(level=1).values[(slm3 == 1) | (seaice3 > 0) ] = 1
+
+# water, scaled lat
+ptagmap.tagmap.sel(level=2).values[(slm3 == 0) & (seaice3 < 1)] = np.clip(
+    (zqklevw/zqsw - minRHsst) / (maxRHsst - minRHsst), 0, 1)[(slm3 == 0) & (seaice3 < 1)]
+
+# complementary set
+ptagmap.tagmap.sel(level=3).values[(slm3 == 0) & (seaice3 < 1)] = 1 - \
+    ptagmap.tagmap.sel(level=2).values[(slm3 == 0) & (seaice3 < 1)]
+
+
+#---- check
+(ptagmap.tagmap.values == exp_org_o[expid[i]]['wiso'].tagmap.sel(
+    wisotype=slice(kstart+1, kstart+3)).values).all()
+
+np.max(abs(ptagmap.tagmap.values - exp_org_o[expid[i]]['wiso'].tagmap.sel(
+    wisotype=slice(kstart+1, kstart+3)).values))
 
 '''
 '''
@@ -787,4 +827,43 @@ stats.describe(tagmap.tagmap[10:, :, :] - exp_org_o[expid[i]]['wiso'].tagmap.val
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region check binning tagmap based on RHsst
+
+tagmap = xr.open_dataset('startdump/tagging/tagmap/pi_binned_RHsst_tagmap.nc')
+RHsstbins = np.concatenate((np.arange(0, 1.401, 0.05), np.array([2])))
+
+ptagmap = xr.Dataset(
+    {"tagmap": (
+        ("time", "level", "lat", "lon"),
+        np.zeros(exp_org_o[expid[i]]['wiso'].tagmap.shape, dtype=np.double)),
+     },
+    coords={
+        "time": exp_org_o[expid[i]]['wiso'].tagmap.time.values,
+        "level": exp_org_o[expid[i]]['wiso'].tagmap.wisotype.values,
+        "lat": exp_org_o[expid[i]]['wiso'].tagmap.lat.values,
+        "lon": exp_org_o[expid[i]]['wiso'].tagmap.lon.values,
+    }
+)
+
+ptagmap.tagmap.sel(level=4).values[(slm3 == 1) | (seaice3 > 0)] = 1
+
+for j in np.arange(5, len(RHsstbins)+4):
+    ptagmap.tagmap.sel(level=j).values[
+        ((slm3 == 0) & (seaice3 < 1)) & \
+            (zqklevw/zqsw > RHsstbins[j-5]) & (zqklevw/zqsw <= RHsstbins[j-4])] = 1
+
+(ptagmap.tagmap.sel(level=slice(4, len(RHsstbins)+3)) != exp_org_o[expid[i]]['wiso'].tagmap.sel(wisotype=slice(4, len(RHsstbins)+3)).values).sum().values
+
+i0, i1, i2, i3 = np.where(ptagmap.tagmap.sel(level=slice(4, len(RHsstbins)+3)) != exp_org_o[expid[i]]['wiso'].tagmap.sel(wisotype=slice(4, len(RHsstbins)+3)).values)
+
+seaice3[i0, i2, i3]
+slm3[i0, i2, i3]
+
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
 
