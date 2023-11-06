@@ -193,7 +193,7 @@ ttest_fdr_res = ttest_fdr_control(
 ax.scatter(
     x=plat_2d[ttest_fdr_res],
     y=plevs_2d[ttest_fdr_res],
-    s=1, c='k', marker='.', edgecolors='none',
+    s=4, c='k', marker='.', edgecolors='none',
     )
 
 # x-axis

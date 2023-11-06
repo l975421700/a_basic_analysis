@@ -353,7 +353,7 @@ ttest_fdr_res = ttest_fdr_control(
 ax.scatter(
     x=lon_2d[ttest_fdr_res & echam6_t63_ais_mask['mask']['AIS']],
     y=lat_2d[ttest_fdr_res & echam6_t63_ais_mask['mask']['AIS']],
-    s=0.5, c='k', marker='.', edgecolors='none',
+    s=1.5, c='k', marker='.', edgecolors='none',
     transform=ccrs.PlateCarree(),
     )
 
@@ -442,7 +442,7 @@ wwtest_res = circ.watson_williams(
 ax.scatter(
     x=lon_2d[wwtest_res & echam6_t63_ais_mask['mask']['AIS']],
     y=lat_2d[wwtest_res & echam6_t63_ais_mask['mask']['AIS']],
-    s=0.5, c='k', marker='.', edgecolors='none',
+    s=1.5, c='k', marker='.', edgecolors='none',
     transform=ccrs.PlateCarree(),
     )
 
@@ -516,7 +516,7 @@ ttest_fdr_res = ttest_fdr_control(
 ax.scatter(
     x=lon_2d[ttest_fdr_res & echam6_t63_ais_mask['mask']['AIS']],
     y=lat_2d[ttest_fdr_res & echam6_t63_ais_mask['mask']['AIS']],
-    s=0.5, c='k', marker='.', edgecolors='none',
+    s=1.5, c='k', marker='.', edgecolors='none',
     transform=ccrs.PlateCarree(),
     )
 

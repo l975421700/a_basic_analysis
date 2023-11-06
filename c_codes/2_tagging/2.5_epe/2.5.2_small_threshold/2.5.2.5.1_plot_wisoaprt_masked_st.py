@@ -124,8 +124,6 @@ wisoaprt_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
     wisoaprt_alltime[expid[i]] = pickle.load(f)
 
-with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
-    echam6_t63_ais_mask = pickle.load(f)
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -184,6 +182,11 @@ cbar.ax.set_xlabel(
     'Contribution of HP to total precipitation [$\%$]', linespacing=1.5,
     fontsize=8)
 fig.savefig(output_png, dpi=600)
+
+
+np.max(1 - wisoaprt_masked_st[expid[i]]['frc']['10%']['am'].values[echam6_t63_ais_mask['mask']['AIS']])
+
+
 
 
 '''

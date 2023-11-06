@@ -165,251 +165,6 @@ with open(
 
 
 # -----------------------------------------------------------------------------
-# region plot q_weighted_lat am zm
-
-am_zm_source_lat = q_weighted_lat[expid[i]]['am'].weighted(
-        ocean_q_alltime[expid[i]]['am'].sel(var_names='lat').fillna(0)
-        ).mean(dim='lon')
-
-am_zm_q = q_plev[expid[i]]['am'].mean(dim='lon') * 1000
-
-am_zm_tpot = tpot_plev[expid[i]]['am'].mean(dim='lon') - zerok
-
-
-output_png = 'figures/6_awi/6.1_echam6/6.1.5_source_var_q/6.1.5.0_lat/6.1.5.0 ' + expid[i] + ' q_weighted_lat am zm.png'
-
-pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-60, cm_max=-10, cm_interval1=2.5, cm_interval2=5, cmap='PuOr',)
-
-fig, ax = plt.subplots(1, 1, figsize=np.array([13.2, 8.8]) / 2.54)
-
-# mesh
-plt_mesh = ax.pcolormesh(
-    lat.sel(lat=slice(-20, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
-    am_zm_source_lat.sel(lat=slice(-20, -90), plev=slice(1e+5, 2e+4)),
-    norm=pltnorm, cmap=pltcmp,
-)
-
-# q contours
-q_intervals = np.array([0.01, 0.05, 0.1, 0.5, 1, 2, 4, 6, 8, 10])
-plt_ctr = ax.contour(
-    lat.sel(lat=slice(-20, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
-    am_zm_q.sel(lat=slice(-20, -90), plev=slice(1e+5, 2e+4)),
-    colors='b', levels=q_intervals, linewidths=0.4,
-    clip_on=True, zorder=2)
-ax_clabel = ax.clabel(
-    plt_ctr, inline=1, colors='b', fmt=remove_trailing_zero,
-    levels=q_intervals, inline_spacing=1, fontsize=6,)
-
-# tpot contours
-tpot_intervals = np.arange(-20, 80 + 1e-4, 5)
-plt_ctr_tpot = ax.contour(
-    lat.sel(lat=slice(-20, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
-    am_zm_tpot.sel(lat=slice(-20, -90), plev=slice(1e+5, 2e+4)),
-    colors='k', levels=tpot_intervals, linewidths=0.4, linestyles='solid',
-    clip_on=True, zorder=2)
-ax_clabel = ax.clabel(
-    plt_ctr_tpot, inline=1, colors='k', fmt=remove_trailing_zero,
-    levels=tpot_intervals, inline_spacing=1, fontsize=6,)
-
-# x-axis
-ax.set_xticks(np.arange(-20, -90 - 1e-4, -10))
-ax.set_xlim(-20, -90)
-ax.xaxis.set_major_formatter(LatitudeFormatter(degree_symbol='° '))
-
-# y-axis
-ax.invert_yaxis()
-ax.set_ylim(1000, 200)
-ax.set_yticks(np.arange(1000, 200 - 1e-4, -100))
-ax.set_ylabel('Pressure [$hPa$]')
-
-# grid
-ax.grid(True, lw=0.5, c='gray', alpha=0.5, linestyle='--',)
-
-# mesh cbar
-cbar = fig.colorbar(
-    plt_mesh, ax=ax, aspect=25,
-    orientation="horizontal", shrink=0.7, ticks=pltticks, extend='both',
-    pad=0.1, fraction=0.04,
-    anchor=(1.3, -1),
-    )
-cbar.ax.set_xticklabels(
-    [remove_trailing_zero(x) for x in abs(pltticks)])
-cbar.ax.set_xlabel('Source latitude [$°\;S$]',)
-
-# 2nd y-axis
-height = np.round(
-    pressure_to_height_std(
-        pressure=np.arange(1000, 200 - 1e-4, -100) * units('hPa')), 1,)
-ax2 = ax.twinx()
-ax2.invert_yaxis()
-ax2.set_ylim(1000, 200)
-ax2.set_yticks(np.arange(1000, 200 - 1e-4, -100))
-ax2.set_yticklabels(height.magnitude, c = 'gray')
-ax2.set_ylabel('Height assuming a standard atmosphere [$km$]', c = 'gray')
-
-# contours legend
-h1, _ = plt_ctr.legend_elements()
-h2, _ = plt_ctr_tpot.legend_elements()
-ax_legend = ax.legend(
-    [h1[0], h2[0]],
-    ['Specific humidity [$g \; kg^{-1}$]',
-     'Potential temperature [$°C$]'],
-    loc='lower left', frameon=False,
-    bbox_to_anchor=(-0.13, -0.36), labelspacing=1.2,
-    handlelength=1, columnspacing=1)
-
-for line in ax_legend.get_lines():
-    line.set_linewidth(1)
-
-fig.subplots_adjust(left=0.12, right=0.89, bottom=0.14, top=0.98)
-fig.savefig(output_png)
-
-
-
-
-
-'''
-# q_weighted_lat_am_zm = q_weighted_lat[expid[i]]['am'].weighted(
-#     ocean_q_alltime[expid[i]]['am'].sel(var_names='lat').fillna(0)
-#     ).mean(dim='lon')
-
-# q_plev[expid[i]]['am'].mean(dim='lon')
-
-
-#-------- check weighted average
-iplev = 20
-ilat = 48
-np.average(
-    q_weighted_lat[expid[i]]['am'][iplev, ilat],
-    weights=ocean_q_alltime[expid[i]]['am'].sel(var_names='lat')[iplev, ilat],
-    )
-q_weighted_lat_am_zm[iplev, ilat].values
-
-np.average(
-     q_weighted_lat[expid[i]]['am'],
-     weights=ocean_q_alltime[expid[i]]['am'].sel(var_names='lat')
-)
-
-q_weighted_lat_am_zm = q_weighted_lat[expid[i]]['am'].weighted(
-    ocean_q_alltime[expid[i]]['am'].sel(var_names='lat')
-    ).mean(dim='lon')
-
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot relative q_weighted_lat am zm
-
-am_zm_rel_source_lat = q_weighted_lat[expid[i]]['am'].weighted(
-    ocean_q_alltime[expid[i]]['am'].sel(var_names='lat').fillna(0)
-    ).mean(dim='lon') - lat.values[None, :]
-
-am_zm_q = q_plev[expid[i]]['am'].mean(dim='lon') * 1000
-
-am_zm_tpot = tpot_plev[expid[i]]['am'].mean(dim='lon') - zerok
-
-
-output_png = 'figures/6_awi/6.1_echam6/6.1.5_source_var_q/6.1.5.0_lat/6.1.5.0 ' + expid[i] + ' relative q_weighted_lat am zm.png'
-
-pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-5, cm_max=65, cm_interval1=5, cm_interval2=5, cmap='PiYG',)
-
-fig, ax = plt.subplots(1, 1, figsize=np.array([13.2, 8.8]) / 2.54)
-
-# mesh
-plt_mesh = ax.pcolormesh(
-    lat.sel(lat=slice(-20, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
-    am_zm_rel_source_lat.sel(lat=slice(-20, -90), plev=slice(1e+5, 2e+4)),
-    norm=pltnorm, cmap=pltcmp,
-)
-
-# q contours
-q_intervals = np.array([0.01, 0.05, 0.1, 0.5, 1, 2, 4, 6, 8, 10])
-plt_ctr = ax.contour(
-    lat.sel(lat=slice(-20, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
-    am_zm_q.sel(lat=slice(-20, -90), plev=slice(1e+5, 2e+4)),
-    colors='b', levels=q_intervals, linewidths=0.4,
-    clip_on=True, zorder=2)
-ax_clabel = ax.clabel(
-    plt_ctr, inline=1, colors='b', fmt=remove_trailing_zero,
-    levels=q_intervals, inline_spacing=1, fontsize=6,)
-
-# tpot contours
-tpot_intervals = np.arange(-20, 80 + 1e-4, 5)
-plt_ctr_tpot = ax.contour(
-    lat.sel(lat=slice(-20, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
-    am_zm_tpot.sel(lat=slice(-20, -90), plev=slice(1e+5, 2e+4)),
-    colors='k', levels=tpot_intervals, linewidths=0.4, linestyles='solid',
-    clip_on=True, zorder=2)
-ax_clabel = ax.clabel(
-    plt_ctr_tpot, inline=1, colors='k', fmt=remove_trailing_zero,
-    levels=tpot_intervals, inline_spacing=1, fontsize=6,)
-
-# x-axis
-ax.set_xticks(np.arange(-20, -90 - 1e-4, -10))
-ax.set_xlim(-20, -90)
-ax.xaxis.set_major_formatter(LatitudeFormatter(degree_symbol='° '))
-
-# y-axis
-ax.invert_yaxis()
-ax.set_ylim(1000, 200)
-ax.set_yticks(np.arange(1000, 200 - 1e-4, -100))
-ax.set_ylabel('Pressure [$hPa$]')
-
-# grid
-ax.grid(True, lw=0.5, c='gray', alpha=0.5, linestyle='--',)
-
-# mesh cbar
-cbar = fig.colorbar(
-    plt_mesh, ax=ax, aspect=25,
-    orientation="horizontal", shrink=0.7, ticks=pltticks, extend='both',
-    pad=0.1, fraction=0.04,
-    anchor=(1.3, -1),
-    )
-cbar.ax.set_xlabel('Relative source latitude [$°$]',)
-
-# 2nd y-axis
-height = np.round(
-    pressure_to_height_std(
-        pressure=np.arange(1000, 200 - 1e-4, -100) * units('hPa')), 1,)
-ax2 = ax.twinx()
-ax2.invert_yaxis()
-ax2.set_ylim(1000, 200)
-ax2.set_yticks(np.arange(1000, 200 - 1e-4, -100))
-ax2.set_yticklabels(height.magnitude, c = 'gray')
-ax2.set_ylabel('Height assuming a standard atmosphere [$km$]', c = 'gray')
-
-# contours legend
-h1, _ = plt_ctr.legend_elements()
-h2, _ = plt_ctr_tpot.legend_elements()
-ax_legend = ax.legend(
-    [h1[0], h2[0]],
-    ['Specific humidity [$g \; kg^{-1}$]',
-     'Potential temperature [$°C$]'],
-    loc='lower left', frameon=False,
-    bbox_to_anchor=(-0.13, -0.36), labelspacing=1.2,
-    handlelength=1, columnspacing=1)
-
-for line in ax_legend.get_lines():
-    line.set_linewidth(1)
-
-fig.subplots_adjust(left=0.12, right=0.89, bottom=0.14, top=0.98)
-fig.savefig(output_png)
-
-
-
-
-
-'''
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
 # region plot q_weighted_lat am zm SH
 
 am_zm_source_lat = q_weighted_lat[expid[i]]['am'].weighted(
@@ -711,6 +466,97 @@ fig.savefig(output_png)
 
 
 # -----------------------------------------------------------------------------
+# region plot q_weighted_lat ann std zm SH
+
+ann_std_zm_source_lat = q_weighted_lat[expid[i]]['ann'].weighted(
+    ocean_q_alltime[expid[i]]['ann'].sel(var_names='lat').fillna(0)
+    ).mean(dim='lon').std(dim='time', ddof=1)
+# np.nanmin(ann_std_zm_source_lat)
+
+am_zm_q = q_plev[expid[i]]['am'].mean(dim='lon') * 1000
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.5_source_var_q/6.1.5.0_lat/6.1.5.0 ' + expid[i] + ' q_weighted_lat ann_std zm_SH.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=0, cm_max=2, cm_interval1=0.2, cm_interval2=0.4, cmap='viridis',
+    reversed=False)
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([13.2, 8.8]) / 2.54)
+
+plt_mesh = ax.contourf(
+    lat.sel(lat=slice(3, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
+    ann_std_zm_source_lat.sel(lat=slice(3, -90), plev=slice(1e+5, 2e+4)),
+    norm=pltnorm, cmap=pltcmp, levels=pltlevel, extend='max'
+)
+
+# # q contours
+# q_intervals = np.array([0.01, 0.05, 0.1, 0.5, 1, 2, 4, 6, 8, 10, 12, 14])
+# plt_ctr = ax.contour(
+#     lat.sel(lat=slice(2, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
+#     am_zm_q.sel(lat=slice(2, -90), plev=slice(1e+5, 2e+4)),
+#     colors='b', levels=q_intervals, linewidths=0.4,
+#     clip_on=True, zorder=2)
+# ax_clabel = ax.clabel(
+#     plt_ctr, inline=1, colors='b', fmt=remove_trailing_zero,
+#     levels=q_intervals, inline_spacing=1, fontsize=10,)
+
+# x-axis
+ax.set_xticks(np.arange(0, -90 - 1e-4, -10))
+ax.set_xlim(0, -88.57)
+ax.xaxis.set_major_formatter(LatitudeFormatter(degree_symbol='° '))
+
+# y-axis
+ax.invert_yaxis()
+ax.set_ylim(1000, 200)
+ax.set_yticks(np.arange(1000, 200 - 1e-4, -100))
+ax.set_ylabel('Pressure [$hPa$]')
+
+# grid
+ax.grid(True, lw=0.5, c='gray', alpha=0.5, linestyle='--',)
+
+# mesh cbar
+cbar = fig.colorbar(
+    plt_mesh, ax=ax, aspect=25, format=remove_trailing_zero_pos_abs,
+    orientation="horizontal", shrink=0.7, ticks=pltticks, extend='max',
+    pad=0.1, fraction=0.04,
+    anchor=(0.6, -1),
+    )
+# cbar.ax.set_xticklabels([remove_trailing_zero(x) for x in abs(pltticks)])
+cbar.ax.set_xlabel('Standard deviation of annual zonal mean source latitude [$°$]',)
+# cbar.ax.invert_xaxis()
+
+# # contours legend
+# h1, _ = plt_ctr.legend_elements()
+# ax_legend = ax.legend(
+#     [h1[0],
+#     #  h2[0],
+#      ],
+#     ['Specific humidity [$g \; kg^{-1}$]',
+#     #  'Potential temperature [$°C$]',
+#      ],
+#     loc='lower left', frameon=False,
+#     bbox_to_anchor=(-0.13, -0.3), labelspacing=1.2,
+#     handlelength=1, columnspacing=1)
+
+# for line in ax_legend.get_lines():
+#     line.set_linewidth(1)
+
+fig.subplots_adjust(left=0.12, right=0.96, bottom=0.14, top=0.98)
+fig.savefig(output_png)
+
+
+
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+
+
+# -----------------------------------------------------------------------------
 # region plot q_weighted_lat am zm SH
 
 am_zm_source_lat = q_weighted_lat[expid[i]]['am'].weighted(
@@ -814,6 +660,249 @@ fig.savefig(output_png)
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region plot q_weighted_lat am zm
+
+am_zm_source_lat = q_weighted_lat[expid[i]]['am'].weighted(
+        ocean_q_alltime[expid[i]]['am'].sel(var_names='lat').fillna(0)
+        ).mean(dim='lon')
+
+am_zm_q = q_plev[expid[i]]['am'].mean(dim='lon') * 1000
+
+am_zm_tpot = tpot_plev[expid[i]]['am'].mean(dim='lon') - zerok
+
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.5_source_var_q/6.1.5.0_lat/6.1.5.0 ' + expid[i] + ' q_weighted_lat am zm.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-60, cm_max=-10, cm_interval1=2.5, cm_interval2=5, cmap='PuOr',)
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([13.2, 8.8]) / 2.54)
+
+# mesh
+plt_mesh = ax.pcolormesh(
+    lat.sel(lat=slice(-20, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
+    am_zm_source_lat.sel(lat=slice(-20, -90), plev=slice(1e+5, 2e+4)),
+    norm=pltnorm, cmap=pltcmp,
+)
+
+# q contours
+q_intervals = np.array([0.01, 0.05, 0.1, 0.5, 1, 2, 4, 6, 8, 10])
+plt_ctr = ax.contour(
+    lat.sel(lat=slice(-20, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
+    am_zm_q.sel(lat=slice(-20, -90), plev=slice(1e+5, 2e+4)),
+    colors='b', levels=q_intervals, linewidths=0.4,
+    clip_on=True, zorder=2)
+ax_clabel = ax.clabel(
+    plt_ctr, inline=1, colors='b', fmt=remove_trailing_zero,
+    levels=q_intervals, inline_spacing=1, fontsize=6,)
+
+# tpot contours
+tpot_intervals = np.arange(-20, 80 + 1e-4, 5)
+plt_ctr_tpot = ax.contour(
+    lat.sel(lat=slice(-20, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
+    am_zm_tpot.sel(lat=slice(-20, -90), plev=slice(1e+5, 2e+4)),
+    colors='k', levels=tpot_intervals, linewidths=0.4, linestyles='solid',
+    clip_on=True, zorder=2)
+ax_clabel = ax.clabel(
+    plt_ctr_tpot, inline=1, colors='k', fmt=remove_trailing_zero,
+    levels=tpot_intervals, inline_spacing=1, fontsize=6,)
+
+# x-axis
+ax.set_xticks(np.arange(-20, -90 - 1e-4, -10))
+ax.set_xlim(-20, -90)
+ax.xaxis.set_major_formatter(LatitudeFormatter(degree_symbol='° '))
+
+# y-axis
+ax.invert_yaxis()
+ax.set_ylim(1000, 200)
+ax.set_yticks(np.arange(1000, 200 - 1e-4, -100))
+ax.set_ylabel('Pressure [$hPa$]')
+
+# grid
+ax.grid(True, lw=0.5, c='gray', alpha=0.5, linestyle='--',)
+
+# mesh cbar
+cbar = fig.colorbar(
+    plt_mesh, ax=ax, aspect=25,
+    orientation="horizontal", shrink=0.7, ticks=pltticks, extend='both',
+    pad=0.1, fraction=0.04,
+    anchor=(1.3, -1),
+    )
+cbar.ax.set_xticklabels(
+    [remove_trailing_zero(x) for x in abs(pltticks)])
+cbar.ax.set_xlabel('Source latitude [$°\;S$]',)
+
+# 2nd y-axis
+height = np.round(
+    pressure_to_height_std(
+        pressure=np.arange(1000, 200 - 1e-4, -100) * units('hPa')), 1,)
+ax2 = ax.twinx()
+ax2.invert_yaxis()
+ax2.set_ylim(1000, 200)
+ax2.set_yticks(np.arange(1000, 200 - 1e-4, -100))
+ax2.set_yticklabels(height.magnitude, c = 'gray')
+ax2.set_ylabel('Height assuming a standard atmosphere [$km$]', c = 'gray')
+
+# contours legend
+h1, _ = plt_ctr.legend_elements()
+h2, _ = plt_ctr_tpot.legend_elements()
+ax_legend = ax.legend(
+    [h1[0], h2[0]],
+    ['Specific humidity [$g \; kg^{-1}$]',
+     'Potential temperature [$°C$]'],
+    loc='lower left', frameon=False,
+    bbox_to_anchor=(-0.13, -0.36), labelspacing=1.2,
+    handlelength=1, columnspacing=1)
+
+for line in ax_legend.get_lines():
+    line.set_linewidth(1)
+
+fig.subplots_adjust(left=0.12, right=0.89, bottom=0.14, top=0.98)
+fig.savefig(output_png)
+
+
+
+
+
+'''
+# q_weighted_lat_am_zm = q_weighted_lat[expid[i]]['am'].weighted(
+#     ocean_q_alltime[expid[i]]['am'].sel(var_names='lat').fillna(0)
+#     ).mean(dim='lon')
+
+# q_plev[expid[i]]['am'].mean(dim='lon')
+
+
+#-------- check weighted average
+iplev = 20
+ilat = 48
+np.average(
+    q_weighted_lat[expid[i]]['am'][iplev, ilat],
+    weights=ocean_q_alltime[expid[i]]['am'].sel(var_names='lat')[iplev, ilat],
+    )
+q_weighted_lat_am_zm[iplev, ilat].values
+
+np.average(
+     q_weighted_lat[expid[i]]['am'],
+     weights=ocean_q_alltime[expid[i]]['am'].sel(var_names='lat')
+)
+
+q_weighted_lat_am_zm = q_weighted_lat[expid[i]]['am'].weighted(
+    ocean_q_alltime[expid[i]]['am'].sel(var_names='lat')
+    ).mean(dim='lon')
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot relative q_weighted_lat am zm
+
+am_zm_rel_source_lat = q_weighted_lat[expid[i]]['am'].weighted(
+    ocean_q_alltime[expid[i]]['am'].sel(var_names='lat').fillna(0)
+    ).mean(dim='lon') - lat.values[None, :]
+
+am_zm_q = q_plev[expid[i]]['am'].mean(dim='lon') * 1000
+
+am_zm_tpot = tpot_plev[expid[i]]['am'].mean(dim='lon') - zerok
+
+
+output_png = 'figures/6_awi/6.1_echam6/6.1.5_source_var_q/6.1.5.0_lat/6.1.5.0 ' + expid[i] + ' relative q_weighted_lat am zm.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-5, cm_max=65, cm_interval1=5, cm_interval2=5, cmap='PiYG',)
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([13.2, 8.8]) / 2.54)
+
+# mesh
+plt_mesh = ax.pcolormesh(
+    lat.sel(lat=slice(-20, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
+    am_zm_rel_source_lat.sel(lat=slice(-20, -90), plev=slice(1e+5, 2e+4)),
+    norm=pltnorm, cmap=pltcmp,
+)
+
+# q contours
+q_intervals = np.array([0.01, 0.05, 0.1, 0.5, 1, 2, 4, 6, 8, 10])
+plt_ctr = ax.contour(
+    lat.sel(lat=slice(-20, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
+    am_zm_q.sel(lat=slice(-20, -90), plev=slice(1e+5, 2e+4)),
+    colors='b', levels=q_intervals, linewidths=0.4,
+    clip_on=True, zorder=2)
+ax_clabel = ax.clabel(
+    plt_ctr, inline=1, colors='b', fmt=remove_trailing_zero,
+    levels=q_intervals, inline_spacing=1, fontsize=6,)
+
+# tpot contours
+tpot_intervals = np.arange(-20, 80 + 1e-4, 5)
+plt_ctr_tpot = ax.contour(
+    lat.sel(lat=slice(-20, -90)), plevs.sel(plev=slice(1e+5, 2e+4)) / 100,
+    am_zm_tpot.sel(lat=slice(-20, -90), plev=slice(1e+5, 2e+4)),
+    colors='k', levels=tpot_intervals, linewidths=0.4, linestyles='solid',
+    clip_on=True, zorder=2)
+ax_clabel = ax.clabel(
+    plt_ctr_tpot, inline=1, colors='k', fmt=remove_trailing_zero,
+    levels=tpot_intervals, inline_spacing=1, fontsize=6,)
+
+# x-axis
+ax.set_xticks(np.arange(-20, -90 - 1e-4, -10))
+ax.set_xlim(-20, -90)
+ax.xaxis.set_major_formatter(LatitudeFormatter(degree_symbol='° '))
+
+# y-axis
+ax.invert_yaxis()
+ax.set_ylim(1000, 200)
+ax.set_yticks(np.arange(1000, 200 - 1e-4, -100))
+ax.set_ylabel('Pressure [$hPa$]')
+
+# grid
+ax.grid(True, lw=0.5, c='gray', alpha=0.5, linestyle='--',)
+
+# mesh cbar
+cbar = fig.colorbar(
+    plt_mesh, ax=ax, aspect=25,
+    orientation="horizontal", shrink=0.7, ticks=pltticks, extend='both',
+    pad=0.1, fraction=0.04,
+    anchor=(1.3, -1),
+    )
+cbar.ax.set_xlabel('Relative source latitude [$°$]',)
+
+# 2nd y-axis
+height = np.round(
+    pressure_to_height_std(
+        pressure=np.arange(1000, 200 - 1e-4, -100) * units('hPa')), 1,)
+ax2 = ax.twinx()
+ax2.invert_yaxis()
+ax2.set_ylim(1000, 200)
+ax2.set_yticks(np.arange(1000, 200 - 1e-4, -100))
+ax2.set_yticklabels(height.magnitude, c = 'gray')
+ax2.set_ylabel('Height assuming a standard atmosphere [$km$]', c = 'gray')
+
+# contours legend
+h1, _ = plt_ctr.legend_elements()
+h2, _ = plt_ctr_tpot.legend_elements()
+ax_legend = ax.legend(
+    [h1[0], h2[0]],
+    ['Specific humidity [$g \; kg^{-1}$]',
+     'Potential temperature [$°C$]'],
+    loc='lower left', frameon=False,
+    bbox_to_anchor=(-0.13, -0.36), labelspacing=1.2,
+    handlelength=1, columnspacing=1)
+
+for line in ax_legend.get_lines():
+    line.set_linewidth(1)
+
+fig.subplots_adjust(left=0.12, right=0.89, bottom=0.14, top=0.98)
+fig.savefig(output_png)
+
+
+
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------

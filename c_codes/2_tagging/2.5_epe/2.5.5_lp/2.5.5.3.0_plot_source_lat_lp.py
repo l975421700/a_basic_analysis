@@ -169,7 +169,7 @@ ttest_fdr_res = ttest_fdr_control(
 ax.scatter(
     x=lon_2d[ttest_fdr_res & echam6_t63_ais_mask['mask']['AIS']],
     y=lat_2d[ttest_fdr_res & echam6_t63_ais_mask['mask']['AIS']],
-    s=0.5, c='k', marker='.', edgecolors='none',
+    s=1.5, c='k', marker='.', edgecolors='none',
     transform=ccrs.PlateCarree(),
     )
 
@@ -180,7 +180,7 @@ cbar = fig.colorbar(
     )
 cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel('LP source latitude anomalies [$°$]', linespacing=2)
+cbar.ax.set_xlabel('Source latitude anomalies [$°$]', linespacing=2)
 fig.savefig(output_png, dpi=600)
 
 

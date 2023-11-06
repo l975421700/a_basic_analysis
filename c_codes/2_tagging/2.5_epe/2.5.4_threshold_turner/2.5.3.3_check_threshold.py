@@ -134,11 +134,19 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
 
 fig, ax = hemisphere_plot(northextent=-60)
 cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
-plt_cmp = ax.pcolormesh(
+
+plt_cmp = ax.contourf(
     wisoaprt_masked[expid[i]]['frc']['1%']['am'].lon,
     wisoaprt_masked[expid[i]]['frc']['1%']['am'].lat,
     100 - wisoaprt_masked[expid[i]]['frc']['1%']['am'] * 100,
+    levels=pltlevel, extend='max',
     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+# plt_cmp = ax.pcolormesh(
+#     wisoaprt_masked[expid[i]]['frc']['1%']['am'].lon,
+#     wisoaprt_masked[expid[i]]['frc']['1%']['am'].lat,
+#     100 - wisoaprt_masked[expid[i]]['frc']['1%']['am'] * 100,
+#     norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
 
 cbar = fig.colorbar(
     plt_cmp, ax=ax, aspect=30,
