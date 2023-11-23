@@ -1,7 +1,7 @@
 
 
 # -----------------------------------------------------------------------------
-# region Function to generate ticks and labels
+# region ticks_labels
 
 def ticks_labels(
     xmin, xmax, ymin, ymax, xspacing, yspacing
@@ -67,7 +67,7 @@ ddd = ticks_labels(xmin, xmax, ymin, ymax, xspacing, yspacing)
 
 
 # -----------------------------------------------------------------------------
-# region Function to plot scale bar
+# region scale_bar
 
 def scale_bar(
     ax, bars = 2, length = None, location = (0.1, 0.05),
@@ -156,7 +156,7 @@ middle_label=scalebar_elements['middle_label']
 
 
 # -----------------------------------------------------------------------------
-# region Function to plot globe
+# region globe_plot
 
 
 import numpy as np
@@ -358,7 +358,7 @@ fig.savefig(output_png)
 
 
 # -----------------------------------------------------------------------------
-# region Function to plot advance framework
+# region framework_plot1
 
 def framework_plot1(
     which_area,
@@ -497,7 +497,7 @@ os.environ['CARTOPY_USER_BACKGROUNDS'] = 'bas_palaeoclim_qino/others/bg_cartopy'
 
 
 # -----------------------------------------------------------------------------
-# region Function to plot confidence ellipse
+# region confidence_ellipse
 # https://matplotlib.org/3.3.2/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py
 
 def confidence_ellipse(x, y, ax, n_std=3.0, facecolor='none', **kwargs):
@@ -561,7 +561,7 @@ def confidence_ellipse(x, y, ax, n_std=3.0, facecolor='none', **kwargs):
 
 
 # -----------------------------------------------------------------------------
-# region Function to plot polar scale bar
+# region polar_scale_bar
 
 def polar_scale_bar(
     ax, bars = None, length = None, location = None,
@@ -638,7 +638,7 @@ middle_label=scalebar_elements['middle_label']
 
 
 # -----------------------------------------------------------------------------
-# region Function to plot two hemisphere
+# region hemisphere_plot
 
 
 import numpy as np
@@ -996,7 +996,7 @@ fig.savefig('figures/trial.png')
 
 
 # -----------------------------------------------------------------------------
-# region Function to plot high and low pressure systems
+# region plot_maxmin_points
 
 
 def plot_maxmin_points(lon, lat, data, ax, extrema, nsize, symbol, color='k',
@@ -1054,7 +1054,7 @@ def plot_maxmin_points(lon, lat, data, ax, extrema, nsize, symbol, color='k',
 
 
 # -----------------------------------------------------------------------------
-# region Function to quickly plot variables
+# region quick_var_plot
 
 def quick_var_plot(
     var=None, varname=None, xlabel=' \n ', whicharea='global',
@@ -1185,7 +1185,7 @@ def quick_var_plot(
 
 
 # -----------------------------------------------------------------------------
-# region Function to generate mesh components for FESOM2 grid plot
+# region mesh2plot
 
 def mesh2plot(
     meshdir='startdump/fesom2/mesh/core2/',
@@ -1223,7 +1223,7 @@ def mesh2plot(
 
 
 # -----------------------------------------------------------------------------
-# region Function to remove trailing zeros of numbers to strings
+# region remove_trailing_zero
 
 def remove_trailing_zero(x):
     return ('%f' % x).rstrip('0').rstrip('.')
@@ -1254,7 +1254,7 @@ https://stackoverflow.com/questions/66817786/how-can-i-use-the-formatters-to-mak
 
 
 # -----------------------------------------------------------------------------
-# region Function to plot regions
+# region regional_plot
 
 
 def regional_plot(

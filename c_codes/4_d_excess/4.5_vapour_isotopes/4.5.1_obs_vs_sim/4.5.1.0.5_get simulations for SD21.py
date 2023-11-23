@@ -122,6 +122,8 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q',]:
             ivar.values
         )
 
+SD21_Neumayer_1d_sim[expid[i]]['q'] = SD21_Neumayer_1d_sim[expid[i]]['q'] / 1000
+
 output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.SD21_Neumayer_1d_sim.pkl'
 
 if (os.path.isfile(output_file)):
@@ -161,13 +163,13 @@ wiso_q_6h_sfc_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wiso_q_6h_sfc_alltime.pkl', 'rb') as f:
     wiso_q_6h_sfc_alltime[expid[i]] = pickle.load(f)
 
-SD21_Neumayer_1d_sim[expid[i]][var_name + '_sim'][ires]
-wiso_q_6h_sfc_alltime[expid[i]]['q16o']['daily'][itime, 0, ilat, ilon]
+print(SD21_Neumayer_1d_sim[expid[i]][var_name + '_sim'][ires])
+print(wiso_q_6h_sfc_alltime[expid[i]]['q16o']['daily'][itime, 0, ilat, ilon])
 
 #-------- check d_ln
 var_name = 'd_ln'
-SD21_Neumayer_1d_sim[expid[i]][var_name + '_sim'][ires]
-d_ln_q_sfc_alltime[expid[i]]['daily'][itime, ilat, ilon]
+print(SD21_Neumayer_1d_sim[expid[i]][var_name + '_sim'][ires])
+print(d_ln_q_sfc_alltime[expid[i]]['daily'][itime, ilat, ilon])
 
 #-------- check dD
 dD_q_sfc_alltime = {}
@@ -175,8 +177,8 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_q_sfc_allti
     dD_q_sfc_alltime[expid[i]] = pickle.load(f)
 
 var_name = 'dD'
-SD21_Neumayer_1d_sim[expid[i]][var_name + '_sim'][ires]
-dD_q_sfc_alltime[expid[i]]['daily'][itime, ilat, ilon]
+print(SD21_Neumayer_1d_sim[expid[i]][var_name + '_sim'][ires])
+print(dD_q_sfc_alltime[expid[i]]['daily'][itime, ilat, ilon])
 
 
 '''

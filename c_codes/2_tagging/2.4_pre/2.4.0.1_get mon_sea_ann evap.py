@@ -114,6 +114,7 @@ ncfile2 = xr.open_dataset(filenames_echam[ifile_start:ifile_end][ifile])
 (wisoevap_alltime[expid[i]]['mon'][ifile, 0] == ncfile2.evap[0]).all().values
 (wisoevap_alltime[expid[i]]['mon'][ifile, :] == ncfile1.wisoevap[0, :3]).all().values
 
+wisoevap_alltime[expid[i]]['am'].to_netcdf('scratch/test/test.nc')
 '''
 # endregion
 # -----------------------------------------------------------------------------

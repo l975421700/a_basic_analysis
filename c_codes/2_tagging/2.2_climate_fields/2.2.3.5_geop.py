@@ -49,8 +49,6 @@ psl_zh = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.psl_zh.pkl', 'rb') as f:
     psl_zh[expid[i]] = pickle.load(f)
 
-
-
 import metpy.calc
 from metpy.units import units
 

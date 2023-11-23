@@ -1,7 +1,10 @@
 
 
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_416_4.9',]
+exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+expid = [
+    # 'pi_m_416_4.9',
+    'nudged_701_5.0',
+    ]
 i = 0
 
 # -----------------------------------------------------------------------------
@@ -14,7 +17,6 @@ import warnings
 warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
-sys.path.append('/work/ollie/qigao001')
 
 # data analysis
 import numpy as np
@@ -543,10 +545,11 @@ fig.savefig(output_png)
 # -----------------------------------------------------------------------------
 # region plot am evap Antarctica
 
-output_png = 'figures/6_awi/6.1_echam6/6.1.4_precipitation/6.1.4.1_evap/6.1.4.1 ' + expid[i] + ' evap am Antarctica.png'
+# output_png = 'figures/6_awi/6.1_echam6/6.1.4_precipitation/6.1.4.1_evap/6.1.4.1 ' + expid[i] + ' evap am Antarctica.png'
+output_png = 'figures/test/test.png'
 
-pltlevel = np.array([0, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 6, 8,])
-pltticks = np.array([0, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 6, 8,])
+pltlevel = np.array([-0.1, -0.05, 0, 0.05, 0.1, 0.5, 1, 2, 4,])
+pltticks = np.array([-0.1, -0.05, 0, 0.05, 0.1, 0.5, 1, 2, 4,])
 pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
 pltcmp = cm.get_cmap('BrBG', len(pltlevel)-1)
 
@@ -567,6 +570,7 @@ cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.set_xlabel('Evaporation [$mm \; day^{-1}$]', linespacing=1.5,)
 fig.savefig(output_png)
 
+# There is a net deposition over most of Antarctica.
 
 '''
 '''

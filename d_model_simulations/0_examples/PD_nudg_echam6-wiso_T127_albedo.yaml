@@ -1,42 +1,40 @@
 general:
     setup_name: "echam"
     version: "6.3.05p2-wiso"
-    compute_time: "00:30:00"
-    initial_date: "1979-01-01"
-    final_date: "1979-4-01"
-    model_dir: "/albedo/work/user/qigao001/model_codes/echam-6.3.05p2-wiso/"
-    base_dir: "/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/"
+    compute_time: "00:60:00"
+    initial_date: "2022-01-01"
+    final_date: "2022-11-30"
+    model_dir: "/albedo/home/acauquoi/esm_tools/echam-6.3.05p2-wiso/"
+    base_dir: "/albedo/work/user/acauquoi/echam6-wiso/experiments/"
     nmonth: 1
     nyear: 0
     with_wiso: True
     use_venv: False
-    # clean_old_rundirs_except: 3
+    clean_old_rundirs_except: 3
     account: paleodyn.paleodyn
 
 echam:
-    executable: echam6_230519_5.0
-    bin_sources:
-            echam_bin: "${bin_dir}/${executable}"
-    bin_in_work:
-            echam_bin: "${executable}"
     scenario: "HIST"
     dataset: r0007
-    res: T63
-    lresume: False
+    resolution: T127
+    res: T127
+    ocean_resolution: "TP04"
+    lresume: True
     restart_rate: 1
     restart_unit: "months"
-    # ini_parent_date: 20211231
-    # ini_parent_exp_id: "NUDGING_ERA5_T63L47_v1.2"
-    # ini_parent_dir: "/albedo/work/projects/paleo_work/acauquoi/mpi-esm-wiso/echam6/experiments/NUDGING_ERA5_T63L47_v1.2/restart/echam6/"
+    ini_parent_date: 20211231
+    ini_parent_exp_id: "NUDGING_ERA5_T127L95_v1.2"
+    ini_parent_dir: "/albedo/work/projects/paleo_work/acauquoi/mpi-esm-wiso/echam6/experiments/NUDGING_ERA5_T127L95_v1.2/restart/echam6/"
+    nproc: 576
+
     add_namelist_changes:
         namelist.echam:
             runctl:
-                out_filetype: 2
-                # putdata:
-                #   - 6
-                #   - 'hours'
-                #   - 'last'
-                #   - 0
+                putdata:
+                  - 6
+                  - 'hours'
+                  - 'last'
+                  - 0
                 lcouple: False
                 lcouple_co2: False
                 default_output: False
@@ -61,39 +59,9 @@ echam:
                 lnudgini: False
             simpleplumesctl:
                 fix_yr: 2016
-            wisoctl:
-                lwiso: True
-                lwiso_rerun: ${lresume}
-                nwiso: 28
-                ntag: 0
-                ntag1: 0
-                ntag2: 0
-                ntag3: 0
-                ntag4: 0
-                ntags1_lat: 3
-                ntags2_lon: 0
-                ntags3_sst: 3
-                ntags4_rh2m: 3
-                ntags5_wind10: 3
-                ntag_geo7: 7
-                ntags6_sinlon: 3
-                ntags7_coslon: 3
-                ntag5: 0
-                ntag_sum: 25
-                lupdate_tagmap: True
-                tag_minsst: 268.15
-                tag_maxsst: 318.15
-                tag_minrh2m: 0
-                tag_maxrh2m: 1.6
-                tag_minwind10: 0
-                tag_maxwind10: 28.0
-                ltag_corr1: True
-                ltag_corr3: True
-                latm_water: False
-                ltag_corr2: False
-                ltag_corr3_m: False
-                ltag_corr_xtec: False
-                lcorrfac: False
+            parctl:
+                nproca: 24
+                nprocb: 24
 
     file_movements:
         forcing:
@@ -116,24 +84,22 @@ echam:
     forcing_sources:
 
         # water isotope forcing file
-        wiso_sw_observed: "/albedo/home/acauquoi/esm_tools/echam-6.3.05p2-wiso/input/iniwiso/T63_wisosw_d.nc"
-        wiso_tagmap_1: "/albedo/work/user/qigao001/startdump/tagging/tagmap/pi_6tagmap.nc"
+        wiso_sw_observed: "/albedo/home/acauquoi/esm_tools/echam-6.3.05p2-wiso/input/iniwiso/T127_wisosw_d.nc"
             
         # ERA5 forcing files        
-        era5_atm: "/albedo/work/projects/paleo_work/paleodyn_from_work_ollie_projects/paleodyn/nudging/ERA5/atmos/T63/era5${echam.res}${echam.levels}_${echam.current_date!syear}${echam.current_date!smonth}.nc"        
-        sst: "/albedo/work/user/acauquoi/nudging/ERA5/sea/T63/T63_era5sst_${echam.current_date!syear}.nc"
-        sic: "/albedo/work/user/acauquoi/nudging/ERA5/sea/T63/T63_era5sic_${echam.current_date!syear}.nc"
+        era5_atm: "/albedo/work/projects/paleo_work/paleodyn_from_work_ollie_projects/paleodyn/nudging/ERA5/atmos/T127/era5${echam.res}${echam.levels}_${echam.current_date!syear}${echam.current_date!smonth}.nc"        
+        sst: "/albedo/work/user/acauquoi/nudging/ERA5/sea/T127/T127_era5sst_@YEAR@.nc"
+        sic: "/albedo/work/user/acauquoi/nudging/ERA5/sea/T127/T127_era5sic_@YEAR@.nc"
         
         # further ECHAM6 forcing files (no files for the year after 2014)
         greenhouse_gases: "/albedo/work/projects/p_pool_echam6/greenhouse.nc"
-        ozone: "/albedo/work/projects/p_pool_echam6/input/r0007/T63/ozone/T63_ozone_historical_2014.nc"
-        volcir: "/albedo/work/projects/p_pool_echam6/input/r0007/T63/volcano_aerosols/strat_aerosol_ir_T63_2014.nc"
-        volcsw: "/albedo/work/projects/p_pool_echam6/input/r0007/T63/volcano_aerosols/strat_aerosol_sw_T63_2014.nc"
+        ozone: "/albedo/work/projects/p_pool_echam6/input/r0007/T127/ozone/T127_ozone_historical_2014.nc"
+        volcir: "/albedo/work/projects/p_pool_echam6/input/r0007/T127/volcano_aerosols/strat_aerosol_ir_T127_2014.nc"
+        volcsw: "/albedo/work/projects/p_pool_echam6/input/r0007/T127/volcano_aerosols/strat_aerosol_sw_T127_2014.nc"
         MAC-SP: "/albedo/pool/ECHAM6/input/r0007/MAC-SP.nc"
 
     add_forcing_files:
         wiso_sw: wiso_sw_observed
-        wiso_tagmap: wiso_tagmap_1
 
         era5_previous: era5_atm
         era5_current:  era5_atm
@@ -149,7 +115,6 @@ echam:
 
     forcing_in_work:
         wiso_sw: "unit.25"
-        wiso_tagmap: "unit.26"
 
         era5_previous: ndg${echam.prev_date!syear}${echam.prev_date!smonth}.nc
         era5_current: ndg${echam.current_date!syear}${echam.current_date!smonth}.nc
@@ -205,15 +170,15 @@ jsbach:
             hydrology_ctl:
                 ldebughd: "remove_from_namelist"
                 gethd:
-                  - 192
+                  - 432
                   - 'steps'
                   - 'exact'
                   - 0
                 puthd:
-                  - 192
+                  - 432
                   - 'steps'
                   - 'exact'
-                  - -450
+                  - -200
             input_ctl:
                 var_name: "remove_from_namelist"
                 #dt_update: "remove_from_namelist"
@@ -229,7 +194,7 @@ jsbach:
           - jsbach
 
     input_sources:
-        jsbach_bin_default: "/albedo/work/projects/p_pool_jsbach3/input/r0010/T63/jsbach_T63GR15_11tiles_5layers_1976_no-dynveg.nc"
+        jsbach_bin_default: "/albedo/work/projects/p_pool_jsbach3/input/r0010/T127/jsbach_T127TP04_11tiles_5layers_1976_no-dynveg.nc"
     add_input_files:
         jsbach_bin: jsbach_bin_default
     input_in_work:
@@ -245,8 +210,8 @@ jsbach:
           - LU_trans
           
     forcing_sources:
-        landuse_transition: "/albedo/work/projects/p_pool_jsbach3/T63/New_Hampshire_LCC/hist/LUH_transitions_T63_2010.nc"
-        landuse_harvest:    "/albedo/work/projects/p_pool_jsbach3/T63/New_Hampshire_LCC/hist/LUH_harvest_T63_2010.nc"
+        landuse_transition: "/albedo/work/projects/p_pool_jsbach3/T127/New_Hampshire_LCC/hist/LUH_transitions_T127_2010.nc"
+        landuse_harvest:    "/albedo/work/projects/p_pool_jsbach3/T127/New_Hampshire_LCC/hist/LUH_harvest_T127_2010.nc"
     add_forcing_files:
         landuse_transition: landuse_transition
         landuse_harvest:    landuse_harvest

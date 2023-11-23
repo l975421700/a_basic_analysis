@@ -1,25 +1,12 @@
 &runctl
-    dt_start = 1850, 1, 1, 0, 0, 0
-    dt_stop = 2402, 1, 1, 0, 0, 0
-    putrerun = 1, 'months', 'last', 0
-    default_output = .false.
-    lcouple = .true.
-    lcouple_co2 = .true.
+    putrerun = 1, 'months', 'first', 0
     lfractional_mask = .false.
-    lresume = .true.
-    out_expname = 'TST'
-    out_datapath = '/work/bk0988/awicm/a270062/fesom_echam/glob//cpl_work_test/'
     rerun_filetype = 4
-    getocean = 1, 'days', 'last', 0
-    putocean = 1, 'days', 'last', 0
     putdata = 1, 'months', 'last', 0
 /
 
 &wisoctl
-    lwiso = .false.
-    lwiso_rerun = .false.
-    nwiso = 0
-    ntagtyp = 4, 4, 4, 3, 1, 1, 3, 1, 1, 3, 1, 1, 3, 1, 1, 0, 0, 5, 5, 5, 2, 1, 3, 1, 1, 3, 1, 1
+    ntagtyp = 4, 4, 4, 3, 1, 1, 3, 1, 1, 3, 1, 1, 3, 1, 1, 0, 0, 5, 5, 5, 2, 1, 3, 1, 1, 3, 1, 1, 3, 1, 1
 /
 
 &parctl
@@ -31,9 +18,6 @@
 
 &submodelctl
     lmethox = .true.
-/
-&submdiagctl
-    vphysc_lpost = .false.
 /
 
 &radctl
@@ -50,6 +34,7 @@
     n2ovmr = 300.74e-09
     cfcvmr(1) = 148.80e-12
     cfcvmr(2) = 270.50e-12
+    lrad_async = .false.
 /
 &co2ctl
     lco2_scenario = .true.
@@ -69,10 +54,6 @@
 /
 &set_stream
     stream = 'ma'
-    lpost = 0
-/
-&set_stream
-    stream = 'surf'
     lpost = 0
 /
 &set_stream
@@ -271,27 +252,94 @@
 /
 !-------------------------------- echam stream
 &mvstreamctl
-    interval = 1, 'months', 'last', 0
-    target = 'sp_1m'
+    interval = 1, 'days', 'last', 0
+    target = 'sp_1d'
     source = 'sp'
     variables = 'st:mean', 'svo:mean', 'sd:mean'
 /
 &mvstreamctl
-    interval = 1, 'months', 'last', 0
-    target = 'gl_1m'
+    interval = 1, 'days', 'last', 0
+    target = 'gl_1d'
     source = 'gl'
     variables = 'q:mean', 'xl:mean', 'xi:mean'
-/
-&mvstreamctl
-    interval = 1, 'months', 'last', 0
-    target = 'g3b_1m'
-    source = 'g3b'
-    variables = 'q2m:mean', 'rh2m:mean', 'aps:mean', 'seaice:mean',
-                'relhum:mean', 'tpot:mean', 'wind10:mean', 'tsw:mean', 'temp2:mean'
 /
 &mvstreamctl
     interval = 1, 'days', 'last', 0
     target = 'g3b_1d'
     source = 'g3b'
-    variables = 'temp2:mean'
+    variables = 'q2m:mean', 'rh2m:mean', 'aps:mean', 'seaice:mean',
+                'relhum:mean', 'tpot:mean', 'wind10:mean', 'tsw:mean', 'temp2:mean', 'tsurf:mean'
+/
+
+&mvstreamctl
+    filetag = 'echam'
+    source = 'sp', 'gl', 'g3b'
+/
+
+!-------------------------------- zqsw and zqklevw in stream surf
+
+&set_stream
+    stream = 'surf'
+    interval = 1, 'days', 'last', 0
+    lpost = 1
+/
+&set_stream_element
+    stream = 'surf'
+    name = 'zqsw'
+    lpost = 1
+/
+&set_stream_element
+    stream = 'surf'
+    name = 'zqklevw'
+    lpost = 1
+/
+&set_stream_element
+    stream = 'surf'
+    name = 'pevapw'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'surf'
+    name = 'jsswniracc'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'surf'
+    name = 'jsswvisacc'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'surf'
+    name = 'jsswdifniracc'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'surf'
+    name = 'jsswdifvisacc'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'surf'
+    name = 'longwave_down_acc'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'surf'
+    name = 'az0lh'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'surf'
+    name = 'az0'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'surf'
+    name = 'jsswparacc'
+    lpost = 0
+/
+&set_stream_element
+    stream = 'surf'
+    name = 'jsswdifparacc'
+    lpost = 0
 /

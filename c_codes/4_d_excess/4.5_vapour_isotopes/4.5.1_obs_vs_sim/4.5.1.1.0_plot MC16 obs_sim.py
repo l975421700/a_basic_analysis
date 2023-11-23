@@ -1,5 +1,10 @@
 
 
+# salloc --account=paleodyn.paleodyn --qos=12h --time=12:00:00 --nodes=1 --mem=120GB
+# source ${HOME}/miniconda3/bin/activate deepice
+# ipython
+
+
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     'nudged_701_5.0',
@@ -35,6 +40,8 @@ from statsmodels.stats import multitest
 import pycircstat as circ
 from scipy.stats import pearsonr
 from scipy.stats import linregress
+from metpy.calc import pressure_to_height_std, geopotential_to_height
+from metpy.units import units
 
 # plot
 import matplotlib as mpl
@@ -56,51 +63,28 @@ import matplotlib.path as mpath
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
-    globe_plot,
-    hemisphere_plot,
-    quick_var_plot,
-    mesh2plot,
-    framework_plot1,
     remove_trailing_zero,
     remove_trailing_zero_pos,
-    ticks_labels,
     hemisphere_conic_plot,
+    hemisphere_plot,
 )
 
 from a_basic_analysis.b_module.basic_calculations import (
-    mon_sea_ann,
+    find_gridvalue_at_site,
+    find_multi_gridvalue_at_site,
+    find_gridvalue_at_site_time,
+    find_multi_gridvalue_at_site_time,
 )
 
 from a_basic_analysis.b_module.namelist import (
-    month,
-    month_num,
-    month_dec,
-    month_dec_num,
-    seasons,
-    seasons_last_num,
-    hours,
-    months,
-    month_days,
-    zerok,
     panel_labels,
     plot_labels,
-)
-
-from a_basic_analysis.b_module.source_properties import (
-    source_properties,
-    calc_lon_diff,
-)
-
-from a_basic_analysis.b_module.statistics import (
-    fdr_control_bh,
-    check_normality_3d,
-    check_equal_variance_3d,
-    ttest_fdr_control,
 )
 
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
     plt_mesh_pars,
+    plot_t63_contourf,
 )
 
 # endregion
@@ -114,10 +98,43 @@ MC16_Dome_C_1d_sim = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.MC16_Dome_C_1d_sim.pkl', 'rb') as f:
     MC16_Dome_C_1d_sim[expid[i]] = pickle.load(f)
 
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
+
 with open('data_sources/water_isotopes/MC16/MC16_Dome_C.pkl', 'rb') as f:
     MC16_Dome_C = pickle.load(f)
 
+q_geo7_sfc_frc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_geo7_sfc_frc_alltime.pkl', 'rb') as f:
+    q_geo7_sfc_frc_alltime[expid[i]] = pickle.load(f)
+MC16_1d_oo2q = find_multi_gridvalue_at_site_time(
+    MC16_Dome_C_1d_sim[expid[i]]['time'],
+    MC16_Dome_C_1d_sim[expid[i]]['lat'],
+    MC16_Dome_C_1d_sim[expid[i]]['lon'],
+    q_geo7_sfc_frc_alltime[expid[i]]['daily'].time.values,
+    q_geo7_sfc_frc_alltime[expid[i]]['daily'].lat.values,
+    q_geo7_sfc_frc_alltime[expid[i]]['daily'].lon.values,
+    q_geo7_sfc_frc_alltime[expid[i]]['daily'].sel(geo_regions='Open Ocean').values,
+    )
+
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+
+
+
 '''
+echam6_t63_geosp = xr.open_dataset(exp_odir + expid[i] + '/input/echam/unit.24')
+echam6_t63_surface_height = geopotential_to_height(
+    echam6_t63_geosp.GEOSP * (units.m / units.s)**2)
+MC16_1d_height = find_gridvalue_at_site(
+    MC16_Dome_C_1d_sim[expid[i]]['lat'].values[0],
+    MC16_Dome_C_1d_sim[expid[i]]['lon'].values[0],
+    echam6_t63_surface_height.lat.values,
+    echam6_t63_surface_height.lon.values,
+    echam6_t63_surface_height.values,
+)
+print('Height of Dome C in T63 ECHAM6: ' + str(np.round(MC16_1d_height, 1)))
+
+
 #---------------- check correlation
 for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_3m', 'q']:
     # var_name = 'd_ln'
@@ -126,6 +143,42 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_3m', 'q']:
     subset = np.isfinite(MC16_Dome_C_1d_sim[expid[i]][var_name]) & np.isfinite(MC16_Dome_C_1d_sim[expid[i]][var_name + '_sim'])
     
     print(np.round(pearsonr(MC16_Dome_C_1d_sim[expid[i]][var_name][subset], MC16_Dome_C_1d_sim[expid[i]][var_name + '_sim'][subset], ).statistic ** 2, 3))
+
+print(stats.describe(MC16_1d_oo2q))
+# 80%
+print(find_gridvalue_at_site(
+    MC16_Dome_C_1d_sim[expid[i]]['lat'][0],
+    MC16_Dome_C_1d_sim[expid[i]]['lon'][0],
+    q_geo7_sfc_frc_alltime[expid[i]]['am'].lat.values,
+    q_geo7_sfc_frc_alltime[expid[i]]['am'].lon.values,
+    q_geo7_sfc_frc_alltime[expid[i]]['am'].sel(geo_regions='Open Ocean').values,
+    ))
+# 83.7%
+print(find_gridvalue_at_site(
+    MC16_Dome_C_1d_sim[expid[i]]['lat'][0],
+    MC16_Dome_C_1d_sim[expid[i]]['lon'][0],
+    q_geo7_sfc_frc_alltime[expid[i]]['am'].lat.values,
+    q_geo7_sfc_frc_alltime[expid[i]]['am'].lon.values,
+    q_geo7_sfc_frc_alltime[expid[i]]['am'].sel(geo_regions='AIS').values,
+    ))
+# 5.4%
+print(find_gridvalue_at_site(
+    MC16_Dome_C_1d_sim[expid[i]]['lat'][0],
+    MC16_Dome_C_1d_sim[expid[i]]['lon'][0],
+    q_geo7_sfc_frc_alltime[expid[i]]['am'].lat.values,
+    q_geo7_sfc_frc_alltime[expid[i]]['am'].lon.values,
+    q_geo7_sfc_frc_alltime[expid[i]]['am'].sel(geo_regions='Land excl. AIS').values,
+    ))
+# 7.1%
+print(find_gridvalue_at_site(
+    MC16_Dome_C_1d_sim[expid[i]]['lat'][0],
+    MC16_Dome_C_1d_sim[expid[i]]['lon'][0],
+    q_geo7_sfc_frc_alltime[expid[i]]['am'].lat.values,
+    q_geo7_sfc_frc_alltime[expid[i]]['am'].lon.values,
+    q_geo7_sfc_frc_alltime[expid[i]]['am'].sel(geo_regions='SH seaice').values,
+    ))
+# 3.7%
+
 
 '''
 # endregion
@@ -267,6 +320,174 @@ fig, ax = hemisphere_plot(northextent=-60)
 cplot_ice_cores(MC16_Dome_C_1d_sim[expid[i]]['lon'][0], MC16_Dome_C_1d_sim[expid[i]]['lat'][0], ax=ax, s=50, marker='*', edgecolors='b')
 
 fig.savefig('figures/test/trial.png')
+
+
+from metpy.calc import geopotential_to_height
+from metpy.units import units
+echam6_t63_geosp = xr.open_dataset(exp_odir + expid[i] + '/input/echam/unit.24')
+echam6_t63_surface_height = geopotential_to_height(
+    echam6_t63_geosp.GEOSP * (units.m / units.s)**2)
+
+echam6_t63_surface_height.sel(lon = MC16_Dome_C_1d_sim[expid[i]]['lon'][0], lat = MC16_Dome_C_1d_sim[expid[i]]['lat'][0], method='nearest').values
+
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region animate daily observations and simulations
+
+#-------------------------------- import data
+
+dD_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_q_sfc_alltime.pkl', 'rb') as f:
+    dD_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+dO18_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_q_sfc_alltime.pkl', 'rb') as f:
+    dO18_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+d_excess_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_q_sfc_alltime.pkl', 'rb') as f:
+    d_excess_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+d_ln_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_q_sfc_alltime.pkl', 'rb') as f:
+    d_ln_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+wiso_q_6h_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wiso_q_6h_sfc_alltime.pkl', 'rb') as f:
+    wiso_q_6h_sfc_alltime[expid[i]] = pickle.load(f)
+
+temp2_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
+    temp2_alltime[expid[i]] = pickle.load(f)
+temp2_alltime[expid[i]]['daily']['time'] = temp2_alltime[expid[i]]['daily']['time'].dt.floor('D').rename('time')
+
+lon = d_ln_q_sfc_alltime[expid[i]]['am'].lon
+lat = d_ln_q_sfc_alltime[expid[i]]['am'].lat
+
+
+#-------------------------------- animate data
+
+itime_start = np.datetime64('2014-12-25')
+itime_end   = np.datetime64('2015-01-17')
+
+north_extent = -60
+
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', 't_3m']:
+    # var_name = 'dD'
+    # ['dD', 'd18O', 'd_xs', 'd_ln', 'q', 't_3m']
+    print('#-------------------------------- ' + var_name)
+    
+    if (var_name == 'dD'):
+        var = dD_q_sfc_alltime[expid[i]]['daily'].sel(lat=slice(north_extent + 2, -90), time=slice(itime_start, itime_end))
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min=-500, cm_max=-150, cm_interval1=25, cm_interval2=50,
+            cmap='viridis', reversed=False)
+    elif (var_name == 'd18O'):
+        var = dO18_q_sfc_alltime[expid[i]]['daily'].sel(lat=slice(north_extent + 2, -90), time=slice(itime_start, itime_end))
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min=-70, cm_max=-15, cm_interval1=5, cm_interval2=10,
+            cmap='viridis', reversed=False)
+    elif (var_name == 'd_xs'):
+        var = d_excess_q_sfc_alltime[expid[i]]['daily'].sel(lat=slice(north_extent + 2, -90), time=slice(itime_start, itime_end))
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min=-20, cm_max=50, cm_interval1=5, cm_interval2=10,
+            cmap='viridis', reversed=False)
+    elif (var_name == 'd_ln'):
+        var = d_ln_q_sfc_alltime[expid[i]]['daily'].sel(lat=slice(north_extent + 2, -90), time=slice(itime_start, itime_end))
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min=-20, cm_max=50, cm_interval1=5, cm_interval2=10,
+            cmap='viridis', reversed=False)
+    elif (var_name == 'q'): #g/kg
+        var = wiso_q_6h_sfc_alltime[expid[i]]['q16o']['daily'].sel(
+            lev=47, lat=slice(north_extent + 2, -90), time=slice(itime_start, itime_end)) * 1000
+        pltlevel = np.array([0.01, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 6,])
+        pltticks = np.array([0.01, 0.05, 0.1, 0.25, 0.5, 1, 2, 4, 6,])
+        pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+        pltcmp = cm.get_cmap('viridis', len(pltlevel)-1)
+    elif ((var_name == 'temp2') | (var_name == 't_3m')):
+        var = temp2_alltime[expid[i]]['daily'].sel(lat=slice(north_extent + 2, -90), time=slice(itime_start, itime_end))
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min=-35, cm_max=0, cm_interval1=2.5, cm_interval2=5,
+            cmap='viridis', reversed=False)
+    
+    # b_mask = np.broadcast_to(echam6_t63_ais_mask['mask']['AIS'][-17:, :], var.shape)
+    # print(stats.describe(var.values[b_mask], axis=None, nan_policy='omit'))
+    # print(stats.describe(MC16_Dome_C_1d_sim[expid[i]][var_name], axis=None, nan_policy='omit'))
+    
+    itime_start_idx = np.argmin(abs(var.time.values - itime_start))
+    itime_end_idx = np.argmin(abs(var.time.values - itime_end))
+    plt_data = var[itime_start_idx:itime_end_idx].compute().copy()
+    
+    start_time = str(plt_data.time.values[0])[:10]
+    end_time   = str(plt_data.time.values[-1])[:10]
+    # print('Start time: ' + start_time)
+    # print('End time:   ' + end_time)
+    
+    output_mp4 = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.1_MC16/8.3.0.1.2 ' + expid[i] + ' MC16 daily_sfc ' + var_name + ' ' + start_time + ' to ' + end_time + '.mp4'
+    
+    fig, ax = hemisphere_plot(northextent=north_extent, fm_top=0.92,)
+    # cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
+    
+    cbar = fig.colorbar(
+        cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=ax, aspect=30,
+        format=remove_trailing_zero_pos,
+        orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+        pad=0.02, fraction=0.15,
+        )
+    cbar.ax.tick_params(labelsize=8)
+    cbar.ax.set_xlabel('Daily surface ' + plot_labels[var_name], linespacing=1.5)
+    
+    plt_objs = []
+    
+    def update_frames(itime):
+        # itime = 0
+        global plt_objs
+        for plt_obj in plt_objs:
+            plt_obj.remove()
+        plt_objs = []
+        
+        plt_mesh = plot_t63_contourf(
+            plt_data.lon, plt_data.lat, plt_data[itime], ax,
+            pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+        
+        plt_ocean = ax.add_feature(
+            cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
+        
+        scatter_values = MC16_Dome_C_1d_sim[expid[i]][var_name][itime].copy()
+        if (var_name == 'q'):
+            scatter_values = scatter_values * 1000
+        plt_scatter = ax.scatter(
+            MC16_Dome_C_1d_sim[expid[i]]['lon'][itime],
+            MC16_Dome_C_1d_sim[expid[i]]['lat'][itime],
+            c=scatter_values,
+            marker='o', edgecolors='k', lw=0.5,
+            cmap=pltcmp, norm=pltnorm, transform=ccrs.PlateCarree(),
+        )
+        
+        plt_txt = plt.text(
+            0.5, 1, str(plt_data.time[itime].values)[:10],
+            transform=ax.transAxes,
+            ha='center', va='bottom', rotation='horizontal')
+        
+        plt_objs = plt_mesh.collections + [plt_txt, plt_ocean, plt_scatter,]
+        return(plt_objs)
+    
+    ani = animation.FuncAnimation(
+        fig, update_frames, frames=itime_end_idx - itime_start_idx,
+        interval=500, blit=False)
+    
+    ani.save(
+        output_mp4,
+        progress_callback=lambda iframe, n: print(f'Saving frame {iframe} of {n}'),)
+
+
+
 
 # endregion
 # -----------------------------------------------------------------------------

@@ -40,6 +40,8 @@ from statsmodels.stats import multitest
 import pycircstat as circ
 from scipy.stats import pearsonr
 from scipy.stats import linregress
+from metpy.calc import pressure_to_height_std, geopotential_to_height
+from metpy.units import units
 
 # plot
 import matplotlib as mpl
@@ -92,9 +94,55 @@ NK16_Australia_Syowa_1d_sim = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.NK16_Australia_Syowa_1d_sim.pkl', 'rb') as f:
     NK16_Australia_Syowa_1d_sim[expid[i]] = pickle.load(f)
 
+T63GR15_jan_surf = xr.open_dataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/nudged_701_5.0/input/echam/unit.24')
+NK16_1d_SLM = find_multi_gridvalue_at_site(
+    NK16_Australia_Syowa_1d_sim[expid[i]]['lat'].values,
+    NK16_Australia_Syowa_1d_sim[expid[i]]['lon'].values,
+    T63GR15_jan_surf.lat.values,
+    T63GR15_jan_surf.lon.values,
+    T63GR15_jan_surf.SLM.values,
+)
+
+echam6_t63_geosp = xr.open_dataset(exp_odir + expid[i] + '/input/echam/unit.24')
+echam6_t63_surface_height = geopotential_to_height(
+    echam6_t63_geosp.GEOSP * (units.m / units.s)**2)
+NK16_1d_height = find_multi_gridvalue_at_site(
+    NK16_Australia_Syowa_1d_sim[expid[i]]['lat'].values,
+    NK16_Australia_Syowa_1d_sim[expid[i]]['lon'].values,
+    echam6_t63_surface_height.lat.values,
+    echam6_t63_surface_height.lon.values,
+    echam6_t63_surface_height.values,
+)
+
 ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
+ERA5_daily_SIC_2013_2022 = xr.open_dataset('scratch/ERA5/SIC/ERA5_daily_SIC_2013_2022.nc', chunks={'time': 720})
+NK16_1d_SIC = find_multi_gridvalue_at_site_time(
+    NK16_Australia_Syowa_1d_sim[expid[i]]['time'],
+    NK16_Australia_Syowa_1d_sim[expid[i]]['lat'],
+    NK16_Australia_Syowa_1d_sim[expid[i]]['lon'],
+    ERA5_daily_SIC_2013_2022.time.values,
+    ERA5_daily_SIC_2013_2022.latitude.values,
+    ERA5_daily_SIC_2013_2022.longitude.values,
+    ERA5_daily_SIC_2013_2022.siconc.values * 100
+    )
+
+q_geo7_sfc_frc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_geo7_sfc_frc_alltime.pkl', 'rb') as f:
+    q_geo7_sfc_frc_alltime[expid[i]] = pickle.load(f)
+NK16_1d_oo2q = find_multi_gridvalue_at_site_time(
+    NK16_Australia_Syowa_1d_sim[expid[i]]['time'],
+    NK16_Australia_Syowa_1d_sim[expid[i]]['lat'],
+    NK16_Australia_Syowa_1d_sim[expid[i]]['lon'],
+    q_geo7_sfc_frc_alltime[expid[i]]['daily'].time.values,
+    q_geo7_sfc_frc_alltime[expid[i]]['daily'].lat.values,
+    q_geo7_sfc_frc_alltime[expid[i]]['daily'].lon.values,
+    q_geo7_sfc_frc_alltime[expid[i]]['daily'].sel(geo_regions='Open Ocean').values,
+    )
+
+
 '''
+((NK16_1d_SLM == 0) & (NK16_1d_SIC == 0) & (NK16_Australia_Syowa_1d_sim[expid[i]]['lat']>=-60)).sum()
 NK16_Australia_Syowa_1d_sim[expid[i]].iloc[np.argmax(NK16_Australia_Syowa_1d_sim[expid[i]]['d_ln'])]
 
 #---------------- check correlation
@@ -111,506 +159,10 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_air', 'q']:
 # -----------------------------------------------------------------------------
 
 
+# clean data
 # -----------------------------------------------------------------------------
-# region Q-Q plot, colored by year
-
-for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_air', 'q']:
-    # var_name = 'q'
-    print('#-------- ' + var_name)
-    
-    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 observed vs. simulated daily ' + var_name + '.png'
-    
-    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
-    
-    xdata = NK16_Australia_Syowa_1d_sim[expid[i]][var_name]
-    ydata = NK16_Australia_Syowa_1d_sim[expid[i]][var_name + '_sim']
-    subset = (np.isfinite(xdata) & np.isfinite(ydata))
-    xdata = xdata[subset]
-    ydata = ydata[subset]
-    
-    if (var_name == 'q'):
-        xdata = xdata * 1000
-        ydata = ydata * 1000
-    
-    cdata = NK16_Australia_Syowa_1d_sim[expid[i]]['period']
-    cdata = cdata[subset]
-    
-    RMSE = np.sqrt(np.average(np.square(xdata - ydata)))
-    
-    sns.scatterplot(
-        x=xdata, y=ydata, hue=cdata,
-        s=12, palette='viridis',
-        # marker="o",
-    )
-    
-    linearfit = linregress(x = xdata, y = ydata,)
-    ax.axline(
-        (0, linearfit.intercept), slope = linearfit.slope, lw=1,)
-    
-    if (linearfit.intercept >= 0):
-        eq_text = '$y = $' + \
-            str(np.round(linearfit.slope, 2)) + '$x + $' + \
-                str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        ', $RMSE = $' + str(np.round(RMSE, 1))
-    if (linearfit.intercept < 0):
-        eq_text = '$y = $' + \
-            str(np.round(linearfit.slope, 2)) + '$x $' + \
-                str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        ', $RMSE = $' + str(np.round(RMSE, 1))
-    
-    plt.text(
-        0.32, 0.15, eq_text,
-        transform=ax.transAxes, fontsize=8, ha='left')
-    
-    xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
-    xylim_min = np.min(xylim)
-    xylim_max = np.max(xylim)
-    ax.set_xlim(xylim_min, xylim_max)
-    ax.set_ylim(xylim_min, xylim_max)
-    
-    ax.axline((0, 0), slope = 1, lw=1, color='grey', alpha=0.5)
-    
-    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-    ax.set_xlabel('Observed '  + plot_labels[var_name], labelpad=6)
-    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-    ax.set_ylabel('Simulated ' + plot_labels[var_name], labelpad=6)
-    
-    ax.grid(True, which='both',
-            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-    
-    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
-    fig.savefig(output_png)
-
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region Q-Q plot, colored by latitude
-
-for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_air', 'q']:
-    # var_name = 'dD'
-    print('#-------- ' + var_name)
-    
-    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 observed vs. simulated daily ' + var_name + ' colored_by_lat.png'
-    
-    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
-    
-    xdata = NK16_Australia_Syowa_1d_sim[expid[i]][var_name]
-    ydata = NK16_Australia_Syowa_1d_sim[expid[i]][var_name + '_sim']
-    subset = (np.isfinite(xdata) & np.isfinite(ydata))
-    xdata = xdata[subset]
-    ydata = ydata[subset]
-    
-    if (var_name == 'q'):
-        xdata = xdata * 1000
-        ydata = ydata * 1000
-    
-    cdata = abs(NK16_Australia_Syowa_1d_sim[expid[i]]['lat'])
-    cdata = cdata[subset]
-    
-    RMSE = np.sqrt(np.average(np.square(xdata - ydata)))
-    
-    sns.scatterplot(
-        x=xdata, y=ydata, hue=cdata,
-        s=12, palette='viridis',
-        # marker="o",
-    )
-    
-    linearfit = linregress(x = xdata, y = ydata,)
-    ax.axline((0, linearfit.intercept), slope = linearfit.slope, lw=1,)
-    
-    if (linearfit.intercept >= 0):
-        eq_text = '$y = $' + \
-            str(np.round(linearfit.slope, 2)) + '$x + $' + \
-                str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        ', $RMSE = $' + str(np.round(RMSE, 1))
-    if (linearfit.intercept < 0):
-        eq_text = '$y = $' + \
-            str(np.round(linearfit.slope, 2)) + '$x $' + \
-                str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        ', $RMSE = $' + str(np.round(RMSE, 1))
-    
-    plt.text(
-        0.32, 0.15, eq_text,
-        transform=ax.transAxes, fontsize=8, ha='left')
-    
-    xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
-    xylim_min = np.min(xylim)
-    xylim_max = np.max(xylim)
-    ax.set_xlim(xylim_min, xylim_max)
-    ax.set_ylim(xylim_min, xylim_max)
-    
-    ax.axline((0, 0), slope = 1, lw=1, color='grey', alpha=0.5)
-    
-    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-    ax.set_xlabel('Observed '  + plot_labels[var_name], labelpad=6)
-    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-    ax.set_ylabel('Simulated ' + plot_labels[var_name], labelpad=6)
-    
-    ax.grid(True, which='both',
-            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-    
-    ax.legend(title='Latitude [$°\;S$]')
-    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
-    fig.savefig(output_png)
-
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region Q-Q plot, colored by temperature bias
-
-for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_air', 'q']:
-    # var_name = 'dD'
-    print('#-------- ' + var_name)
-    
-    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 observed vs. simulated daily ' + var_name + ' colored_by_T_bias.png'
-    
-    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
-    
-    xdata = NK16_Australia_Syowa_1d_sim[expid[i]][var_name]
-    ydata = NK16_Australia_Syowa_1d_sim[expid[i]][var_name + '_sim']
-    subset = (np.isfinite(xdata) & np.isfinite(ydata))
-    xdata = xdata[subset]
-    ydata = ydata[subset]
-    
-    if (var_name == 'q'):
-        xdata = xdata * 1000
-        ydata = ydata * 1000
-    
-    cdata = (abs(NK16_Australia_Syowa_1d_sim[expid[i]]['t_air'] - NK16_Australia_Syowa_1d_sim[expid[i]]['t_air_sim']) >= 7.5)
-    cdata = cdata[subset]
-    
-    RMSE = np.sqrt(np.average(np.square(xdata - ydata)))
-    
-    sns.scatterplot(
-        x=xdata, y=ydata, hue=cdata,
-        s=12, palette='viridis',
-        # marker="o",
-    )
-    
-    linearfit = linregress(x = xdata, y = ydata,)
-    ax.axline((0, linearfit.intercept), slope = linearfit.slope, lw=1,)
-    
-    if (linearfit.intercept >= 0):
-        eq_text = '$y = $' + \
-            str(np.round(linearfit.slope, 2)) + '$x + $' + \
-                str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        ', $RMSE = $' + str(np.round(RMSE, 1))
-    if (linearfit.intercept < 0):
-        eq_text = '$y = $' + \
-            str(np.round(linearfit.slope, 2)) + '$x $' + \
-                str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        ', $RMSE = $' + str(np.round(RMSE, 1))
-    
-    plt.text(
-        0.32, 0.15, eq_text,
-        transform=ax.transAxes, fontsize=8, ha='left')
-    
-    xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
-    xylim_min = np.min(xylim)
-    xylim_max = np.max(xylim)
-    ax.set_xlim(xylim_min, xylim_max)
-    ax.set_ylim(xylim_min, xylim_max)
-    
-    ax.axline((0, 0), slope = 1, lw=1, color='grey', alpha=0.5)
-    
-    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-    ax.set_xlabel('Observed '  + plot_labels[var_name], labelpad=6)
-    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-    ax.set_ylabel('Simulated ' + plot_labels[var_name], labelpad=6)
-    
-    ax.grid(True, which='both',
-            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-    
-    ax.legend(title='Large T bias')
-    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
-    fig.savefig(output_png)
-
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region Q-Q plot, colored by temperature bias continuous
-
-for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_air', 'q']:
-    # var_name = 'dD'
-    print('#-------- ' + var_name)
-    
-    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 observed vs. simulated daily ' + var_name + ' colored_by_T_bias_continuous.png'
-    
-    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
-    
-    xdata = NK16_Australia_Syowa_1d_sim[expid[i]][var_name]
-    ydata = NK16_Australia_Syowa_1d_sim[expid[i]][var_name + '_sim']
-    subset = (np.isfinite(xdata) & np.isfinite(ydata))
-    xdata = xdata[subset]
-    ydata = ydata[subset]
-    
-    if (var_name == 'q'):
-        xdata = xdata * 1000
-        ydata = ydata * 1000
-    
-    cdata = abs(NK16_Australia_Syowa_1d_sim[expid[i]]['t_air'] - NK16_Australia_Syowa_1d_sim[expid[i]]['t_air_sim'])
-    cdata = cdata[subset]
-    
-    RMSE = np.sqrt(np.average(np.square(xdata - ydata)))
-    
-    sns.scatterplot(
-        x=xdata, y=ydata, hue=cdata,
-        s=12, palette='viridis',
-        # marker="o",
-    )
-    
-    linearfit = linregress(x = xdata, y = ydata,)
-    ax.axline((0, linearfit.intercept), slope = linearfit.slope, lw=1,)
-    
-    if (linearfit.intercept >= 0):
-        eq_text = '$y = $' + \
-            str(np.round(linearfit.slope, 2)) + '$x + $' + \
-                str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        ', $RMSE = $' + str(np.round(RMSE, 1))
-    if (linearfit.intercept < 0):
-        eq_text = '$y = $' + \
-            str(np.round(linearfit.slope, 2)) + '$x $' + \
-                str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        ', $RMSE = $' + str(np.round(RMSE, 1))
-    
-    plt.text(
-        0.32, 0.15, eq_text,
-        transform=ax.transAxes, fontsize=8, ha='left')
-    
-    xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
-    xylim_min = np.min(xylim)
-    xylim_max = np.max(xylim)
-    ax.set_xlim(xylim_min, xylim_max)
-    ax.set_ylim(xylim_min, xylim_max)
-    
-    ax.axline((0, 0), slope = 1, lw=1, color='grey', alpha=0.5)
-    
-    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-    ax.set_xlabel('Observed '  + plot_labels[var_name], labelpad=6)
-    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-    ax.set_ylabel('Simulated ' + plot_labels[var_name], labelpad=6)
-    
-    ax.grid(True, which='both',
-            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-    
-    ax.legend(title='T bias [$°C$]')
-    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
-    fig.savefig(output_png)
-
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region Q-Q plot, colored by SIC
-
-ERA5_daily_SIC_2013_2022 = xr.open_dataset('scratch/ERA5/SIC/ERA5_daily_SIC_2013_2022.nc', chunks={'time': 720})
-
-NK16_1d_SIC = find_multi_gridvalue_at_site_time(
-    NK16_Australia_Syowa_1d_sim[expid[i]]['time'],
-    NK16_Australia_Syowa_1d_sim[expid[i]]['lat'],
-    NK16_Australia_Syowa_1d_sim[expid[i]]['lon'],
-    ERA5_daily_SIC_2013_2022.time.values,
-    ERA5_daily_SIC_2013_2022.latitude.values,
-    ERA5_daily_SIC_2013_2022.longitude.values,
-    ERA5_daily_SIC_2013_2022.siconc.values * 100
-    )
-
-for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_air', 'q']:
-    # var_name = 'dD'
-    print('#-------- ' + var_name)
-    
-    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 observed vs. simulated daily ' + var_name + ' colored_by_SIC.png'
-    
-    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
-    
-    xdata = NK16_Australia_Syowa_1d_sim[expid[i]][var_name]
-    ydata = NK16_Australia_Syowa_1d_sim[expid[i]][var_name + '_sim']
-    subset = (np.isfinite(xdata) & np.isfinite(ydata))
-    xdata = xdata[subset]
-    ydata = ydata[subset]
-    
-    if (var_name == 'q'):
-        xdata = xdata * 1000
-        ydata = ydata * 1000
-    
-    cdata = NK16_1d_SIC.copy()
-    cdata = cdata[subset]
-    
-    RMSE = np.sqrt(np.average(np.square(xdata - ydata)))
-    
-    sns.scatterplot(
-        x=xdata, y=ydata, hue=cdata,
-        s=12, palette='viridis',
-        # marker="o",
-    )
-    
-    linearfit = linregress(x = xdata, y = ydata,)
-    ax.axline((0, linearfit.intercept), slope = linearfit.slope, lw=1,)
-    
-    if (linearfit.intercept >= 0):
-        eq_text = '$y = $' + \
-            str(np.round(linearfit.slope, 2)) + '$x + $' + \
-                str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        ', $RMSE = $' + str(np.round(RMSE, 1))
-    if (linearfit.intercept < 0):
-        eq_text = '$y = $' + \
-            str(np.round(linearfit.slope, 2)) + '$x $' + \
-                str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        ', $RMSE = $' + str(np.round(RMSE, 1))
-    
-    plt.text(
-        0.32, 0.15, eq_text,
-        transform=ax.transAxes, fontsize=8, ha='left')
-    
-    xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
-    xylim_min = np.min(xylim)
-    xylim_max = np.max(xylim)
-    ax.set_xlim(xylim_min, xylim_max)
-    ax.set_ylim(xylim_min, xylim_max)
-    
-    ax.axline((0, 0), slope = 1, lw=1, color='grey', alpha=0.5)
-    
-    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-    ax.set_xlabel('Observed '  + plot_labels[var_name], labelpad=6)
-    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-    ax.set_ylabel('Simulated ' + plot_labels[var_name], labelpad=6)
-    
-    ax.grid(True, which='both',
-            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-    
-    ax.legend(title='SIC [$\%$]')
-    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
-    fig.savefig(output_png)
-
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region Q-Q plot, colored by open ocean contribution to q
-
-q_geo7_sfc_frc_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_geo7_sfc_frc_alltime.pkl', 'rb') as f:
-    q_geo7_sfc_frc_alltime[expid[i]] = pickle.load(f)
-
-NK16_1d_oo2q = find_multi_gridvalue_at_site_time(
-    NK16_Australia_Syowa_1d_sim[expid[i]]['time'],
-    NK16_Australia_Syowa_1d_sim[expid[i]]['lat'],
-    NK16_Australia_Syowa_1d_sim[expid[i]]['lon'],
-    q_geo7_sfc_frc_alltime[expid[i]]['daily'].time.values,
-    q_geo7_sfc_frc_alltime[expid[i]]['daily'].lat.values,
-    q_geo7_sfc_frc_alltime[expid[i]]['daily'].lon.values,
-    q_geo7_sfc_frc_alltime[expid[i]]['daily'].sel(geo_regions='Open Ocean').values,
-    )
-
-for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_air', 'q']:
-    # var_name = 'dD'
-    print('#-------- ' + var_name)
-    
-    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 observed vs. simulated daily ' + var_name + ' colored_by_oo2q.png'
-    
-    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
-    
-    xdata = NK16_Australia_Syowa_1d_sim[expid[i]][var_name]
-    ydata = NK16_Australia_Syowa_1d_sim[expid[i]][var_name + '_sim']
-    subset = (np.isfinite(xdata) & np.isfinite(ydata))
-    xdata = xdata[subset]
-    ydata = ydata[subset]
-    
-    if (var_name == 'q'):
-        xdata = xdata * 1000
-        ydata = ydata * 1000
-    
-    cdata = NK16_1d_oo2q.copy()
-    cdata = cdata[subset]
-    
-    RMSE = np.sqrt(np.average(np.square(xdata - ydata)))
-    
-    sns.scatterplot(
-        x=xdata, y=ydata, hue=cdata,
-        s=12, palette='viridis',
-        # marker="o",
-    )
-    
-    linearfit = linregress(x = xdata, y = ydata,)
-    ax.axline((0, linearfit.intercept), slope = linearfit.slope, lw=1,)
-    
-    if (linearfit.intercept >= 0):
-        eq_text = '$y = $' + \
-            str(np.round(linearfit.slope, 2)) + '$x + $' + \
-                str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        ', $RMSE = $' + str(np.round(RMSE, 1))
-    if (linearfit.intercept < 0):
-        eq_text = '$y = $' + \
-            str(np.round(linearfit.slope, 2)) + '$x $' + \
-                str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        ', $RMSE = $' + str(np.round(RMSE, 1))
-    
-    plt.text(
-        0.32, 0.15, eq_text,
-        transform=ax.transAxes, fontsize=8, ha='left')
-    
-    xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
-    xylim_min = np.min(xylim)
-    xylim_max = np.max(xylim)
-    ax.set_xlim(xylim_min, xylim_max)
-    ax.set_ylim(xylim_min, xylim_max)
-    
-    ax.axline((0, 0), slope = 1, lw=1, color='grey', alpha=0.5)
-    
-    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-    ax.set_xlabel('Observed '  + plot_labels[var_name], labelpad=6)
-    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-    ax.set_ylabel('Simulated ' + plot_labels[var_name], labelpad=6)
-    
-    ax.grid(True, which='both',
-            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-    
-    ax.legend(title='Open ocean contribution to q [$\%$]')
-    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
-    fig.savefig(output_png)
-
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
 # -----------------------------------------------------------------------------
 # region Q-Q plot, colored by SLM
-
-T63GR15_jan_surf = xr.open_dataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/nudged_701_5.0/input/echam/unit.24')
-
-NK16_1d_SLM = find_multi_gridvalue_at_site(
-    NK16_Australia_Syowa_1d_sim[expid[i]]['lat'].values,
-    NK16_Australia_Syowa_1d_sim[expid[i]]['lon'].values,
-    T63GR15_jan_surf.lat.values,
-    T63GR15_jan_surf.lon.values,
-    T63GR15_jan_surf.SLM.values,
-)
 
 for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_air', 'q']:
     # var_name = 'dD'
@@ -680,6 +232,669 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_air', 'q']:
     ax.legend(title='Land [1] or Ocean [0]')
     fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
     fig.savefig(output_png)
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region Q-Q plot, colored by SIC
+
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_air', 'q']:
+    # var_name = 'dD'
+    print('#-------- ' + var_name)
+    
+    # output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 observed vs. simulated daily ' + var_name + ' colored_by_SIC.png'
+    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 observed vs. simulated daily ' + var_name + ' colored_by_SIC SLM0.png'
+    
+    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+    
+    xdata = NK16_Australia_Syowa_1d_sim[expid[i]][var_name]
+    ydata = NK16_Australia_Syowa_1d_sim[expid[i]][var_name + '_sim']
+    # subset = (np.isfinite(xdata) & np.isfinite(ydata))
+    subset = (np.isfinite(xdata) & np.isfinite(ydata) & (NK16_1d_SLM == 0))
+    xdata = xdata[subset]
+    ydata = ydata[subset]
+    
+    if (var_name == 'q'):
+        xdata = xdata * 1000
+        ydata = ydata * 1000
+    
+    cdata = NK16_1d_SIC.copy()
+    cdata = cdata[subset]
+    
+    RMSE = np.sqrt(np.average(np.square(xdata - ydata)))
+    
+    sns.scatterplot(
+        x=xdata, y=ydata, hue=cdata,
+        s=12, palette='viridis',
+        # marker="o",
+    )
+    
+    linearfit = linregress(x = xdata, y = ydata,)
+    ax.axline((0, linearfit.intercept), slope = linearfit.slope, lw=1,)
+    
+    if (linearfit.intercept >= 0):
+        eq_text = '$y = $' + \
+            str(np.round(linearfit.slope, 2)) + '$x + $' + \
+                str(np.round(linearfit.intercept, 1)) + \
+                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
+                        ', $RMSE = $' + str(np.round(RMSE, 1))
+    if (linearfit.intercept < 0):
+        eq_text = '$y = $' + \
+            str(np.round(linearfit.slope, 2)) + '$x $' + \
+                str(np.round(linearfit.intercept, 1)) + \
+                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
+                        ', $RMSE = $' + str(np.round(RMSE, 1))
+    
+    plt.text(
+        0.32, 0.15, eq_text,
+        transform=ax.transAxes, fontsize=8, ha='left')
+    
+    xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
+    xylim_min = np.min(xylim)
+    xylim_max = np.max(xylim)
+    ax.set_xlim(xylim_min, xylim_max)
+    ax.set_ylim(xylim_min, xylim_max)
+    
+    ax.axline((0, 0), slope = 1, lw=1, color='grey', alpha=0.5)
+    
+    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_xlabel('Observed '  + plot_labels[var_name], labelpad=6)
+    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_ylabel('Simulated ' + plot_labels[var_name], labelpad=6)
+    
+    ax.grid(True, which='both',
+            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+    
+    ax.legend(title='SIC [$\%$]')
+    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
+    fig.savefig(output_png)
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region Q-Q plot, colored by altitude
+
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_air', 'q']:
+    # var_name = 'dD'
+    print('#-------- ' + var_name)
+    
+    # output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 observed vs. simulated daily ' + var_name + ' colored_by_altitude.png'
+    # output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 observed vs. simulated daily ' + var_name + ' colored_by_altitude SLM0.png'
+    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 observed vs. simulated daily ' + var_name + ' colored_by_altitude SLM0 SIC0.png'
+    
+    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+    
+    xdata = NK16_Australia_Syowa_1d_sim[expid[i]][var_name]
+    ydata = NK16_Australia_Syowa_1d_sim[expid[i]][var_name + '_sim']
+    # subset = (np.isfinite(xdata) & np.isfinite(ydata))
+    # subset = (np.isfinite(xdata) & np.isfinite(ydata) & (NK16_1d_SLM == 0))
+    subset = (np.isfinite(xdata) & np.isfinite(ydata) & (NK16_1d_SLM == 0) & (NK16_1d_SIC == 0))
+    xdata = xdata[subset]
+    ydata = ydata[subset]
+    
+    if (var_name == 'q'):
+        xdata = xdata * 1000
+        ydata = ydata * 1000
+    
+    cdata = NK16_1d_height.copy()
+    cdata = cdata[subset]
+    
+    RMSE = np.sqrt(np.average(np.square(xdata - ydata)))
+    
+    sns.scatterplot(
+        x=xdata, y=ydata, hue=cdata,
+        s=12, palette='viridis',
+        # marker="o",
+    )
+    
+    linearfit = linregress(x = xdata, y = ydata,)
+    ax.axline((0, linearfit.intercept), slope = linearfit.slope, lw=1,)
+    
+    if (linearfit.intercept >= 0):
+        eq_text = '$y = $' + \
+            str(np.round(linearfit.slope, 2)) + '$x + $' + \
+                str(np.round(linearfit.intercept, 1)) + \
+                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
+                        ', $RMSE = $' + str(np.round(RMSE, 1))
+    if (linearfit.intercept < 0):
+        eq_text = '$y = $' + \
+            str(np.round(linearfit.slope, 2)) + '$x $' + \
+                str(np.round(linearfit.intercept, 1)) + \
+                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
+                        ', $RMSE = $' + str(np.round(RMSE, 1))
+    
+    plt.text(
+        0.32, 0.15, eq_text,
+        transform=ax.transAxes, fontsize=8, ha='left')
+    
+    xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
+    xylim_min = np.min(xylim)
+    xylim_max = np.max(xylim)
+    ax.set_xlim(xylim_min, xylim_max)
+    ax.set_ylim(xylim_min, xylim_max)
+    
+    ax.axline((0, 0), slope = 1, lw=1, color='grey', alpha=0.5)
+    
+    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_xlabel('Observed '  + plot_labels[var_name], labelpad=6)
+    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_ylabel('Simulated ' + plot_labels[var_name], labelpad=6)
+    
+    ax.grid(True, which='both',
+            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+    
+    ax.legend(title='Height [$m$]')
+    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
+    fig.savefig(output_png)
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region Q-Q plot, colored by oo2q
+
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_air', 'q']:
+    # var_name = 'dD'
+    print('#-------- ' + var_name)
+    
+    # output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 observed vs. simulated daily ' + var_name + ' colored_by_oo2q.png'
+    # output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 observed vs. simulated daily ' + var_name + ' colored_by_oo2q SLM0.png'
+    # output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 observed vs. simulated daily ' + var_name + ' colored_by_oo2q SLM0 SIC0.png'
+    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 observed vs. simulated daily ' + var_name + ' colored_by_oo2q SLM0 SIC0 lat60.png'
+    
+    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+    
+    xdata = NK16_Australia_Syowa_1d_sim[expid[i]][var_name]
+    ydata = NK16_Australia_Syowa_1d_sim[expid[i]][var_name + '_sim']
+    # subset = (np.isfinite(xdata) & np.isfinite(ydata))
+    # subset = (np.isfinite(xdata) & np.isfinite(ydata) & (NK16_1d_SLM == 0))
+    # subset = (np.isfinite(xdata) & np.isfinite(ydata) & (NK16_1d_SLM == 0) & (NK16_1d_SIC == 0))
+    subset = (np.isfinite(xdata) & np.isfinite(ydata) & (NK16_1d_SLM == 0) & (NK16_1d_SIC == 0) & (NK16_Australia_Syowa_1d_sim[expid[i]]['lat']>=-60))
+    xdata = xdata[subset]
+    ydata = ydata[subset]
+    
+    if (var_name == 'q'):
+        xdata = xdata * 1000
+        ydata = ydata * 1000
+    
+    cdata = NK16_1d_oo2q.copy()
+    cdata = cdata[subset]
+    
+    RMSE = np.sqrt(np.average(np.square(xdata - ydata)))
+    
+    sns.scatterplot(
+        x=xdata, y=ydata, hue=cdata,
+        s=12, palette='viridis',
+        # marker="o",
+    )
+    
+    linearfit = linregress(x = xdata, y = ydata,)
+    ax.axline((0, linearfit.intercept), slope = linearfit.slope, lw=1,)
+    
+    if (linearfit.intercept >= 0):
+        eq_text = '$y = $' + \
+            str(np.round(linearfit.slope, 2)) + '$x + $' + \
+                str(np.round(linearfit.intercept, 1)) + \
+                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
+                        ', $RMSE = $' + str(np.round(RMSE, 1))
+    if (linearfit.intercept < 0):
+        eq_text = '$y = $' + \
+            str(np.round(linearfit.slope, 2)) + '$x $' + \
+                str(np.round(linearfit.intercept, 1)) + \
+                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
+                        ', $RMSE = $' + str(np.round(RMSE, 1))
+    
+    plt.text(
+        0.32, 0.15, eq_text,
+        transform=ax.transAxes, fontsize=8, ha='left')
+    
+    xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
+    xylim_min = np.min(xylim)
+    xylim_max = np.max(xylim)
+    ax.set_xlim(xylim_min, xylim_max)
+    ax.set_ylim(xylim_min, xylim_max)
+    
+    ax.axline((0, 0), slope = 1, lw=1, color='grey', alpha=0.5)
+    
+    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_xlabel('Observed '  + plot_labels[var_name], labelpad=6)
+    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_ylabel('Simulated ' + plot_labels[var_name], labelpad=6)
+    
+    ax.grid(True, which='both',
+            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+    
+    ax.legend(title='Open ocean contribution to q [$\%$]')
+    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
+    fig.savefig(output_png)
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region Q-Q plot, colored by latitude
+
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_air', 'q']:
+    # var_name = 'dD'
+    print('#-------- ' + var_name)
+    
+    # output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 observed vs. simulated daily ' + var_name + ' colored_by_lat.png'
+    # output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 observed vs. simulated daily ' + var_name + ' colored_by_lat height150.png'
+    # output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 observed vs. simulated daily ' + var_name + ' colored_by_lat height50.png'
+    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 observed vs. simulated daily ' + var_name + ' colored_by_lat SLM0 SIC0 lat60.png'
+    
+    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+    
+    xdata = NK16_Australia_Syowa_1d_sim[expid[i]][var_name]
+    ydata = NK16_Australia_Syowa_1d_sim[expid[i]][var_name + '_sim']
+    # subset = (np.isfinite(xdata) & np.isfinite(ydata))
+    # subset = (np.isfinite(xdata) & np.isfinite(ydata) & (abs(NK16_1d_height) <= 150))
+    # subset = (np.isfinite(xdata) & np.isfinite(ydata) & (abs(NK16_1d_height) <= 50))
+    subset = (np.isfinite(xdata) & np.isfinite(ydata) & (NK16_1d_SLM == 0) & (NK16_1d_SIC == 0) & (NK16_Australia_Syowa_1d_sim[expid[i]]['lat']>=-60))
+    xdata = xdata[subset]
+    ydata = ydata[subset]
+    
+    if (var_name == 'q'):
+        xdata = xdata * 1000
+        ydata = ydata * 1000
+    
+    cdata = abs(NK16_Australia_Syowa_1d_sim[expid[i]]['lat'])
+    cdata = cdata[subset]
+    
+    RMSE = np.sqrt(np.average(np.square(xdata - ydata)))
+    
+    sns.scatterplot(
+        x=xdata, y=ydata, hue=cdata,
+        s=12, palette='viridis',
+        # marker="o",
+    )
+    
+    linearfit = linregress(x = xdata, y = ydata,)
+    ax.axline((0, linearfit.intercept), slope = linearfit.slope, lw=1,)
+    
+    if (linearfit.intercept >= 0):
+        eq_text = '$y = $' + \
+            str(np.round(linearfit.slope, 2)) + '$x + $' + \
+                str(np.round(linearfit.intercept, 1)) + \
+                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
+                        ', $RMSE = $' + str(np.round(RMSE, 1))
+    if (linearfit.intercept < 0):
+        eq_text = '$y = $' + \
+            str(np.round(linearfit.slope, 2)) + '$x $' + \
+                str(np.round(linearfit.intercept, 1)) + \
+                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
+                        ', $RMSE = $' + str(np.round(RMSE, 1))
+    
+    plt.text(
+        0.32, 0.15, eq_text,
+        transform=ax.transAxes, fontsize=8, ha='left')
+    
+    xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
+    xylim_min = np.min(xylim)
+    xylim_max = np.max(xylim)
+    ax.set_xlim(xylim_min, xylim_max)
+    ax.set_ylim(xylim_min, xylim_max)
+    
+    ax.axline((0, 0), slope = 1, lw=1, color='grey', alpha=0.5)
+    
+    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_xlabel('Observed '  + plot_labels[var_name], labelpad=6)
+    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_ylabel('Simulated ' + plot_labels[var_name], labelpad=6)
+    
+    ax.grid(True, which='both',
+            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+    
+    ax.legend(title='Latitude [$°\;S$]')
+    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
+    fig.savefig(output_png)
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region Q-Q plot, colored by q
+
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_air', 'q']:
+    # var_name = 'dD'
+    print('#-------- ' + var_name)
+    
+    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 observed vs. simulated daily ' + var_name + ' colored_by_q.png'
+    # output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 observed vs. simulated daily ' + var_name + ' colored_by_q SLM0.png'
+    # output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 observed vs. simulated daily ' + var_name + ' colored_by_q SLM0 SIC0.png'
+    # output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 observed vs. simulated daily ' + var_name + ' colored_by_q SLM0 SIC0 lat60.png'
+    
+    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+    
+    xdata = NK16_Australia_Syowa_1d_sim[expid[i]][var_name].copy()
+    ydata = NK16_Australia_Syowa_1d_sim[expid[i]][var_name + '_sim'].copy()
+    subset = (np.isfinite(xdata) & np.isfinite(ydata))
+    # subset = (np.isfinite(xdata) & np.isfinite(ydata) & (NK16_1d_SLM == 0))
+    # subset = (np.isfinite(xdata) & np.isfinite(ydata) & (NK16_1d_SLM == 0) & (NK16_1d_SIC == 0))
+    # subset = (np.isfinite(xdata) & np.isfinite(ydata) & (NK16_1d_SLM == 0) & (NK16_1d_SIC == 0) & (NK16_Australia_Syowa_1d_sim[expid[i]]['lat']>=-60))
+    xdata = xdata[subset]
+    ydata = ydata[subset]
+    
+    if (var_name == 'q'):
+        xdata = xdata * 1000
+        ydata = ydata * 1000
+    
+    cdata = NK16_Australia_Syowa_1d_sim[expid[i]]['q'].copy() * 1000
+    cdata = cdata[subset]
+    
+    RMSE = np.sqrt(np.average(np.square(xdata - ydata)))
+    
+    sns.scatterplot(
+        x=xdata, y=ydata, hue=cdata,
+        s=12, palette='viridis',
+        # marker="o",
+    )
+    
+    linearfit = linregress(x = xdata, y = ydata,)
+    ax.axline((0, linearfit.intercept), slope = linearfit.slope, lw=1,)
+    
+    if (linearfit.intercept >= 0):
+        eq_text = '$y = $' + \
+            str(np.round(linearfit.slope, 2)) + '$x + $' + \
+                str(np.round(linearfit.intercept, 1)) + \
+                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
+                        ', $RMSE = $' + str(np.round(RMSE, 1))
+    if (linearfit.intercept < 0):
+        eq_text = '$y = $' + \
+            str(np.round(linearfit.slope, 2)) + '$x $' + \
+                str(np.round(linearfit.intercept, 1)) + \
+                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
+                        ', $RMSE = $' + str(np.round(RMSE, 1))
+    
+    plt.text(
+        0.32, 0.15, eq_text,
+        transform=ax.transAxes, fontsize=8, ha='left')
+    
+    xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
+    xylim_min = np.min(xylim)
+    xylim_max = np.max(xylim)
+    ax.set_xlim(xylim_min, xylim_max)
+    ax.set_ylim(xylim_min, xylim_max)
+    
+    ax.axline((0, 0), slope = 1, lw=1, color='grey', alpha=0.5)
+    
+    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_xlabel('Observed '  + plot_labels[var_name], labelpad=6)
+    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_ylabel('Simulated ' + plot_labels[var_name], labelpad=6)
+    
+    ax.grid(True, which='both',
+            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+    
+    ax.legend(title=plot_labels['q'])
+    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
+    fig.savefig(output_png)
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot bias in dD against absolute height differences
+
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_air', 'q']:
+    # var_name = 'dD'
+    # ['dD', 'd18O', 'd_xs', 'd_ln', 't_air', 'q']
+    print('#-------- ' + var_name)
+    
+    xdata = NK16_1d_height
+    ydata = NK16_Australia_Syowa_1d_sim[expid[i]][var_name + '_sim'] - NK16_Australia_Syowa_1d_sim[expid[i]][var_name]
+    subset = np.isfinite(ydata) & np.isfinite(xdata) & (NK16_1d_SLM == 0)
+    
+    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 daily ' + var_name + ' bias vs. height.png'
+    
+    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+    ax.scatter(xdata[subset], ydata[subset], marker='x', lw=0.5, )
+    
+    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_xlabel('Height', labelpad=6)
+    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_ylabel('Bias in '  + plot_labels[var_name], labelpad=6)
+    
+    ax.grid(True, which='both',
+            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+    
+    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
+    fig.savefig(output_png)
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot bias in dD against SIC
+
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_air', 'q']:
+    # var_name = 'dD'
+    # ['dD', 'd18O', 'd_xs', 'd_ln', 't_air', 'q']
+    print('#-------- ' + var_name)
+    
+    xdata = NK16_1d_SIC
+    ydata = NK16_Australia_Syowa_1d_sim[expid[i]][var_name + '_sim'] - NK16_Australia_Syowa_1d_sim[expid[i]][var_name]
+    subset = np.isfinite(xdata) & np.isfinite(ydata) & (NK16_1d_SLM == 0)
+    
+    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 daily ' + var_name + ' bias vs. SIC.png'
+    
+    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+    ax.scatter(xdata[subset], ydata[subset], marker='x', lw=0.5, )
+    
+    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_xlabel('SIC [$\%$]', labelpad=6)
+    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_ylabel('Bias in '  + plot_labels[var_name], labelpad=6)
+    
+    ax.grid(True, which='both',
+            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+    
+    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
+    fig.savefig(output_png)
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot bias in dD against oo2q
+
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_air', 'q']:
+    # var_name = 'dD'
+    # ['dD', 'd18O', 'd_xs', 'd_ln', 't_air', 'q']
+    print('#-------- ' + var_name)
+    
+    xdata = NK16_1d_oo2q
+    ydata = NK16_Australia_Syowa_1d_sim[expid[i]][var_name + '_sim'] - NK16_Australia_Syowa_1d_sim[expid[i]][var_name]
+    subset = np.isfinite(xdata) & np.isfinite(ydata) & (NK16_1d_SLM == 0)
+    
+    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 daily ' + var_name + ' bias vs. oo2q.png'
+    
+    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+    ax.scatter(xdata[subset], ydata[subset], marker='x', lw=0.5, )
+    
+    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_xlabel('Open ocean contributions to q [$\%$]', labelpad=6)
+    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_ylabel('Bias in '  + plot_labels[var_name], labelpad=6)
+    
+    ax.grid(True, which='both',
+            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+    
+    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
+    fig.savefig(output_png)
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot SIC against oo2q
+
+xdata = NK16_1d_SIC
+ydata = NK16_1d_oo2q
+subset = np.isfinite(xdata) & np.isfinite(ydata) & (NK16_1d_SLM == 0)
+
+output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 daily SIC vs. oo2q.png'
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+ax.scatter(xdata[subset], ydata[subset], marker='x', lw=0.5, )
+
+ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+ax.set_xlabel('SIC [$\%$]', labelpad=6)
+ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+ax.set_ylabel('Open ocean contributions to q [$\%$]', labelpad=6)
+
+ax.grid(True, which='both',
+        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+
+fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
+fig.savefig(output_png)
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot SIC against height
+
+xdata = NK16_1d_height
+ydata = NK16_1d_SIC
+subset = np.isfinite(xdata) & np.isfinite(ydata) & (NK16_1d_SLM == 0)
+
+output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 daily SIC vs. height.png'
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+ax.scatter(xdata[subset], ydata[subset], marker='x', lw=0.5, )
+
+ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+ax.set_xlabel('Height [$m$]', labelpad=6)
+ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+ax.set_ylabel('SIC [$\%$]', labelpad=6)
+
+ax.grid(True, which='both',
+        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+
+fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
+fig.savefig(output_png)
+
+# (NK16_1d_SIC == 0).sum()
+# (NK16_1d_SIC < 1).sum()
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot SIC against latitude
+
+xdata = NK16_Australia_Syowa_1d_sim[expid[i]]['lat']
+ydata = NK16_1d_SIC
+subset = np.isfinite(xdata) & np.isfinite(ydata) & (NK16_1d_SLM == 0)
+
+output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 daily SIC vs. latitude.png'
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+ax.scatter(xdata[subset], ydata[subset], marker='x', lw=0.5, )
+
+ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+ax.set_xlabel('Latitude [$°\;S$]', labelpad=6)
+ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+ax.set_ylabel('SIC [$\%$]', labelpad=6)
+
+ax.grid(True, which='both',
+        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+
+fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
+fig.savefig(output_png)
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot oo2q against latitude
+
+xdata = NK16_Australia_Syowa_1d_sim[expid[i]]['lat']
+ydata = NK16_1d_oo2q
+
+# subset = np.isfinite(xdata) & np.isfinite(ydata) & (NK16_1d_SLM == 0)
+# output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 daily oo2q vs. latitude.png'
+subset = (np.isfinite(xdata) & np.isfinite(ydata) & (NK16_1d_SLM == 0) & (NK16_1d_SIC == 0))
+output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 daily oo2q vs. latitude SIC0.png'
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+ax.scatter(xdata[subset], ydata[subset], marker='x', lw=0.5, )
+
+ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+ax.set_xlabel('Latitude [$°\;S$]', labelpad=6)
+ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+ax.set_ylabel('Open ocean contributions to q [$\%$]', labelpad=6)
+
+ax.grid(True, which='both',
+        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+
+fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
+fig.savefig(output_png)
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# plot map
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# region plot locations of observations
+
+subset = (NK16_1d_SLM == 0) & (NK16_1d_SIC == 0) & (NK16_Australia_Syowa_1d_sim[expid[i]]['lat']>-60)
+
+data_to_plot = NK16_Australia_Syowa_1d_sim[expid[i]][subset]
+
+xdata = data_to_plot['lon'].copy()
+ydata = data_to_plot['lat'].copy()
+cdata = data_to_plot['period'].copy()
+
+output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.4 NK16 daily observation locations SLM0 SIC0 lat60.png'
+
+fig, ax = hemisphere_conic_plot(add_grid_labels=True,)
+
+sns.scatterplot(
+    x=xdata, y=ydata, hue=cdata,
+    s=12, palette='viridis',
+    transform=ccrs.PlateCarree(), marker = 'x', linewidth=1)
+
+cplot_ice_cores(
+    lon=ten_sites_loc.lon[ten_sites_loc['Site']=='EDC'],
+    lat=ten_sites_loc.lat[ten_sites_loc['Site']=='EDC'],
+    ax=ax, s=12, marker='*',)
+
+ax.get_legend().remove()
+fig.savefig(output_png)
 
 
 # endregion
@@ -981,4 +1196,153 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_air', 'q']:
 
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot d_xs vs. dD
+
+for xvar in ['dD', 'd18O', ]:
+    print('#---------------- ' + xvar)
+    
+    for yvar in ['d_xs', 'd_ln',]:
+        print('#-------- ' + yvar)
+        
+        output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.3 ' + expid[i] + ' sim_obs NK16 daily ' + xvar + ' vs. ' + yvar + '.png'
+        
+        fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+        
+        xdata1 = NK16_Australia_Syowa_1d_sim[expid[i]][xvar]
+        xdata2 = NK16_Australia_Syowa_1d_sim[expid[i]][xvar + '_sim']
+        ydata1 = NK16_Australia_Syowa_1d_sim[expid[i]][yvar]
+        ydata2 = NK16_Australia_Syowa_1d_sim[expid[i]][yvar + '_sim']
+        
+        subset = (np.isfinite(xdata1) & np.isfinite(ydata1))
+        xdata1 = xdata1[subset]
+        ydata1 = ydata1[subset]
+        
+        subset = (np.isfinite(xdata2) & np.isfinite(ydata2))
+        xdata2 = xdata2[subset]
+        ydata2 = ydata2[subset]
+        
+        ax.scatter(x=xdata1, y=ydata1, c='k', marker='+', s=8, lw=0.5, alpha=0.5)
+        ax.scatter(x=xdata2, y=ydata2, c='b', marker='x', s=8, lw=0.5, alpha=0.5)
+        
+        ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+        ax.set_xlabel(plot_labels[xvar], labelpad=6)
+        ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+        ax.set_ylabel(plot_labels[yvar], labelpad=6)
+        
+        ax.grid(True, which='both', linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+        fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
+        fig.savefig(output_png)
+
+
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region check height at fake land grid cells
+
+
+T63GR15_jan_surf = xr.open_dataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/nudged_701_5.0/input/echam/unit.24')
+
+NK16_1d_SLM = find_multi_gridvalue_at_site(
+    NK16_Australia_Syowa_1d_sim[expid[i]]['lat'].values,
+    NK16_Australia_Syowa_1d_sim[expid[i]]['lon'].values,
+    T63GR15_jan_surf.lat.values,
+    T63GR15_jan_surf.lon.values,
+    T63GR15_jan_surf.SLM.values,
+)
+
+echam6_t63_geosp = xr.open_dataset(exp_odir + expid[i] + '/input/echam/unit.24')
+echam6_t63_surface_height = geopotential_to_height(
+    echam6_t63_geosp.GEOSP * (units.m / units.s)**2)
+
+NK16_1d_height = find_multi_gridvalue_at_site(
+    NK16_Australia_Syowa_1d_sim[expid[i]]['lat'].values,
+    NK16_Australia_Syowa_1d_sim[expid[i]]['lon'].values,
+    echam6_t63_surface_height.lat.values,
+    echam6_t63_surface_height.lon.values,
+    echam6_t63_surface_height.values,
+)
+
+stats.describe(NK16_1d_height[NK16_1d_SLM==1])
+# minmax=(108., 1036.), mean=989.
+
+echam6_t63_surface_height.to_netcdf('scratch/test/test.nc')
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region histogram of altitude
+
+T63GR15_jan_surf = xr.open_dataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/nudged_701_5.0/input/echam/unit.24')
+NK16_1d_SLM = find_multi_gridvalue_at_site(
+    NK16_Australia_Syowa_1d_sim[expid[i]]['lat'].values,
+    NK16_Australia_Syowa_1d_sim[expid[i]]['lon'].values,
+    T63GR15_jan_surf.lat.values,
+    T63GR15_jan_surf.lon.values,
+    T63GR15_jan_surf.SLM.values,
+)
+
+echam6_t63_geosp = xr.open_dataset(exp_odir + expid[i] + '/input/echam/unit.24')
+echam6_t63_surface_height = geopotential_to_height(
+    echam6_t63_geosp.GEOSP * (units.m / units.s)**2)
+NK16_1d_height = find_multi_gridvalue_at_site(
+    NK16_Australia_Syowa_1d_sim[expid[i]]['lat'].values,
+    NK16_Australia_Syowa_1d_sim[expid[i]]['lon'].values,
+    echam6_t63_surface_height.lat.values,
+    echam6_t63_surface_height.lon.values,
+    echam6_t63_surface_height.values,
+)
+
+# NK16_1d_height[NK16_1d_height > 900]
+# Syowa
+print(stats.describe(NK16_Australia_Syowa_1d_sim[expid[i]]['lat'].values[NK16_1d_height > 900]))
+print(stats.describe(NK16_Australia_Syowa_1d_sim[expid[i]]['lon'].values[NK16_1d_height > 900]))
+# all land
+NK16_1d_SLM[NK16_1d_height > 900]
+
+# np.unique(NK16_1d_height, return_counts=True)
+# NK16_1d_height[(NK16_1d_height > 190) & (NK16_1d_height < 200)]
+print(stats.describe(NK16_Australia_Syowa_1d_sim[expid[i]]['lat'].values[(NK16_1d_height > 190) & (NK16_1d_height < 200)]))
+print(stats.describe(NK16_Australia_Syowa_1d_sim[expid[i]]['lon'].values[(NK16_1d_height > 190) & (NK16_1d_height < 200)]))
+# all ocean
+NK16_1d_SLM[(NK16_1d_height > 190) & (NK16_1d_height < 200)]
+
+
+
+
+output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.3 T63 histogram of NK16 height.png'
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([6.6, 6.6]) / 2.54)
+sns.histplot(NK16_1d_height, binwidth=25)
+ax.set_xlabel('Elevation [$m$]')
+fig.tight_layout()
+fig.savefig(output_png)
+
+
+
+
+SLM_height = echam6_t63_surface_height.values[T63GR15_jan_surf.SLM.values == 0]
+
+output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.3 T63 histogram of ocean height.png'
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([6.6, 6.6]) / 2.54)
+sns.histplot(SLM_height, binwidth=25)
+ax.set_xlabel('Elevation [$m$]')
+ax.set_xlim(-200, 500)
+fig.tight_layout()
+fig.savefig(output_png)
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
 

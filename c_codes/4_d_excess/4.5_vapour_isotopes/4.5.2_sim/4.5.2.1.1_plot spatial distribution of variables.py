@@ -148,6 +148,10 @@ for src_var in ['lat', 'sst', 'rh2m', 'wind10']:
     with open(src_file, 'rb') as f:
         q_sfc_weighted_var[expid[i]][src_var] = pickle.load(f)
 
+q_sfc_transport_distance = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_sfc_transport_distance.pkl', 'rb') as f:
+    q_sfc_transport_distance[expid[i]] = pickle.load(f)
+
 ocean_q_sfc_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_q_sfc_alltime.pkl', 'rb') as f:
     ocean_q_sfc_alltime[expid[i]] = pickle.load(f)
@@ -155,9 +159,7 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_q_sfc_al
 lon = dD_q_sfc_alltime[expid[i]]['am'].lon
 lat = dD_q_sfc_alltime[expid[i]]['am'].lat
 
-
 ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
-
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -166,9 +168,9 @@ ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 # -----------------------------------------------------------------------------
 # region plot am
 
-for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q',
-                 'lat', 'sst', 'rh2m', 'wind10']:
+for var_name in ['distance']:
     # var_name = 'dD'
+    # ['dD', 'd18O', 'd_xs', 'd_ln', 'q', 'lat', 'sst', 'rh2m', 'wind10']
     print('#-------------------------------- ' + var_name)
     
     if (var_name == 'dD'):
@@ -219,6 +221,13 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q',
             lat=slice(-17, -90))
         pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
             cm_min=5, cm_max=11, cm_interval1=0.25, cm_interval2=0.5,
+            cmap='viridis', reversed=False)
+    elif (var_name == 'distance'):
+        var = q_sfc_transport_distance[expid[i]]['am'].sel(
+            lat=slice(-17, -90)) / 100
+        # stats.describe(var, axis=None)
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min=0, cm_max=70, cm_interval1=5, cm_interval2=10,
             cmap='viridis', reversed=False)
     
     output_png = 'figures/8_d-excess/8.3_vapour/8.3.1_sim/8.3.1.0.1 ' + expid[i] + ' am_sfc ' + var_name + '.png'
@@ -273,13 +282,14 @@ ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 output_png = 'figures/8_d-excess/8.3_vapour/8.3.1_sim/8.3.1.0.1 ' + expid[i] + ' am_sfc relative source latitude.png'
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=-4, cm_max=12, cm_interval1=2, cm_interval2=4, cmap='BrBG',
+    cm_min=-5, cm_max=50, cm_interval1=5, cm_interval2=10, cmap='BrBG',
     asymmetric=True,)
 
 fig, ax = hemisphere_plot(
     northextent=-20, figsize=np.array([5.8, 7.3]) / 2.54,)
 cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
 
+# stats.describe(q_sfc_weighted_var[expid[i]][src_var]['am'] - lat.sel(lat=slice(-17, -90)), axis=None)
 plt_mesh = plot_t63_contourf(
     lon, lat, q_sfc_weighted_var[expid[i]][src_var]['am'] - lat, ax,
     pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
@@ -429,3 +439,133 @@ for iregion in q_geo7_sfc_frc_alltime[expid[i]]['am'].geo_regions.values:
 
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region animate daily varibales
+
+
+itime_start = np.datetime64('2021-12-01')
+itime_end   = np.datetime64('2022-03-01')
+
+north_extent = -30
+
+for var_name in ['lat',]:
+    # var_name = 'dD'
+    # ['dD', 'd18O', 'd_xs', 'd_ln', 'q', 'lat', 'sst', 'rh2m', 'wind10', 'distance']
+    print('#-------------------------------- ' + var_name)
+    
+    if (var_name == 'dD'):
+        var = dD_q_sfc_alltime[expid[i]]['daily'].sel(lat=slice(north_extent + 2, -90))
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min=-500, cm_max=-100, cm_interval1=25, cm_interval2=50,
+            cmap='viridis', reversed=False)
+    elif (var_name == 'd18O'):
+        var = dO18_q_sfc_alltime[expid[i]]['daily'].sel(lat=slice(north_extent + 2, -90))
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min=-80, cm_max=-10, cm_interval1=5, cm_interval2=10,
+            cmap='viridis', reversed=False)
+    elif (var_name == 'd_xs'):
+        var = d_excess_q_sfc_alltime[expid[i]]['daily'].sel(lat=slice(north_extent + 2, -90))
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min=-5, cm_max=30, cm_interval1=2.5, cm_interval2=5,
+            cmap='viridis', reversed=False)
+    elif (var_name == 'd_ln'):
+        var = d_ln_q_sfc_alltime[expid[i]]['daily'].sel(lat=slice(north_extent + 2, -90))
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min=-5, cm_max=35, cm_interval1=2.5, cm_interval2=5,
+            cmap='viridis', reversed=False)
+    elif (var_name == 'q'): #g/kg
+        var = wiso_q_6h_sfc_alltime[expid[i]]['q16o']['daily'].sel(
+            lev=47, lat=slice(north_extent + 2, -90)) * 1000
+        pltlevel = np.array([0.01, 0.05, 0.1, 0.5, 1, 2, 4, 6, 8, 10, 12, 14])
+        pltticks = np.array([0.01, 0.05, 0.1, 0.5, 1, 2, 4, 6, 8, 10, 12, 14])
+        pltnorm = BoundaryNorm(pltlevel, ncolors=len(pltlevel)-1, clip=True)
+        pltcmp = cm.get_cmap('viridis', len(pltlevel)-1)
+    elif (var_name == 'lat'):
+        var = q_sfc_weighted_var[expid[i]]['lat']['daily'].sel(lat=slice(north_extent + 2, -90))
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min=-70, cm_max=-20, cm_interval1=2.5, cm_interval2=5,
+            cmap='viridis', reversed=False)
+    elif (var_name == 'sst'):
+        var = q_sfc_weighted_var[expid[i]]['sst']['daily'].sel(lat=slice(north_extent + 2, -90))
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min=0, cm_max=27, cm_interval1=1.5, cm_interval2=3,
+            cmap='viridis', reversed=False)
+    elif (var_name == 'rh2m'):
+        var = q_sfc_weighted_var[expid[i]]['rh2m']['daily'].sel(lat=slice(north_extent + 2, -90))
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min=65, cm_max=110, cm_interval1=2.5, cm_interval2=5,
+            cmap='viridis', reversed=False)
+    elif (var_name == 'wind10'):
+        var = q_sfc_weighted_var[expid[i]]['wind10']['daily'].sel(lat=slice(north_extent + 2, -90))
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min=4, cm_max=16, cm_interval1=0.5, cm_interval2=2,
+            cmap='viridis', reversed=False)
+    elif (var_name == 'distance'):
+        var = q_sfc_transport_distance[expid[i]]['daily'].sel(lat=slice(north_extent + 2, -90)) / 100
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min=0, cm_max=100, cm_interval1=5, cm_interval2=20,
+            cmap='viridis', reversed=False)
+    
+    # print(stats.describe(var, axis=None, nan_policy='omit'))
+    
+    itime_start_idx = np.argmin(abs(var.time.values - itime_start))
+    itime_end_idx = np.argmin(abs(var.time.values - itime_end))
+    plt_data = var[itime_start_idx:itime_end_idx].compute().copy()
+    
+    start_time = str(plt_data.time.values[0])[:10]
+    end_time   = str(plt_data.time.values[-1])[:10]
+    print('Start time: ' + start_time)
+    print('End time:   ' + end_time)
+    
+    output_mp4 = 'figures/8_d-excess/8.3_vapour/8.3.1_sim/8.3.1.2_animation/8.3.1.2.0 ' + expid[i] + ' daily_sfc ' + var_name + ' ' + start_time + ' to ' + end_time + '.mp4'
+    
+    fig, ax = hemisphere_plot(northextent=north_extent, fm_top=0.92,)
+    cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
+    
+    cbar = fig.colorbar(
+        cm.ScalarMappable(norm=pltnorm, cmap=pltcmp), ax=ax, aspect=30,
+        format=remove_trailing_zero_pos,
+        orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+        pad=0.02, fraction=0.15,
+        )
+    cbar.ax.tick_params(labelsize=8)
+    cbar.ax.set_xlabel('Daily surface ' + plot_labels[var_name], linespacing=1.5)
+    
+    plt_objs = []
+    
+    def update_frames(itime):
+        # itime = 0
+        global plt_objs
+        for plt_obj in plt_objs:
+            plt_obj.remove()
+        plt_objs = []
+        
+        plt_mesh = ax.pcolormesh(
+            plt_data.lon,
+            plt_data.lat,
+            plt_data[itime],
+            norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(), )
+        
+        plt_txt = plt.text(
+            0.5, 1, str(plt_data.time[itime].values)[:10],
+            transform=ax.transAxes,
+            ha='center', va='bottom', rotation='horizontal')
+        
+        plt_objs = [plt_mesh, plt_txt, ]
+        return(plt_objs)
+    
+    ani = animation.FuncAnimation(
+        fig, update_frames, frames=itime_end_idx - itime_start_idx,
+        interval=500, blit=False)
+    
+    ani.save(
+        output_mp4,
+        progress_callback=lambda iframe, n: print(f'Saving frame {iframe} of {n}'),)
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+

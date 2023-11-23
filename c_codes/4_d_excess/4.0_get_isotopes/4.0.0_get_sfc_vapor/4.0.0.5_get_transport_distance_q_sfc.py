@@ -150,48 +150,34 @@ with open(output_file, 'wb') as f:
 '''
 #-------------------------------- check
 
-from geopy.distance import geodesic, great_circle
-from sklearn.metrics.pairwise import haversine_distances
-from math import radians
-from haversine import haversine, Unit, haversine_vector
+from haversine import haversine
 
-transport_distance = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance.pkl', 'rb') as f:
-    transport_distance[expid[i]] = pickle.load(f)
+q_sfc_transport_distance = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_sfc_transport_distance.pkl', 'rb') as f:
+    q_sfc_transport_distance[expid[i]] = pickle.load(f)
 
-transport_distance[expid[i]]['am'].to_netcdf('scratch/test/test.nc')
-
-ilat = 40
+ilat = 50
 ilon = 90
 
 for ialltime in ['daily', 'mon', 'ann', 'mm', 'sm']:
     # ialltime = 'mm'
-    itime = -4
+    itime = -3
     
     local = [lat_2d[ilat, ilon], lon_2d[ilat, ilon]]
-    source = [pre_weighted_lat[expid[i]][ialltime][itime, ilat, ilon].values,
-              pre_weighted_lon[expid[i]][ialltime][itime, ilat, ilon].values,]
-
-    # print(geodesic(local, source).km)
-    # print(great_circle(local, source).km)
-
-    # local_in_radians = [radians(_) for _ in local]
-    # source_in_radians = [radians(_) for _ in source]
-    # result = haversine_distances([local_in_radians, source_in_radians])
-    # print((result * 6371000/1000)[0, 1])
+    source = [q_sfc_weighted_lat[expid[i]][ialltime][itime, ilat, ilon].values,
+              q_sfc_weighted_lon[expid[i]][ialltime][itime, ilat, ilon].values,]
 
     print(haversine(local, source, normalize=True))
-
-    print(transport_distance[expid[i]][ialltime][itime, ilat, ilon].values)
+    print(q_sfc_transport_distance[expid[i]][ialltime][itime, ilat, ilon].values)
 
 ialltime = 'am'
 
 local = [lat_2d[ilat, ilon], lon_2d[ilat, ilon]]
-source = [pre_weighted_lat[expid[i]][ialltime][ilat, ilon].values,
-          pre_weighted_lon[expid[i]][ialltime][ilat, ilon].values,]
+source = [q_sfc_weighted_lat[expid[i]][ialltime][ilat, ilon].values,
+          q_sfc_weighted_lon[expid[i]][ialltime][ilat, ilon].values,]
 
 print(haversine(local, source, normalize=True))
-print(transport_distance[expid[i]][ialltime][ilat, ilon].values)
+print(q_sfc_transport_distance[expid[i]][ialltime][ilat, ilon].values)
 
 
 

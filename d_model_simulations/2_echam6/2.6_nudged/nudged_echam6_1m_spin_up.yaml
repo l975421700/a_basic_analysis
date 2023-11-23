@@ -2,8 +2,8 @@ general:
     setup_name: "echam"
     version: "6.3.05p2-wiso"
     compute_time: "00:30:00"
-    initial_date: "2022-01-01"
-    final_date: "2022-02-01"
+    initial_date: "1979-01-01"
+    final_date: "1984-01-01"
     model_dir: "/albedo/work/user/qigao001/model_codes/echam-6.3.05p2-wiso/"
     base_dir: "/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/"
     nmonth: 1
@@ -20,7 +20,6 @@ echam:
             echam_bin: "${executable}"
     namelist_dir: '/albedo/work/user/qigao001/a_basic_analysis/g_namelists/nudged/'
     scenario: "HIST"
-    # dataset: r0007
     res: T63
     lresume: True
     restart_rate: 1
@@ -28,13 +27,22 @@ echam:
     ini_parent_date: 20081231
     ini_parent_exp_id: "NUDGING_ERA5_T63L47_spinup_v1.2"
     ini_parent_dir: "/albedo/work/user/qigao001/startdump/restart_from_alexandre/NUDGING_ERA5_T63L47_spinup_v1.2/"
+    nproca: 24
+    nprocb: 24
+    nprocar: 0
+    nprocbr: 0
     add_namelist_changes:
         namelist.echam:
+            parctl:
+                nproca: 24
+                nprocb: 24
+                nprocar: 0
+                nprocbr: 0
             runctl:
                 default_output: False
                 out_filetype: 2
-                putdata: [ 1, 'days', 'last', 0 ]
-                dt_stop: [ 2022, 1, 2 ]
+                # putdata: [ 1, 'days', 'last', 0 ]
+                # dt_stop: [ 1979, 1, 2 ]
                 lcouple: False
                 lcouple_co2: False
                 lamip: True
@@ -42,11 +50,11 @@ echam:
                 l_orbvsop87: True
             ndgctl:
                 dt_nudg_start:
-                  - ${echam.current_date!syear}
+                  - 1979
                   - ${echam.current_date!smonth}
                   - ${echam.current_date!sday}
                 dt_nudg_stop:
-                  - ${echam.next_date!syear}
+                  - 1979
                   - ${echam.next_date!smonth}
                   - ${echam.next_date!sday}
                 inudgformat: 2
@@ -103,15 +111,27 @@ echam:
           - ozonec
           - sst
           - sic
+          - ozone
+          - volcir
+          - volcsw
+          - MAC-SP
+          - swflux
     forcing_sources:
         wiso_sw_observed: "/albedo/home/mwerner/model_input/ECHAM6-wiso/PI_ctrl/T63/T63_wisosw_d.nc"
         wiso_tagmap_1: "/albedo/work/user/qigao001/startdump/tagging/tagmap/pi_7tagmap.nc"
 
-        era5_atm: "/albedo/work/projects/paleo_work/paleodyn_from_work_ollie_projects/paleodyn/nudging/ERA5/atmos/T63/era5${echam.res}${echam.levels}_${echam.current_date!syear}${echam.current_date!smonth}.nc"
-        sst: "/albedo/work/user/acauquoi/nudging/ERA5/sea/T63/T63_era5sst_${echam.current_date!syear}.nc"
-        sic: "/albedo/work/user/acauquoi/nudging/ERA5/sea/T63/T63_era5sic_${echam.current_date!syear}.nc"
+        era5_atm: "/albedo/work/projects/paleo_work/paleodyn_from_work_ollie_projects/paleodyn/nudging/ERA5/atmos/T63/era5${echam.res}${echam.levels}_1979${echam.current_date!smonth}.nc"
+        sst: "/albedo/work/user/acauquoi/nudging/ERA5/sea/T63/T63_era5sst_1979.nc"
+        sic: "/albedo/work/user/acauquoi/nudging/ERA5/sea/T63/T63_era5sic_1979.nc"
 
-        greenhouse_gases: "/albedo/work/projects/p_pool_echam6/greenhouse.nc"
+        greenhouse_gases: "/albedo/work/projects/p_pool_echam6/input/r0008/greenhouse_ssp370.nc"
+
+        ozone: "/albedo/work/projects/p_pool_echam6/input/r0008/T63/ozone/T63_ozone_historical_1979.nc"
+        volcir: "/albedo/work/projects/p_pool_echam6/input/r0008/T63/volcano_aerosols/strat_aerosol_ir_T63_1979.nc"
+        volcsw: "/albedo/work/projects/p_pool_echam6/input/r0008/T63/volcano_aerosols/strat_aerosol_sw_T63_1979.nc"
+        MAC-SP: "/albedo/work/projects/p_pool_echam6/input/r0008/MAC-SP_ssp370.nc"
+        swflux: "/albedo/pool/ECHAM6/input/r0008/solar_irradiance/swflux_14band_1979.nc"
+
     add_forcing_files:
         wiso_sw: wiso_sw_observed
         wiso_tagmap: wiso_tagmap_1
@@ -123,6 +143,12 @@ echam:
         sic: sic
 
         greenhouse_gases: greenhouse_gases
+        ozone: ozone
+        volcir: volcir
+        volcsw: volcsw
+        MAC-SP: MAC-SP
+        swflux: swflux
+
     forcing_in_work:
         wiso_sw: "unit.25"
         wiso_tagmap: "unit.26"
@@ -220,25 +246,25 @@ jsbach:
           - lightning
           - Ndepo
           - popdens
-        #   - LU
-        #   - LU_trans
+          - LU
+          - LU_trans
 
-    # forcing_sources:
-    #     landuse_transition: "/albedo/work/projects/p_pool_jsbach3/T63/New_Hampshire_LCC/hist/LUH_transitions_T63_${echam.current_date!syear}.nc"
-    #     landuse_harvest:    "/albedo/work/projects/p_pool_jsbach3/T63/New_Hampshire_LCC/hist/LUH_harvest_T63_${echam.current_date!syear}.nc"
-    # add_forcing_files:
-    #     landuse_transition: landuse_transition
-    #     landuse_harvest:    landuse_harvest
-    # forcing_in_work:
-    #     landuse_transition: "landuseTransitions.@YEAR@.nc"
-    #     landuse_harvest:    "landuseHarvest.@YEAR@.nc"
-    # add_forcing_additional_information:
-    #     landuse_transition:
-    #         - need_year_before
-    #         - need_year_after
-    #     landuse_harvest:
-    #         - need_year_before
-    #         - need_year_after
+    forcing_sources:
+        landuse_transition: "/albedo/pool/JSBACH/input/r0010/T63/New_Hampshire_LCC/hist_no-dynveg/LUH_scaled_transitions_T63_1979.nc"
+        landuse_harvest:    "/albedo/pool/JSBACH/input/r0010/T63/New_Hampshire_LCC/hist_harvest/LUH_harvest_T63_1979.nc"
+    add_forcing_files:
+        landuse_transition: landuse_transition
+        landuse_harvest:    landuse_harvest
+    forcing_in_work:
+        landuse_transition: "landuseTransitions.@YEAR@.nc"
+        landuse_harvest:    "landuseHarvest.@YEAR@.nc"
+    add_forcing_additional_information:
+        landuse_transition:
+            - need_year_before
+            - need_year_after
+        landuse_harvest:
+            - need_year_before
+            - need_year_after
     remove_streams:
       - land
       - la_wiso

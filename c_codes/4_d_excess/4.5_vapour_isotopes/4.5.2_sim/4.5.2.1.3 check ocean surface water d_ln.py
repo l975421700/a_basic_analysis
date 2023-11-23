@@ -1,4 +1,10 @@
 
+exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+expid = [
+    'nudged_701_5.0',
+    ]
+i = 0
+
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -48,27 +54,59 @@ import cartopy.feature as cfeature
 from matplotlib.ticker import AutoMinorLocator
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 import matplotlib.path as mpath
+from metpy.calc import pressure_to_height_std
+import mpl_scatter_density
+from matplotlib.colors import LinearSegmentedColormap
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
+    globe_plot,
+    hemisphere_plot,
+    quick_var_plot,
+    mesh2plot,
+    framework_plot1,
     remove_trailing_zero,
     remove_trailing_zero_pos,
+    remove_trailing_zero_pos_abs,
+    ticks_labels,
     hemisphere_conic_plot,
 )
 
 from a_basic_analysis.b_module.basic_calculations import (
-    find_multi_gridvalue_at_site,
-    find_multi_gridvalue_at_site_time,
+    mon_sea_ann,
 )
 
 from a_basic_analysis.b_module.namelist import (
+    month,
+    month_num,
+    month_dec,
+    month_dec_num,
+    seasons,
+    seasons_last_num,
+    hours,
+    months,
+    month_days,
+    zerok,
     panel_labels,
     plot_labels,
+)
+
+from a_basic_analysis.b_module.source_properties import (
+    source_properties,
+    calc_lon_diff,
+)
+
+from a_basic_analysis.b_module.statistics import (
+    fdr_control_bh,
+    check_normality_3d,
+    check_equal_variance_3d,
+    ttest_fdr_control,
 )
 
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
     plt_mesh_pars,
+    plot_t63_contourf,
 )
 
 # endregion
@@ -78,27 +116,7 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-with open('data_sources/water_isotopes/MC16/MC16_Dome_C.pkl', 'rb') as f:
-    MC16_Dome_C = pickle.load(f)
-
-with open('data_sources/water_isotopes/NK16/NK16_Australia_Syowa.pkl', 'rb') as f:
-    NK16_Australia_Syowa = pickle.load(f)
-
-with open('data_sources/water_isotopes/BJ19/BJ19_polarstern.pkl', 'rb') as f:
-    BJ19_polarstern = pickle.load(f)
-
-with open('data_sources/water_isotopes/IT20/IT20_ACE.pkl', 'rb') as f:
-    IT20_ACE = pickle.load(f)
-
-with open('data_sources/water_isotopes/FR16/FR16_Kohnen.pkl', 'rb') as f:
-    FR16_Kohnen = pickle.load(f)
-
-with open('data_sources/water_isotopes/SD21/SD21_Neumayer.pkl', 'rb') as f:
-    SD21_Neumayer = pickle.load(f)
-
-with open('data_sources/water_isotopes/CB19/CB19_DDU.pkl', 'rb') as f:
-    CB19_DDU = pickle.load(f)
-
+T63_wisosw_d = xr.open_dataset('/albedo/home/mwerner/model_input/ECHAM6-wiso/PI_ctrl/T63/T63_wisosw_d.nc')
 
 
 # endregion
@@ -106,47 +124,22 @@ with open('data_sources/water_isotopes/CB19/CB19_DDU.pkl', 'rb') as f:
 
 
 # -----------------------------------------------------------------------------
-# region check data
-NK16_Australia_Syowa['1d']
-BJ19_polarstern['1d']
-IT20_ACE['1d']
-
-MC16_Dome_C['1d']
-SD21_Neumayer['1d']
-FR16_Kohnen['1d']
-
-CB19_DDU['1d']
-# endregion
-# -----------------------------------------------------------------------------
+# region calculate d_ln
 
 
-# -----------------------------------------------------------------------------
-# region check original CB19 data
+dD   = T63_wisosw_d.wisosw_d.sel(level=3)
+d18O = T63_wisosw_d.wisosw_d.sel(level=2)
 
-CB19_DDU_1min = pd.read_csv(
-    'data_sources/water_isotopes/CB19/Breant_2019.txt',
-    sep = '\s+', header=0, skiprows=4,)
+ln_dD = 1000 * np.log(1 + dD / 1000)
+ln_d18O = 1000 * np.log(1 + d18O / 1000)
 
-fig, ax = plt.subplots(1, 1, figsize=np.array([13.2, 8.8]) / 2.54)
-ax.plot(CB19_DDU_1min['d-excess'], ls='-', lw=0.2, )
+d_ln = ln_dD - 8.47 * ln_d18O + 0.0285 * (ln_d18O ** 2)
+d_xs = dD - 8 * d18O
 
-ax.set_xlabel('Minutes from 2016-12-25 to 2017-02-03')
-ax.set_ylabel('$d_{xs}$ [$‰$]')
+stats.describe(d_xs, axis=None)
+stats.describe(d_ln, axis=None)
 
-fig.tight_layout()
-fig.savefig('figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.6_CB19/8.3.0.6.0_original minute d_xs.png')
-
-
-fig, ax = plt.subplots(1, 1, figsize=np.array([13.2, 8.8]) / 2.54)
-ax.plot(CB19_DDU_1min['dD.1'].values - 8 * CB19_DDU_1min['d18O.1'].values, ls='-', lw=0.2, )
-
-ax.set_xlabel('Minutes from 2016-12-25 to 2017-02-03')
-ax.set_ylabel('$d_{xs}$ [$‰$]')
-
-fig.tight_layout()
-fig.savefig('figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.6_CB19/8.3.0.6.0_original minute d_xs calculated from corrected data.png')
-
-
+d_ln.to_netcdf('scratch/test/test.nc')
 # endregion
 # -----------------------------------------------------------------------------
 

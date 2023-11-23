@@ -139,10 +139,11 @@ for ivar in ['dD', 'd18O', 'd_xs', 'd_ln', 'pre', 'temp2', ]:
     
     RMSE = np.sqrt(np.average(np.square(xdata - ydata)))
     
-    sns.scatterplot(x=xdata, y=ydata, s=12,)
+    ax.scatter(x=xdata, y=ydata, s=12, marker = 'x')
+    ax.scatter(x=xdata_am, y=ydata_am, s=12, marker='*')
     
     linearfit = linregress(x = xdata, y = ydata,)
-    ax.axline((0, linearfit.intercept), slope = linearfit.slope, lw=1,)
+    # ax.axline((0, linearfit.intercept), slope = linearfit.slope, lw=1,)
     
     if (linearfit.intercept >= 0):
         eq_text = '$y = $' + \
