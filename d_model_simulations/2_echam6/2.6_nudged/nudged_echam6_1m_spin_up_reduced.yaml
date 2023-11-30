@@ -18,7 +18,7 @@ echam:
             echam_bin: "${bin_dir}/${executable}"
     bin_in_work:
             echam_bin: "${executable}"
-    namelist_dir: '/albedo/work/user/qigao001/a_basic_analysis/g_namelists/nudged/'
+    namelist_dir: '/albedo/work/user/qigao001/a_basic_analysis/g_namelists/nudged_reduced/'
     scenario: "HIST"
     res: T63
     lresume: True
@@ -65,7 +65,7 @@ echam:
             wisoctl:
                 lwiso: True
                 lwiso_rerun: False
-                nwiso: 31
+                nwiso: 6
                 ntag: 0
                 ntag1: 0
                 ntag2: 0
@@ -73,16 +73,16 @@ echam:
                 ntag4: 0
                 ntags1_lat: 3
                 ntags2_lon: 0
-                ntags3_sst: 3
-                ntags4_rh2m: 3
-                ntags5_wind10: 3
-                ntag_geo7: 7
-                ntags6_sinlon: 3
-                ntags7_coslon: 3
+                ntags3_sst: 0
+                ntags4_rh2m: 0
+                ntags5_wind10: 0
+                ntag_geo7: 0
+                ntags6_sinlon: 0
+                ntags7_coslon: 0
                 ntag5: 0
-                ntags8_RHsst: 3
+                ntags8_RHsst: 0
                 ntag6: 0
-                ntag_sum: 28
+                ntag_sum: 3
                 lupdate_tagmap: True
                 tag_minsst: 268.15
                 tag_maxsst: 318.15
@@ -118,7 +118,7 @@ echam:
           - swflux
     forcing_sources:
         wiso_sw_observed: "/albedo/home/mwerner/model_input/ECHAM6-wiso/PI_ctrl/T63/T63_wisosw_d.nc"
-        wiso_tagmap_1: "/albedo/work/user/qigao001/startdump/tagging/tagmap/pi_7tagmap.nc"
+        wiso_tagmap_1: "/albedo/work/user/qigao001/startdump/tagging/tagmap/pi_lat_tagmap.nc"
 
         era5_atm: "/albedo/work/projects/paleo_work/paleodyn_from_work_ollie_projects/paleodyn/nudging/ERA5/atmos/T63/era5${echam.res}${echam.levels}_${echam.current_date!syear}${echam.current_date!smonth}.nc"
         sst: "/albedo/work/user/acauquoi/nudging/ERA5/sea/T63/T63_era5sst_1979.nc"

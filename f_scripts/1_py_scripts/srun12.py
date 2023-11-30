@@ -1,15 +1,28 @@
 
+# salloc --account=paleodyn.paleodyn --qos=12h --time=12:00:00 --nodes=1 --mem=120GB
+# source ${HOME}/miniconda3/bin/activate deepice
+# ipython
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'pi_600_5.0',
+    # 'nudged_701_5.0',
+    
+    # 'nudged_705_6.0',
+    # 'nudged_706_6.0_k52_88',
+    # 'nudged_707_6.0_k43',
+    # 'nudged_708_6.0_I01',
+    # 'nudged_709_6.0_I03',
+    'nudged_710_6.0_S3',
+    # 'nudged_711_6.0_S6',
     ]
+i = 0
 
 
 # -----------------------------------------------------------------------------
 # region import packages
 
 # management
+import glob
 import pickle
 import warnings
 warnings.filterwarnings('ignore')
@@ -25,15 +38,16 @@ dask.config.set({"array.slicing.split_large_chunks": True})
 from dask.diagnostics import ProgressBar
 pbar = ProgressBar()
 pbar.register()
-import xskillscore as xs
 
-from a_basic_analysis.b_module.namelist import (
-    seconds_per_d,
+from a_basic_analysis.b_module.basic_calculations import (
+    find_ilat_ilon,
+    find_ilat_ilon_general,
+    find_gridvalue_at_site,
+    find_multi_gridvalue_at_site,
+    find_gridvalue_at_site_time,
+    find_multi_gridvalue_at_site_time,
 )
 
-from a_basic_analysis.b_module.statistics import (
-    xr_par_cor,
-)
 
 
 # endregion
@@ -43,243 +57,139 @@ from a_basic_analysis.b_module.statistics import (
 # -----------------------------------------------------------------------------
 # region import data
 
+#-------- import obs
 
-wisoaprt_alltime = {}
-dO18_alltime = {}
-dD_alltime = {}
-d_ln_alltime = {}
-d_excess_alltime = {}
-
-for i in range(len(expid)):
-    print(str(i) + ': ' + expid[i])
-    
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
-        wisoaprt_alltime[expid[i]] = pickle.load(f)
-    
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_alltime.pkl', 'rb') as f:
-        dO18_alltime[expid[i]] = pickle.load(f)
-    
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_alltime.pkl', 'rb') as f:
-        dD_alltime[expid[i]] = pickle.load(f)
-    
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_alltime.pkl', 'rb') as f:
-        d_ln_alltime[expid[i]] = pickle.load(f)
-    
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_alltime.pkl', 'rb') as f:
-        d_excess_alltime[expid[i]] = pickle.load(f)
+with open('data_sources/water_isotopes/BJ19/BJ19_polarstern.pkl', 'rb') as f:
+    BJ19_polarstern = pickle.load(f)
 
 
-source_var = ['lat', 'lon', 'sst', 'rh2m', 'wind10', 'distance']
-pre_weighted_var = {}
+#-------- import sim
 
-for i in range(len(expid)):
-    # i = 0
-    print(str(i) + ': ' + expid[i])
-    
-    pre_weighted_var[expid[i]] = {}
-    
-    prefix = exp_odir + expid[i] + '/analysis/echam/' + expid[i]
-    
-    source_var_files = [
-        prefix + '.pre_weighted_lat.pkl',
-        prefix + '.pre_weighted_lon.pkl',
-        prefix + '.pre_weighted_sst.pkl',
-        prefix + '.pre_weighted_rh2m.pkl',
-        prefix + '.pre_weighted_wind10.pkl',
-        prefix + '.transport_distance.pkl',
-    ]
-    
-    for ivar, ifile in zip(source_var, source_var_files):
-        print(ivar + ':    ' + ifile)
-        with open(ifile, 'rb') as f:
-            pre_weighted_var[expid[i]][ivar] = pickle.load(f)
+wiso_q_6h_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wiso_q_6h_sfc_alltime.pkl', 'rb') as f:
+    wiso_q_6h_sfc_alltime[expid[i]] = pickle.load(f)
+
+dD_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_q_sfc_alltime.pkl', 'rb') as f:
+    dD_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+dO18_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_q_sfc_alltime.pkl', 'rb') as f:
+    dO18_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+d_excess_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_q_sfc_alltime.pkl', 'rb') as f:
+    d_excess_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+d_ln_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_q_sfc_alltime.pkl', 'rb') as f:
+    d_ln_q_sfc_alltime[expid[i]] = pickle.load(f)
 
 
-temp2_alltime = {}
+lon = d_ln_q_sfc_alltime[expid[i]]['am'].lon
+lat = d_ln_q_sfc_alltime[expid[i]]['am'].lat
 
-for i in range(len(expid)):
-    # i = 0
-    print(str(i) + ': ' + expid[i])
-    
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
-        temp2_alltime[expid[i]] = pickle.load(f)
-
-
-sam_mon = {}
-b_sam_mon = {}
-
-for i in range(len(expid)):
-    print(str(i) + ': ' + expid[i])
-    
-    sam_mon[expid[i]] = xr.open_dataset(
-        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.sam_mon.nc')
-    
-    b_sam_mon[expid[i]], _ = xr.broadcast(
-        sam_mon[expid[i]].sam,
-        d_ln_alltime[expid[i]]['mon'])
 
 '''
+
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region get partial Corr. isotopes and temp2/sst, given temp2/sst
+# region extract data
 
-par_corr_isotopes_temp2_sst = {}
+BJ19_polarstern_1d_sim = {}
 
-for i in range(len(expid)):
-    # i = 0
-    print('#-------------------------------- ' + str(i) + ': ' + expid[i])
+BJ19_polarstern_1d_sim[expid[i]] = BJ19_polarstern['1d'].copy()
+
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
+    # var_name = 'd_ln'
+    print('#-------- ' + var_name)
     
-    par_corr_isotopes_temp2_sst[expid[i]] = {}
+    if (var_name == 'dD'):
+        ivar = dD_q_sfc_alltime[expid[i]]['daily']
+    elif (var_name == 'd18O'):
+        ivar = dO18_q_sfc_alltime[expid[i]]['daily']
+    elif (var_name == 'd_xs'):
+        ivar = d_excess_q_sfc_alltime[expid[i]]['daily']
+    elif (var_name == 'd_ln'):
+        ivar = d_ln_q_sfc_alltime[expid[i]]['daily']
+    elif (var_name == 'q'):
+        ivar = wiso_q_6h_sfc_alltime[expid[i]]['q16o']['daily'].sel(lev=47)
     
-    for iisotopes in ['wisoaprt', 'dO18', 'dD', 'd_ln', 'd_excess',]:
-        # iisotopes = 'd_ln'
-        print('#---------------- ' + iisotopes)
-        
-        par_corr_isotopes_temp2_sst[expid[i]][iisotopes] = {}
-        
-        for ivar in ['temp2', 'sst']:
-            # ivar = 'temp2'
-            print('#-------- ' + ivar)
-            
-            par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar] = {}
-            
-            for ialltime in ['daily', 'mon', 'mon no mm', 'ann', 'ann no am']:
-                # ialltime = 'mon'
-                print('#---- ' + ialltime)
-                
-                if (iisotopes == 'wisoaprt'):
-                    isotopevar = wisoaprt_alltime[expid[i]][ialltime].sel(
-                        wisotype=1) * seconds_per_d
-                elif (iisotopes == 'dO18'):
-                    isotopevar = dO18_alltime[expid[i]][ialltime]
-                elif (iisotopes == 'dD'):
-                    isotopevar = dD_alltime[expid[i]][ialltime]
-                elif (iisotopes == 'd_ln'):
-                    isotopevar = d_ln_alltime[expid[i]][ialltime]
-                elif (iisotopes == 'd_excess'):
-                    isotopevar = d_excess_alltime[expid[i]][ialltime]
-                
-                if (ivar == 'temp2'):
-                    corr_var = temp2_alltime[expid[i]][ialltime]
-                    # corr_var['time'] = isotopevar.time
-                    
-                    ctr_var = pre_weighted_var[expid[i]]['sst'][ialltime]
-                elif (ivar == 'sst'):
-                    corr_var = pre_weighted_var[expid[i]]['sst'][ialltime]
-                    
-                    ctr_var = temp2_alltime[expid[i]][ialltime]
-                    # ctr_var['time'] = isotopevar.time
-                
-                par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar][ialltime] = {}
-                
-                par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar][ialltime]['r'] = xr.apply_ufunc(
-                        xr_par_cor,
-                        isotopevar,
-                        corr_var,
-                        ctr_var,
-                        input_core_dims=[["time"], ["time"], ["time"]],
-                        kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
-                    )
-                
-                par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar][ialltime]['p'] = xr.apply_ufunc(
-                        xr_par_cor,
-                        isotopevar,
-                        corr_var,
-                        ctr_var,
-                        input_core_dims=[["time"], ["time"], ["time"]],
-                        kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
-                    )
-                
-                par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar][ialltime]['r_significant'] = par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar][ialltime]['r'].copy()
-                
-                par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar][ialltime]['r_significant'].values[par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar][ialltime]['p'].values > 0.05] = np.nan
-                
-                # if (ialltime == 'mon'):
-                    
-                #     par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar]['mon_no_mm'] = {}
+    BJ19_polarstern_1d_sim[expid[i]][var_name + '_sim'] = \
+        find_multi_gridvalue_at_site_time(
+            BJ19_polarstern_1d_sim[expid[i]]['time'],
+            BJ19_polarstern_1d_sim[expid[i]]['lat'],
+            BJ19_polarstern_1d_sim[expid[i]]['lon'],
+            ivar.time.values,
+            ivar.lat.values,
+            ivar.lon.values,
+            ivar.values
+        )
 
-                #     par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar]['mon_no_mm']['r'] = xr.apply_ufunc(
-                #             xr_par_cor,
-                #             isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
-                #             corr_var.groupby('time.month') - corr_var.groupby('time.month').mean(),
-                #             ctr_var.groupby('time.month') - ctr_var.groupby('time.month').mean(),
-                #             input_core_dims=[["time"], ["time"], ["time"]],
-                #             kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
-                #         )
+BJ19_polarstern_1d_sim[expid[i]]['q'] = BJ19_polarstern_1d_sim[expid[i]]['q'] / 1000
 
-                #     par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar]['mon_no_mm']['p'] = xr.apply_ufunc(
-                #             xr_par_cor,
-                #             isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
-                #             corr_var.groupby('time.month') - corr_var.groupby('time.month').mean(),
-                #             ctr_var.groupby('time.month') - ctr_var.groupby('time.month').mean(),
-                #             input_core_dims=[["time"], ["time"], ["time"]],
-                #             kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
-                #         )
+output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.BJ19_polarstern_1d_sim.pkl'
 
-                #     par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar]['mon_no_mm']['r_significant'] = par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar]['mon_no_mm']['r'].copy()
+if (os.path.isfile(output_file)):
+    os.remove(output_file)
 
-                #     par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar]['mon_no_mm']['r_significant'].values[par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar]['mon_no_mm']['p'].values > 0.05] = np.nan
-    
-    output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_isotopes_temp2_sst.pkl'
-    
-    if (os.path.isfile(output_file)):
-        os.remove(output_file)
-    
-    with open(output_file, 'wb') as f:
-        pickle.dump(par_corr_isotopes_temp2_sst[expid[i]], f)
+with open(output_file, 'wb') as f:
+    pickle.dump(BJ19_polarstern_1d_sim[expid[i]], f)
+
 
 
 
 '''
 #-------------------------------- check
+BJ19_polarstern_1d_sim = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.BJ19_polarstern_1d_sim.pkl', 'rb') as f:
+    BJ19_polarstern_1d_sim[expid[i]] = pickle.load(f)
 
-i = 0
+d_ln_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_q_sfc_alltime.pkl', 'rb') as f:
+    d_ln_q_sfc_alltime[expid[i]] = pickle.load(f)
 
-par_corr_isotopes_temp2_sst = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_isotopes_temp2_sst.pkl', 'rb') as f:
-    par_corr_isotopes_temp2_sst[expid[i]] = pickle.load(f)
+ires = 120
+stime = BJ19_polarstern_1d_sim[expid[i]]['time'][ires]
+slat = BJ19_polarstern_1d_sim[expid[i]]['lat'][ires]
+slon = BJ19_polarstern_1d_sim[expid[i]]['lon'][ires]
 
-iisotopes = 'd_ln'
-ialltime = 'mon'
-ivar = 'sst'
-
-isotopevar = d_ln_alltime[expid[i]][ialltime]
-
-corr_var = pre_weighted_var[expid[i]]['sst'][ialltime]
-
-ctr_var = temp2_alltime[expid[i]][ialltime]
-ctr_var['time'] = isotopevar.time
+itime = np.argmin(abs(stime.asm8 - d_ln_q_sfc_alltime[expid[i]]['daily'].time).values)
+ilat, ilon = find_ilat_ilon(
+    slat, slon,
+    d_ln_q_sfc_alltime[expid[i]]['daily'].lat.values,
+    d_ln_q_sfc_alltime[expid[i]]['daily'].lon.values)
 
 
-data1 = xr.apply_ufunc(
-    xr_par_cor,
-    isotopevar, corr_var, ctr_var,
-    input_core_dims=[["time"], ["time"], ["time"]],
-    kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
-    ).values
-data2 = par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar][ialltime]['r'].values
-print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
+#-------- check q
+var_name = 'q'
+wiso_q_6h_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wiso_q_6h_sfc_alltime.pkl', 'rb') as f:
+    wiso_q_6h_sfc_alltime[expid[i]] = pickle.load(f)
 
-data3 = xr.apply_ufunc(
-    xr_par_cor,
-    isotopevar, corr_var, ctr_var,
-    input_core_dims=[["time"], ["time"], ["time"]],
-    kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
-    ).values
-data4 = par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar][ialltime]['p'].values
-print((data3[np.isfinite(data3)] == data4[np.isfinite(data4)]).all())
+print(BJ19_polarstern_1d_sim[expid[i]][var_name + '_sim'][ires])
+print(wiso_q_6h_sfc_alltime[expid[i]]['q16o']['daily'][itime, 0, ilat, ilon])
 
-data5 = data1.copy()
-data5[data3 > 0.05] = np.nan
-data6 = par_corr_isotopes_temp2_sst[expid[i]][iisotopes][ivar][ialltime]['r_significant'].values
-print((data5[np.isfinite(data5)] == data6[np.isfinite(data6)]).all())
+#-------- check d_ln
+var_name = 'd_ln'
+print(BJ19_polarstern_1d_sim[expid[i]][var_name + '_sim'][ires])
+print(d_ln_q_sfc_alltime[expid[i]]['daily'][itime, ilat, ilon])
+
+#-------- check dD
+dD_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_q_sfc_alltime.pkl', 'rb') as f:
+    dD_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+var_name = 'dD'
+print(BJ19_polarstern_1d_sim[expid[i]][var_name + '_sim'][ires])
+print(dD_q_sfc_alltime[expid[i]]['daily'][itime, ilat, ilon])
+
 
 '''
 # endregion
 # -----------------------------------------------------------------------------
-
 

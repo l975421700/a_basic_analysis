@@ -7,13 +7,13 @@ exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'nudged_701_5.0',
     
-    'nudged_705_6.0',
+    # 'nudged_705_6.0',
     # 'nudged_706_6.0_k52_88',
     # 'nudged_707_6.0_k43',
     # 'nudged_708_6.0_I01',
     # 'nudged_709_6.0_I03',
     # 'nudged_710_6.0_S3',
-    # 'nudged_711_6.0_S6',
+    'nudged_711_6.0_S6',
     ]
 i = 0
 

@@ -1,19 +1,22 @@
-#SBATCH --time=00:30:00 for PI_control
 
+# salloc --account=paleodyn.paleodyn --qos=12h --time=12:00:00 --nodes=1 --mem=120GB
+# source ${HOME}/miniconda3/bin/activate deepice
+# ipython
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_600_5.0',
-    # 'pi_601_5.1',
-    # 'pi_602_5.2',
-    # 'pi_605_5.5',
-    # 'pi_606_5.6',
-    # 'pi_609_5.7',
-    # 'pi_610_5.8',
-    # 'hist_700_5.0',
-    'nudged_701_5.0',
+    # 'nudged_701_5.0',
+    
+    # 'nudged_705_6.0',
+    # 'nudged_706_6.0_k52_88',
+    # 'nudged_707_6.0_k43',
+    # 'nudged_708_6.0_I01',
+    'nudged_709_6.0_I03',
+    # 'nudged_710_6.0_S3',
+    # 'nudged_711_6.0_S6',
     ]
 i = 0
+
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -35,70 +38,17 @@ dask.config.set({"array.slicing.split_large_chunks": True})
 from dask.diagnostics import ProgressBar
 pbar = ProgressBar()
 pbar.register()
-from scipy import stats
-import xesmf as xe
-import pandas as pd
-from metpy.interpolate import cross_section
-from statsmodels.stats import multitest
-import pycircstat as circ
-
-# plot
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from matplotlib.colors import BoundaryNorm
-from matplotlib import cm
-import cartopy.crs as ccrs
-plt.rcParams['pcolor.shading'] = 'auto'
-mpl.rcParams['figure.dpi'] = 600
-mpl.rc('font', family='Times New Roman', size=10)
-mpl.rcParams['axes.linewidth'] = 0.2
-plt.rcParams.update({"mathtext.fontset": "stix"})
-import matplotlib.animation as animation
-import seaborn as sns
-
-# self defined
-from a_basic_analysis.b_module.mapplot import (
-    globe_plot,
-    hemisphere_plot,
-    quick_var_plot,
-    mesh2plot,
-    framework_plot1,
-    remove_trailing_zero,
-)
 
 from a_basic_analysis.b_module.basic_calculations import (
-    mon_sea_ann,
+    find_ilat_ilon,
+    find_ilat_ilon_general,
+    find_gridvalue_at_site,
+    find_multi_gridvalue_at_site,
+    find_gridvalue_at_site_time,
+    find_multi_gridvalue_at_site_time,
 )
 
-from a_basic_analysis.b_module.namelist import (
-    month,
-    month_num,
-    month_dec,
-    month_dec_num,
-    seasons,
-    seasons_last_num,
-    hours,
-    months,
-    month_days,
-    zerok,
-    panel_labels,
-)
 
-from a_basic_analysis.b_module.source_properties import (
-    source_properties,
-    calc_lon_diff,
-)
-
-from a_basic_analysis.b_module.statistics import (
-    fdr_control_bh,
-    check_normality_3d,
-    check_equal_variance_3d,
-    ttest_fdr_control,
-)
-
-from a_basic_analysis.b_module.component_plot import (
-    cplot_ice_cores,
-)
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -107,95 +57,139 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-aprt_geo7_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_geo7_alltime.pkl', 'rb') as f:
-    aprt_geo7_alltime[expid[i]] = pickle.load(f)
+#-------- import obs
 
-lon = aprt_geo7_alltime[expid[i]]['am'].lon
-lat = aprt_geo7_alltime[expid[i]]['am'].lat
-lon_2d, lat_2d = np.meshgrid(lon, lat,)
+with open('data_sources/water_isotopes/BJ19/BJ19_polarstern.pkl', 'rb') as f:
+    BJ19_polarstern = pickle.load(f)
 
 
-# endregion
-# -----------------------------------------------------------------------------
+#-------- import sim
+
+wiso_q_6h_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wiso_q_6h_sfc_alltime.pkl', 'rb') as f:
+    wiso_q_6h_sfc_alltime[expid[i]] = pickle.load(f)
+
+dD_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_q_sfc_alltime.pkl', 'rb') as f:
+    dD_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+dO18_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_q_sfc_alltime.pkl', 'rb') as f:
+    dO18_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+d_excess_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_q_sfc_alltime.pkl', 'rb') as f:
+    d_excess_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+d_ln_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_q_sfc_alltime.pkl', 'rb') as f:
+    d_ln_q_sfc_alltime[expid[i]] = pickle.load(f)
 
 
-# -----------------------------------------------------------------------------
-# region get aprt_frc
-
-geo_regions = [
-    'AIS', 'Land excl. AIS', 'Atlantic Ocean',
-    'Indian Ocean', 'Pacific Ocean', 'SH seaice', 'Southern Ocean']
-wisotypes = {'AIS': 16, 'Land excl. AIS': 17,
-             'Atlantic Ocean': 18, 'Indian Ocean': 19, 'Pacific Ocean': 20,
-             'SH seaice': 21, 'Southern Ocean': 22}
-
-aprt_frc = {}
-for iregion in geo_regions:
-    aprt_frc[iregion] = {}
-
-for ialltime in aprt_geo7_alltime[expid[i]].keys():
-    if (ialltime != 'sum'):
-        # ialltime = 'daily'
-        print('#---- ' + ialltime)
-
-        for iregion in geo_regions:
-            # iregion = 'NHland'
-            print(iregion + ': ' + str(wisotypes[iregion]))
-
-            aprt_frc[iregion][ialltime] = \
-                100 * (aprt_geo7_alltime[expid[i]][ialltime].sel(
-                    wisotype=wisotypes[iregion]) / \
-                        aprt_geo7_alltime[expid[i]]['sum'][ialltime])
-
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc.pkl', 'wb') as f:
-    pickle.dump(aprt_frc, f)
+lon = d_ln_q_sfc_alltime[expid[i]]['am'].lon
+lat = d_ln_q_sfc_alltime[expid[i]]['am'].lat
 
 
 '''
-geo_regions = [
-    'NHland', 'SHland', 'Antarctica',
-    'NHocean', 'NHseaice', 'SHocean', 'SHseaice']
-wisotypes = {'NHland': 16, 'SHland': 17, 'Antarctica': 18,
-             'NHocean': 19, 'NHseaice': 20, 'SHocean': 21, 'SHseaice': 22}
 
-for ialltime in aprt_frc['Antarctica'].keys():
-    aprt_frc['Otherland'][ialltime] = \
-        aprt_frc['NHland'][ialltime] + aprt_frc['SHland'][ialltime]
-    aprt_frc['Otherocean'][ialltime] = \
-        aprt_frc['NHocean'][ialltime] + aprt_frc['NHseaice'][ialltime] + \
-            aprt_frc['SHocean'][ialltime]
-
-aprt_frc['Otherland']  = {}
-aprt_frc['Otherocean']  = {}
-
-
-#-------- check calculation
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_frc.pkl', 'rb') as f:
-    aprt_frc = pickle.load(f)
-
-print((aprt_frc['AIS']['ann'] == 100 * (aprt_geo7_alltime[expid[i]]['ann'].sel(wisotype=16) / aprt_geo7_alltime[expid[i]]['sum']['ann'])).all().values)
-
-print((aprt_frc['Land excl. AIS']['ann'] == 100 * (aprt_geo7_alltime[expid[i]]['ann'].sel(wisotype=17) / aprt_geo7_alltime[expid[i]]['sum']['ann'])).all().values)
-
-print((aprt_frc['Atlantic Ocean']['ann'] == 100 * (aprt_geo7_alltime[expid[i]]['ann'].sel(wisotype=18) / aprt_geo7_alltime[expid[i]]['sum']['ann'])).all().values)
-
-print((aprt_frc['Indian Ocean']['ann'] == 100 * (aprt_geo7_alltime[expid[i]]['ann'].sel(wisotype=19) / aprt_geo7_alltime[expid[i]]['sum']['ann'])).all().values)
-
-print((aprt_frc['Pacific Ocean']['ann'] == 100 * (aprt_geo7_alltime[expid[i]]['ann'].sel(wisotype=20) / aprt_geo7_alltime[expid[i]]['sum']['ann'])).all().values)
-
-print((aprt_frc['SH seaice']['am'] == 100 * (aprt_geo7_alltime[expid[i]]['am'].sel(wisotype=21) / aprt_geo7_alltime[expid[i]]['sum']['am'])).all().values)
-
-print((aprt_frc['Southern Ocean']['mon'] == 100 * (aprt_geo7_alltime[expid[i]]['mon'].sel(wisotype=22) / aprt_geo7_alltime[expid[i]]['sum']['mon'])).all().values)
-
-
-
-
-
-(100 * (aprt_geo7_alltime[expid[i]]['am'].sel(wisotype=22) / aprt_geo7_alltime[expid[i]]['sum']['am']) == (100 * aprt_geo7_alltime[expid[i]]['am'].sel(wisotype=22) / aprt_geo7_alltime[expid[i]]['sum']['am'])).all()
-np.max(abs(100 * (aprt_geo7_alltime[expid[i]]['am'].sel(wisotype=22) / aprt_geo7_alltime[expid[i]]['sum']['am']) - (100 * aprt_geo7_alltime[expid[i]]['am'].sel(wisotype=22) / aprt_geo7_alltime[expid[i]]['sum']['am'])))
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region extract data
+
+BJ19_polarstern_1d_sim = {}
+
+BJ19_polarstern_1d_sim[expid[i]] = BJ19_polarstern['1d'].copy()
+
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
+    # var_name = 'd_ln'
+    print('#-------- ' + var_name)
+    
+    if (var_name == 'dD'):
+        ivar = dD_q_sfc_alltime[expid[i]]['daily']
+    elif (var_name == 'd18O'):
+        ivar = dO18_q_sfc_alltime[expid[i]]['daily']
+    elif (var_name == 'd_xs'):
+        ivar = d_excess_q_sfc_alltime[expid[i]]['daily']
+    elif (var_name == 'd_ln'):
+        ivar = d_ln_q_sfc_alltime[expid[i]]['daily']
+    elif (var_name == 'q'):
+        ivar = wiso_q_6h_sfc_alltime[expid[i]]['q16o']['daily'].sel(lev=47)
+    
+    BJ19_polarstern_1d_sim[expid[i]][var_name + '_sim'] = \
+        find_multi_gridvalue_at_site_time(
+            BJ19_polarstern_1d_sim[expid[i]]['time'],
+            BJ19_polarstern_1d_sim[expid[i]]['lat'],
+            BJ19_polarstern_1d_sim[expid[i]]['lon'],
+            ivar.time.values,
+            ivar.lat.values,
+            ivar.lon.values,
+            ivar.values
+        )
+
+BJ19_polarstern_1d_sim[expid[i]]['q'] = BJ19_polarstern_1d_sim[expid[i]]['q'] / 1000
+
+output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.BJ19_polarstern_1d_sim.pkl'
+
+if (os.path.isfile(output_file)):
+    os.remove(output_file)
+
+with open(output_file, 'wb') as f:
+    pickle.dump(BJ19_polarstern_1d_sim[expid[i]], f)
+
+
+
+
+'''
+#-------------------------------- check
+BJ19_polarstern_1d_sim = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.BJ19_polarstern_1d_sim.pkl', 'rb') as f:
+    BJ19_polarstern_1d_sim[expid[i]] = pickle.load(f)
+
+d_ln_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_q_sfc_alltime.pkl', 'rb') as f:
+    d_ln_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+ires = 120
+stime = BJ19_polarstern_1d_sim[expid[i]]['time'][ires]
+slat = BJ19_polarstern_1d_sim[expid[i]]['lat'][ires]
+slon = BJ19_polarstern_1d_sim[expid[i]]['lon'][ires]
+
+itime = np.argmin(abs(stime.asm8 - d_ln_q_sfc_alltime[expid[i]]['daily'].time).values)
+ilat, ilon = find_ilat_ilon(
+    slat, slon,
+    d_ln_q_sfc_alltime[expid[i]]['daily'].lat.values,
+    d_ln_q_sfc_alltime[expid[i]]['daily'].lon.values)
+
+
+#-------- check q
+var_name = 'q'
+wiso_q_6h_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wiso_q_6h_sfc_alltime.pkl', 'rb') as f:
+    wiso_q_6h_sfc_alltime[expid[i]] = pickle.load(f)
+
+print(BJ19_polarstern_1d_sim[expid[i]][var_name + '_sim'][ires])
+print(wiso_q_6h_sfc_alltime[expid[i]]['q16o']['daily'][itime, 0, ilat, ilon])
+
+#-------- check d_ln
+var_name = 'd_ln'
+print(BJ19_polarstern_1d_sim[expid[i]][var_name + '_sim'][ires])
+print(d_ln_q_sfc_alltime[expid[i]]['daily'][itime, ilat, ilon])
+
+#-------- check dD
+dD_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_q_sfc_alltime.pkl', 'rb') as f:
+    dD_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+var_name = 'dD'
+print(BJ19_polarstern_1d_sim[expid[i]][var_name + '_sim'][ires])
+print(dD_q_sfc_alltime[expid[i]]['daily'][itime, ilat, ilon])
+
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
 

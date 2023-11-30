@@ -1,6 +1,6 @@
 
 output_dir='/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi'
-expid='pi_1d_804_6.1'
+expid='nudged_711_6.0_S6'
 
 echo $'\n#-------- clean model output: ' ${expid}
 
@@ -20,7 +20,8 @@ rm log/*prepcompute*.log
 rm log/*tidy*.log
 rm log/run_folders.log
 
-# echo '#---- clean echam6 output'
+echo '#---- clean echam6 output'
+rm unknown/${expid}_*.01_nudg*
 # rm outdata/echam/${expid}_*.01_accw*
 # rm outdata/echam/${expid}_*.01_aclcim*
 # rm outdata/echam/${expid}_*.01_g3b1hi*
@@ -46,6 +47,7 @@ echo '#---- clean restart files'
 
 for MONTH in 01 02 03 04 05 06 07 08 09 10 11; do
     rm restart/echam/restart_${expid}_*_????${MONTH}??.nc
+    rm restart/hdmodel/restart_${expid}_????${MONTH}*.nc
     rm restart/jsbach/restart_${expid}_????${MONTH}*.nc
 done
 

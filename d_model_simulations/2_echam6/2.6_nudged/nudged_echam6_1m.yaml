@@ -2,8 +2,8 @@ general:
     setup_name: "echam"
     version: "6.3.05p2-wiso"
     compute_time: "00:30:00"
-    initial_date: "2022-01-01"
-    final_date: "2022-02-01"
+    initial_date: "1979-01-01"
+    final_date: "2023-01-01"
     model_dir: "/albedo/work/user/qigao001/model_codes/echam-6.3.05p2-wiso/"
     base_dir: "/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/"
     nmonth: 1
@@ -20,21 +20,29 @@ echam:
             echam_bin: "${executable}"
     namelist_dir: '/albedo/work/user/qigao001/a_basic_analysis/g_namelists/nudged/'
     scenario: "HIST"
-    # dataset: r0007
     res: T63
     lresume: True
     restart_rate: 1
     restart_unit: "months"
-    ini_parent_date: 20081231
-    ini_parent_exp_id: "NUDGING_ERA5_T63L47_spinup_v1.2"
-    ini_parent_dir: "/albedo/work/user/qigao001/startdump/restart_from_alexandre/NUDGING_ERA5_T63L47_spinup_v1.2/"
+    ini_parent_date: "1983-12-31T23:52:30"
+    ini_parent_exp_id: "nudged_702_6.0_spinup"
+    ini_parent_dir: "/albedo/work/user/qigao001/albedo_scratch/output/echam-6.3.05p2-wiso/pi/nudged_702_6.0_spinup/restart/echam/"
+    nproca: 24
+    nprocb: 24
+    nprocar: 0
+    nprocbr: 0
     add_namelist_changes:
         namelist.echam:
+            parctl:
+                nproca: 24
+                nprocb: 24
+                nprocar: 0
+                nprocbr: 0
             runctl:
                 default_output: False
                 out_filetype: 2
-                putdata: [ 1, 'days', 'last', 0 ]
-                dt_stop: [ 2022, 1, 2 ]
+                # putdata: [ 1, 'days', 'last', 0 ]
+                # dt_stop: [ 1979, 1, 2 ]
                 lcouple: False
                 lcouple_co2: False
                 lamip: True
@@ -56,7 +64,7 @@ echam:
                 lnudgini: False
             wisoctl:
                 lwiso: True
-                lwiso_rerun: False
+                lwiso_rerun: True
                 nwiso: 31
                 ntag: 0
                 ntag1: 0
@@ -111,7 +119,7 @@ echam:
         sst: "/albedo/work/user/acauquoi/nudging/ERA5/sea/T63/T63_era5sst_${echam.current_date!syear}.nc"
         sic: "/albedo/work/user/acauquoi/nudging/ERA5/sea/T63/T63_era5sic_${echam.current_date!syear}.nc"
 
-        greenhouse_gases: "/albedo/work/projects/p_pool_echam6/greenhouse.nc"
+        greenhouse_gases: "/albedo/work/projects/p_pool_echam6/input/r0008/greenhouse_ssp370.nc"
     add_forcing_files:
         wiso_sw: wiso_sw_observed
         wiso_tagmap: wiso_tagmap_1
@@ -160,10 +168,6 @@ echam:
       - spim
 
 jsbach:
-    lresume: True
-    ini_parent_date: 20081231
-    ini_parent_exp_id: "NUDGING_ERA5_T63L47_spinup_v1.2"
-    ini_parent_dir: "/albedo/work/user/qigao001/startdump/restart_from_alexandre/NUDGING_ERA5_T63L47_spinup_v1.2/"
     add_namelist_changes:
         namelist.jsbach:
             jsbach_ctl:
@@ -246,10 +250,6 @@ jsbach:
       - nitro
 
 hdmodel:
-    lresume: True
-    ini_parent_date: 20081231
-    ini_parent_exp_id: "NUDGING_ERA5_T63L47_spinup_v1.2"
-    ini_parent_dir: "/albedo/work/user/qigao001/startdump/restart_from_alexandre/NUDGING_ERA5_T63L47_spinup_v1.2/"
     file_movements:
         forcing:
             all_directions: "link"

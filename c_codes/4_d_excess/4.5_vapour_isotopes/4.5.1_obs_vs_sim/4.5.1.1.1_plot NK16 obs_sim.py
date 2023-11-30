@@ -101,7 +101,7 @@ NK16_1d_SLM = find_multi_gridvalue_at_site(
     T63GR15_jan_surf.lat.values,
     T63GR15_jan_surf.lon.values,
     T63GR15_jan_surf.SLM.values,
-)
+    )
 
 echam6_t63_geosp = xr.open_dataset(exp_odir + expid[i] + '/input/echam/unit.24')
 echam6_t63_surface_height = geopotential_to_height(
@@ -112,7 +112,7 @@ NK16_1d_height = find_multi_gridvalue_at_site(
     echam6_t63_surface_height.lat.values,
     echam6_t63_surface_height.lon.values,
     echam6_t63_surface_height.values,
-)
+    )
 
 ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
@@ -402,7 +402,7 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_air', 'q']:
 # region Q-Q plot, colored by oo2q
 
 for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_air', 'q']:
-    # var_name = 'dD'
+    # var_name = 'q'
     print('#-------- ' + var_name)
     
     # output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.0_NK16/8.3.0.0.0 ' + expid[i] + ' NK16 observed vs. simulated daily ' + var_name + ' colored_by_oo2q.png'

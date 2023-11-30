@@ -1,21 +1,22 @@
 
+# salloc --account=paleodyn.paleodyn --qos=12h --time=12:00:00 --nodes=1 --mem=120GB
+# source ${HOME}/miniconda3/bin/activate deepice
+# ipython
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_600_5.0',
-    # 'pi_601_5.1',
-    # 'pi_602_5.2',
-    # 'pi_605_5.5',
-    # 'pi_606_5.6',
-    # 'pi_609_5.7',
-    # 'pi_610_5.8',
-    # 'hist_700_5.0',
-    'nudged_701_5.0',
+    # 'nudged_701_5.0',
+    
+    # 'nudged_705_6.0',
+    'nudged_706_6.0_k52_88',
+    # 'nudged_707_6.0_k43',
+    # 'nudged_708_6.0_I01',
+    # 'nudged_709_6.0_I03',
+    # 'nudged_710_6.0_S3',
+    # 'nudged_711_6.0_S6',
     ]
 i = 0
 
-ifile_start = 12 #0 #120
-ifile_end   = 516 #1740 #840
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -28,7 +29,6 @@ warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
 sys.path.append('/albedo/work/user/qigao001')
-import psutil
 
 # data analysis
 import numpy as np
@@ -38,204 +38,156 @@ dask.config.set({"array.slicing.split_large_chunks": True})
 from dask.diagnostics import ProgressBar
 pbar = ProgressBar()
 pbar.register()
-from scipy import stats
-import xesmf as xe
-import pandas as pd
-
 
 from a_basic_analysis.b_module.basic_calculations import (
-    mon_sea_ann,
-    mean_over_ais,
+    find_ilat_ilon,
+    find_ilat_ilon_general,
+    find_gridvalue_at_site,
+    find_multi_gridvalue_at_site,
+    find_gridvalue_at_site_time,
+    find_multi_gridvalue_at_site_time,
 )
+
+
 
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region import output
+# region import data
 
-exp_org_o = {}
-exp_org_o[expid[i]] = {}
+#-------- import obs
 
-filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'))
-exp_org_o[expid[i]]['wiso'] = xr.open_mfdataset(
-    filenames_wiso[ifile_start:ifile_end],
-    )
+with open('data_sources/water_isotopes/BJ19/BJ19_polarstern.pkl', 'rb') as f:
+    BJ19_polarstern = pickle.load(f)
+
+
+#-------- import sim
+
+wiso_q_6h_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wiso_q_6h_sfc_alltime.pkl', 'rb') as f:
+    wiso_q_6h_sfc_alltime[expid[i]] = pickle.load(f)
+
+dD_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_q_sfc_alltime.pkl', 'rb') as f:
+    dD_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+dO18_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_q_sfc_alltime.pkl', 'rb') as f:
+    dO18_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+d_excess_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_q_sfc_alltime.pkl', 'rb') as f:
+    d_excess_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+d_ln_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_q_sfc_alltime.pkl', 'rb') as f:
+    d_ln_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+
+lon = d_ln_q_sfc_alltime[expid[i]]['am'].lon
+lat = d_ln_q_sfc_alltime[expid[i]]['am'].lat
+
 
 '''
-#-------- check pre
-filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'))
-filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_echam.nc'))
-
-ifile = 1000
-nc1 = xr.open_dataset(filenames_wiso[ifile])
-nc2 = xr.open_dataset(filenames_echam[ifile])
-
-np.max(abs(nc1.wisoaprl[:, 0].mean(dim='time').values - nc2.aprl[0].values))
-
-
-#-------- input previous files
-
-for i in range(len(expid)):
-    # i=0
-    print('#-------- ' + expid[i])
-    exp_org_o[expid[i]] = {}
-    
-    
-    file_exists = os.path.exists(
-        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_echam.nc')
-    
-    if (file_exists):
-        exp_org_o[expid[i]]['echam'] = xr.open_dataset(
-            exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_echam.nc')
-        exp_org_o[expid[i]]['wiso'] = xr.open_dataset(
-            exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_wiso.nc')
-    else:
-        # filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*monthly.01_echam.nc'))
-        # exp_org_o[expid[i]]['echam'] = xr.open_mfdataset(filenames_echam, data_vars='minimal', coords='minimal', parallel=True)
-        
-        # filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*monthly.01_wiso.nc'))
-        # exp_org_o[expid[i]]['wiso'] = xr.open_mfdataset(filenames_wiso, data_vars='minimal', coords='minimal', parallel=True)
-        
-        # filenames_wiso_daily = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*daily.01_wiso.nc'))
-        # exp_org_o[expid[i]]['wiso_daily'] = xr.open_mfdataset(filenames_wiso_daily, data_vars='minimal', coords='minimal', parallel=True)
-        
-        filenames_echam_daily = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*daily.01_echam.nc'))
-        exp_org_o[expid[i]]['echam_daily'] = xr.open_mfdataset(filenames_echam_daily[120:], data_vars='minimal', coords='minimal', parallel=True)
 
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
 
-#SBATCH --time=12:00:00
 # -----------------------------------------------------------------------------
-# region get mon_sea_ann ocean_aprt
+# region extract data
 
-time = exp_org_o[expid[i]]['wiso'].time
-lon  = exp_org_o[expid[i]]['wiso'].lon
-lat  = exp_org_o[expid[i]]['wiso'].lat
+BJ19_polarstern_1d_sim = {}
 
-ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
-kwiso2 = 3
-var_names = ['lat', 'sst', 'rh2m', 'wind10', 'sinlon', 'coslon', 'geo7']
-itags = [5, 7, 8, 9, 11, 12]
+BJ19_polarstern_1d_sim[expid[i]] = BJ19_polarstern['1d'].copy()
 
-ocean_aprt = {}
-ocean_aprt[expid[i]] = xr.DataArray(
-    data = np.zeros(
-        (len(time), len(var_names), len(lat), len(lon)),
-        dtype=np.float32),
-    coords={
-        'time':         time,
-        'var_names':    var_names,
-        'lat':          lat,
-        'lon':          lon,
-    }
-)
-
-for count,var_name in enumerate(var_names[:-1]):
-    # count = 0; var_name = 'lat'
-    kstart = kwiso2 + sum(ntags[:itags[count]])
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
+    # var_name = 'd_ln'
+    print('#-------- ' + var_name)
     
-    print(str(count) + ' : ' + var_name + ' : ' + str(itags[count]) + \
-        ' : ' + str(kstart))
+    if (var_name == 'dD'):
+        ivar = dD_q_sfc_alltime[expid[i]]['daily']
+    elif (var_name == 'd18O'):
+        ivar = dO18_q_sfc_alltime[expid[i]]['daily']
+    elif (var_name == 'd_xs'):
+        ivar = d_excess_q_sfc_alltime[expid[i]]['daily']
+    elif (var_name == 'd_ln'):
+        ivar = d_ln_q_sfc_alltime[expid[i]]['daily']
+    elif (var_name == 'q'):
+        ivar = wiso_q_6h_sfc_alltime[expid[i]]['q16o']['daily'].sel(lev=47)
     
-    ocean_aprt[expid[i]].sel(var_names=var_name)[:] = \
-        (exp_org_o[expid[i]]['wiso'].wisoaprl.sel(
-            wisotype=slice(kstart+2, kstart+3)) + \
-                exp_org_o[expid[i]]['wiso'].wisoaprc.sel(
-                    wisotype=slice(kstart+2, kstart+3))
-                ).sum(dim='wisotype')
+    BJ19_polarstern_1d_sim[expid[i]][var_name + '_sim'] = \
+        find_multi_gridvalue_at_site_time(
+            BJ19_polarstern_1d_sim[expid[i]]['time'],
+            BJ19_polarstern_1d_sim[expid[i]]['lat'],
+            BJ19_polarstern_1d_sim[expid[i]]['lon'],
+            ivar.time.values,
+            ivar.lat.values,
+            ivar.lon.values,
+            ivar.values
+        )
 
-ocean_aprt[expid[i]].sel(var_names='geo7')[:] = \
-    (exp_org_o[expid[i]]['wiso'].wisoaprl.sel(
-        wisotype=[19, 21]) + \
-            exp_org_o[expid[i]]['wiso'].wisoaprc.sel(
-                wisotype=[19, 21])
-            ).sum(dim='wisotype')
+BJ19_polarstern_1d_sim[expid[i]]['q'] = BJ19_polarstern_1d_sim[expid[i]]['q'] / 1000
 
-ocean_aprt_alltime = {}
-ocean_aprt_alltime[expid[i]] = mon_sea_ann(
-    ocean_aprt[expid[i]], lcopy = False,)
+output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.BJ19_polarstern_1d_sim.pkl'
 
-print(psutil.Process().memory_info().rss / (2 ** 30))
+if (os.path.isfile(output_file)):
+    os.remove(output_file)
 
-del ocean_aprt[expid[i]]
-
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_aprt_alltime.pkl', 'wb') as f:
-    pickle.dump(ocean_aprt_alltime[expid[i]], f)
-
-
+with open(output_file, 'wb') as f:
+    pickle.dump(BJ19_polarstern_1d_sim[expid[i]], f)
 
 
 
 
 '''
+#-------------------------------- check
+BJ19_polarstern_1d_sim = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.BJ19_polarstern_1d_sim.pkl', 'rb') as f:
+    BJ19_polarstern_1d_sim[expid[i]] = pickle.load(f)
 
-#-------------------------------- check ocean_aprt
+d_ln_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_q_sfc_alltime.pkl', 'rb') as f:
+    d_ln_q_sfc_alltime[expid[i]] = pickle.load(f)
 
-ocean_aprt_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_aprt_alltime.pkl', 'rb') as f:
-    ocean_aprt_alltime[expid[i]] = pickle.load(f)
+ires = 120
+stime = BJ19_polarstern_1d_sim[expid[i]]['time'][ires]
+slat = BJ19_polarstern_1d_sim[expid[i]]['lat'][ires]
+slon = BJ19_polarstern_1d_sim[expid[i]]['lon'][ires]
 
-ocean_aprt = {}
-ocean_aprt[expid[i]] = ocean_aprt_alltime[expid[i]]['daily']
-
-filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'))
-ifile = -1
-ncfile = xr.open_dataset(filenames_wiso[ifile_start:ifile_end][ifile])
-
-ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
-kwiso2 = 3
-var_names = ['lat', 'sst', 'rh2m', 'wind10', 'sinlon', 'coslon']
-itags = [5, 7, 8, 9, 11, 12]
-
-ilat = 48
-ilon = 90
-
-for count in range(6):
-    # count = 5
-    print(count)
-    
-    kstart = kwiso2 + sum(ntags[:itags[count]])
-
-    res1 = ocean_aprt[expid[i]][-31:, :, ilat, ilon].sel(
-        var_names = var_names[count])
-
-    res2 = ncfile.wisoaprl[:, :, ilat, ilon].sel(
-        wisotype=[kstart+2, kstart+3]).sum(dim='wisotype') + \
-            ncfile.wisoaprc[:, :, ilat, ilon].sel(
-        wisotype=[kstart+2, kstart+3]).sum(dim='wisotype')
-
-    print(np.max(abs(res1 - res2)).values)
-
-# check 'geo7'
-res1 = ocean_aprt[expid[i]][-31:, :, ilat, ilon].sel(var_names = 'geo7')
-res2 = ncfile.wisoaprl[:, :, ilat, ilon].sel(
-    wisotype=[19, 21]).sum(dim='wisotype') + \
-        ncfile.wisoaprc[:, :, ilat, ilon].sel(
-    wisotype=[19, 21]).sum(dim='wisotype')
-print(np.max(abs(res1 - res2)).values)
+itime = np.argmin(abs(stime.asm8 - d_ln_q_sfc_alltime[expid[i]]['daily'].time).values)
+ilat, ilon = find_ilat_ilon(
+    slat, slon,
+    d_ln_q_sfc_alltime[expid[i]]['daily'].lat.values,
+    d_ln_q_sfc_alltime[expid[i]]['daily'].lon.values)
 
 
-#-------------------------------- check alltime calculation
-ocean_aprt_alltime[expid[i]].keys()
-(ocean_aprt_alltime[expid[i]]['daily'] == ocean_aprt[expid[i]]).all().values
+#-------- check q
+var_name = 'q'
+wiso_q_6h_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wiso_q_6h_sfc_alltime.pkl', 'rb') as f:
+    wiso_q_6h_sfc_alltime[expid[i]] = pickle.load(f)
 
-(ocean_aprt_alltime[expid[i]]['mon'] == ocean_aprt_alltime[expid[i]]['daily'].resample({'time': '1M'}).mean()).all()
+print(BJ19_polarstern_1d_sim[expid[i]][var_name + '_sim'][ires])
+print(wiso_q_6h_sfc_alltime[expid[i]]['q16o']['daily'][itime, 0, ilat, ilon])
 
-#-------------------------------- check ocean pre consistency
-np.max(abs((ocean_aprt_alltime[expid[i]]['mon'][:, 5] - \
-    ocean_aprt_alltime[expid[i]]['mon'][:, 0]) / \
-        ocean_aprt_alltime[expid[i]]['mon'][:, 5]))
-np.mean(abs(ocean_aprt_alltime[expid[i]]['mon'][:, 5] - ocean_aprt_alltime[expid[i]]['mon'][:, 0]))
-np.mean(abs(ocean_aprt_alltime[expid[i]]['mon'][:, 5]))
+#-------- check d_ln
+var_name = 'd_ln'
+print(BJ19_polarstern_1d_sim[expid[i]][var_name + '_sim'][ires])
+print(d_ln_q_sfc_alltime[expid[i]]['daily'][itime, ilat, ilon])
 
-np.max(abs((ocean_aprt_alltime[expid[i]]['am'][5] - \
-    ocean_aprt_alltime[expid[i]]['am'][0]) / \
-        ocean_aprt_alltime[expid[i]]['am'][5]))
+#-------- check dD
+dD_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_q_sfc_alltime.pkl', 'rb') as f:
+    dD_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+var_name = 'dD'
+print(BJ19_polarstern_1d_sim[expid[i]][var_name + '_sim'][ires])
+print(dD_q_sfc_alltime[expid[i]]['daily'][itime, ilat, ilon])
+
 
 '''
 # endregion

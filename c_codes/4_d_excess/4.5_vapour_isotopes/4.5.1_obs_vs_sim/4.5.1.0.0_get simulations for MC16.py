@@ -5,7 +5,15 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'nudged_701_5.0',
+    # 'nudged_701_5.0',
+    # 'nudged_712_6.0_k52_2yr',
+    # 'nudged_713_6.0_2yr',
+    # 'nudged_714_6.0_k52_88_2yr',
+    # 'nudged_715_6.0_k43_2yr',
+    # 'nudged_716_6.0_I01_2yr',
+    # 'nudged_717_6.0_I03_2yr',
+    # 'nudged_718_6.0_S3_2yr',
+    'nudged_719_6.0_S6_2yr',
     ]
 i = 0
 
@@ -76,10 +84,10 @@ d_ln_q_sfc_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_q_sfc_alltime.pkl', 'rb') as f:
     d_ln_q_sfc_alltime[expid[i]] = pickle.load(f)
 
-temp2_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
-    temp2_alltime[expid[i]] = pickle.load(f)
-temp2_alltime[expid[i]]['daily']['time'] = temp2_alltime[expid[i]]['daily']['time'].dt.floor('D').rename('time')
+# temp2_alltime = {}
+# with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
+#     temp2_alltime[expid[i]] = pickle.load(f)
+# temp2_alltime[expid[i]]['daily']['time'] = temp2_alltime[expid[i]]['daily']['time'].dt.floor('D').rename('time')
 
 
 lon = d_ln_q_sfc_alltime[expid[i]]['am'].lon
@@ -98,8 +106,9 @@ MC16_Dome_C_1d_sim = {}
 
 MC16_Dome_C_1d_sim[expid[i]] = MC16_Dome_C['1d'].copy()
 
-for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_3m', 'q']:
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
     # var_name = 'd_ln'
+    # 't_3m',
     print('#-------- ' + var_name)
     
     if (var_name == 'dD'):
@@ -110,8 +119,8 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_3m', 'q']:
         ivar = d_excess_q_sfc_alltime[expid[i]]['daily']
     elif (var_name == 'd_ln'):
         ivar = d_ln_q_sfc_alltime[expid[i]]['daily']
-    elif (var_name == 't_3m'):
-        ivar = temp2_alltime[expid[i]]['daily']
+    # elif (var_name == 't_3m'):
+    #     ivar = temp2_alltime[expid[i]]['daily']
     elif (var_name == 'q'):
         ivar = wiso_q_6h_sfc_alltime[expid[i]]['q16o']['daily'].sel(lev=47)
     

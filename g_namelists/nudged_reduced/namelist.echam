@@ -6,7 +6,7 @@
 /
 
 &wisoctl
-    ntagtyp = 4, 4, 4, 3, 1, 1, 3, 1, 1, 3, 1, 1, 3, 1, 1, 0, 0, 5, 5, 5, 2, 1, 3, 1, 1, 3, 1, 1, 3, 1, 1
+    ntagtyp = 4, 4, 4, 3, 1, 1
 /
 
 &parctl
@@ -106,31 +106,6 @@
                 'q_01:mean', 'xl_01:mean', 'xi_01:mean',
                 'q_02:mean', 'xl_02:mean', 'xi_02:mean',
                 'q_03:mean', 'xl_03:mean', 'xi_03:mean',
-                'q_04:mean', 'xl_04:mean', 'xi_04:mean',
-                'q_05:mean', 'xl_05:mean', 'xi_05:mean',
-                'q_06:mean', 'xl_06:mean', 'xi_06:mean',
-                'q_07:mean', 'xl_07:mean', 'xi_07:mean',
-                'q_08:mean', 'xl_08:mean', 'xi_08:mean',
-                'q_09:mean', 'xl_09:mean', 'xi_09:mean',
-                'q_10:mean', 'xl_10:mean', 'xi_10:mean',
-                'q_11:mean', 'xl_11:mean', 'xi_11:mean',
-                'q_12:mean', 'xl_12:mean', 'xi_12:mean',
-                'q_13:mean', 'xl_13:mean', 'xi_13:mean',
-                'q_14:mean', 'xl_14:mean', 'xi_14:mean',
-                'q_15:mean', 'xl_15:mean', 'xi_15:mean',
-                'q_16:mean', 'xl_16:mean', 'xi_16:mean',
-                'q_17:mean', 'xl_17:mean', 'xi_17:mean',
-                'q_18:mean', 'xl_18:mean', 'xi_18:mean',
-                'q_19:mean', 'xl_19:mean', 'xi_19:mean',
-                'q_20:mean', 'xl_20:mean', 'xi_20:mean',
-                'q_21:mean', 'xl_21:mean', 'xi_21:mean',
-                'q_22:mean', 'xl_22:mean', 'xi_22:mean',
-                'q_23:mean', 'xl_23:mean', 'xi_23:mean',
-                'q_24:mean', 'xl_24:mean', 'xi_24:mean',
-                'q_25:mean', 'xl_25:mean', 'xi_25:mean',
-                'q_26:mean', 'xl_26:mean', 'xi_26:mean',
-                'q_27:mean', 'xl_27:mean', 'xi_27:mean',
-                'q_28:mean', 'xl_28:mean', 'xi_28:mean',
 /
 !---------------- variables not output in wiso stream
 &set_stream_element
@@ -253,107 +228,5 @@
     name = 'wisosi_d'
     lpost = 0
 /
-!-------------------------------- echam stream
-&mvstreamctl
-    interval = 1, 'days', 'last', 0
-    target = 'sp_1d'
-    source = 'sp'
-    variables = 'st:mean', 'svo:mean', 'sd:mean'
-/
-&mvstreamctl
-    interval = 1, 'days', 'last', 0
-    target = 'gl_1d'
-    source = 'gl'
-    variables = 'q:mean', 'xl:mean', 'xi:mean'
-/
-&mvstreamctl
-    interval = 1, 'months', 'last', 0
-    target = 'g3b_1m'
-    source = 'g3b'
-    variables = 'relhum:mean', 'tpot:mean'
-/
-&mvstreamctl
-    interval = 1, 'days', 'last', 0
-    target = 'g3b_1d'
-    source = 'g3b'
-    variables = 'aps:mean', 'seaice:mean', 'tsw:mean'
-/
-&mvstreamctl
-    interval = 6, 'hours', 'last', 0
-    target = 'g3b_6h'
-    source = 'g3b'
-    variables = 'temp2:mean', 'q2m:mean', 'rh2m:mean', 'tsurf:mean', 'wind10:mean'
-/
 
-&mvstreamctl
-    filetag = 'echam'
-    source = 'sp', 'gl', 'g3b'
-/
 
-!-------------------------------- zqsw and zqklevw in stream surf
-
-&set_stream
-    stream = 'surf'
-    interval = 1, 'days', 'last', 0
-    lpost = 1
-/
-&set_stream_element
-    stream = 'surf'
-    name = 'zqsw'
-    lpost = 1
-/
-&set_stream_element
-    stream = 'surf'
-    name = 'zqklevw'
-    lpost = 1
-/
-&set_stream_element
-    stream = 'surf'
-    name = 'pevapw'
-    lpost = 0
-/
-&set_stream_element
-    stream = 'surf'
-    name = 'jsswniracc'
-    lpost = 0
-/
-&set_stream_element
-    stream = 'surf'
-    name = 'jsswvisacc'
-    lpost = 0
-/
-&set_stream_element
-    stream = 'surf'
-    name = 'jsswdifniracc'
-    lpost = 0
-/
-&set_stream_element
-    stream = 'surf'
-    name = 'jsswdifvisacc'
-    lpost = 0
-/
-&set_stream_element
-    stream = 'surf'
-    name = 'longwave_down_acc'
-    lpost = 0
-/
-&set_stream_element
-    stream = 'surf'
-    name = 'az0lh'
-    lpost = 0
-/
-&set_stream_element
-    stream = 'surf'
-    name = 'az0'
-    lpost = 0
-/
-&set_stream_element
-    stream = 'surf'
-    name = 'jsswparacc'
-    lpost = 0
-/
-&set_stream_element
-    stream = 'surf'
-    name = 'jsswdifparacc'
-    lpost = 0
-/

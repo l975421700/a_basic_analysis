@@ -1,34 +1,53 @@
-#SBATCH --time=00:30:00
 
+# salloc --account=paleodyn.paleodyn --qos=12h --time=12:00:00 --nodes=1 --mem=120GB
+# source ${HOME}/miniconda3/bin/activate deepice
+# ipython
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_600_5.0',
-    # 'hist_700_5.0',
-    'nudged_701_5.0',
+    # 'nudged_701_5.0',
+    
+    # 'nudged_705_6.0',
+    # 'nudged_706_6.0_k52_88',
+    # 'nudged_707_6.0_k43',
+    'nudged_708_6.0_I01',
+    # 'nudged_709_6.0_I03',
+    # 'nudged_710_6.0_S3',
+    # 'nudged_711_6.0_S6',
     ]
 i = 0
+
 
 # -----------------------------------------------------------------------------
 # region import packages
 
 # management
+import glob
 import pickle
 import warnings
 warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
 sys.path.append('/albedo/work/user/qigao001')
-import datetime
 
 # data analysis
 import numpy as np
+import xarray as xr
 import dask
 dask.config.set({"array.slicing.split_large_chunks": True})
 from dask.diagnostics import ProgressBar
 pbar = ProgressBar()
 pbar.register()
-from haversine import haversine_vector
+
+from a_basic_analysis.b_module.basic_calculations import (
+    find_ilat_ilon,
+    find_ilat_ilon_general,
+    find_gridvalue_at_site,
+    find_multi_gridvalue_at_site,
+    find_gridvalue_at_site_time,
+    find_multi_gridvalue_at_site_time,
+)
+
 
 
 # endregion
@@ -38,271 +57,139 @@ from haversine import haversine_vector
 # -----------------------------------------------------------------------------
 # region import data
 
-pre_weighted_lon = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lon.pkl', 'rb') as f:
-    pre_weighted_lon[expid[i]] = pickle.load(f)
+#-------- import obs
 
-pre_weighted_lat = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lat.pkl', 'rb') as f:
-    pre_weighted_lat[expid[i]] = pickle.load(f)
+with open('data_sources/water_isotopes/BJ19/BJ19_polarstern.pkl', 'rb') as f:
+    BJ19_polarstern = pickle.load(f)
 
-lon = pre_weighted_lat[expid[i]]['am'].lon
-lat = pre_weighted_lat[expid[i]]['am'].lat
-lon_2d, lat_2d = np.meshgrid(lon, lat,)
+
+#-------- import sim
+
+wiso_q_6h_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wiso_q_6h_sfc_alltime.pkl', 'rb') as f:
+    wiso_q_6h_sfc_alltime[expid[i]] = pickle.load(f)
+
+dD_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_q_sfc_alltime.pkl', 'rb') as f:
+    dD_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+dO18_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_q_sfc_alltime.pkl', 'rb') as f:
+    dO18_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+d_excess_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_q_sfc_alltime.pkl', 'rb') as f:
+    d_excess_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+d_ln_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_q_sfc_alltime.pkl', 'rb') as f:
+    d_ln_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+
+lon = d_ln_q_sfc_alltime[expid[i]]['am'].lon
+lat = d_ln_q_sfc_alltime[expid[i]]['am'].lat
 
 
 '''
-print(psutil.Process().memory_info().rss / (2 ** 30))
+
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region get transport distance
+# region extract data
 
-transport_distance = {}
-transport_distance[expid[i]] = {}
+BJ19_polarstern_1d_sim = {}
 
-begin_time = datetime.datetime.now()
-print(begin_time)
+BJ19_polarstern_1d_sim[expid[i]] = BJ19_polarstern['1d'].copy()
 
-for ialltime in ['daily', 'mon', 'mm', 'sea', 'sm', 'ann', 'am']:
-    # ialltime = 'daily'
-    # ialltime = 'ann'
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
+    # var_name = 'd_ln'
+    print('#-------- ' + var_name)
     
-    transport_distance[expid[i]][ialltime] = pre_weighted_lat[expid[i]][ialltime].copy().rename('transport_distance')
-    transport_distance[expid[i]][ialltime][:] = 0
+    if (var_name == 'dD'):
+        ivar = dD_q_sfc_alltime[expid[i]]['daily']
+    elif (var_name == 'd18O'):
+        ivar = dO18_q_sfc_alltime[expid[i]]['daily']
+    elif (var_name == 'd_xs'):
+        ivar = d_excess_q_sfc_alltime[expid[i]]['daily']
+    elif (var_name == 'd_ln'):
+        ivar = d_ln_q_sfc_alltime[expid[i]]['daily']
+    elif (var_name == 'q'):
+        ivar = wiso_q_6h_sfc_alltime[expid[i]]['q16o']['daily'].sel(lev=47)
     
-    if (ialltime in ['daily', 'mon', 'sea', 'ann']):
-        print(ialltime)
-        
-        years = np.unique(transport_distance[expid[i]][ialltime].time.dt.year)
-        for iyear in years:
-            # iyear = 2010
-            print(str(iyear) + ' / ' + str(years[-1]))
-            
-            time_indices = np.where(
-                transport_distance[expid[i]][ialltime].time.dt.year == iyear)
-            
-            b_lon_2d = np.broadcast_to(
-                lon_2d,
-                transport_distance[expid[i]][ialltime][time_indices].shape,
-                )
-            b_lat_2d = np.broadcast_to(
-                lat_2d,
-                transport_distance[expid[i]][ialltime][time_indices].shape,
-                )
-            b_lon_2d_flatten = b_lon_2d.reshape(-1, 1)
-            b_lat_2d_flatten = b_lat_2d.reshape(-1, 1)
-            local_pairs = [[x, y] for x, y in zip(b_lat_2d_flatten, b_lon_2d_flatten)]
-            
-            lon_src_flatten = pre_weighted_lon[expid[i]][
-                ialltime][time_indices].values.reshape(-1, 1).copy()
-            lat_src_flatten = pre_weighted_lat[expid[i]][
-                ialltime][time_indices].values.reshape(-1, 1).copy()
-            source_pairs = [[x, y] for x, y in zip(
-                lat_src_flatten, lon_src_flatten)]
-            
-            transport_distance[expid[i]][ialltime][time_indices] = \
-                haversine_vector(
-                local_pairs, source_pairs, normalize=True).reshape(
-                    transport_distance[expid[i]][ialltime][time_indices].shape)
-            
-            print(datetime.datetime.now() - begin_time)
-            
-    elif (ialltime in ['mm', 'sm', 'am']):
-        print(ialltime)
-        b_lon_2d = np.broadcast_to(
-            lon_2d, pre_weighted_lat[expid[i]][ialltime].shape, )
-        b_lat_2d = np.broadcast_to(
-            lat_2d, pre_weighted_lat[expid[i]][ialltime].shape, )
-        b_lon_2d_flatten = b_lon_2d.reshape(-1, 1)
-        b_lat_2d_flatten = b_lat_2d.reshape(-1, 1)
-        local_pairs = [[x, y] for x, y in zip(b_lat_2d_flatten, b_lon_2d_flatten)]
+    BJ19_polarstern_1d_sim[expid[i]][var_name + '_sim'] = \
+        find_multi_gridvalue_at_site_time(
+            BJ19_polarstern_1d_sim[expid[i]]['time'],
+            BJ19_polarstern_1d_sim[expid[i]]['lat'],
+            BJ19_polarstern_1d_sim[expid[i]]['lon'],
+            ivar.time.values,
+            ivar.lat.values,
+            ivar.lon.values,
+            ivar.values
+        )
 
-        lon_src_flatten = pre_weighted_lon[expid[i]][
-            ialltime].values.reshape(-1, 1).copy()
-        lat_src_flatten = pre_weighted_lat[expid[i]][
-            ialltime].values.reshape(-1, 1).copy()
-        source_pairs = [[x, y] for x, y in zip(lat_src_flatten, lon_src_flatten)]
+BJ19_polarstern_1d_sim[expid[i]]['q'] = BJ19_polarstern_1d_sim[expid[i]]['q'] / 1000
 
-        transport_distance[expid[i]][ialltime][:] = haversine_vector(
-                    local_pairs, source_pairs, normalize=True).reshape(
-                        pre_weighted_lat[expid[i]][ialltime].shape)
-
-#-------- monthly without monthly mean
-transport_distance[expid[i]]['mon no mm'] = (transport_distance[expid[i]]['mon'].groupby('time.month') - transport_distance[expid[i]]['mon'].groupby('time.month').mean(skipna=True)).compute()
-
-#-------- annual without annual mean
-transport_distance[expid[i]]['ann no am'] = (transport_distance[expid[i]]['ann'] - transport_distance[expid[i]]['ann'].mean(dim='time', skipna=True)).compute()
-
-output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance.pkl'
+output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.BJ19_polarstern_1d_sim.pkl'
 
 if (os.path.isfile(output_file)):
     os.remove(output_file)
 
 with open(output_file, 'wb') as f:
-    pickle.dump(transport_distance[expid[i]], f)
+    pickle.dump(BJ19_polarstern_1d_sim[expid[i]], f)
+
+
 
 
 '''
 #-------------------------------- check
+BJ19_polarstern_1d_sim = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.BJ19_polarstern_1d_sim.pkl', 'rb') as f:
+    BJ19_polarstern_1d_sim[expid[i]] = pickle.load(f)
 
-from geopy.distance import geodesic, great_circle
-from sklearn.metrics.pairwise import haversine_distances
-from math import radians
-from haversine import haversine, Unit, haversine_vector
+d_ln_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_q_sfc_alltime.pkl', 'rb') as f:
+    d_ln_q_sfc_alltime[expid[i]] = pickle.load(f)
 
-transport_distance = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance.pkl', 'rb') as f:
-    transport_distance[expid[i]] = pickle.load(f)
+ires = 120
+stime = BJ19_polarstern_1d_sim[expid[i]]['time'][ires]
+slat = BJ19_polarstern_1d_sim[expid[i]]['lat'][ires]
+slon = BJ19_polarstern_1d_sim[expid[i]]['lon'][ires]
 
-transport_distance[expid[i]]['am'].to_netcdf('scratch/test/test.nc')
-
-ilat = 40
-ilon = 90
-
-for ialltime in ['daily', 'mon', 'ann', 'mm', 'sm']:
-    # ialltime = 'mm'
-    itime = -4
-    
-    local = [lat_2d[ilat, ilon], lon_2d[ilat, ilon]]
-    source = [pre_weighted_lat[expid[i]][ialltime][itime, ilat, ilon].values,
-              pre_weighted_lon[expid[i]][ialltime][itime, ilat, ilon].values,]
-
-    # print(geodesic(local, source).km)
-    # print(great_circle(local, source).km)
-
-    # local_in_radians = [radians(_) for _ in local]
-    # source_in_radians = [radians(_) for _ in source]
-    # result = haversine_distances([local_in_radians, source_in_radians])
-    # print((result * 6371000/1000)[0, 1])
-
-    print(haversine(local, source, normalize=True))
-
-    print(transport_distance[expid[i]][ialltime][itime, ilat, ilon].values)
-
-ialltime = 'am'
-
-local = [lat_2d[ilat, ilon], lon_2d[ilat, ilon]]
-source = [pre_weighted_lat[expid[i]][ialltime][ilat, ilon].values,
-          pre_weighted_lon[expid[i]][ialltime][ilat, ilon].values,]
-
-print(haversine(local, source, normalize=True))
-print(transport_distance[expid[i]][ialltime][ilat, ilon].values)
+itime = np.argmin(abs(stime.asm8 - d_ln_q_sfc_alltime[expid[i]]['daily'].time).values)
+ilat, ilon = find_ilat_ilon(
+    slat, slon,
+    d_ln_q_sfc_alltime[expid[i]]['daily'].lat.values,
+    d_ln_q_sfc_alltime[expid[i]]['daily'].lon.values)
 
 
+#-------- check q
+var_name = 'q'
+wiso_q_6h_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wiso_q_6h_sfc_alltime.pkl', 'rb') as f:
+    wiso_q_6h_sfc_alltime[expid[i]] = pickle.load(f)
 
+print(BJ19_polarstern_1d_sim[expid[i]][var_name + '_sim'][ires])
+print(wiso_q_6h_sfc_alltime[expid[i]]['q16o']['daily'][itime, 0, ilat, ilon])
 
-#-------- Function to normalize longitude
+#-------- check d_ln
+var_name = 'd_ln'
+print(BJ19_polarstern_1d_sim[expid[i]][var_name + '_sim'][ires])
+print(d_ln_q_sfc_alltime[expid[i]]['daily'][itime, ilat, ilon])
 
-def lon_180(lon):
-    lon_copy = lon.copy()
-    
-    if (type(lon_copy) != np.float64):
-        lon_copy[lon_copy>180] -= 360
-    elif (lon_copy > 180):
-        lon_copy -= - 360
-    
-    return(lon_copy)
+#-------- check dD
+dD_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_q_sfc_alltime.pkl', 'rb') as f:
+    dD_q_sfc_alltime[expid[i]] = pickle.load(f)
 
+var_name = 'dD'
+print(BJ19_polarstern_1d_sim[expid[i]][var_name + '_sim'][ires])
+print(dD_q_sfc_alltime[expid[i]]['daily'][itime, ilat, ilon])
 
-
-
-#-------- previous trial by calculating in order
-
-            # for ilat in range(len(lat)):
-            #     for ilon in range(len(lon)):
-                    
-            #         # itime = 0; ilat = 0; ilon = 0
-                    
-            #         local = [lat_2d[ilat, ilon], lon_2d[ilat, ilon]]
-            #         source = [
-            #             pre_weighted_lat[expid[i]][ialltime][
-            #                 itime, ilat, ilon].values,
-            #             pre_weighted_lon[expid[i]][ialltime][
-            #                 itime, ilat, ilon].values,]
-                    
-            #         if (np.isnan(source).sum() > 0):
-            #             transport_distance[expid[i]][ialltime][
-            #                 itime, ilat, ilon] = np.nan
-            #         else:
-            #             transport_distance[expid[i]][ialltime][
-            #                 itime, ilat, ilon] = geodesic(local, source).km
-
-        
-        # for ilat in range(len(lat)):
-        #     for ilon in range(len(lon)):
-                
-        #         # ilat = 48; ilon = 96
-                
-        #         local = [lat_2d[ilat, ilon], lon_2d[ilat, ilon]]
-        #         source = [
-        #             pre_weighted_lat[expid[i]][ialltime][ilat, ilon].values,
-        #             pre_weighted_lon[expid[i]][ialltime][ilat, ilon].values,]
-                
-        #         if (np.isnan(source).sum() > 0):
-        #             transport_distance[expid[i]][ialltime][
-        #                 ilat, ilon] = np.nan
-        #         else:
-        #             transport_distance[expid[i]][ialltime][
-        #                 ilat, ilon] = geodesic(local, source)
-
-
-#-------- previous trial calculate for each timestep
-
-    if (ialltime in ['daily', 'mon', 'sea', 'ann', 'mm', 'sm']):
-        
-        transport_distance[expid[i]][ialltime] = pre_weighted_lat[expid[i]][ialltime].rename('transport_distance')
-        transport_distance[expid[i]][ialltime][:] = 0
-        
-        b_lon_2d = np.broadcast_to(
-                lon_2d, pre_weighted_lat[expid[i]][ialltime].shape, )
-        b_lat_2d = np.broadcast_to(
-            lat_2d, pre_weighted_lat[expid[i]][ialltime].shape, )
-        b_lon_2d_flatten = b_lon_2d.reshape(-1, 1).copy()
-        b_lat_2d_flatten = b_lat_2d.reshape(-1, 1).copy()
-        
-        for itime in range(pre_weighted_lat[expid[i]][ialltime].shape[0]):
-            # itime = 0
-            
-            
-            
-            
-            
-            local_pairs = [[x, y] for x, y in zip(lat_2d_flatten, lon_2d_flatten)]
-            
-            
-            lon_src_flatten = pre_weighted_lon[expid[i]][ialltime][
-                itime].values.reshape(-1, 1).copy()
-            lat_src_flatten = pre_weighted_lat[expid[i]][ialltime][
-                itime].values.reshape(-1, 1).copy()
-            source_pairs = [[x, y] for x, y in zip(lat_src_flatten, lon_src_flatten)]
-            
-            transport_distance[expid[i]][ialltime][itime, ] = haversine_vector(
-                local_pairs, source_pairs, normalize=True).reshape(lon_2d.shape)
-            
-            if (itime % 100 == 0):
-                print(str(itime) + ': ' + str(datetime.datetime.now() - begin_time))
-            
-    elif (ialltime in ['am']):
-        # ialltime = 'am'
-        print(ialltime)
-        transport_distance[expid[i]][ialltime] = pre_weighted_lat[expid[i]][ialltime].rename('transport_distance')
-        transport_distance[expid[i]][ialltime][:] = 0
-        
-        lon_src_flatten = pre_weighted_lon[expid[i]][
-            ialltime].values.reshape(-1, 1).copy()
-        lat_src_flatten = pre_weighted_lat[expid[i]][
-            ialltime].values.reshape(-1, 1).copy()
-        source_pairs = [[x, y] for x, y in zip(lat_src_flatten, lon_src_flatten)]
-        
-        transport_distance[expid[i]][ialltime][:] = haversine_vector(
-            local_pairs, source_pairs, normalize=True).reshape(lon_2d.shape)
 
 '''
 # endregion
 # -----------------------------------------------------------------------------
-
 

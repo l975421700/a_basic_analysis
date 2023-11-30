@@ -1,3 +1,5 @@
+# check
+
 
 # salloc --account=paleodyn.paleodyn --qos=12h --time=12:00:00 --nodes=1 --mem=120GB
 # source ${HOME}/miniconda3/bin/activate deepice
@@ -75,6 +77,7 @@ from a_basic_analysis.b_module.mapplot import (
 
 from a_basic_analysis.b_module.basic_calculations import (
     mon_sea_ann,
+    regrid,
 )
 
 from a_basic_analysis.b_module.namelist import (
@@ -90,6 +93,7 @@ from a_basic_analysis.b_module.namelist import (
     zerok,
     panel_labels,
     plot_labels,
+    seconds_per_d,
 )
 
 from a_basic_analysis.b_module.source_properties import (
@@ -161,12 +165,15 @@ lat = dD_q_sfc_alltime[expid[i]]['am'].lat
 
 ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region plot am
+# region plot am surface vapour variables
 
 for var_name in ['distance']:
     # var_name = 'dD'
@@ -566,6 +573,473 @@ for var_name in ['lat',]:
 
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region am precipitation and surface vapour variables, and their differences
+
+#-------------------------------- import data
+
+dO18_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_alltime.pkl', 'rb') as f:
+    dO18_alltime[expid[i]] = pickle.load(f)
+
+dD_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_alltime.pkl', 'rb') as f:
+    dD_alltime[expid[i]] = pickle.load(f)
+
+d_excess_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_alltime.pkl', 'rb') as f:
+    d_excess_alltime[expid[i]] = pickle.load(f)
+
+d_ln_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_alltime.pkl', 'rb') as f:
+    d_ln_alltime[expid[i]] = pickle.load(f)
+
+pre_weighted_var = {}
+pre_weighted_var[expid[i]] = {}
+
+source_var = ['lat', 'sst', 'rh2m', 'wind10', 'distance']
+prefix = exp_odir + expid[i] + '/analysis/echam/' + expid[i]
+source_var_files = [
+    prefix + '.pre_weighted_lat.pkl',
+    prefix + '.pre_weighted_sst.pkl',
+    prefix + '.pre_weighted_rh2m.pkl',
+    prefix + '.pre_weighted_wind10.pkl',
+    prefix + '.transport_distance.pkl',
+]
+
+for ivar, ifile in zip(source_var, source_var_files):
+    print(ivar + ':    ' + ifile)
+    with open(ifile, 'rb') as f:
+        pre_weighted_var[expid[i]][ivar] = pickle.load(f)
+
+#-------------------------------- plot data
+north_extent = -60
+
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'lat', 'sst', 'rh2m', 'wind10', 'distance', ]:
+    # var_name = 'd18O'
+    print('#-------------------------------- ' + var_name)
+    
+    if (var_name == 'dD'):
+        sfc_data = dD_q_sfc_alltime[expid[i]]['am'].sel(lat=slice(north_extent + 2, -90))
+        pre_data = dD_alltime[expid[i]]['am'].sel(lat=slice(north_extent + 2, -90))
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min=-470, cm_max=-150, cm_interval1=20, cm_interval2=40,
+            cmap='viridis', reversed=False)
+        pltlevel2, pltticks2, pltnorm2, pltcmp2 = plt_mesh_pars(
+            cm_min=-140, cm_max=0, cm_interval1=10, cm_interval2=20,
+            cmap='viridis', reversed=False)
+    elif (var_name == 'd18O'):
+        sfc_data = dO18_q_sfc_alltime[expid[i]]['am'].sel(lat=slice(north_extent + 2, -90))
+        pre_data = dO18_alltime[expid[i]]['am'].sel(lat=slice(north_extent + 2, -90))
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min=-60, cm_max=-20, cm_interval1=2, cm_interval2=4,
+            cmap='viridis', reversed=False)
+        pltlevel2, pltticks2, pltnorm2, pltcmp2 = plt_mesh_pars(
+            cm_min=-18, cm_max=0, cm_interval1=2, cm_interval2=4,
+            cmap='viridis', reversed=False)
+    elif (var_name == 'd_xs'):
+        sfc_data = d_excess_q_sfc_alltime[expid[i]]['am'].sel(lat=slice(north_extent + 2, -90))
+        pre_data = d_excess_alltime[expid[i]]['am'].sel(lat=slice(north_extent + 2, -90))
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min=0, cm_max=20, cm_interval1=1, cm_interval2=2,
+            cmap='viridis', reversed=False)
+        pltlevel2, pltticks2, pltnorm2, pltcmp2 = plt_mesh_pars(
+            cm_min=0, cm_max=18, cm_interval1=1, cm_interval2=2,
+            cmap='viridis', reversed=False)
+    elif (var_name == 'd_ln'):
+        sfc_data = d_ln_q_sfc_alltime[expid[i]]['am'].sel(lat=slice(north_extent + 2, -90))
+        pre_data = d_ln_alltime[expid[i]]['am'].sel(lat=slice(north_extent + 2, -90))
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min=8, cm_max=24, cm_interval1=1, cm_interval2=2,
+            cmap='viridis', reversed=False)
+        pltlevel2, pltticks2, pltnorm2, pltcmp2 = plt_mesh_pars(
+            cm_min=0, cm_max=12, cm_interval1=1, cm_interval2=2,
+            cmap='viridis', reversed=False)
+    elif (var_name == 'lat'):
+        sfc_data = q_sfc_weighted_var[expid[i]]['lat']['am'].sel(lat=slice(north_extent + 2, -90))
+        pre_data = pre_weighted_var[expid[i]]['lat']['am'].sel(lat=slice(north_extent + 2, -90))
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min=-50, cm_max=-36, cm_interval1=1, cm_interval2=2,
+            cmap='viridis', reversed=False)
+        pltlevel2, pltticks2, pltnorm2, pltcmp2 = plt_mesh_pars(
+            cm_min=-18, cm_max=2, cm_interval1=1, cm_interval2=2,
+            cmap='viridis', reversed=False)
+    elif (var_name == 'sst'):
+        sfc_data = q_sfc_weighted_var[expid[i]]['sst']['am'].sel(lat=slice(north_extent + 2, -90))
+        pre_data = pre_weighted_var[expid[i]]['sst']['am'].sel(lat=slice(north_extent + 2, -90))
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min=0, cm_max=16, cm_interval1=1, cm_interval2=2,
+            cmap='viridis', reversed=False)
+        pltlevel2, pltticks2, pltnorm2, pltcmp2 = plt_mesh_pars(
+            cm_min=-9, cm_max=2, cm_interval1=1, cm_interval2=2,
+            cmap='viridis', reversed=False)
+    elif (var_name == 'rh2m'):
+        sfc_data = q_sfc_weighted_var[expid[i]]['rh2m']['am'].sel(lat=slice(north_extent + 2, -90))
+        pre_data = pre_weighted_var[expid[i]]['rh2m']['am'].sel(lat=slice(north_extent + 2, -90))
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min=76, cm_max=90, cm_interval1=1, cm_interval2=2,
+            cmap='viridis', reversed=False)
+        pltlevel2, pltticks2, pltnorm2, pltcmp2 = plt_mesh_pars(
+            cm_min=0, cm_max=5, cm_interval1=0.5, cm_interval2=1,
+            cmap='viridis', reversed=False)
+    elif (var_name == 'wind10'):
+        sfc_data = q_sfc_weighted_var[expid[i]]['wind10']['am'].sel(lat=slice(north_extent + 2, -90))
+        pre_data = pre_weighted_var[expid[i]]['wind10']['am'].sel(lat=slice(north_extent + 2, -90))
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min=6, cm_max=10.5, cm_interval1=0.25, cm_interval2=0.5,
+            cmap='viridis', reversed=False)
+        pltlevel2, pltticks2, pltnorm2, pltcmp2 = plt_mesh_pars(
+            cm_min=-2, cm_max=0, cm_interval1=0.1, cm_interval2=0.2,
+            cmap='viridis', reversed=False)
+    elif (var_name == 'distance'):
+        sfc_data = q_sfc_transport_distance[expid[i]]['am'].sel(
+            lat=slice(north_extent + 2, -90)) / 100
+        pre_data = pre_weighted_var[expid[i]]['distance']['am'].sel(lat=slice(north_extent + 2, -90)) / 100
+        pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+            cm_min=5, cm_max=65, cm_interval1=2.5, cm_interval2=5,
+            cmap='viridis', reversed=False)
+        pltlevel2, pltticks2, pltnorm2, pltcmp2 = plt_mesh_pars(
+            cm_min=-28, cm_max=10, cm_interval1=2, cm_interval2=4,
+            cmap='viridis', reversed=False)
+    
+    # print(stats.describe(np.concatenate((sfc_data.values[echam6_t63_ais_mask['mask']['AIS'][-17:, :]], pre_data.values[echam6_t63_ais_mask['mask']['AIS'][-17:, :]])), axis=None, nan_policy='omit'))
+    # print(stats.describe((sfc_data.values - pre_data.values)[echam6_t63_ais_mask['mask']['AIS'][-17:, :]], axis=None, nan_policy='omit'))
+    
+    output_png = 'figures/8_d-excess/8.3_vapour/8.3.1_sim/8.3.1.3_sfc_vs_pre/8.3.1.3.0 ' + expid[i] + ' am_sfc_pre ' + var_name + '.png'
+    
+    cbar_label = 'Annual mean ' + plot_labels[var_name]
+    cbar_label2 = 'Differences: (a) - (b)'
+    
+    nrow = 1
+    ncol = 3
+    fm_bottom = 2.5 / (5.8*nrow + 2)
+    
+    fig, axs = plt.subplots(
+        nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2.5]) / 2.54,
+        subplot_kw={'projection': ccrs.SouthPolarStereo()},
+        gridspec_kw={'hspace': 0.05, 'wspace': 0.05},)
+    
+    ipanel=0
+    for jcol in range(ncol):
+        axs[jcol] = hemisphere_plot(northextent=north_extent,ax_org = axs[jcol])
+        cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
+        plt.text(
+            0.05, 0.975, panel_labels[ipanel],
+            transform=axs[jcol].transAxes,
+            ha='center', va='center', rotation='horizontal')
+        ipanel += 1
+    
+    plt1 = plot_t63_contourf(
+        sfc_data.lon,
+        sfc_data.lat,
+        sfc_data,
+        axs[0],
+        pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+    
+    plot_t63_contourf(
+        pre_data.lon,
+        pre_data.lat,
+        pre_data,
+        axs[1],
+        pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+    
+    plt2 = plot_t63_contourf(
+        pre_data.lon,
+        pre_data.lat,
+        sfc_data - pre_data,
+        axs[2],
+        pltlevel2, 'both', pltnorm2, pltcmp2, ccrs.PlateCarree(),)
+    
+    for jcol in range(ncol):
+        axs[jcol].add_feature(
+            cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
+    
+    plt.text(
+        0.5, 1.05, 'Surface vapour', transform=axs[0].transAxes,
+        ha='center', va='center', rotation='horizontal')
+    plt.text(
+        0.5, 1.05, 'Precipitation', transform=axs[1].transAxes,
+        ha='center', va='center', rotation='horizontal')
+    plt.text(
+        0.5, 1.05, '(a) - (b)', transform=axs[2].transAxes,
+        ha='center', va='center', rotation='horizontal')
+    
+    cbar1 = fig.colorbar(
+        plt1, ax=axs,
+        orientation="horizontal",shrink=0.5,aspect=40,
+        anchor=(-0.2, 1), ticks=pltticks, format=remove_trailing_zero_pos, )
+    cbar1.ax.set_xlabel(cbar_label, linespacing=2)
+    
+    cbar2 = fig.colorbar(
+        plt2, ax=axs,
+        orientation="horizontal",shrink=0.5,aspect=40,
+        anchor=(1.1,-2.2),ticks=pltticks2)
+    cbar2.ax.set_xlabel(cbar_label2, linespacing=2)
+    
+    fig.subplots_adjust(
+        left=0.01, right = 0.99, bottom = fm_bottom * 0.8, top = 0.94)
+    fig.savefig(output_png)
+
+
+
+'''
+    # print(stats.describe(sfc_data.values[echam6_t63_ais_mask['mask']['AIS'][-17:, :]], axis=None, nan_policy='omit'))
+    # print(stats.describe(pre_data.values[echam6_t63_ais_mask['mask']['AIS'][-17:, :]], axis=None, nan_policy='omit'))
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot am evaporation in ECHAM6 and ERA5 and their diff
+
+
+wisoevap_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoevap_alltime.pkl', 'rb') as f:
+    wisoevap_alltime[expid[i]] = pickle.load(f)
+
+with open('scratch/ERA5/evap/ERA5_evap_1979_2022_alltime.pkl', 'rb') as f:
+    ERA5_evap_1979_2022_alltime = pickle.load(f)
+
+#---------------------------- global plot
+
+plt_data1 = wisoevap_alltime[expid[i]]['am'].sel(wisotype=1) * seconds_per_d * 365 * 0.001
+plt_data2 = ERA5_evap_1979_2022_alltime['am'] * 365
+# plt_data3 = regrid(plt_data1) - regrid(plt_data2)
+plt_data3 = (regrid(plt_data1) - regrid(plt_data2)) / abs(regrid(plt_data2)) * 100
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-2, cm_max=0, cm_interval1=0.1, cm_interval2=0.2, cmap='viridis',)
+# pltlevel2, pltticks2, pltnorm2, pltcmp2 = plt_mesh_pars(
+#     cm_min=-1, cm_max=1, cm_interval1=0.1, cm_interval2=0.2, cmap='PiYG',)
+pltlevel2, pltticks2, pltnorm2, pltcmp2 = plt_mesh_pars(
+    cm_min=-100, cm_max=100, cm_interval1=10, cm_interval2=20, cmap='PiYG',)
+
+# output_png = 'figures/8_d-excess/8.3_vapour/8.3.1_sim/8.3.1.0_sim_era5/8.3.1.0.0 ECHAM6_ERA5 am evap differences.png'
+output_png = 'figures/8_d-excess/8.3_vapour/8.3.1_sim/8.3.1.0_sim_era5/8.3.1.0.0 ECHAM6_ERA5 am evap differences_percentage.png'
+
+cbar_label1 = 'Evaporation [$m \; year^{-1}$]'
+# cbar_label2 = 'Differences [$m \; year^{-1}$]'
+cbar_label2 = 'Differences [$\%$]'
+
+nrow = 1
+ncol = 3
+fm_right = 1 - 4 / (8.8*ncol + 4)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([8.8*ncol + 4, 5*nrow]) / 2.54,
+    subplot_kw={'projection': ccrs.PlateCarree()},
+    gridspec_kw={'hspace': 0.01, 'wspace': 0.01},)
+
+for jcol in range(ncol):
+    axs[jcol] = globe_plot(ax_org = axs[jcol], add_grid_labels=False)
+
+plt_mesh1 = plot_t63_contourf(
+    plt_data1.lon,
+    plt_data1.lat,
+    plt_data1,
+    axs[0], pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+
+plt_mesh2 = axs[1].contourf(
+    plt_data2.longitude,
+    plt_data2.latitude,
+    plt_data2,
+    levels = pltlevel, extend='both',
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+plt_mesh3 = axs[2].contourf(
+    plt_data3.lon,
+    plt_data3.lat,
+    plt_data3,
+    levels = pltlevel2, extend='both',
+    norm=pltnorm2, cmap=pltcmp2, transform=ccrs.PlateCarree(),)
+
+plt.text(
+    0.5, 1.05, '(a): ECHAM6', transform=axs[0].transAxes,
+    ha='center', va='center', rotation='horizontal')
+plt.text(
+    0.5, 1.05, '(b): ERA5', transform=axs[1].transAxes,
+    ha='center', va='center', rotation='horizontal')
+# plt.text(
+#     0.5, 1.05, '(c): (a) - (b)', transform=axs[2].transAxes,
+#     ha='center', va='center', rotation='horizontal')
+plt.text(
+    0.5, 1.05, '(c): (a - b) / |b|', transform=axs[2].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+cbar2 = fig.colorbar(
+    plt_mesh3, ax=axs,
+    orientation="vertical",shrink=1.2,aspect=40,extend='both',
+    anchor=(0.8, 0.5),
+    ticks=pltticks2)
+cbar2.ax.set_ylabel(cbar_label2, linespacing=1.5)
+
+cbar1 = fig.colorbar(
+    plt_mesh1, ax=axs,
+    orientation="vertical",shrink=1.2,aspect=40,extend='both',
+    anchor=(3.2, 0.5),
+    ticks=pltticks)
+cbar1.ax.set_ylabel(cbar_label1, linespacing=1.5)
+
+fig.subplots_adjust(left=0.005, right = fm_right, bottom = 0.005, top = 0.93)
+fig.savefig(output_png)
+
+
+
+'''
+print(stats.describe(plt_data1, axis=None))
+print(stats.describe(plt_data2, axis=None))
+print(stats.describe(plt_data3, axis=None))
+
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+with open('scratch/others/land_sea_masks/era5_ais_mask.pkl', 'rb') as f:
+    era5_ais_mask = pickle.load(f)
+
+# mm/s * 86400 s/d * 365 d/yr * 0.001 m/mm
+print(stats.describe((wisoevap_alltime[expid[i]]['am'].sel(wisotype=1) * seconds_per_d * 365 * 0.001).values[echam6_t63_ais_mask['mask']['AIS']]))
+# m/d * 365 d/yr = m/yr, positive:downward
+print(stats.describe((ERA5_evap_1979_2022_alltime['am'] * 365).values[era5_ais_mask['mask']['AIS']]))
+
+print(stats.describe((wisoevap_alltime[expid[i]]['am'].sel(wisotype=1) * seconds_per_d * 365 * 0.001).values.flatten()))
+print(stats.describe((ERA5_evap_1979_2022_alltime['am'] * 365).values.flatten()))
+
+
+(wisoevap_alltime[expid[i]]['am'].sel(wisotype=1) * seconds_per_d * 365 * 0.001).to_netcdf('scratch/test/test.nc')
+(ERA5_evap_1979_2022_alltime['am'] * 365).to_netcdf('scratch/test/test2.nc')
+
+with open('scratch/ERA5/evap/ERA5_evap_2013_2022_alltime.pkl', 'rb') as f:
+    ERA5_evap_2013_2022_alltime = pickle.load(f)
+# m/hour * 24 hour/d * 365 d/yr = m/yr, positive:downward
+print(stats.describe((ERA5_evap_2013_2022_alltime['am'] * 24 * 365).values[era5_ais_mask['mask']['AIS']]))
+(ERA5_evap_2013_2022_alltime['am'] * 24 * 365).to_netcdf('scratch/test/test1.nc')
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot am evaporation in ECHAM6 and ERA5 and their diff_SH
+
+wisoevap_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoevap_alltime.pkl', 'rb') as f:
+    wisoevap_alltime[expid[i]] = pickle.load(f)
+
+with open('scratch/ERA5/evap/ERA5_evap_1979_2022_alltime.pkl', 'rb') as f:
+    ERA5_evap_1979_2022_alltime = pickle.load(f)
+
+#---------------------------- global plot
+
+plt_data1 = wisoevap_alltime[expid[i]]['am'].sel(wisotype=1) * seconds_per_d * 365 * 0.001
+plt_data2 = ERA5_evap_1979_2022_alltime['am'] * 365
+plt_data3 = (regrid(plt_data1) - regrid(plt_data2)) / abs(regrid(plt_data2)) * 100
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-0.6, cm_max=0.04, cm_interval1=0.04, cm_interval2=0.08, cmap='BrBG',
+    asymmetric=True,)
+pltlevel2, pltticks2, pltnorm2, pltcmp2 = plt_mesh_pars(
+    cm_min=-100, cm_max=100, cm_interval1=10, cm_interval2=20, cmap='PiYG',)
+
+output_png = 'figures/8_d-excess/8.3_vapour/8.3.1_sim/8.3.1.0_sim_era5/8.3.1.0.0 ECHAM6_ERA5 am evap differences_percentage_SH.png'
+
+cbar_label1 = 'Evaporation [$m \; year^{-1}$]'
+cbar_label2 = 'Differences [$\%$]'
+
+nrow = 1
+ncol = 3
+fm_bottom = 2.5 / (5.8*nrow + 2)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2.5]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.05, 'wspace': 0.05},)
+
+for jcol in range(ncol):
+    axs[jcol] = hemisphere_plot(northextent=-60, ax_org = axs[jcol])
+    # cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, axs[jcol])
+
+plt_mesh1 = plot_t63_contourf(
+    plt_data1.lon,
+    plt_data1.lat,
+    plt_data1,
+    axs[0], pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+
+plt_mesh2 = axs[1].contourf(
+    plt_data2.longitude,
+    plt_data2.latitude,
+    plt_data2,
+    levels = pltlevel, extend='both',
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+plt_mesh3 = axs[2].contourf(
+    plt_data3.lon,
+    plt_data3.lat,
+    plt_data3,
+    levels = pltlevel2, extend='both',
+    norm=pltnorm2, cmap=pltcmp2, transform=ccrs.PlateCarree(),)
+
+plt.text(
+    0.5, 1.05, '(a): ECHAM6', transform=axs[0].transAxes,
+    ha='center', va='center', rotation='horizontal')
+plt.text(
+    0.5, 1.05, '(b): ERA5', transform=axs[1].transAxes,
+    ha='center', va='center', rotation='horizontal')
+plt.text(
+    0.5, 1.05, '(c): (a - b) / |b|', transform=axs[2].transAxes,
+    ha='center', va='center', rotation='horizontal')
+
+cbar1 = fig.colorbar(
+    plt_mesh1, ax=axs,
+    orientation="horizontal",shrink=0.5,aspect=40,
+    anchor=(-0.2, 1), ticks=pltticks, format=remove_trailing_zero_pos, )
+cbar1.ax.set_xlabel(cbar_label1, linespacing=2)
+
+cbar2 = fig.colorbar(
+    plt_mesh3, ax=axs,
+    orientation="horizontal",shrink=0.5,aspect=40,
+    anchor=(1.1,-2.2),ticks=pltticks2)
+cbar2.ax.set_xlabel(cbar_label2, linespacing=2)
+
+fig.subplots_adjust(
+    left=0.01, right = 0.99, bottom = fm_bottom * 0.8, top = 0.94)
+fig.savefig(output_png)
+
+
+
+
+
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+with open('scratch/others/land_sea_masks/era5_ais_mask.pkl', 'rb') as f:
+    era5_ais_mask = pickle.load(f)
+
+echam6_t63_cellarea = xr.open_dataset('scratch/others/land_sea_masks/echam6_t63_cellarea.nc')
+era5_cellarea = xr.open_dataset('scratch/ERA5/temp2/ERA5_cellarea.nc')
+
+echam6_evap = wisoevap_alltime[expid[i]]['am'].sel(wisotype=1) * seconds_per_d * 365 * 0.001
+era5_evap = ERA5_evap_1979_2022_alltime['am'] * 365
+
+# np.mean(echam6_evap.values[echam6_t63_ais_mask['mask']['AIS']])
+np.average(
+    echam6_evap.values[echam6_t63_ais_mask['mask']['AIS']],
+    weights=echam6_t63_cellarea.cell_area.values[echam6_t63_ais_mask['mask']['AIS']],
+)
+
+# np.mean(era5_evap.values[era5_ais_mask['mask']['AIS']])
+np.average(
+    era5_evap.values[era5_ais_mask['mask']['AIS']],
+    weights=era5_cellarea.cell_area.values[era5_ais_mask['mask']['AIS']]
+)
+
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
 
 
 

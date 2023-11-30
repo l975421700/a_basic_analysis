@@ -1,21 +1,22 @@
 
+# salloc --account=paleodyn.paleodyn --qos=12h --time=12:00:00 --nodes=1 --mem=120GB
+# source ${HOME}/miniconda3/bin/activate deepice
+# ipython
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_600_5.0',
-    # 'pi_601_5.1',
-    # 'pi_602_5.2',
-    # 'pi_605_5.5',
-    # 'pi_606_5.6',
-    # 'pi_609_5.7',
-    # 'pi_610_5.8',
-    # 'hist_700_5.0',
-    'nudged_701_5.0',
+    # 'nudged_701_5.0',
+    
+    # 'nudged_705_6.0',
+    # 'nudged_706_6.0_k52_88',
+    'nudged_707_6.0_k43',
+    # 'nudged_708_6.0_I01',
+    # 'nudged_709_6.0_I03',
+    # 'nudged_710_6.0_S3',
+    # 'nudged_711_6.0_S6',
     ]
 i = 0
 
-ifile_start = 12 #0 #120
-ifile_end   = 516 #1740 #840
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -39,83 +40,156 @@ pbar = ProgressBar()
 pbar.register()
 
 from a_basic_analysis.b_module.basic_calculations import (
-    mon_sea_ann,
+    find_ilat_ilon,
+    find_ilat_ilon_general,
+    find_gridvalue_at_site,
+    find_multi_gridvalue_at_site,
+    find_gridvalue_at_site_time,
+    find_multi_gridvalue_at_site_time,
 )
 
 
+
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region import output
+# region import data
 
-exp_org_o = {}
-exp_org_o[expid[i]] = {}
+#-------- import obs
 
-filenames_sf_wiso = sorted(glob.glob(
-    exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_sf_wiso.nc'))
-exp_org_o[expid[i]]['sf_wiso'] = xr.open_mfdataset(
-    filenames_sf_wiso[ifile_start:ifile_end],
-    )
+with open('data_sources/water_isotopes/BJ19/BJ19_polarstern.pkl', 'rb') as f:
+    BJ19_polarstern = pickle.load(f)
 
 
-'''
-#-------- check evap
-filenames_sf_wiso = sorted(glob.glob(
-    exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_sf_wiso.nc'))
-filenames_echam = sorted(glob.glob(
-    exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_echam.nc'))
+#-------- import sim
 
-ifile = 1000
-ncfile1 = xr.open_dataset(filenames_sf_wiso[ifile_start:ifile_end][ifile])
-ncfile2 = xr.open_dataset(filenames_echam[ifile_start:ifile_end][ifile])
+wiso_q_6h_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wiso_q_6h_sfc_alltime.pkl', 'rb') as f:
+    wiso_q_6h_sfc_alltime[expid[i]] = pickle.load(f)
 
-np.max(abs(ncfile1.wisoevap[0, 0] - ncfile2.evap[0])).values
+dD_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_q_sfc_alltime.pkl', 'rb') as f:
+    dD_q_sfc_alltime[expid[i]] = pickle.load(f)
 
-'''
-# endregion
-# -----------------------------------------------------------------------------
+dO18_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_q_sfc_alltime.pkl', 'rb') as f:
+    dO18_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+d_excess_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_q_sfc_alltime.pkl', 'rb') as f:
+    d_excess_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+d_ln_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_q_sfc_alltime.pkl', 'rb') as f:
+    d_ln_q_sfc_alltime[expid[i]] = pickle.load(f)
 
 
-#SBATCH --time=00:30:00
-# -----------------------------------------------------------------------------
-# region calculate mon/sea/ann evap
-
-
-wisoevap = {}
-wisoevap[expid[i]] = (exp_org_o[expid[i]]['sf_wiso'].wisoevap[:, :3]).copy().compute()
-
-wisoevap[expid[i]] = wisoevap[expid[i]].rename('wisoevap')
-
-wisoevap_alltime = {}
-wisoevap_alltime[expid[i]] = mon_sea_ann(var_monthly = wisoevap[expid[i]])
-
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoevap_alltime.pkl',
-          'wb') as f:
-    pickle.dump(wisoevap_alltime[expid[i]], f)
+lon = d_ln_q_sfc_alltime[expid[i]]['am'].lon
+lat = d_ln_q_sfc_alltime[expid[i]]['am'].lat
 
 
 '''
-#-------- check
-wisoevap_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoevap_alltime.pkl', 'rb') as f:
-    wisoevap_alltime[expid[i]] = pickle.load(f)
-
-filenames_sf_wiso = sorted(glob.glob(
-    exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_sf_wiso.nc'))
-filenames_echam = sorted(glob.glob(
-    exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_echam.nc'))
-
-ifile = -2
-ncfile1 = xr.open_dataset(filenames_sf_wiso[ifile_start:ifile_end][ifile])
-ncfile2 = xr.open_dataset(filenames_echam[ifile_start:ifile_end][ifile])
-
-(wisoevap_alltime[expid[i]]['mon'][ifile, 0] == ncfile2.evap[0]).all().values
-(wisoevap_alltime[expid[i]]['mon'][ifile, :] == ncfile1.wisoevap[0, :3]).all().values
 
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region extract data
+
+BJ19_polarstern_1d_sim = {}
+
+BJ19_polarstern_1d_sim[expid[i]] = BJ19_polarstern['1d'].copy()
+
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
+    # var_name = 'd_ln'
+    print('#-------- ' + var_name)
+    
+    if (var_name == 'dD'):
+        ivar = dD_q_sfc_alltime[expid[i]]['daily']
+    elif (var_name == 'd18O'):
+        ivar = dO18_q_sfc_alltime[expid[i]]['daily']
+    elif (var_name == 'd_xs'):
+        ivar = d_excess_q_sfc_alltime[expid[i]]['daily']
+    elif (var_name == 'd_ln'):
+        ivar = d_ln_q_sfc_alltime[expid[i]]['daily']
+    elif (var_name == 'q'):
+        ivar = wiso_q_6h_sfc_alltime[expid[i]]['q16o']['daily'].sel(lev=47)
+    
+    BJ19_polarstern_1d_sim[expid[i]][var_name + '_sim'] = \
+        find_multi_gridvalue_at_site_time(
+            BJ19_polarstern_1d_sim[expid[i]]['time'],
+            BJ19_polarstern_1d_sim[expid[i]]['lat'],
+            BJ19_polarstern_1d_sim[expid[i]]['lon'],
+            ivar.time.values,
+            ivar.lat.values,
+            ivar.lon.values,
+            ivar.values
+        )
+
+BJ19_polarstern_1d_sim[expid[i]]['q'] = BJ19_polarstern_1d_sim[expid[i]]['q'] / 1000
+
+output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.BJ19_polarstern_1d_sim.pkl'
+
+if (os.path.isfile(output_file)):
+    os.remove(output_file)
+
+with open(output_file, 'wb') as f:
+    pickle.dump(BJ19_polarstern_1d_sim[expid[i]], f)
+
+
+
+
+'''
+#-------------------------------- check
+BJ19_polarstern_1d_sim = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.BJ19_polarstern_1d_sim.pkl', 'rb') as f:
+    BJ19_polarstern_1d_sim[expid[i]] = pickle.load(f)
+
+d_ln_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_q_sfc_alltime.pkl', 'rb') as f:
+    d_ln_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+ires = 120
+stime = BJ19_polarstern_1d_sim[expid[i]]['time'][ires]
+slat = BJ19_polarstern_1d_sim[expid[i]]['lat'][ires]
+slon = BJ19_polarstern_1d_sim[expid[i]]['lon'][ires]
+
+itime = np.argmin(abs(stime.asm8 - d_ln_q_sfc_alltime[expid[i]]['daily'].time).values)
+ilat, ilon = find_ilat_ilon(
+    slat, slon,
+    d_ln_q_sfc_alltime[expid[i]]['daily'].lat.values,
+    d_ln_q_sfc_alltime[expid[i]]['daily'].lon.values)
+
+
+#-------- check q
+var_name = 'q'
+wiso_q_6h_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wiso_q_6h_sfc_alltime.pkl', 'rb') as f:
+    wiso_q_6h_sfc_alltime[expid[i]] = pickle.load(f)
+
+print(BJ19_polarstern_1d_sim[expid[i]][var_name + '_sim'][ires])
+print(wiso_q_6h_sfc_alltime[expid[i]]['q16o']['daily'][itime, 0, ilat, ilon])
+
+#-------- check d_ln
+var_name = 'd_ln'
+print(BJ19_polarstern_1d_sim[expid[i]][var_name + '_sim'][ires])
+print(d_ln_q_sfc_alltime[expid[i]]['daily'][itime, ilat, ilon])
+
+#-------- check dD
+dD_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_q_sfc_alltime.pkl', 'rb') as f:
+    dD_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+var_name = 'dD'
+print(BJ19_polarstern_1d_sim[expid[i]][var_name + '_sim'][ires])
+print(dD_q_sfc_alltime[expid[i]]['daily'][itime, ilat, ilon])
+
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
 

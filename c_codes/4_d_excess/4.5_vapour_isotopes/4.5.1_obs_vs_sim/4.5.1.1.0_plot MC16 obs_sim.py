@@ -7,7 +7,15 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'nudged_701_5.0',
+    # 'nudged_701_5.0',
+    'nudged_713_6.0_2yr',
+    'nudged_712_6.0_k52_2yr',
+    'nudged_714_6.0_k52_88_2yr',
+    'nudged_715_6.0_k43_2yr',
+    'nudged_716_6.0_I01_2yr',
+    'nudged_717_6.0_I03_2yr',
+    'nudged_718_6.0_S3_2yr',
+    'nudged_719_6.0_S6_2yr',
     ]
 i = 0
 
@@ -79,6 +87,8 @@ from a_basic_analysis.b_module.basic_calculations import (
 from a_basic_analysis.b_module.namelist import (
     panel_labels,
     plot_labels,
+    expid_colours,
+    expid_labels,
 )
 
 from a_basic_analysis.b_module.component_plot import (
@@ -95,33 +105,27 @@ from a_basic_analysis.b_module.component_plot import (
 # region import data
 
 MC16_Dome_C_1d_sim = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.MC16_Dome_C_1d_sim.pkl', 'rb') as f:
-    MC16_Dome_C_1d_sim[expid[i]] = pickle.load(f)
+for i in range(len(expid)):
+    print('#-------------------------------- ' + expid[i])
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.MC16_Dome_C_1d_sim.pkl', 'rb') as f:
+        MC16_Dome_C_1d_sim[expid[i]] = pickle.load(f)
 
 ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
 with open('data_sources/water_isotopes/MC16/MC16_Dome_C.pkl', 'rb') as f:
     MC16_Dome_C = pickle.load(f)
 
-q_geo7_sfc_frc_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_geo7_sfc_frc_alltime.pkl', 'rb') as f:
-    q_geo7_sfc_frc_alltime[expid[i]] = pickle.load(f)
-MC16_1d_oo2q = find_multi_gridvalue_at_site_time(
-    MC16_Dome_C_1d_sim[expid[i]]['time'],
-    MC16_Dome_C_1d_sim[expid[i]]['lat'],
-    MC16_Dome_C_1d_sim[expid[i]]['lon'],
-    q_geo7_sfc_frc_alltime[expid[i]]['daily'].time.values,
-    q_geo7_sfc_frc_alltime[expid[i]]['daily'].lat.values,
-    q_geo7_sfc_frc_alltime[expid[i]]['daily'].lon.values,
-    q_geo7_sfc_frc_alltime[expid[i]]['daily'].sel(geo_regions='Open Ocean').values,
-    )
-
 with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
     echam6_t63_ais_mask = pickle.load(f)
 
 
 
+
 '''
+# check
+for ivar in ['dD_sim', 'd18O_sim', 'd_ln_sim', 'd_xs_sim', 'q_sim']:
+    print((MC16_Dome_C_1d_sim['nudged_717_6.0_I03_2yr'][ivar] == MC16_Dome_C_1d_sim['nudged_713_6.0_2yr'][ivar]).all())
+
 echam6_t63_geosp = xr.open_dataset(exp_odir + expid[i] + '/input/echam/unit.24')
 echam6_t63_surface_height = geopotential_to_height(
     echam6_t63_geosp.GEOSP * (units.m / units.s)**2)
@@ -144,6 +148,18 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_3m', 'q']:
     
     print(np.round(pearsonr(MC16_Dome_C_1d_sim[expid[i]][var_name][subset], MC16_Dome_C_1d_sim[expid[i]][var_name + '_sim'][subset], ).statistic ** 2, 3))
 
+q_geo7_sfc_frc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_geo7_sfc_frc_alltime.pkl', 'rb') as f:
+    q_geo7_sfc_frc_alltime[expid[i]] = pickle.load(f)
+MC16_1d_oo2q = find_multi_gridvalue_at_site_time(
+    MC16_Dome_C_1d_sim[expid[i]]['time'],
+    MC16_Dome_C_1d_sim[expid[i]]['lat'],
+    MC16_Dome_C_1d_sim[expid[i]]['lon'],
+    q_geo7_sfc_frc_alltime[expid[i]]['daily'].time.values,
+    q_geo7_sfc_frc_alltime[expid[i]]['daily'].lat.values,
+    q_geo7_sfc_frc_alltime[expid[i]]['daily'].lon.values,
+    q_geo7_sfc_frc_alltime[expid[i]]['daily'].sel(geo_regions='Open Ocean').values,
+    )
 print(stats.describe(MC16_1d_oo2q))
 # 80%
 print(find_gridvalue_at_site(
@@ -188,8 +204,8 @@ print(find_gridvalue_at_site(
 # -----------------------------------------------------------------------------
 # region Q-Q plot
 
-for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_3m', 'q']:
-    # var_name = 'q'
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
+    # var_name = 'q', 't_3m'
     print('#-------- ' + var_name)
     
     output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.1_MC16/8.3.0.1.0 ' + expid[i] + ' MC16 observed vs. simulated daily ' + var_name + '.png'
@@ -489,5 +505,92 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', 't_3m']:
 
 
 
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region Q-Q plot multiple models
+
+
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
+    # var_name = 'q', 't_3m'
+    print('#-------- ' + var_name)
+    
+    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.1_MC16/8.3.0.1.0 nudged_712_9 MC16 observed vs. simulated daily ' + var_name + '.png'
+    
+    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+    
+    for i in range(len(expid)):
+        print(str(i) + ': ' + expid[i])
+        
+        xdata = MC16_Dome_C_1d_sim[expid[i]][var_name].copy()
+        ydata = MC16_Dome_C_1d_sim[expid[i]][var_name + '_sim'].copy()
+        subset = (np.isfinite(xdata) & np.isfinite(ydata))
+        xdata = xdata[subset]
+        ydata = ydata[subset]
+        
+        if (var_name == 'q'):
+            xdata = xdata * 1000
+            ydata = ydata * 1000
+        
+        RMSE = np.sqrt(np.average(np.square(xdata - ydata)))
+        
+        ax.scatter(
+            xdata, ydata,
+            s=6, lw=0.4, alpha=0.5,
+            facecolors='white',
+            edgecolors=expid_colours[expid[i]],
+            )
+        
+        linearfit = linregress(x = xdata, y = ydata,)
+        ax.axline(
+            (0, linearfit.intercept), slope = linearfit.slope,
+            lw=1, alpha=0.5,
+            color=expid_colours[expid[i]],
+            )
+        
+        if (linearfit.intercept >= 0):
+            eq_text = expid_labels[expid[i]] + ':       $y = $' + \
+                str(np.round(linearfit.slope, 2)) + '$x + $' + \
+                    str(np.round(linearfit.intercept, 1)) + \
+                        ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
+                            ', $RMSE = $' + str(np.round(RMSE, 1))
+        if (linearfit.intercept < 0):
+            eq_text = expid_labels[expid[i]] + ':       $y = $' + \
+                str(np.round(linearfit.slope, 2)) + '$x $' + \
+                    str(np.round(linearfit.intercept, 1)) + \
+                        ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
+                            ', $RMSE = $' + str(np.round(RMSE, 1))
+        
+        plt.text(
+            0.05, 0.95 - 0.06*i, eq_text,
+            transform=ax.transAxes, fontsize=6,
+            color=expid_colours[expid[i]],
+            ha='left')
+    
+    xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
+    xylim_min = np.min(xylim)
+    xylim_max = np.max(xylim)
+    ax.set_xlim(xylim_min, xylim_max)
+    ax.set_ylim(xylim_min, xylim_max)
+    
+    ax.axline((0, 0), slope = 1, lw=1, color='grey', alpha=0.5)
+    
+    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_xlabel('Observed '  + plot_labels[var_name], labelpad=6)
+    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_ylabel('Simulated ' + plot_labels[var_name], labelpad=6)
+    
+    ax.grid(True, which='both',
+            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+    
+    fig.subplots_adjust(left=0.18, right=0.98, bottom=0.18, top=0.98)
+    fig.savefig(output_png)
+
+
+
+'''
+'''
 # endregion
 # -----------------------------------------------------------------------------

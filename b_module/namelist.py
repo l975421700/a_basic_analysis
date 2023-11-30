@@ -104,6 +104,7 @@ plot_labels = {
     't_3m': 'Air temperature [$°C$]',
     'q': 'Specific humidity [$g/kg$]',
     'pre': 'Precipitation [$mm \; day^{-1}$]',
+    'local_rh2m': 'rh2m [$\%$]',
 }
 
 plot_labels_no_unit = {
@@ -134,6 +135,24 @@ expid_labels = {
     'pi_609_5.7': '$PI_{highT}$',
     
     'pi_603_5.3': '$PI_{no\_ss}$',
+
+    'nudged_713_6.0_2yr': '$Nudge_{control}$',
+    'nudged_712_6.0_k52_2yr': '$Nudge_{k52}$',
+    'nudged_714_6.0_k52_88_2yr': '$Nudge_{k52\_88}$',
+    'nudged_715_6.0_k43_2yr': '$Nudge_{k43}$',
+    'nudged_716_6.0_I01_2yr': '$Nudge_{I01}$',
+    'nudged_717_6.0_I03_2yr': '$Nudge_{I03}$',
+    'nudged_718_6.0_S3_2yr': '$Nudge_{S3}$',
+    'nudged_719_6.0_S6_2yr': '$Nudge_{S6}$',
+    
+    'nudged_705_6.0': '$Nudge_{control}$',
+    'nudged_706_6.0_k52_88': '$Nudge_{k52\_88}$',
+    'nudged_707_6.0_k43': '$Nudge_{k43}$',
+    'nudged_708_6.0_I01': '$Nudge_{I01}$',
+    'nudged_709_6.0_I03': '$Nudge_{I03}$',
+    'nudged_710_6.0_S3': '$Nudge_{S3}$',
+    'nudged_711_6.0_S6': '$Nudge_{S6}$',
+
 }
 
 expid_colours = {
@@ -147,6 +166,23 @@ expid_colours = {
     'pi_603_5.3': 'tab:brown',
     
     'pi_610_5.8': 'grey',
+
+    'nudged_713_6.0_2yr': 'black',
+    'nudged_712_6.0_k52_2yr': 'tab:blue',
+    'nudged_714_6.0_k52_88_2yr': 'tab:orange',
+    'nudged_715_6.0_k43_2yr': 'tab:green',
+    'nudged_716_6.0_I01_2yr': 'tab:red',
+    'nudged_717_6.0_I03_2yr': 'tab:purple',
+    'nudged_718_6.0_S3_2yr': 'tab:brown',
+    'nudged_719_6.0_S6_2yr': 'grey',
+    
+    'nudged_705_6.0': 'black',
+    'nudged_706_6.0_k52_88': 'tab:orange',
+    'nudged_707_6.0_k43': 'tab:green',
+    'nudged_708_6.0_I01': 'tab:red',
+    'nudged_709_6.0_I03': 'tab:purple',
+    'nudged_710_6.0_S3': 'tab:brown',
+    'nudged_711_6.0_S6': 'grey',
 }
 
 

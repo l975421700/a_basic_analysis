@@ -109,7 +109,7 @@ IT20_1d_SLM = find_multi_gridvalue_at_site(
     T63GR15_jan_surf.lat.values,
     T63GR15_jan_surf.lon.values,
     T63GR15_jan_surf.SLM.values,
-)
+    )
 
 echam6_t63_geosp = xr.open_dataset(exp_odir + expid[i] + '/input/echam/unit.24')
 echam6_t63_surface_height = geopotential_to_height(

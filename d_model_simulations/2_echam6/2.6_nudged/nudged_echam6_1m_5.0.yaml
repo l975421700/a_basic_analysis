@@ -1,0 +1,290 @@
+general:
+    setup_name: "echam"
+    version: "6.3.05p2-wiso"
+    compute_time: "00:30:00"
+    initial_date: "2014-01-01"
+    final_date: "2015-02-01"
+    model_dir: "/albedo/work/user/qigao001/model_codes/echam-6.3.05p2-wiso/"
+    base_dir: "/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/"
+    nmonth: 1
+    nyear: 0
+    with_wiso: True
+    use_venv: False
+    account: paleodyn.paleodyn
+
+echam:
+    executable: echam6_231126_6.0_S6
+    bin_sources:
+            echam_bin: "${bin_dir}/${executable}"
+    bin_in_work:
+            echam_bin: "${executable}"
+    namelist_dir: '/albedo/work/user/qigao001/a_basic_analysis/g_namelists/nudged/'
+    scenario: "HIST"
+    # dataset: r0007
+    res: T63
+    lresume: True
+    ini_parent_date: "2013-12-31T23:52:30"
+    ini_parent_exp_id: "nudged_701_5.0"
+    ini_parent_dir: "/albedo/work/user/qigao001/albedo_scratch/output/echam-6.3.05p2-wiso/pi/nudged_701_5.0/restart/echam/"
+    restart_rate: 1
+    restart_unit: "months"
+    nproca: 24
+    nprocb:  24
+    nprocar: 0
+    nprocbr: 0
+    add_namelist_changes:
+        namelist.echam:
+            parctl:
+                nproca: 24
+                nprocb: 24
+                nprocar: 0
+                nprocbr: 0
+            runctl:
+                out_filetype: 2
+                # putdata: [ 6, 'hours', 'last', 0 ]
+                # dt_stop: [ 2015, 1, 2 ]
+                lcouple: False
+                lcouple_co2: False
+                default_output: False
+                lamip: True
+                lnudge: True
+                l_orbvsop87: True
+                putocean: "remove_from_namelist"
+                getocean: "remove_from_namelist"
+            ndgctl:
+                dt_nudg_start:
+                  - ${echam.current_date!syear}
+                  - ${echam.current_date!smonth}
+                  - ${echam.current_date!sday}
+                dt_nudg_stop:
+                  - ${echam.next_date!syear}
+                  - ${echam.next_date!smonth}
+                  - ${echam.next_date!sday}
+                inudgformat: 2
+                ndg_file_nc: 'ndg%y4%m2.nc'
+                nsstinc: 0
+                lnudgcli: False
+                lnudgini: False
+            radctl:
+                lrad_async: False
+            wisoctl:
+                lwiso: True
+                lwiso_rerun: ${lresume}
+                nwiso: 28
+                ntag: 0
+                ntag1: 0
+                ntag2: 0
+                ntag3: 0
+                ntag4: 0
+                ntags1_lat: 3
+                ntags2_lon: 0
+                ntags3_sst: 3
+                ntags4_rh2m: 3
+                ntags5_wind10: 3
+                ntag_geo7: 7
+                ntags6_sinlon: 3
+                ntags7_coslon: 3
+                ntag5: 0
+                ntag_sum: 25
+                lupdate_tagmap: True
+                tag_minsst: 268.15
+                tag_maxsst: 318.15
+                tag_minrh2m: 0
+                tag_maxrh2m: 1.6
+                tag_minwind10: 0
+                tag_maxwind10: 28.0
+                ltag_corr1: True
+                ltag_corr3: True
+                latm_water: False
+                ltag_corr2: False
+                ltag_corr3_m: False
+                ltag_corr_xtec: False
+                lcorrfac: False
+
+    file_movements:
+        forcing:
+            all_directions: "link"
+        input:
+            all_directions: "link"
+
+    remove_forcing_files:
+          - greenhouse
+          - ozonea
+          - ozoneb
+          - ozonec
+          - sst
+          - sic
+    
+    forcing_sources:
+
+        # water isotope forcing file
+        wiso_sw_observed: "/albedo/home/mwerner/model_input/ECHAM6-wiso/PI_ctrl/T63/T63_wisosw_d.nc"
+        wiso_tagmap_1: "/albedo/work/user/qigao001/startdump/tagging/tagmap/pi_6tagmap.nc"
+
+        # ERA5 forcing files
+        era5_atm: "/albedo/work/projects/paleo_work/paleodyn_from_work_ollie_projects/paleodyn/nudging/ERA5/atmos/T63/era5${echam.res}${echam.levels}_${echam.current_date!syear}${echam.current_date!smonth}.nc"
+        sst: "/albedo/work/projects/paleo_work/paleodyn_from_work_ollie_projects/paleodyn/nudging/ERA5/sea/T63/T63_era5sst_${echam.current_date!syear}.nc"
+        sic: "/albedo/work/projects/paleo_work/paleodyn_from_work_ollie_projects/paleodyn/nudging/ERA5/sea/T63/T63_era5sic_${echam.current_date!syear}.nc"
+        
+        # further ECHAM6 forcing files
+        greenhouse_gases: "/albedo/work/projects/p_pool_echam6/input/r0008/greenhouse_ssp245.nc"
+
+    add_forcing_files:
+        wiso_sw: wiso_sw_observed
+        wiso_tagmap: wiso_tagmap_1
+
+        era5_previous: era5_atm
+        era5_current:  era5_atm
+        era5_next:     era5_atm
+        sst: sst
+        sic: sic
+        
+        greenhouse_gases: greenhouse_gases
+
+    forcing_in_work:
+        wiso_sw: "unit.25"
+        wiso_tagmap: "unit.26"
+
+        era5_previous: ndg${echam.prev_date!syear}${echam.prev_date!smonth}.nc
+        era5_current: ndg${echam.current_date!syear}${echam.current_date!smonth}.nc
+        era5_next: ndg${echam.next_date!syear}${echam.next_date!smonth}.nc
+        sst: "sst@YEAR@"
+        sic: "ice@YEAR@"
+
+        greenhouse_gases: "greenhouse_gases.nc"
+
+    add_forcing_additional_information:
+        sst:
+            - need_year_before
+            - need_year_after
+            - need_2years_after
+        sic:
+            - need_year_before
+            - need_year_after
+            - need_2years_after
+
+    add_streams: #put these output files into output directory instead of "unknown"
+      - nudg
+
+    remove_streams: # these streams have not been used in previous (script-based) setups for ECHAM6-wiso nudged simulations
+      - g3bid
+      - g3bim
+      - g3bday
+      - g3b1hi
+      - glday
+      - aclcim
+      - rad
+      - sp6h
+      - glim
+      - spim
+
+jsbach:
+    file_movements:
+        forcing:
+            all_directions: "link"
+        input:
+            all_directions: "link"
+    add_namelist_changes:
+        namelist.jsbach:
+            jsbach_ctl:
+                with_hd: False
+
+# jsbach:
+#     add_namelist_changes:
+#         namelist.jsbach:
+#             jsbach_ctl:
+#                 with_hd: True
+#                 lcc_forcing_type: 'transitions'
+#                 lcc_scheme: 2
+#                 test_cconservation: True
+#                 test_nconservation: False
+#                 use_dynveg: False
+#                 use_disturbance: False
+#                 with_nitrogen: False
+#                 file_type: "remove_from_namelist"
+#                 file_ztype: "remove_from_namelist"
+#                 lpost_echam: "remove_from_namelist"
+#                 debug: "remove_from_namelist"
+#             cbalance_ctl:
+#                 read_ndepo: False
+#             hydrology_ctl:
+#                 ldebughd: "remove_from_namelist"
+#                 gethd:
+#                   - 192
+#                   - 'steps'
+#                   - 'exact'
+#                   - 0
+#                 puthd:
+#                   - 192
+#                   - 'steps'
+#                   - 'exact'
+#                   - -450
+#             input_ctl:
+#                 var_name: "remove_from_namelist"
+#                 #dt_update: "remove_from_namelist"
+#                 init_rec: "remove_from_namelist"
+
+#     file_movements:
+#         forcing:
+#             all_directions: "link"
+#         input:
+#             all_directions: "link"
+
+#     remove_input_files:
+#           - jsbach
+
+#     input_sources:
+#         jsbach_bin_default: "/albedo/work/projects/p_pool_jsbach3/input/r0010/T63/jsbach_T63GR15_11tiles_5layers_1976_no-dynveg.nc"
+#     add_input_files:
+#         jsbach_bin: jsbach_bin_default
+#     input_in_work:
+#         jsbach_bin: "jsbach.nc"
+
+#     remove_forcing_files:
+#           - a_nd_file
+#           - cover_fract
+#           - lightning
+#           - Ndepo
+#           - popdens
+#           - LU
+#           - LU_trans
+          
+#     forcing_sources:
+#         # landuse_transition: "/albedo/work/projects/p_pool_jsbach3/T63/New_Hampshire_LCC/hist/LUH_transitions_T63_@YEAR@.nc"
+#         # landuse_harvest:    "/albedo/work/projects/p_pool_jsbach3/T63/New_Hampshire_LCC/hist/LUH_harvest_T63_@YEAR@.nc"
+#         landuse_transition:
+#             "/albedo/work/projects/p_pool_jsbach3/input/r0010/T63/New_Hampshire_LCC/hist_no-dynveg/LUH_scaled_transitions_T63_@YEAR@.nc"
+#             #     to: 2014
+#             # "/albedo/work/projects/p_pool_jsbach3/input/r0010/T63/New_Hampshire_LCC/ssp370_no-dynveg/LUH_scaled_transitions_T63_@YEAR@.nc"
+#             #     to: 2099
+#         landuse_harvest:
+#             "/albedo/work/projects/p_pool_jsbach3/input/r0009/T63/New_Hampshire_LCC/hist_harvest/LUH_harvest_T63_@YEAR@.nc"
+#             #     to: 2014
+#             # "/albedo/work/projects/p_pool_jsbach3/input/r0010/T63/New_Hampshire_LCC/ssp370_harvest/LUH_harvest_T63_@YEAR@.nc"
+#             #     to: 2099
+#     add_forcing_files:
+#         landuse_transition: landuse_transition
+#         landuse_harvest:    landuse_harvest
+#     forcing_in_work:
+#         landuse_transition: "landuseTransitions.@YEAR@.nc"
+#         landuse_harvest:    "landuseHarvest.@YEAR@.nc"
+#     add_forcing_additional_information:
+#         landuse_transition:
+#             - need_year_before
+#             - need_year_after
+#         landuse_harvest:
+#             - need_year_before
+#             - need_year_after
+
+#     remove_streams: # these streams have not been used in previous (script-based) setups for ECHAM6-wiso nudged simulations
+#       - land
+#       - la_wiso
+#       - jsbid
+#       - nitro
+
+# hdmodel:
+#     file_movements:
+#         forcing:
+#             all_directions: "link"
+#         input:
+#             all_directions: "link"

@@ -41,11 +41,11 @@ from a_basic_analysis.b_module.namelist import (
 # region import data
 
 #-------------------------------- get model output from the 1st time step
-t63_1st_output = xr.open_dataset('/albedo/work/user/qigao001/albedo_scratch/output/echam-6.3.05p2-wiso/pi/pi_1d_800_5.0/unknown/pi_1d_800_5.0_200001.01_echam.nc')
-t63_1st_surf = xr.open_dataset('/albedo/work/user/qigao001/albedo_scratch/output/echam-6.3.05p2-wiso/pi/pi_1d_800_5.0/outdata/echam/pi_1d_800_5.0_200001.01_surf.nc')
+t63_1st_output = xr.open_dataset('/albedo/work/user/qigao001/albedo_scratch/output/echam-6.3.05p2-wiso/pi/nudged_702_6.0_spinup/unknown/nudged_702_6.0_spinup_198005.01_echam.nc')
+t63_1st_surf = xr.open_dataset('/albedo/work/user/qigao001/albedo_scratch/output/echam-6.3.05p2-wiso/pi/nudged_702_6.0_spinup/outdata/echam/nudged_702_6.0_spinup_197901.01_surf.nc')
 
 #-------------------------------- get land sea mask
-T63GR15_jan_surf = xr.open_dataset('/albedo/work/user/qigao001/albedo_scratch/output/echam-6.3.05p2-wiso/pi/pi_1d_800_5.0/input/echam/unit.24')
+T63GR15_jan_surf = xr.open_dataset('/albedo/work/user/qigao001/albedo_scratch/output/echam-6.3.05p2-wiso/pi/nudged_702_6.0_spinup/input/echam/unit.24')
 
 # 1 means land
 t63_slm = T63GR15_jan_surf.SLM.values
@@ -674,4 +674,46 @@ np.nanmin(t63_1st_surf.zqklevw / t63_1st_surf.zqsw)
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region create empty tagmap pi_empty_tagmap
+
+pi_empty_tagmap = xr.Dataset(
+    {"tagmap": (
+        ("level", "lat", "lon"),
+        np.zeros((3, len(lat), len(lon)), dtype=np.double)),
+     },
+    coords={
+        "level": np.arange(1, 3+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
+    }
+)
+
+pi_empty_tagmap.tagmap.sel(level=slice(1, 3))[:] = 1
+
+pi_empty_tagmap.to_netcdf('startdump/tagging/tagmap/pi_empty_tagmap.nc',)
+
+
+pi_empty_tagmap1 = xr.Dataset(
+    {"tagmap": (
+        ("level", "lat", "lon"),
+        np.zeros((4, len(lat), len(lon)), dtype=np.double)),
+     },
+    coords={
+        "level": np.arange(1, 4+1, 1, dtype='int32'),
+        "lat": lat,
+        "lon": lon,
+    }
+)
+
+pi_empty_tagmap1.tagmap.sel(level=slice(1, 4))[:] = 1
+
+pi_empty_tagmap1.to_netcdf('startdump/tagging/tagmap/pi_empty_tagmap1.nc',)
+
+'''
+#-------- check
+'''
+# endregion
+# -----------------------------------------------------------------------------
 
