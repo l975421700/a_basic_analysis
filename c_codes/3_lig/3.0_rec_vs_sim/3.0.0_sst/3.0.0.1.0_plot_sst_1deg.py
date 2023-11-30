@@ -10,7 +10,7 @@ import warnings
 warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
-sys.path.append('/work/ollie/qigao001')
+sys.path.append('/home/users/qino')
 
 # data analysis
 import numpy as np

@@ -432,7 +432,7 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
 
 fig, ax = hemisphere_plot(northextent=-38,)
 
-# plot SST
+# plot
 lig_data = sic_regrid_alltime_ens_stats['lig']['mon']['mean'][8::12]
 pi_data = sic_regrid_alltime_ens_stats['pi']['mon']['mean'][8::12]
 ttest_fdr_res = ttest_fdr_control(lig_data, pi_data,)

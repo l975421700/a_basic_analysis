@@ -1,6 +1,6 @@
 
 
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_600_5.0',
     # 'pi_601_5.1',
@@ -9,13 +9,13 @@ expid = [
     # 'pi_606_5.6',
     # 'pi_609_5.7',
     # 'pi_610_5.8',
-    # 'hist_700_5.0',
-    'nudged_701_5.0',
+    'hist_700_5.0',
+    # 'nudged_701_5.0',
     ]
 i = 0
 
-ifile_start = 12 #0 #120
-ifile_end   = 516 #1740 #840
+ifile_start = 1380 #12 #0 #120
+ifile_end   = 1740 #516 #1740 #840
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -943,7 +943,8 @@ lat  = exp_org_o[expid[i]]['wiso'].lat
 
 ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
 kwiso2 = 3
-var_names = ['lat', 'sst', 'rh2m', 'wind10', 'sinlon', 'coslon', 'geo7']
+var_names = ['lat',]
+# var_names = ['lat', 'sst', 'rh2m', 'wind10', 'sinlon', 'coslon', 'geo7']
 itags = [5, 7, 8, 9, 11, 12]
 
 ocean_aprt = {}
@@ -959,7 +960,7 @@ ocean_aprt[expid[i]] = xr.DataArray(
     }
 )
 
-for count,var_name in enumerate(var_names[:-1]):
+for count,var_name in enumerate(var_names[:]): #var_names[:-1]
     # count = 0; var_name = 'lat'
     kstart = kwiso2 + sum(ntags[:itags[count]])
     
@@ -973,12 +974,12 @@ for count,var_name in enumerate(var_names[:-1]):
                     wisotype=slice(kstart+2, kstart+3))
                 ).sum(dim='wisotype')
 
-ocean_aprt[expid[i]].sel(var_names='geo7')[:] = \
-    (exp_org_o[expid[i]]['wiso'].wisoaprl.sel(
-        wisotype=[19, 21]) + \
-            exp_org_o[expid[i]]['wiso'].wisoaprc.sel(
-                wisotype=[19, 21])
-            ).sum(dim='wisotype')
+# ocean_aprt[expid[i]].sel(var_names='geo7')[:] = \
+#     (exp_org_o[expid[i]]['wiso'].wisoaprl.sel(
+#         wisotype=[19, 21]) + \
+#             exp_org_o[expid[i]]['wiso'].wisoaprc.sel(
+#                 wisotype=[19, 21])
+#             ).sum(dim='wisotype')
 
 ocean_aprt_alltime = {}
 ocean_aprt_alltime[expid[i]] = mon_sea_ann(
