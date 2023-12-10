@@ -180,7 +180,7 @@ cbar = fig.colorbar(
     )
 cbar.ax.xaxis.set_minor_locator(AutoMinorLocator(1))
 cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel('Source wind10 anomalies [$m \; s^{-1}$]', linespacing=2)
+cbar.ax.set_xlabel('Source vel10 anomalies [$m \; s^{-1}$]', linespacing=2)
 fig.savefig(output_png)
 
 

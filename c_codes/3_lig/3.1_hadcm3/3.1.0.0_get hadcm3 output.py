@@ -184,7 +184,7 @@ print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
 with open('scratch/share/from_rahul/data_qingang/hadcm3_output.pkl', 'rb') as f:
     hadcm3_output = pickle.load(f)
 
-for iperiod in ['LIG0.25']:
+for iperiod in ['PI', 'LIG', 'LIG0.25']:
     # iperiod = 'LIG'
     # ['PI', 'LIG', 'LIG0.25']
     print('#-------------------------------- ' + iperiod)
@@ -194,7 +194,7 @@ for iperiod in ['LIG0.25']:
         print('#---------------- ' + ivar)
         
         #---------------- length
-        print(hadcm3_output[iperiod][ivar])
+        print(hadcm3_output[iperiod][ivar].shape)
 
 # hadcm3_output['LIG0.25']['SST'].time
 '''
@@ -215,7 +215,7 @@ hadcm3_output_cleaned[iperiod] = {}
 # hadcm3_output[iperiod]
 
 for ivar in ['SAT', 'SIC', 'SST']:
-    # ivar = 'SAT'
+    # ivar = 'SST'
     print('#---------------- ' + ivar)
     
     hadcm3_output_cleaned[iperiod][ivar] = \
@@ -231,7 +231,7 @@ hadcm3_output_cleaned[iperiod] = {}
 # hadcm3_output[iperiod]
 
 for ivar in ['SAT', 'SIC', 'SST']:
-    # ivar = 'SAT'
+    # ivar = 'SST'
     print('#---------------- ' + ivar)
     
     hadcm3_output_cleaned[iperiod][ivar] = \
@@ -248,23 +248,23 @@ hadcm3_output_cleaned[iperiod] = {}
 
 hadcm3_output_cleaned[iperiod]['SAT'] = \
     hadcm3_output[iperiod]['SAT'].squeeze().rename(
-        'SAT').sel(time=slice('4737-01-17', '4836-12-17'))
+        'SAT').sel(time=slice('5654-01-16', '5753-12-16'))
 
 hadcm3_output_cleaned[iperiod]['SIC'] = \
     hadcm3_output[iperiod]['SIC'].squeeze().rename(
-        'SIC').sel(time=slice('4737-01-17', '4836-12-17'))
+        'SIC').sel(time=slice('5654-01-16', '5753-12-16'))
 
 hadcm3_output_cleaned[iperiod]['SST'] = \
     hadcm3_output[iperiod]['SST'].squeeze().rename(
-        'SST')
+        'SST').sel(time=slice('5654-01-16', '5753-12-16'))
 
-hadcm3_output_cleaned[iperiod]['SST']['time'] = hadcm3_output[iperiod]['SAT']['time'][:-1]
-hadcm3_output_cleaned[iperiod]['SST'] = \
-    hadcm3_output_cleaned[iperiod]['SST'].sel(
-        time=slice('4737-01-17', '4836-12-17'))
+# hadcm3_output_cleaned[iperiod]['SST']['time'] = hadcm3_output[iperiod]['SAT']['time'][:-1]
+# hadcm3_output_cleaned[iperiod]['SST'] = \
+#     hadcm3_output_cleaned[iperiod]['SST'].sel(
+#         time=slice('4737-01-17', '4836-12-17'))
 
-hadcm3_output_cleaned[iperiod]['SST']['lon'] = hadcm3_output_cleaned['PI']['SST']['lon']
-hadcm3_output_cleaned[iperiod]['SST']['lat'] = hadcm3_output_cleaned['PI']['SST']['lat']
+# hadcm3_output_cleaned[iperiod]['SST']['lon'] = hadcm3_output_cleaned['PI']['SST']['lon']
+# hadcm3_output_cleaned[iperiod]['SST']['lat'] = hadcm3_output_cleaned['PI']['SST']['lat']
 
 with open('scratch/share/from_rahul/data_qingang/hadcm3_output_cleaned.pkl', 'wb') as f:
     pickle.dump(hadcm3_output_cleaned, f)

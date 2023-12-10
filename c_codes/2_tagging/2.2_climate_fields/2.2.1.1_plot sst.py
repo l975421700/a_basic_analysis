@@ -620,7 +620,7 @@ cbar = fig.colorbar(
     orientation="horizontal", shrink=0.9, ticks=pltticks, extend='max',
     pad=0.05,
     )
-cbar.ax.set_xlabel('wind10 [$m\;s^{-1}$]',
+cbar.ax.set_xlabel('vel10 [$m\;s^{-1}$]',
                    linespacing=1.5,)
 
 fig.subplots_adjust(

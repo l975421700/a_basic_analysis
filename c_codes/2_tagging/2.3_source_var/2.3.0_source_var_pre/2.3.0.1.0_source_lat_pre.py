@@ -673,7 +673,7 @@ cmaps = ['viridis_r', 'BrBG', 'twilight_shifted',
 cbar_labels = [
     'Source latitude [$°\;S$]', 'Source longitude [$°$]',
     'Relative source longitude [$°$]',
-    'Source SST [$°C$]', 'Source rh2m [$\%$]', 'Source wind10 [$m \; s^{-1}$]',
+    'Source SST [$°C$]', 'Source rh2m [$\%$]', 'Source vel10 [$m \; s^{-1}$]',
 ]
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3 ' + expid[i] + ' pre_weighted_var am Antarctica + am aprt.png'

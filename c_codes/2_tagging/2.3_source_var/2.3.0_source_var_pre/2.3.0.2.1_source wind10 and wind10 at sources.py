@@ -278,7 +278,7 @@ cbar = fig.colorbar(
     pad=0.05,
     )
 cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel('Source wind10 [$m \; s^{-1}$]', linespacing=1.5,)
+cbar.ax.set_xlabel('Source vel10 [$m \; s^{-1}$]', linespacing=1.5,)
 
 
 # wind10 at sources
@@ -307,7 +307,7 @@ cbar = fig.colorbar(
     pad=0.05,
     )
 cbar.ax.tick_params(labelsize=8)
-cbar.ax.set_xlabel('wind10 at source lat & lon [$m \; s^{-1}$]', linespacing=1.5,)
+cbar.ax.set_xlabel('vel10 at source lat & lon [$m \; s^{-1}$]', linespacing=1.5,)
 
 
 # source wind10 - wind10 at sources

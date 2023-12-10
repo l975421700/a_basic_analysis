@@ -198,7 +198,7 @@ fig.savefig(output_png, dpi=1200)
 # region plot pre_weighted_wind10 am_sm_5
 
 output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3.4_wind10/6.1.3.4 ' + expid[i] + ' pre_weighted_wind10 am_sm_5 Antarctica.png'
-cbar_label1 = 'Source wind10 [$m \; s^{-1}$]'
+cbar_label1 = 'Source vel10 [$m \; s^{-1}$]'
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=8.5, cm_max=12.5, cm_interval1=0.5, cm_interval2=0.5, cmap='magma_r',)
 
