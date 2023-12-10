@@ -5,7 +5,16 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'nudged_701_5.0',
+    # 'nudged_701_5.0',
+    
+    # 'nudged_703_6.0_k52',
+    # 'nudged_705_6.0',
+    # 'nudged_706_6.0_k52_88',
+    # 'nudged_707_6.0_k43',
+    # 'nudged_708_6.0_I01',
+    # 'nudged_709_6.0_I03',
+    # 'nudged_710_6.0_S3',
+    'nudged_711_6.0_S6',
     ]
 i = 0
 
@@ -82,10 +91,10 @@ lon = d_ln_q_sfc_alltime[expid[i]]['am'].lon
 lat = d_ln_q_sfc_alltime[expid[i]]['am'].lat
 
 
-temp2_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
-    temp2_alltime[expid[i]] = pickle.load(f)
-temp2_alltime[expid[i]]['daily']['time'] = temp2_alltime[expid[i]]['daily']['time'].dt.floor('D').rename('time')
+# temp2_alltime = {}
+# with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
+#     temp2_alltime[expid[i]] = pickle.load(f)
+# temp2_alltime[expid[i]]['daily']['time'] = temp2_alltime[expid[i]]['daily']['time'].dt.floor('D').rename('time')
 
 
 '''
@@ -102,8 +111,9 @@ FR16_Kohnen_1d_sim = {}
 
 FR16_Kohnen_1d_sim[expid[i]] = FR16_Kohnen['1d'].copy()
 
-for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', 'temp2']:
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q',]:
     # var_name = 'd_ln'
+    #  'temp2'
     print('#-------- ' + var_name)
     
     if (var_name == 'dD'):
@@ -116,8 +126,8 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', 'temp2']:
         ivar = d_ln_q_sfc_alltime[expid[i]]['daily']
     elif (var_name == 'q'):
         ivar = wiso_q_6h_sfc_alltime[expid[i]]['q16o']['daily'].sel(lev=47)
-    elif (var_name == 'temp2'):
-        ivar = temp2_alltime[expid[i]]['daily']
+    # elif (var_name == 'temp2'):
+    #     ivar = temp2_alltime[expid[i]]['daily']
     
     FR16_Kohnen_1d_sim[expid[i]][var_name + '_sim'] = \
         find_multi_gridvalue_at_site_time(

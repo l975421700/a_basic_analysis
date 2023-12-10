@@ -1,5 +1,10 @@
 
 
+# salloc --account=paleodyn.paleodyn --qos=12h --time=12:00:00 --nodes=1 --mem=120GB
+# source ${HOME}/miniconda3/bin/activate deepice
+# ipython
+
+
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_600_5.0',
@@ -10,7 +15,9 @@ expid = [
     # 'pi_609_5.7',
     # 'pi_610_5.8',
     # 'hist_700_5.0',
-    'nudged_701_5.0',
+    # 'nudged_701_5.0',
+    
+    'nudged_703_6.0_k52',
     ]
 i = 0
 
@@ -63,7 +70,7 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_alltime.pkl
 d_excess_alltime = {}
 d_excess_alltime[expid[i]] = {}
 
-for ialltime in ['daily', 'mon', 'mm', 'sea', 'sm', 'ann', 'am']:
+for ialltime in ['6h', 'daily', 'mon', 'mm', 'sea', 'sm', 'ann', 'am']:
     print(ialltime)
     
     d_excess_alltime[expid[i]][ialltime] = \
@@ -114,7 +121,7 @@ print(cc)
 d_ln_alltime = {}
 d_ln_alltime[expid[i]] = {}
 
-for ialltime in ['daily', 'mon', 'mm', 'sea', 'sm', 'ann', 'am']:
+for ialltime in ['6h', 'daily', 'mon', 'mm', 'sea', 'sm', 'ann', 'am']:
     print(ialltime)
     # ialltime = 'sm'
     

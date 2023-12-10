@@ -8,14 +8,24 @@
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'nudged_701_5.0',
-    'nudged_713_6.0_2yr',
-    'nudged_712_6.0_k52_2yr',
-    'nudged_714_6.0_k52_88_2yr',
-    'nudged_715_6.0_k43_2yr',
-    'nudged_716_6.0_I01_2yr',
-    'nudged_717_6.0_I03_2yr',
-    'nudged_718_6.0_S3_2yr',
-    'nudged_719_6.0_S6_2yr',
+    
+    'nudged_705_6.0',
+    'nudged_703_6.0_k52',
+    # 'nudged_706_6.0_k52_88',
+    'nudged_707_6.0_k43',
+    'nudged_708_6.0_I01',
+    'nudged_709_6.0_I03',
+    'nudged_710_6.0_S3',
+    'nudged_711_6.0_S6',
+    
+    # 'nudged_713_6.0_2yr',
+    # 'nudged_712_6.0_k52_2yr',
+    # 'nudged_714_6.0_k52_88_2yr',
+    # 'nudged_715_6.0_k43_2yr',
+    # 'nudged_716_6.0_I01_2yr',
+    # 'nudged_717_6.0_I03_2yr',
+    # 'nudged_718_6.0_S3_2yr',
+    # 'nudged_719_6.0_S6_2yr',
     ]
 i = 0
 
@@ -248,7 +258,7 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
                         ', $RMSE = $' + str(np.round(RMSE, 1))
     
     plt.text(
-        0.32, 0.15, eq_text,
+        0.05, 0.9, eq_text,
         transform=ax.transAxes, fontsize=8, ha='left')
     
     xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
@@ -279,7 +289,7 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
 # -----------------------------------------------------------------------------
 # region plot time series
 
-for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 't_3m', 'q']:
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
     # var_name = 'q'
     print('#-------- ' + var_name)
     
@@ -592,5 +602,62 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
 
 '''
 '''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region time series multiple models
+
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
+    # var_name = 'q'
+    print('#-------- ' + var_name)
+    
+    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.1_MC16/8.3.0.1.1 nudged_712_9 MC16 time series of observed and simulated daily ' + var_name + '.png'
+    
+    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 6.6]) / 2.54)
+    
+    for i in range(len(expid)):
+        print(str(i) + ': ' + expid[i])
+        
+        xdata = MC16_Dome_C_1d_sim[expid[i]]['time'].values
+        ydata = MC16_Dome_C_1d_sim[expid[i]][var_name].values
+        ydata_sim = MC16_Dome_C_1d_sim[expid[i]][var_name + '_sim'].values
+        
+        if (var_name == 'q'):
+            ydata = ydata * 1000
+            ydata_sim = ydata_sim * 1000
+        
+        ax.plot(xdata, ydata_sim, 'o', ls='-', ms=2, lw=0.5,
+                c=expid_colours[expid[i]], label=expid_labels[expid[i]],)
+    
+    ax.plot(xdata, ydata, 'o', ls='-', ms=2, lw=0.5, label='Obs.',)
+    
+    hourly_y = MC16_Dome_C['1h'][var_name].values
+    if (var_name == 'q'):
+        hourly_y = hourly_y * 1000
+    ax.plot(
+        MC16_Dome_C['1h']['time'].values,
+        hourly_y,
+        ls='-', lw=0.2, label='Hourly Obs.',)
+    
+    ax.set_xticks(xdata[::4])
+    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_xlabel('Date', labelpad=6)
+    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_ylabel(plot_labels[var_name], labelpad=6)
+    plt.xticks(rotation=30, ha='right')
+    
+    ax.legend(handlelength=1, loc='upper right', framealpha=0.25, ncol=3, fontsize=8)
+    
+    ax.grid(True, which='both',
+            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.3, top=0.98)
+    fig.savefig(output_png)
+
+
+
+# MC16_Dome_C_1d_sim[expid[i]]['time']
+
 # endregion
 # -----------------------------------------------------------------------------

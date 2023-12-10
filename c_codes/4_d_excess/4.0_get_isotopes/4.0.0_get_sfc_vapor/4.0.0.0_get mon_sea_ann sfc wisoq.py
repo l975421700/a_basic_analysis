@@ -18,7 +18,8 @@ expid = [
     # 'nudged_718_6.0_S3_2yr',
     # 'nudged_719_6.0_S6_2yr',
     
-    'nudged_705_6.0',
+    'nudged_703_6.0_k52',
+    # 'nudged_705_6.0',
     # 'nudged_706_6.0_k52_88',
     # 'nudged_707_6.0_k43',
     # 'nudged_708_6.0_I01',
@@ -89,10 +90,10 @@ time = exp_org_o[expid[i]]['wiso_q_6h_sfc'].time
 lon  = exp_org_o[expid[i]]['wiso_q_6h_sfc'].lon
 lat  = exp_org_o[expid[i]]['wiso_q_6h_sfc'].lat
 
-ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
+ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0,  3, 0]
 kwiso2 = 0
-var_names = ['lat', 'sst', 'rh2m', 'wind10', 'sinlon', 'coslon',]
-itags = [5, 7, 8, 9, 11, 12]
+var_names = ['lat', 'sst', 'rh2m', 'wind10', 'sinlon', 'coslon', 'RHsst',]
+itags = [5, 7, 8, 9, 11, 12, 14]
 
 ocean_q_sfc = {}
 ocean_q_sfc[expid[i]] = xr.DataArray(

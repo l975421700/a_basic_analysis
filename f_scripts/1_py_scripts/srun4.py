@@ -5,92 +5,114 @@
 # ipython
 
 
+#SBATCH --time=00:30:00
+
+
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'nudged_701_5.0',
-    
+    'nudged_703_6.0_k52',
     # 'nudged_705_6.0',
-    # 'nudged_706_6.0_k52_88',
-    # 'nudged_707_6.0_k43',
-    # 'nudged_708_6.0_I01',
-    'nudged_709_6.0_I03',
-    # 'nudged_710_6.0_S3',
-    # 'nudged_711_6.0_S6',
     ]
 i = 0
 
+ifile_start = 0 #12 #0 #120
+ifile_end   = 528 #528 #516 #1740 #840
+
+ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0,  3, 0]
+
+# var_name  = 'sst'
+# itag      = 7
+# min_sf    = 268.15
+# max_sf    = 318.15
+
+var_name  = 'lat'
+itag      = 5
+min_sf    = -90
+max_sf    = 90
+
+# var_name  = 'rh2m'
+# itag      = 8
+# min_sf    = 0
+# max_sf    = 1.6
+
+# var_name  = 'wind10'
+# itag      = 9
+# min_sf    = 0
+# max_sf    = 28
+
+# var_name  = 'sinlon'
+# itag      = 11
+# min_sf    = -1
+# max_sf    = 1
+
+# var_name  = 'coslon'
+# itag      = 12
+# min_sf    = -1
+# max_sf    = 1
+
+
+# var_name  = 'RHsst'
+# itag      = 14
+# min_sf    = 0
+# max_sf    = 1.4
 
 # -----------------------------------------------------------------------------
 # region import packages
 
 # management
 import glob
-import pickle
 import warnings
 warnings.filterwarnings('ignore')
-import os
 import sys  # print(sys.path)
 sys.path.append('/albedo/work/user/qigao001')
+import os
 
 # data analysis
 import numpy as np
 import xarray as xr
 import dask
 dask.config.set({"array.slicing.split_large_chunks": True})
-from dask.diagnostics import ProgressBar
-pbar = ProgressBar()
-pbar.register()
+import pickle
 from scipy import stats
-import xesmf as xe
-import pandas as pd
-from metpy.interpolate import cross_section
-from statsmodels.stats import multitest
-import pycircstat as circ
-from scipy.stats import pearsonr
-from scipy.stats import linregress
-from metpy.calc import pressure_to_height_std, geopotential_to_height
-from metpy.units import units
 
-# plot
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from matplotlib.colors import BoundaryNorm
-from matplotlib import cm
-import cartopy.crs as ccrs
-plt.rcParams['pcolor.shading'] = 'auto'
-mpl.rcParams['figure.dpi'] = 600
-mpl.rc('font', family='Times New Roman', size=10)
-mpl.rcParams['axes.linewidth'] = 0.2
-plt.rcParams.update({"mathtext.fontset": "stix"})
-import matplotlib.animation as animation
-import seaborn as sns
-import cartopy.feature as cfeature
-from matplotlib.ticker import AutoMinorLocator
-from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
-import matplotlib.path as mpath
-
-# self defined
-from a_basic_analysis.b_module.mapplot import (
-    remove_trailing_zero,
-    remove_trailing_zero_pos,
-    hemisphere_conic_plot,
+from a_basic_analysis.b_module.source_properties import (
+    source_properties,
 )
 
 from a_basic_analysis.b_module.basic_calculations import (
-    find_multi_gridvalue_at_site,
-    find_multi_gridvalue_at_site_time,
+    mon_sea_ann,
 )
 
-from a_basic_analysis.b_module.namelist import (
-    panel_labels,
-    plot_labels,
-)
+from dask.diagnostics import ProgressBar
+pbar = ProgressBar()
+pbar.register()
 
-from a_basic_analysis.b_module.component_plot import (
-    cplot_ice_cores,
-    plt_mesh_pars,
-)
+# endregion
+# -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region set indices
+
+kwiso2 = 0
+
+kstart = kwiso2 + sum(ntags[:itag])
+
+str_ind1 = str(kstart + 2)
+str_ind2 = str(kstart + 3)
+
+if (len(str_ind1) == 1):
+    str_ind1 = '0' + str_ind1
+if (len(str_ind2) == 1):
+    str_ind2 = '0' + str_ind2
+
+print(kstart); print(str_ind1); print(str_ind2)
+
+
+'''
+exp_out_wiso_q_1m['q_' + str_ind1]
+'''
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -98,127 +120,138 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-NK16_Australia_Syowa_1d_sim = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.NK16_Australia_Syowa_1d_sim.pkl', 'rb') as f:
-    NK16_Australia_Syowa_1d_sim[expid[i]] = pickle.load(f)
 
-IT20_ACE_1d_sim = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.IT20_ACE_1d_sim.pkl', 'rb') as f:
-    IT20_ACE_1d_sim[expid[i]] = pickle.load(f)
+exp_org_o = {}
+exp_org_o[expid[i]] = {}
 
-BJ19_polarstern_1d_sim = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.BJ19_polarstern_1d_sim.pkl', 'rb') as f:
-    BJ19_polarstern_1d_sim[expid[i]] = pickle.load(f)
+filenames_wiso_q_6h_sfc = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso_q_6h_sfc.nc'))
+exp_org_o[expid[i]]['wiso_q_6h_sfc'] = xr.open_mfdataset(
+    filenames_wiso_q_6h_sfc[ifile_start:ifile_end],
+    )
 
-ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
-T63GR15_jan_surf = xr.open_dataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/nudged_701_5.0/input/echam/unit.24')
-ERA5_daily_SIC_2013_2022 = xr.open_dataset('scratch/ERA5/SIC/ERA5_daily_SIC_2013_2022.nc', chunks={'time': 720})
 
 '''
+
+ncfile1 = xr.open_dataset('/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/nudged_703_6.0_k52/unknown/nudged_703_6.0_k52_199906.01_wiso.nc')
+ncfile2 = xr.open_dataset('/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/nudged_703_6.0_k52/unknown/nudged_703_6.0_k52_199906.01_wiso_q_6h_org.nc')
+
+ncfile2['time'] = ncfile1['time']
+
+ncfile2.to_netcdf('/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/nudged_703_6.0_k52/unknown/nudged_703_6.0_k52_199906.01_wiso_q_6h.nc')
+
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region get SIC and SLM info and combine data
+# region calculate atmospheric source var
 
 
-NK16_1d_SLM = find_multi_gridvalue_at_site(
-    NK16_Australia_Syowa_1d_sim[expid[i]]['lat'].values,
-    NK16_Australia_Syowa_1d_sim[expid[i]]['lon'].values,
-    T63GR15_jan_surf.lat.values,
-    T63GR15_jan_surf.lon.values,
-    T63GR15_jan_surf.SLM.values,
-    )
-NK16_1d_SIC = find_multi_gridvalue_at_site_time(
-    NK16_Australia_Syowa_1d_sim[expid[i]]['time'],
-    NK16_Australia_Syowa_1d_sim[expid[i]]['lat'],
-    NK16_Australia_Syowa_1d_sim[expid[i]]['lon'],
-    ERA5_daily_SIC_2013_2022.time.values,
-    ERA5_daily_SIC_2013_2022.latitude.values,
-    ERA5_daily_SIC_2013_2022.longitude.values,
-    ERA5_daily_SIC_2013_2022.siconc.values * 100
-    )
+#-------- aggregate atmospheric water
 
-IT20_1d_SLM = find_multi_gridvalue_at_site(
-    IT20_ACE_1d_sim[expid[i]]['lat'].values,
-    IT20_ACE_1d_sim[expid[i]]['lon'].values,
-    T63GR15_jan_surf.lat.values,
-    T63GR15_jan_surf.lon.values,
-    T63GR15_jan_surf.SLM.values,
-    )
-IT20_1d_SIC = find_multi_gridvalue_at_site_time(
-    IT20_ACE_1d_sim[expid[i]]['time'],
-    IT20_ACE_1d_sim[expid[i]]['lat'],
-    IT20_ACE_1d_sim[expid[i]]['lon'],
-    ERA5_daily_SIC_2013_2022.time.values,
-    ERA5_daily_SIC_2013_2022.latitude.values,
-    ERA5_daily_SIC_2013_2022.longitude.values,
-    ERA5_daily_SIC_2013_2022.siconc.values * 100
-    )
+ocean_q = (exp_org_o[expid[i]]['wiso_q_6h_sfc']['q_' + str_ind1] + \
+    exp_org_o[expid[i]]['wiso_q_6h_sfc']['q_' + str_ind2] + \
+        exp_org_o[expid[i]]['wiso_q_6h_sfc']['xl_' + str_ind1] + \
+            exp_org_o[expid[i]]['wiso_q_6h_sfc']['xl_' + str_ind2] + \
+                exp_org_o[expid[i]]['wiso_q_6h_sfc']['xi_' + str_ind1] + \
+                    exp_org_o[expid[i]]['wiso_q_6h_sfc']['xi_' + str_ind2]
+        ).sel(lev=47).compute()
 
-BJ19_1d_SLM = find_multi_gridvalue_at_site(
-    BJ19_polarstern_1d_sim[expid[i]]['lat'].values,
-    BJ19_polarstern_1d_sim[expid[i]]['lon'].values,
-    T63GR15_jan_surf.lat.values,
-    T63GR15_jan_surf.lon.values,
-    T63GR15_jan_surf.SLM.values,
-    )
-BJ19_1d_SIC = find_multi_gridvalue_at_site_time(
-    BJ19_polarstern_1d_sim[expid[i]]['time'],
-    BJ19_polarstern_1d_sim[expid[i]]['lat'],
-    BJ19_polarstern_1d_sim[expid[i]]['lon'],
-    ERA5_daily_SIC_2013_2022.time.values,
-    ERA5_daily_SIC_2013_2022.latitude.values,
-    ERA5_daily_SIC_2013_2022.longitude.values,
-    ERA5_daily_SIC_2013_2022.siconc.values * 100
+var_scaled_q = (exp_org_o[expid[i]]['wiso_q_6h_sfc']['q_' + str_ind1] + \
+    exp_org_o[expid[i]]['wiso_q_6h_sfc']['xl_' + str_ind1] + \
+        exp_org_o[expid[i]]['wiso_q_6h_sfc']['xi_' + str_ind1]
+        ).sel(lev=47).compute()
+
+
+#-------- mon_sea_ann
+
+ocean_q_alltime = mon_sea_ann(var_6hourly=ocean_q)
+var_scaled_q_alltime = mon_sea_ann(var_6hourly=var_scaled_q)
+
+#-------- q-weighted var
+
+q_sfc_weighted_var = {}
+
+for ialltime in ['6h', 'daily', 'mon', 'mm', 'sea', 'sm', 'ann', 'am']:
+    print(ialltime)
+    
+    q_sfc_weighted_var[ialltime] = source_properties(
+        var_scaled_q_alltime[ialltime],
+        ocean_q_alltime[ialltime],
+        min_sf, max_sf,
+        var_name,
+        prefix = 'q_sfc_weighted_', threshold = 0,
     )
 
-NK16_Australia_Syowa_1d_sim[expid[i]]['SLM'] = NK16_1d_SLM
-NK16_Australia_Syowa_1d_sim[expid[i]]['SIC'] = NK16_1d_SIC
+#-------- monthly without monthly mean
+q_sfc_weighted_var['mon no mm'] = (q_sfc_weighted_var['mon'].groupby('time.month') - q_sfc_weighted_var['mon'].groupby('time.month').mean(skipna=True)).compute()
 
-IT20_ACE_1d_sim[expid[i]]['SLM'] = IT20_1d_SLM
-IT20_ACE_1d_sim[expid[i]]['SIC'] = IT20_1d_SIC
+#-------- annual without annual mean
+q_sfc_weighted_var['ann no am'] = (q_sfc_weighted_var['ann'] - q_sfc_weighted_var['ann'].mean(dim='time', skipna=True)).compute()
 
-BJ19_polarstern_1d_sim[expid[i]]['SLM'] = BJ19_1d_SLM
-BJ19_polarstern_1d_sim[expid[i]]['SIC'] = BJ19_1d_SIC
-
-
-SO_vapor_isotopes_SLMSIC = {}
-
-columns_subset = ['time', 'lat', 'lon', 'dD', 'd18O', 'd_xs', 'd_ln', 'q', 'dD_sim', 'd18O_sim', 'd_xs_sim', 'd_ln_sim', 'q_sim', 'SLM', 'SIC']
-
-SO_vapor_isotopes_SLMSIC[expid[i]] = pd.concat(
-    [NK16_Australia_Syowa_1d_sim[expid[i]][columns_subset].assign(
-        Reference='Kurita et al. (2016)'),
-     IT20_ACE_1d_sim[expid[i]][columns_subset].assign(
-         Reference='Thurnherr et al. (2020)'),
-     BJ19_polarstern_1d_sim[expid[i]][columns_subset].assign(
-         Reference='Bonne et al. (2019)'),],
-    ignore_index=True,)
-
-
-output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.SO_vapor_isotopes_SLMSIC.pkl'
+output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_sfc_weighted_' + var_name + '.pkl'
 
 if (os.path.isfile(output_file)):
     os.remove(output_file)
 
 with open(output_file, 'wb') as f:
-    pickle.dump(SO_vapor_isotopes_SLMSIC[expid[i]], f)
+    pickle.dump(q_sfc_weighted_var, f)
 
 
 
 
 '''
-#-------------------------------- check
-SO_vapor_isotopes_SLMSIC = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.SO_vapor_isotopes_SLMSIC.pkl', 'rb') as f:
-    SO_vapor_isotopes_SLMSIC[expid[i]] = pickle.load(f)
+#-------------------------------- check calculation of q_weighted_var
+
+with open(
+    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_sfc_weighted_' + var_name + '.pkl',
+          'rb') as f:
+    q_sfc_weighted_var = pickle.load(f)
+
+filenames_wiso_q_6h_sfc = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso_q_6h_sfc.nc'))
+ifile = -1
+ncfile2 = xr.open_dataset(filenames_wiso_q_6h_sfc[ifile_start:ifile_end][ifile])
+
+ocean_q = (ncfile2['q_' + str_ind1] + \
+    ncfile2['q_' + str_ind2] + \
+        ncfile2['xl_' + str_ind1] + \
+            ncfile2['xl_' + str_ind2] + \
+                ncfile2['xi_' + str_ind1] + \
+                    ncfile2['xi_' + str_ind2]
+        ).sel(lev=47).compute()
+var_scaled_q = (ncfile2['q_' + str_ind1] + \
+    ncfile2['xl_' + str_ind1] + \
+        ncfile2['xi_' + str_ind1]
+        ).sel(lev=47).compute()
+
+data1 = q_sfc_weighted_var['6h'][-124:].values
+data2 = source_properties(
+    var_scaled_q,
+    ocean_q,
+    min_sf, max_sf,
+    var_name,
+    prefix = 'q_sfc_weighted_', threshold = 0,
+).values
+print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
+
+
+data1 = q_sfc_weighted_var['mon'][-1].values
+data2 = source_properties(
+    var_scaled_q.resample({'time': '1d'}).mean(skipna=False).resample({'time': '1M'}).mean(skipna=False),
+    ocean_q.resample({'time': '1d'}).mean(skipna=False).resample({'time': '1M'}).mean(skipna=False),
+    min_sf, max_sf,
+    var_name,
+    prefix = 'q_sfc_weighted_', threshold = 0,
+).values
+print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
+
 
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
 
 

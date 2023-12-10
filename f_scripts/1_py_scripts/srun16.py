@@ -48,10 +48,10 @@ ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0,  3, 0]
 # min_sf    = -1
 # max_sf    = 1
 
-# var_name  = 'RHsst'
-# itag      = 14
-# min_sf    = 0
-# max_sf    = 1.4
+var_name  = 'RHsst'
+itag      = 14
+min_sf    = 0
+max_sf    = 1.4
 
 # -----------------------------------------------------------------------------
 # region import packages

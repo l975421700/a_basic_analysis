@@ -35,6 +35,7 @@ from metpy.units import units
 
 from a_basic_analysis.b_module.basic_calculations import (
     mon_sea_ann,
+    calc_specific_humidity,
 )
 
 # endregion
@@ -453,4 +454,50 @@ print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region get RHsst_2m in ERA5
+
+ERA5_daily_prs_sfc_2013_2022 = xr.open_dataset('scratch/ERA5/prs_sfc/ERA5_daily_prs_sfc_2013_2022.nc', chunks={'time': 720})
+
+ERA5_daily_SST_2013_2022 = xr.open_dataset('scratch/ERA5/SST/ERA5_daily_SST_2013_2022.nc', chunks={'time': 720})
+
+ERA5_daily_q_2013_2022 = xr.open_dataset('scratch/ERA5/q/ERA5_daily_q_2013_2022.nc', chunks={'time': 720})
+
+
+q_sst = calc_specific_humidity(
+    RH = 1,
+    T = ERA5_daily_SST_2013_2022.sst,
+    p = ERA5_daily_prs_sfc_2013_2022.sp,
+)
+
+ERA5_daily_RHsst_2013_2022 = (ERA5_daily_q_2013_2022.q/1000 / q_sst * 100).compute()
+
+ERA5_daily_RHsst_2013_2022.to_netcdf('scratch/ERA5/RHsst/ERA5_daily_RHsst_2013_2022.nc')
+
+
+
+'''
+ERA5_daily_RHsst_2013_2022 = xr.open_dataset('scratch/ERA5/RHsst/ERA5_daily_RHsst_2013_2022.nc')
+ERA5_daily_prs_sfc_2013_2022 = xr.open_dataset('scratch/ERA5/prs_sfc/ERA5_daily_prs_sfc_2013_2022.nc', chunks={'time': 720})
+ERA5_daily_SST_2013_2022 = xr.open_dataset('scratch/ERA5/SST/ERA5_daily_SST_2013_2022.nc', chunks={'time': 720})
+ERA5_daily_q_2013_2022 = xr.open_dataset('scratch/ERA5/q/ERA5_daily_q_2013_2022.nc', chunks={'time': 720})
+
+itime = 100
+ilat = 20
+ilon = 20
+data1 = calc_specific_humidity(
+    RH = 1,
+    T = ERA5_daily_SST_2013_2022.sst[itime, ilat, ilon].values,
+    p = ERA5_daily_prs_sfc_2013_2022.sp[itime, ilat, ilon].values,
+)
+data1 = ERA5_daily_q_2013_2022.q[itime, ilat, ilon].values/1000 / data1 * 100
+data2 = ERA5_daily_RHsst_2013_2022['__xarray_dataarray_variable__'][itime, ilat, ilon].values
+
+print(data1)
+print(data2)
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
 

@@ -11,7 +11,9 @@ expid = [
     # 'pi_609_5.7',
     # 'pi_610_5.8',
     # 'hist_700_5.0',
-    'nudged_701_5.0',
+    # 'nudged_701_5.0',
+    
+    'nudged_703_6.0_k52',
     ]
 i = 0
 
@@ -123,7 +125,8 @@ for icores in major_ice_core_site.Site:
 pre_weighted_var = {}
 pre_weighted_var[expid[i]] = {}
 
-source_var = ['lat', 'lon', 'sst', 'rh2m', 'wind10', 'distance']
+source_var = ['lat', 'lon', 'sst', 'rh2m', 'wind10', 'RHsst']
+# 'distance',
 
 prefix = exp_odir + expid[i] + '/analysis/echam/' + expid[i]
 source_var_files = [
@@ -132,7 +135,8 @@ source_var_files = [
     prefix + '.pre_weighted_sst.pkl',
     prefix + '.pre_weighted_rh2m.pkl',
     prefix + '.pre_weighted_wind10.pkl',
-    prefix + '.transport_distance.pkl',
+    # prefix + '.transport_distance.pkl',
+    prefix + '.pre_weighted_RHsst.pkl',
 ]
 
 for ivar, ifile in zip(source_var, source_var_files):
@@ -158,7 +162,7 @@ for icores in stations_sites.Site:
         for ialltime in pre_weighted_var[expid[i]][ivar].keys():
             print('#-- ' + ialltime)
             
-            if ialltime in ['daily', 'mon', 'sea', 'ann', 'mm', 'sm', 'mon no mm', 'ann no am']:
+            if ialltime in ['6h', 'daily', 'mon', 'sea', 'ann', 'mm', 'sm', 'mon no mm', 'ann no am']:
                 # ialltime = 'daily'
                 pre_weighted_var_icores[expid[i]][icores][ivar][ialltime] = \
                     pre_weighted_var[expid[i]][ivar][ialltime][
@@ -307,7 +311,7 @@ for iisotope in ['dO18', 'dD', 'd_excess', 'd_ln']:
         
         isotopes_alltime_icores[expid[i]][iisotope][icores] = {}
         
-        for ialltime in ['daily', 'mon', 'sea', 'ann', 'mm', 'sm', 'mon no mm', 'ann no am']:
+        for ialltime in ['6h', 'daily', 'mon', 'sea', 'ann', 'mm', 'sm', 'mon no mm', 'ann no am']:
             # ialltime = 'mon'
             print('#---- ' + ialltime)
             
@@ -391,7 +395,7 @@ for icores in stations_sites.Site:
     
     for ialltime in wisoaprt_alltime[expid[i]].keys():
         # print('#----' + ialltime)
-        if ialltime in ['daily', 'mon', 'sea', 'ann', 'mm', 'sm', 'mon no mm', 'ann no am']:
+        if ialltime in ['6h', 'daily', 'mon', 'sea', 'ann', 'mm', 'sm', 'mon no mm', 'ann no am']:
             # ialltime = 'daily'
             wisoaprt_alltime_icores[expid[i]][icores][ialltime] = \
                 wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1)[

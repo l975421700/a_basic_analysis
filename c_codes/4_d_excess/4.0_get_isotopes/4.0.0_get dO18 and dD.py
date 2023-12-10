@@ -1,5 +1,10 @@
 
 
+# salloc --account=paleodyn.paleodyn --qos=12h --time=12:00:00 --nodes=1 --mem=120GB
+# source ${HOME}/miniconda3/bin/activate deepice
+# ipython
+
+
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_600_5.0',
@@ -10,7 +15,9 @@ expid = [
     # 'pi_609_5.7',
     # 'pi_610_5.8',
     # 'hist_700_5.0',
-    'nudged_701_5.0',
+    # 'nudged_701_5.0',
+    
+    'nudged_703_6.0_k52',
     ]
 i = 0
 
@@ -64,7 +71,7 @@ wiso_calc_min = 0.05 / 2.628e6
 dO18_alltime = {}
 dO18_alltime[expid[i]] = {}
 
-for ialltime in ['daily', 'mon', 'mm', 'sea', 'sm', 'ann', 'am']:
+for ialltime in ['6h', 'daily', 'mon', 'mm', 'sea', 'sm', 'ann', 'am']:
     # ialltime = 'am'
     # ialltime = 'daily'
     print(ialltime)
@@ -122,7 +129,7 @@ ddd[wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1).values < wiso_calc_min]
 dD_alltime = {}
 dD_alltime[expid[i]] = {}
 
-for ialltime in ['daily', 'mon', 'mm', 'sea', 'sm', 'ann', 'am']:
+for ialltime in ['6h', 'daily', 'mon', 'mm', 'sea', 'sm', 'ann', 'am']:
     # ialltime = 'am'
     # ialltime = 'daily'
     print(ialltime)

@@ -1412,3 +1412,86 @@ print(res1); print(res2); print(res3)
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region Ines's function to calculate specific humidity
+
+from typhon import *
+
+def calc_WV_pressure(RH, T, e_eq=physics.e_eq_ice_mk):
+    
+    ''' This function calculates the water vapor pressure in Pa.
+    Inputs:
+        RH = relative humidity
+        T = temperature [K]
+    Default parameter:
+        e_eq = function to calculate the saturation (or equilibrium) vapor pressure of water = default is Murphy and Koop (2005) over ice
+            other options for ice: e_eq_ice_GG46, e_eq_ice_SO90
+            other options for water: physics.e_eq_water_mk, e_eq_water_GG46, e_eq_water_SO90
+    '''
+    
+    # Compute the saturation water vapor pressure in Pa
+    psat = e_eq(T)
+    
+    # Using the definition of RH = pw/psat*100, compute the water vapor pressure in Pa
+    pw = RH*psat
+    
+    return pw
+
+
+def calc_mixing_ratio(RH, T, p, e_eq=physics.e_eq_ice_mk):
+
+    ''' This function calculates the mixing ratio (= mass of WV/mass of dry gas) in kg/kg.
+    Inputs:
+        RH = relative humidity
+        T = temperature [K]
+        p = total air pressure [Pa]
+    Default parameter:
+        e_eq = function to calculate the saturation (or equilibrium) vapor pressure of water = default is Murphy and Koop (2005) over ice
+            other options for ice: e_eq_ice_GG46, e_eq_ice_SO90
+            other options for water: physics.e_eq_water_mk, e_eq_water_GG46, e_eq_water_SO90
+            
+    Rq -- equivalent with Typhon pyhon package:
+        vmr = physics.relative_humidity2vmr(RH, p, T, e_eq)
+        r = physics.vmr2mixing_ratio(vmr)
+    '''
+    
+    B = 0.6219779385109359 # gas constant for air in kg/kg - same value as in Typhon python package
+    
+    # Compute the water vapor pressure in Pa
+    pw = calc_WV_pressure(RH, T, e_eq)
+    
+    # Compute the mixing ratio
+    r = B * pw/(p - pw)
+    
+    return r
+
+
+def calc_specific_humidity(RH, T, p, e_eq=physics.e_eq_ice_mk):
+
+    ''' This function calculates the specific humidity (= mass of WV/mass of total air - same as moist air) in kg/kg.
+    Inputs:
+        RH = relative humidity
+        T = temperature [K]
+        p = total air pressure [Pa]
+    Default parameter:
+        e_eq = function to calculate the saturation (or equilibrium) vapor pressure of water = default is Murphy and Koop (2005) over ice
+            other options for ice: e_eq_ice_GG46, e_eq_ice_SO90
+            other options for water: physics.e_eq_water_mk, e_eq_water_GG46, e_eq_water_SO90
+    
+    Rq -- this is the humidity used for flux calculations
+    Rq -- equivalent with Typhon pyhon package:
+        vmr = physics.relative_humidity2vmr(RH, p, T, e_eq)
+        q = physics.vmr2specific_humidity(vmr)
+    '''
+    
+    # Compute the mixing ratio in kg/kg
+    r = calc_mixing_ratio(RH, T, p, e_eq)
+    
+    # Compute the specific humidity
+    q = r/(1+r)
+    
+    return q
+
+# endregion
+# -----------------------------------------------------------------------------

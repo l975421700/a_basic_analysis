@@ -12,7 +12,9 @@ expid = [
     # 'nudged_718_6.0_S3_2yr',
     # 'nudged_719_6.0_S6_2yr',
     
-    'nudged_705_6.0',
+    'nudged_703_6.0_k52',
+    
+    # 'nudged_705_6.0',
     # 'nudged_706_6.0_k52_88',
     # 'nudged_707_6.0_k43',
     # 'nudged_708_6.0_I01',

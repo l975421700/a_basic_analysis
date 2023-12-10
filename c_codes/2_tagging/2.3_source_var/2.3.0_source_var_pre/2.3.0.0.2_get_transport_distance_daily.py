@@ -5,7 +5,9 @@ exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_600_5.0',
     # 'hist_700_5.0',
-    'nudged_701_5.0',
+    # 'nudged_701_5.0',
+    
+    'nudged_703_6.0_k52',
     ]
 i = 0
 
@@ -309,30 +311,30 @@ def lon_180(lon):
 # -----------------------------------------------------------------------------
 # region copy output
 
-import shutil
+# import shutil
 
-# src_exp = 'pi_600_5.0'
-src_exp = 'pi_601_5.1'
+# # src_exp = 'pi_600_5.0'
+# src_exp = 'pi_601_5.1'
 
-expid = [
-    'pi_602_5.2',
-    'pi_605_5.5',
-    'pi_606_5.6',
-    'pi_609_5.7',
-    # 'pi_610_5.8',
-    ]
+# expid = [
+#     'pi_602_5.2',
+#     'pi_605_5.5',
+#     'pi_606_5.6',
+#     'pi_609_5.7',
+#     # 'pi_610_5.8',
+#     ]
 
-for i in range(len(expid)):
-    print('#-------- ' + expid[i])
+# for i in range(len(expid)):
+#     print('#-------- ' + expid[i])
     
-    input_file = exp_odir + src_exp + '/analysis/echam/' + src_exp + '.transport_distance.pkl'
+#     input_file = exp_odir + src_exp + '/analysis/echam/' + src_exp + '.transport_distance.pkl'
     
-    output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance.pkl'
+#     output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.transport_distance.pkl'
     
-    if (os.path.isfile(output_file)):
-        os.remove(output_file)
+#     if (os.path.isfile(output_file)):
+#         os.remove(output_file)
     
-    shutil.copy2(input_file, output_file)
+#     shutil.copy2(input_file, output_file)
 
 # endregion
 # -----------------------------------------------------------------------------

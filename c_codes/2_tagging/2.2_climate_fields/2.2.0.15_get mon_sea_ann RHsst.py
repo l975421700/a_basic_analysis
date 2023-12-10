@@ -5,13 +5,15 @@ expid = [
     # 'pi_600_5.0',
     # 'hist_700_5.0',
     # 'nudged_701_5.0',
-    'pi_1d_803_6.0',
+    # 'pi_1d_803_6.0',
+    # 'nudged_705_6.0',
+    'nudged_703_6.0_k52',
     ]
 i=0
 
 
-ifile_start = 12 #0 #120
-ifile_end   = 24 # 516 #1740 #840
+ifile_start = 0 #12 #0 #120
+ifile_end   = 480 #528 #24 # 516 #1740 #840
 
 
 # -----------------------------------------------------------------------------
@@ -99,6 +101,16 @@ exp_org_o[expid[i]]['surf'] = xr.open_mfdataset(
 # -----------------------------------------------------------------------------
 # region get mon_sea_ann RHsst
 
+RHsst = (exp_org_o[expid[i]]['surf'].zqklevw / exp_org_o[expid[i]]['surf'].zqsw * 100).compute()
+
+RHsst_alltime = {}
+RHsst_alltime[expid[i]] = mon_sea_ann(var_daily=RHsst)
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.RHsst_alltime.pkl', 'wb') as f:
+    pickle.dump(RHsst_alltime[expid[i]], f)
+
+
+'''
 RHsst_am = (exp_org_o[expid[i]]['surf'].zqklevw / exp_org_o[expid[i]]['surf'].zqsw).mean(dim='time').compute()
 
 # plot it
@@ -124,6 +136,6 @@ cbar.ax.set_xlabel('RHsst [$\%$]', linespacing=1.5,)
 fig.savefig(output_png, dpi=600)
 
 
-
+'''
 # endregion
 # -----------------------------------------------------------------------------

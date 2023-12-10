@@ -1,21 +1,30 @@
+
+
+# salloc --account=paleodyn.paleodyn --qos=12h --time=12:00:00 --nodes=1 --mem=120GB
+# source ${HOME}/miniconda3/bin/activate deepice
+# ipython
+
+
 #SBATCH --time=00:30:00
 
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'nudged_701_5.0',
+    # 'nudged_701_5.0',
+    'nudged_703_6.0_k52',
+    # 'nudged_705_6.0',
     ]
 i = 0
 
-ifile_start = 12 #0 #120
-ifile_end   = 516 #1740 #840
+ifile_start = 0 #12 #0 #120
+ifile_end   = 528 #528 #516 #1740 #840
 
-ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
+ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0,  3, 0]
 
-# var_name  = 'sst'
-# itag      = 7
-# min_sf    = 268.15
-# max_sf    = 318.15
+var_name  = 'sst'
+itag      = 7
+min_sf    = 268.15
+max_sf    = 318.15
 
 # var_name  = 'lat'
 # itag      = 5
@@ -37,11 +46,16 @@ ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
 # min_sf    = -1
 # max_sf    = 1
 
-var_name  = 'coslon'
-itag      = 12
-min_sf    = -1
-max_sf    = 1
+# var_name  = 'coslon'
+# itag      = 12
+# min_sf    = -1
+# max_sf    = 1
 
+
+# var_name  = 'RHsst'
+# itag      = 14
+# min_sf    = 0
+# max_sf    = 1.4
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -116,7 +130,16 @@ exp_org_o[expid[i]]['wiso_q_6h_sfc'] = xr.open_mfdataset(
     )
 
 
+
 '''
+
+ncfile1 = xr.open_dataset('/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/nudged_703_6.0_k52/unknown/nudged_703_6.0_k52_199906.01_wiso.nc')
+ncfile2 = xr.open_dataset('/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/nudged_703_6.0_k52/unknown/nudged_703_6.0_k52_199906.01_wiso_q_6h_org.nc')
+
+ncfile2['time'] = ncfile1['time']
+
+ncfile2.to_netcdf('/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/nudged_703_6.0_k52/unknown/nudged_703_6.0_k52_199906.01_wiso_q_6h.nc')
+
 '''
 # endregion
 # -----------------------------------------------------------------------------

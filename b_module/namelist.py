@@ -91,6 +91,7 @@ plot_labels = {
     'lat': 'Source latitude [$°\;S$]',
     'lon': 'Source longitude [$°$]',
     'sst': 'Source SST [$°C$]',
+    'RHsst': 'Source RHsst [$\%$]',
     'rh2m': 'Source rh2m [$\%$]',
     'wind10': 'Source wind10 [$m \; s^{-1}$]',
     'distance': 'Source-sink distance [$× 10^2 km$]',
@@ -146,6 +147,7 @@ expid_labels = {
     'nudged_719_6.0_S6_2yr': '$Nudge_{S6}$',
     
     'nudged_705_6.0': '$Nudge_{control}$',
+    'nudged_703_6.0_k52': '$Nudge_{k52}$',
     'nudged_706_6.0_k52_88': '$Nudge_{k52\_88}$',
     'nudged_707_6.0_k43': '$Nudge_{k43}$',
     'nudged_708_6.0_I01': '$Nudge_{I01}$',
@@ -177,6 +179,7 @@ expid_colours = {
     'nudged_719_6.0_S6_2yr': 'grey',
     
     'nudged_705_6.0': 'black',
+    'nudged_703_6.0_k52': 'tab:blue',
     'nudged_706_6.0_k52_88': 'tab:orange',
     'nudged_707_6.0_k43': 'tab:green',
     'nudged_708_6.0_I01': 'tab:red',

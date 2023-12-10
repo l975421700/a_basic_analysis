@@ -10,7 +10,10 @@ expid = [
     # 'pi_606_5.6',
     # 'pi_609_5.7',
     # 'pi_610_5.8',
-    'hist_700_5.0',
+    # 'hist_700_5.0',
+    
+    # 'nudged_705_6.0',
+    'nudged_703_6.0_k52',
     ]
 
 
@@ -125,7 +128,7 @@ from a_basic_analysis.b_module.component_plot import (
 isotopes_alltime_icores = {}
 pre_weighted_var_icores = {}
 wisoaprt_alltime_icores = {}
-temp2_alltime_icores = {}
+# temp2_alltime_icores = {}
 
 for i in range(len(expid)):
     print(i)
@@ -142,17 +145,17 @@ for i in range(len(expid)):
         exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_alltime_icores.pkl', 'rb') as f:
         wisoaprt_alltime_icores[expid[i]] = pickle.load(f)
     
-    with open(
-        exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.temp2_alltime_icores.pkl', 'rb') as f:
-        temp2_alltime_icores[expid[i]] = pickle.load(f)
+    # with open(
+    #     exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.temp2_alltime_icores.pkl', 'rb') as f:
+    #     temp2_alltime_icores[expid[i]] = pickle.load(f)
 
-aprt_frc_alltime_icores = {}
-for i in range(len(expid)):
-    print(i)
+# aprt_frc_alltime_icores = {}
+# for i in range(len(expid)):
+#     print(i)
     
-    with open(
-        exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.aprt_frc_alltime_icores.pkl', 'rb') as f:
-        aprt_frc_alltime_icores[expid[i]] = pickle.load(f)
+#     with open(
+#         exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.aprt_frc_alltime_icores.pkl', 'rb') as f:
+#         aprt_frc_alltime_icores[expid[i]] = pickle.load(f)
 
 
 '''
@@ -183,12 +186,14 @@ for icores in ['EDC',]:
     # icores = 'EDC'
     print('#-------------------------------- ' + icores)
     
-    for iisotope in ['dO18', 'dD', 'd_excess', 'd_ln']:
+    for iisotope in ['d_excess', 'd_ln']:
         # iisotope = 'd_ln'
+        # 'dO18', 'dD',
         print('#---------------- ' + iisotope)
         
-        for ivar in ['sst', 'rh2m', 'wind10']:
+        for ivar in ['sst', 'RHsst']:
             # ivar = 'sst'
+            # 'rh2m', 'wind10'
             print('#-------- ' + ivar)
             
             for ialltime in ['daily', 'mon', 'mm', 'mon no mm', 'ann', 'ann no am']:

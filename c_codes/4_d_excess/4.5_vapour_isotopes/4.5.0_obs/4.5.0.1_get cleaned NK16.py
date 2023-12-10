@@ -161,6 +161,8 @@ with open(output_file, 'wb') as f:
 with open('data_sources/water_isotopes/NK16/NK16_Australia_Syowa.pkl', 'rb') as f:
     NK16_Australia_Syowa = pickle.load(f)
 
+NK16_Australia_Syowa['1d']['rh_sst']
+
 (NK16_Australia_Syowa['6h']['dD'] > 0).sum()
 np.max(NK16_Australia_Syowa['6h']['dD'])
 

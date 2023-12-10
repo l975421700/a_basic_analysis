@@ -1,6 +1,6 @@
 
 output_dir='/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi'
-expid='nudged_711_6.0_S6'
+expid='nudged_703_6.0_k52'
 
 echo $'\n#-------- clean model output: ' ${expid}
 

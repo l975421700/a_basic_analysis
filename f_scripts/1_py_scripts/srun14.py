@@ -38,10 +38,10 @@ ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0,  3, 0]
 # min_sf    = 0
 # max_sf    = 28
 
-# var_name  = 'sinlon'
-# itag      = 11
-# min_sf    = -1
-# max_sf    = 1
+var_name  = 'sinlon'
+itag      = 11
+min_sf    = -1
+max_sf    = 1
 
 # var_name  = 'coslon'
 # itag      = 12

@@ -9,7 +9,17 @@ exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'nudged_701_5.0',
     
-    'nudged_705_6.0',
+    # 'nudged_712_6.0_k52_2yr',
+    # 'nudged_713_6.0_2yr',
+    # 'nudged_714_6.0_k52_88_2yr',
+    # 'nudged_715_6.0_k43_2yr',
+    # 'nudged_716_6.0_I01_2yr',
+    # 'nudged_717_6.0_I03_2yr',
+    # 'nudged_718_6.0_S3_2yr',
+    # 'nudged_719_6.0_S6_2yr',
+    
+    'nudged_703_6.0_k52',
+    # 'nudged_705_6.0',
     # 'nudged_706_6.0_k52_88',
     # 'nudged_707_6.0_k43',
     # 'nudged_708_6.0_I01',
@@ -19,6 +29,8 @@ expid = [
     ]
 i = 0
 
+ifile_start = 0 #12
+ifile_end   = 528 #516
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -31,6 +43,7 @@ warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
 sys.path.append('/albedo/work/user/qigao001')
+import psutil
 
 # data analysis
 import numpy as np
@@ -41,79 +54,28 @@ from dask.diagnostics import ProgressBar
 pbar = ProgressBar()
 pbar.register()
 from scipy import stats
-import xesmf as xe
 import pandas as pd
-from metpy.interpolate import cross_section
-from statsmodels.stats import multitest
-import pycircstat as circ
-from scipy.stats import pearsonr
-from scipy.stats import linregress
-from metpy.calc import pressure_to_height_std, geopotential_to_height
-from metpy.units import units
-
-# plot
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from matplotlib.colors import BoundaryNorm
-from matplotlib import cm
-import cartopy.crs as ccrs
-plt.rcParams['pcolor.shading'] = 'auto'
-mpl.rcParams['figure.dpi'] = 600
-mpl.rc('font', family='Times New Roman', size=10)
-mpl.rcParams['axes.linewidth'] = 0.2
-plt.rcParams.update({"mathtext.fontset": "stix"})
-import matplotlib.animation as animation
-import seaborn as sns
-import cartopy.feature as cfeature
-from matplotlib.ticker import AutoMinorLocator
-from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
-import matplotlib.path as mpath
-
-# self defined
-from a_basic_analysis.b_module.mapplot import (
-    remove_trailing_zero,
-    remove_trailing_zero_pos,
-    hemisphere_conic_plot,
-)
 
 from a_basic_analysis.b_module.basic_calculations import (
-    find_multi_gridvalue_at_site,
-    find_multi_gridvalue_at_site_time,
+    mon_sea_ann,
 )
 
-from a_basic_analysis.b_module.namelist import (
-    panel_labels,
-    plot_labels,
-)
-
-from a_basic_analysis.b_module.component_plot import (
-    cplot_ice_cores,
-    plt_mesh_pars,
-)
 
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region import data
+# region import output
 
-NK16_Australia_Syowa_1d_sim = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.NK16_Australia_Syowa_1d_sim.pkl', 'rb') as f:
-    NK16_Australia_Syowa_1d_sim[expid[i]] = pickle.load(f)
+exp_org_o = {}
+exp_org_o[expid[i]] = {}
 
-IT20_ACE_1d_sim = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.IT20_ACE_1d_sim.pkl', 'rb') as f:
-    IT20_ACE_1d_sim[expid[i]] = pickle.load(f)
+filenames_wiso_q_6h_sfc = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso_q_6h_sfc.nc'))
+exp_org_o[expid[i]]['wiso_q_6h_sfc'] = xr.open_mfdataset(
+    filenames_wiso_q_6h_sfc[ifile_start:ifile_end],
+    )
 
-BJ19_polarstern_1d_sim = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.BJ19_polarstern_1d_sim.pkl', 'rb') as f:
-    BJ19_polarstern_1d_sim[expid[i]] = pickle.load(f)
-
-ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
-
-T63GR15_jan_surf = xr.open_dataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/nudged_701_5.0/input/echam/unit.24')
-ERA5_daily_SIC_2013_2022 = xr.open_dataset('scratch/ERA5/SIC/ERA5_daily_SIC_2013_2022.nc', chunks={'time': 720})
 
 '''
 '''
@@ -122,103 +84,139 @@ ERA5_daily_SIC_2013_2022 = xr.open_dataset('scratch/ERA5/SIC/ERA5_daily_SIC_2013
 
 
 # -----------------------------------------------------------------------------
-# region get SIC and SLM info and combine data
+# region get mon_sea_ann ocean_q_sfc
 
+time = exp_org_o[expid[i]]['wiso_q_6h_sfc'].time
+lon  = exp_org_o[expid[i]]['wiso_q_6h_sfc'].lon
+lat  = exp_org_o[expid[i]]['wiso_q_6h_sfc'].lat
 
-NK16_1d_SLM = find_multi_gridvalue_at_site(
-    NK16_Australia_Syowa_1d_sim[expid[i]]['lat'].values,
-    NK16_Australia_Syowa_1d_sim[expid[i]]['lon'].values,
-    T63GR15_jan_surf.lat.values,
-    T63GR15_jan_surf.lon.values,
-    T63GR15_jan_surf.SLM.values,
-    )
-NK16_1d_SIC = find_multi_gridvalue_at_site_time(
-    NK16_Australia_Syowa_1d_sim[expid[i]]['time'],
-    NK16_Australia_Syowa_1d_sim[expid[i]]['lat'],
-    NK16_Australia_Syowa_1d_sim[expid[i]]['lon'],
-    ERA5_daily_SIC_2013_2022.time.values,
-    ERA5_daily_SIC_2013_2022.latitude.values,
-    ERA5_daily_SIC_2013_2022.longitude.values,
-    ERA5_daily_SIC_2013_2022.siconc.values * 100
-    )
+ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0,  3, 0]
+kwiso2 = 0
+var_names = ['lat', 'sst', 'rh2m', 'wind10', 'sinlon', 'coslon', 'RHsst',]
+itags = [5, 7, 8, 9, 11, 12, 14]
 
-IT20_1d_SLM = find_multi_gridvalue_at_site(
-    IT20_ACE_1d_sim[expid[i]]['lat'].values,
-    IT20_ACE_1d_sim[expid[i]]['lon'].values,
-    T63GR15_jan_surf.lat.values,
-    T63GR15_jan_surf.lon.values,
-    T63GR15_jan_surf.SLM.values,
-    )
-IT20_1d_SIC = find_multi_gridvalue_at_site_time(
-    IT20_ACE_1d_sim[expid[i]]['time'],
-    IT20_ACE_1d_sim[expid[i]]['lat'],
-    IT20_ACE_1d_sim[expid[i]]['lon'],
-    ERA5_daily_SIC_2013_2022.time.values,
-    ERA5_daily_SIC_2013_2022.latitude.values,
-    ERA5_daily_SIC_2013_2022.longitude.values,
-    ERA5_daily_SIC_2013_2022.siconc.values * 100
-    )
+ocean_q_sfc = {}
+ocean_q_sfc[expid[i]] = xr.DataArray(
+    data = np.zeros(
+        (len(time), len(var_names), len(lat), len(lon)),
+        dtype=np.float32),
+    coords={
+        'time':         time,
+        'var_names':    var_names,
+        'lat':          lat,
+        'lon':          lon,
+    }
+)
 
-BJ19_1d_SLM = find_multi_gridvalue_at_site(
-    BJ19_polarstern_1d_sim[expid[i]]['lat'].values,
-    BJ19_polarstern_1d_sim[expid[i]]['lon'].values,
-    T63GR15_jan_surf.lat.values,
-    T63GR15_jan_surf.lon.values,
-    T63GR15_jan_surf.SLM.values,
-    )
-BJ19_1d_SIC = find_multi_gridvalue_at_site_time(
-    BJ19_polarstern_1d_sim[expid[i]]['time'],
-    BJ19_polarstern_1d_sim[expid[i]]['lat'],
-    BJ19_polarstern_1d_sim[expid[i]]['lon'],
-    ERA5_daily_SIC_2013_2022.time.values,
-    ERA5_daily_SIC_2013_2022.latitude.values,
-    ERA5_daily_SIC_2013_2022.longitude.values,
-    ERA5_daily_SIC_2013_2022.siconc.values * 100
-    )
+for count,var_name in enumerate(var_names):
+    # count = 0; var_name = 'lat'
+    
+    kstart = kwiso2 + sum(ntags[:itags[count]])
+    
+    str_ind1 = str(kstart + 2)
+    str_ind2 = str(kstart + 3)
+    
+    if (len(str_ind1) == 1): str_ind1 = '0' + str_ind1
+    if (len(str_ind2) == 1): str_ind2 = '0' + str_ind2
+    
+    print(str(count) + ' : ' + var_name + ' : ' + str(itags[count]) + \
+        ' : ' + str_ind1 + ' : ' + str_ind2)
+    
+    ocean_q_sfc[expid[i]].sel(var_names=var_name)[:] = \
+        (exp_org_o[expid[i]]['wiso_q_6h_sfc']['q_' + str_ind1] + \
+            exp_org_o[expid[i]]['wiso_q_6h_sfc']['q_' + str_ind2] + \
+                exp_org_o[expid[i]]['wiso_q_6h_sfc']['xl_' + str_ind1] + \
+                    exp_org_o[expid[i]]['wiso_q_6h_sfc']['xl_' + str_ind2] + \
+                        exp_org_o[expid[i]]['wiso_q_6h_sfc']['xi_' + str_ind1] + \
+                            exp_org_o[expid[i]]['wiso_q_6h_sfc']['xi_' + str_ind2]
+                            ).sel(lev=47)
 
-NK16_Australia_Syowa_1d_sim[expid[i]]['SLM'] = NK16_1d_SLM
-NK16_Australia_Syowa_1d_sim[expid[i]]['SIC'] = NK16_1d_SIC
+ocean_q_sfc_alltime = {}
+ocean_q_sfc_alltime[expid[i]] = mon_sea_ann(
+    var_6hourly=ocean_q_sfc[expid[i]],)
 
-IT20_ACE_1d_sim[expid[i]]['SLM'] = IT20_1d_SLM
-IT20_ACE_1d_sim[expid[i]]['SIC'] = IT20_1d_SIC
+print(psutil.Process().memory_info().rss / (2 ** 30))
 
-BJ19_polarstern_1d_sim[expid[i]]['SLM'] = BJ19_1d_SLM
-BJ19_polarstern_1d_sim[expid[i]]['SIC'] = BJ19_1d_SIC
+del ocean_q_sfc[expid[i]]
 
-
-SO_vapor_isotopes_SLMSIC = {}
-
-columns_subset = ['time', 'lat', 'lon', 'dD', 'd18O', 'd_xs', 'd_ln', 'q', 'dD_sim', 'd18O_sim', 'd_xs_sim', 'd_ln_sim', 'q_sim', 'SLM', 'SIC']
-
-SO_vapor_isotopes_SLMSIC[expid[i]] = pd.concat(
-    [NK16_Australia_Syowa_1d_sim[expid[i]][columns_subset].assign(
-        Reference='Kurita et al. (2016)'),
-     IT20_ACE_1d_sim[expid[i]][columns_subset].assign(
-         Reference='Thurnherr et al. (2020)'),
-     BJ19_polarstern_1d_sim[expid[i]][columns_subset].assign(
-         Reference='Bonne et al. (2019)'),],
-    ignore_index=True,)
-
-
-output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.SO_vapor_isotopes_SLMSIC.pkl'
-
-if (os.path.isfile(output_file)):
-    os.remove(output_file)
-
-with open(output_file, 'wb') as f:
-    pickle.dump(SO_vapor_isotopes_SLMSIC[expid[i]], f)
-
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_q_sfc_alltime.pkl', 'wb') as f:
+    pickle.dump(ocean_q_sfc_alltime[expid[i]], f)
 
 
 
 '''
 #-------------------------------- check
-SO_vapor_isotopes_SLMSIC = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.SO_vapor_isotopes_SLMSIC.pkl', 'rb') as f:
-    SO_vapor_isotopes_SLMSIC[expid[i]] = pickle.load(f)
+
+ocean_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_q_sfc_alltime.pkl', 'rb') as f:
+    ocean_q_sfc_alltime[expid[i]] = pickle.load(f)
+print(psutil.Process().memory_info().rss / (2 ** 30))
+
+
+#---------------- check correspondance between varnames
+data1 = ocean_q_sfc_alltime[expid[i]]['ann'].sel(var_names='lat').values
+data2 = ocean_q_sfc_alltime[expid[i]]['ann'].sel(var_names='wind10').values
+print(np.max(abs((data1[np.isfinite(data1)] - data2[np.isfinite(data2)])/data1[np.isfinite(data1)])))
+
+#---------------- check 6h data
+exp_org_o = {}
+exp_org_o[expid[i]] = {}
+filenames_wiso_q_6h_sfc = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso_q_6h_sfc.nc'))
+ifile = -1
+ncfile = xr.open_dataset(filenames_wiso_q_6h_sfc[ifile_start:ifile_end][ifile])
+
+data1 = (ncfile.q_02[:, 0] + ncfile.q_03[:, 0] + \
+    ncfile.xl_02[:, 0] + ncfile.xl_03[:, 0] + \
+        ncfile.xi_02[:, 0] + ncfile.xi_03[:, 0]).values
+data2 = (ocean_q_sfc_alltime[expid[i]]['6h'][-124:].sel(var_names='lat')).values
+(data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all()
+
+data1 = (ncfile.q_24[:, 0] + ncfile.q_25[:, 0] + \
+    ncfile.xl_24[:, 0] + ncfile.xl_25[:, 0] + \
+        ncfile.xi_24[:, 0] + ncfile.xi_25[:, 0]).values
+data2 = (ocean_q_sfc_alltime[expid[i]]['6h'][-124:].sel(var_names='coslon')).values
+(data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all()
+
+#---------------- from 6h to daily
+exp_org_o = {}
+exp_org_o[expid[i]] = {}
+filenames_wiso_q_6h_sfc = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso_q_6h_sfc.nc'))
+ifile = -1
+ncfile = xr.open_dataset(filenames_wiso_q_6h_sfc[ifile_start:ifile_end][ifile])
+
+data1 = (ncfile.q_02[:, 0] + ncfile.q_03[:, 0] + \
+    ncfile.xl_02[:, 0] + ncfile.xl_03[:, 0] + \
+        ncfile.xi_02[:, 0] + ncfile.xi_03[:, 0]).resample({'time': '1d'}).mean(skipna=False).values
+data2 = (ocean_q_sfc_alltime[expid[i]]['daily'][-31:].sel(var_names='lat')).values
+(data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all()
+
+data1 = (ncfile.q_24[:, 0] + ncfile.q_25[:, 0] + \
+    ncfile.xl_24[:, 0] + ncfile.xl_25[:, 0] + \
+        ncfile.xi_24[:, 0] + ncfile.xi_25[:, 0]).resample({'time': '1d'}).mean(skipna=False).values
+data2 = (ocean_q_sfc_alltime[expid[i]]['daily'][-31:].sel(var_names='coslon')).values
+(data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all()
+
+#---------------- from 6h to monthly
+exp_org_o = {}
+exp_org_o[expid[i]] = {}
+filenames_wiso_q_6h_sfc = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso_q_6h_sfc.nc'))
+ifile = -1
+ncfile = xr.open_dataset(filenames_wiso_q_6h_sfc[ifile_start:ifile_end][ifile])
+
+data1 = (ncfile.q_02[:, 0] + ncfile.q_03[:, 0] + \
+    ncfile.xl_02[:, 0] + ncfile.xl_03[:, 0] + \
+        ncfile.xi_02[:, 0] + ncfile.xi_03[:, 0]).resample({'time': '1d'}).mean(skipna=False).resample({'time': '1M'}).mean(skipna=False).values
+data2 = (ocean_q_sfc_alltime[expid[i]]['mon'][-1].sel(var_names='lat')).values
+print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
+
+data1 = (ncfile.q_24[:, 0] + ncfile.q_25[:, 0] + \
+    ncfile.xl_24[:, 0] + ncfile.xl_25[:, 0] + \
+        ncfile.xi_24[:, 0] + ncfile.xi_25[:, 0]).resample({'time': '1d'}).mean(skipna=False).resample({'time': '1M'}).mean(skipna=False).values
+data2 = (ocean_q_sfc_alltime[expid[i]]['mon'][-1].sel(var_names='coslon')).values
+print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
+
+
 
 '''
 # endregion
 # -----------------------------------------------------------------------------
-
-

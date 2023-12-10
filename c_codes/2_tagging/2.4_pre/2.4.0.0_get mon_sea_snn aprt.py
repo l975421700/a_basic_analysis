@@ -1,6 +1,6 @@
 
 
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_600_5.0',
     # 'pi_601_5.1',
@@ -9,13 +9,15 @@ expid = [
     # 'pi_606_5.6',
     # 'pi_609_5.7',
     # 'pi_610_5.8',
-    'hist_700_5.0',
+    # 'hist_700_5.0',
     # 'nudged_701_5.0',
+    
+    'nudged_703_6.0_k52',
     ]
 i = 0
 
-ifile_start = 1380 #12 #0 #120
-ifile_end   = 1740 #516 #1740 #840
+ifile_start = 0 #1380 #12 #0 #120
+ifile_end   = 528 #1740 #516 #1740 #840
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -121,7 +123,7 @@ wisoaprt[expid[i]] = (
 wisoaprt[expid[i]] = wisoaprt[expid[i]].rename('wisoaprt')
 
 wisoaprt_alltime = {}
-wisoaprt_alltime[expid[i]] = mon_sea_ann(wisoaprt[expid[i]])
+wisoaprt_alltime[expid[i]] = mon_sea_ann(var_6hourly=wisoaprt[expid[i]])
 
 
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'wb') as f:
@@ -279,7 +281,7 @@ aprt_geo7[expid[i]] = (
 aprt_geo7[expid[i]] = aprt_geo7[expid[i]].rename('aprt_geo7')
 
 aprt_geo7_alltime = {}
-aprt_geo7_alltime[expid[i]] = mon_sea_ann(aprt_geo7[expid[i]], lcopy = False,)
+aprt_geo7_alltime[expid[i]] = mon_sea_ann(var_6hourly=aprt_geo7[expid[i]], lcopy = False,)
 
 aprt_geo7_alltime[expid[i]]['sum'] = {}
 for ialltime in aprt_geo7_alltime[expid[i]].keys():
@@ -941,7 +943,7 @@ time = exp_org_o[expid[i]]['wiso'].time
 lon  = exp_org_o[expid[i]]['wiso'].lon
 lat  = exp_org_o[expid[i]]['wiso'].lat
 
-ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
+ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0,  3, 0]
 kwiso2 = 3
 var_names = ['lat',]
 # var_names = ['lat', 'sst', 'rh2m', 'wind10', 'sinlon', 'coslon', 'geo7']
@@ -983,7 +985,7 @@ for count,var_name in enumerate(var_names[:]): #var_names[:-1]
 
 ocean_aprt_alltime = {}
 ocean_aprt_alltime[expid[i]] = mon_sea_ann(
-    ocean_aprt[expid[i]], lcopy = False,)
+    var_6hourly=ocean_aprt[expid[i]], lcopy = False,)
 
 print(psutil.Process().memory_info().rss / (2 ** 30))
 

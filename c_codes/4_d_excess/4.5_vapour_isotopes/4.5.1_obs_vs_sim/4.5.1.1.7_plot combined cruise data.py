@@ -10,7 +10,8 @@ expid = [
     # 'nudged_701_5.0',
     
     'nudged_705_6.0',
-    'nudged_706_6.0_k52_88',
+    'nudged_703_6.0_k52',
+    # 'nudged_706_6.0_k52_88',
     'nudged_707_6.0_k43',
     'nudged_708_6.0_I01',
     'nudged_709_6.0_I03',
@@ -102,15 +103,19 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-SO_vapor_isotopes = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.SO_vapor_isotopes.pkl', 'rb') as f:
-    SO_vapor_isotopes[expid[i]] = pickle.load(f)
 
 SO_vapor_isotopes_SLMSIC = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.SO_vapor_isotopes_SLMSIC.pkl', 'rb') as f:
     SO_vapor_isotopes_SLMSIC[expid[i]] = pickle.load(f)
 
 ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
+
+
+
+'''
+SO_vapor_isotopes = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.SO_vapor_isotopes.pkl', 'rb') as f:
+    SO_vapor_isotopes[expid[i]] = pickle.load(f)
 
 T63GR15_jan_surf = xr.open_dataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/nudged_701_5.0/input/echam/unit.24')
 SO_vapor_SLM = find_multi_gridvalue_at_site(
@@ -121,401 +126,7 @@ SO_vapor_SLM = find_multi_gridvalue_at_site(
     T63GR15_jan_surf.SLM.values,
 )
 
-
 '''
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot all data
-
-for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', ]:
-    # var_name = 'q'
-    print('#-------- ' + var_name)
-    
-    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.7_SO_cruise/8.3.0.7.0 ' + expid[i] + ' SO_cruise observed vs. simulated daily ' + var_name + '.png'
-    
-    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
-    
-    xdata = SO_vapor_isotopes[expid[i]][var_name]
-    ydata = SO_vapor_isotopes[expid[i]][var_name + '_sim']
-    subset = (np.isfinite(xdata) & np.isfinite(ydata))
-    xdata = xdata[subset]
-    ydata = ydata[subset]
-    
-    if (var_name == 'q'):
-        xdata = xdata * 1000
-        ydata = ydata * 1000
-    
-    cdata = SO_vapor_isotopes[expid[i]]['Reference']
-    cdata = cdata[subset]
-    
-    RMSE = np.sqrt(np.average(np.square(xdata - ydata)))
-    
-    sns.scatterplot(
-        x=xdata, y=ydata, hue=cdata,
-        s=12, palette='viridis',
-        # marker="o",
-    )
-    
-    linearfit = linregress(x = xdata, y = ydata,)
-    # ax.axline(
-    #     (0, linearfit.intercept), slope = linearfit.slope, lw=1,)
-    
-    if (linearfit.intercept >= 0):
-        eq_text = '$y = $' + \
-            str(np.round(linearfit.slope, 2)) + '$x + $' + \
-                str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        ', $RMSE = $' + str(np.round(RMSE, 1))
-    if (linearfit.intercept < 0):
-        eq_text = '$y = $' + \
-            str(np.round(linearfit.slope, 2)) + '$x $' + \
-                str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        ', $RMSE = $' + str(np.round(RMSE, 1))
-    
-    plt.text(
-        0.32, 0.15, eq_text,
-        transform=ax.transAxes, fontsize=8, ha='left')
-    
-    xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
-    xylim_min = np.min(xylim)
-    xylim_max = np.max(xylim)
-    ax.set_xlim(xylim_min, xylim_max)
-    ax.set_ylim(xylim_min, xylim_max)
-    
-    ax.axline((0, 0), slope = 1, lw=1, color='grey', alpha=0.5)
-    
-    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-    ax.set_xlabel('Observed '  + plot_labels[var_name], labelpad=6)
-    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-    ax.set_ylabel('Simulated ' + plot_labels[var_name], labelpad=6)
-    
-    ax.grid(True, which='both',
-            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-    
-    ax.legend(title='Reference')
-    
-    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
-    fig.savefig(output_png)
-
-
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot data between 20S and 60S
-
-for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', ]:
-    # var_name = 'q'
-    print('#-------- ' + var_name)
-    
-    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.7_SO_cruise/8.3.0.7.0 ' + expid[i] + ' SO_cruise_20_60S observed vs. simulated daily ' + var_name + '.png'
-    
-    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
-    
-    xdata = SO_vapor_isotopes[expid[i]][var_name]
-    ydata = SO_vapor_isotopes[expid[i]][var_name + '_sim']
-    subset = (np.isfinite(xdata) & np.isfinite(ydata) & (SO_vapor_isotopes[expid[i]]['lat'] >= -60) & (SO_vapor_isotopes[expid[i]]['lat'] <= -20))
-    xdata = xdata[subset]
-    ydata = ydata[subset]
-    
-    if (var_name == 'q'):
-        xdata = xdata * 1000
-        ydata = ydata * 1000
-    
-    cdata = SO_vapor_isotopes[expid[i]]['Reference']
-    cdata = cdata[subset]
-    
-    RMSE = np.sqrt(np.average(np.square(xdata - ydata)))
-    
-    sns.scatterplot(
-        x=xdata, y=ydata, hue=cdata,
-        s=12, palette='viridis',
-        # marker="o",
-    )
-    
-    linearfit = linregress(x = xdata, y = ydata,)
-    # ax.axline(
-    #     (0, linearfit.intercept), slope = linearfit.slope, lw=1,)
-    
-    if (linearfit.intercept >= 0):
-        eq_text = '$y = $' + \
-            str(np.round(linearfit.slope, 2)) + '$x + $' + \
-                str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        ', $RMSE = $' + str(np.round(RMSE, 1))
-    if (linearfit.intercept < 0):
-        eq_text = '$y = $' + \
-            str(np.round(linearfit.slope, 2)) + '$x $' + \
-                str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        ', $RMSE = $' + str(np.round(RMSE, 1))
-    
-    plt.text(
-        0.32, 0.15, eq_text,
-        transform=ax.transAxes, fontsize=8, ha='left')
-    
-    xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
-    xylim_min = np.min(xylim)
-    xylim_max = np.max(xylim)
-    ax.set_xlim(xylim_min, xylim_max)
-    ax.set_ylim(xylim_min, xylim_max)
-    
-    ax.axline((0, 0), slope = 1, lw=1, color='grey', alpha=0.5)
-    
-    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-    ax.set_xlabel('Observed '  + plot_labels[var_name], labelpad=6)
-    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-    ax.set_ylabel('Simulated ' + plot_labels[var_name], labelpad=6)
-    
-    ax.grid(True, which='both',
-            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-    
-    ax.legend(title='Reference')
-    
-    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
-    fig.savefig(output_png)
-
-
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot data south of 20S and at oceanic grid cells
-
-
-for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', ]:
-    # var_name = 'q'
-    print('#-------- ' + var_name)
-    
-    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.7_SO_cruise/8.3.0.7.0 ' + expid[i] + ' SO_cruise_20S_ocean observed vs. simulated daily ' + var_name + '.png'
-    
-    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
-    
-    xdata = SO_vapor_isotopes[expid[i]][var_name]
-    ydata = SO_vapor_isotopes[expid[i]][var_name + '_sim']
-    subset = (np.isfinite(xdata) & np.isfinite(ydata) & (SO_vapor_SLM == 0) & (SO_vapor_isotopes[expid[i]]['lat'] <= -20))
-    xdata = xdata[subset]
-    ydata = ydata[subset]
-    
-    if (var_name == 'q'):
-        xdata = xdata * 1000
-        ydata = ydata * 1000
-    
-    cdata = SO_vapor_isotopes[expid[i]]['Reference']
-    cdata = cdata[subset]
-    
-    RMSE = np.sqrt(np.average(np.square(xdata - ydata)))
-    
-    sns.scatterplot(
-        x=xdata, y=ydata, hue=cdata,
-        s=12, palette='viridis',
-        # marker="o",
-    )
-    
-    linearfit = linregress(x = xdata, y = ydata,)
-    # ax.axline(
-    #     (0, linearfit.intercept), slope = linearfit.slope, lw=1,)
-    
-    if (linearfit.intercept >= 0):
-        eq_text = '$y = $' + \
-            str(np.round(linearfit.slope, 2)) + '$x + $' + \
-                str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        ', $RMSE = $' + str(np.round(RMSE, 1))
-    if (linearfit.intercept < 0):
-        eq_text = '$y = $' + \
-            str(np.round(linearfit.slope, 2)) + '$x $' + \
-                str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        ', $RMSE = $' + str(np.round(RMSE, 1))
-    
-    plt.text(
-        0.32, 0.15, eq_text,
-        transform=ax.transAxes, fontsize=8, ha='left')
-    
-    xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
-    xylim_min = np.min(xylim)
-    xylim_max = np.max(xylim)
-    ax.set_xlim(xylim_min, xylim_max)
-    ax.set_ylim(xylim_min, xylim_max)
-    
-    ax.axline((0, 0), slope = 1, lw=1, color='grey', alpha=0.5)
-    
-    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-    ax.set_xlabel('Observed '  + plot_labels[var_name], labelpad=6)
-    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-    ax.set_ylabel('Simulated ' + plot_labels[var_name], labelpad=6)
-    
-    ax.grid(True, which='both',
-            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-    
-    ax.legend(title='Reference')
-    
-    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
-    fig.savefig(output_png)
-
-
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot data south of 20S and ocean contributions to q larger than 90%
-
-q_geo7_sfc_frc_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_geo7_sfc_frc_alltime.pkl', 'rb') as f:
-    q_geo7_sfc_frc_alltime[expid[i]] = pickle.load(f)
-
-SO_vapor_oo2q = find_multi_gridvalue_at_site_time(
-    SO_vapor_isotopes[expid[i]]['time'],
-    SO_vapor_isotopes[expid[i]]['lat'],
-    SO_vapor_isotopes[expid[i]]['lon'],
-    q_geo7_sfc_frc_alltime[expid[i]]['daily'].time.values,
-    q_geo7_sfc_frc_alltime[expid[i]]['daily'].lat.values,
-    q_geo7_sfc_frc_alltime[expid[i]]['daily'].lon.values,
-    q_geo7_sfc_frc_alltime[expid[i]]['daily'].sel(geo_regions='Open Ocean').values,
-    )
-
-for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', ]:
-    # var_name = 'q'
-    print('#-------- ' + var_name)
-    
-    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.7_SO_cruise/8.3.0.7.0 ' + expid[i] + ' SO_cruise_20S_oo2q observed vs. simulated daily ' + var_name + '.png'
-    
-    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
-    
-    xdata = SO_vapor_isotopes[expid[i]][var_name]
-    ydata = SO_vapor_isotopes[expid[i]][var_name + '_sim']
-    subset = (np.isfinite(xdata) & np.isfinite(ydata) & (SO_vapor_SLM == 0) & (SO_vapor_isotopes[expid[i]]['lat'] <= -20) & (SO_vapor_oo2q >= 90))
-    xdata = xdata[subset]
-    ydata = ydata[subset]
-    
-    if (var_name == 'q'):
-        xdata = xdata * 1000
-        ydata = ydata * 1000
-    
-    cdata = SO_vapor_isotopes[expid[i]]['Reference']
-    cdata = cdata[subset]
-    
-    RMSE = np.sqrt(np.average(np.square(xdata - ydata)))
-    
-    sns.scatterplot(
-        x=xdata, y=ydata, hue=cdata,
-        s=12, palette='viridis',
-        # marker="o",
-    )
-    
-    linearfit = linregress(x = xdata, y = ydata,)
-    # ax.axline(
-    #     (0, linearfit.intercept), slope = linearfit.slope, lw=1,)
-    
-    if (linearfit.intercept >= 0):
-        eq_text = '$y = $' + \
-            str(np.round(linearfit.slope, 2)) + '$x + $' + \
-                str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        ', $RMSE = $' + str(np.round(RMSE, 1))
-    if (linearfit.intercept < 0):
-        eq_text = '$y = $' + \
-            str(np.round(linearfit.slope, 2)) + '$x $' + \
-                str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        ', $RMSE = $' + str(np.round(RMSE, 1))
-    
-    plt.text(
-        0.32, 0.15, eq_text,
-        transform=ax.transAxes, fontsize=8, ha='left')
-    
-    xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
-    xylim_min = np.min(xylim)
-    xylim_max = np.max(xylim)
-    ax.set_xlim(xylim_min, xylim_max)
-    ax.set_ylim(xylim_min, xylim_max)
-    
-    ax.axline((0, 0), slope = 1, lw=1, color='grey', alpha=0.5)
-    
-    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-    ax.set_xlabel('Observed '  + plot_labels[var_name], labelpad=6)
-    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-    ax.set_ylabel('Simulated ' + plot_labels[var_name], labelpad=6)
-    
-    ax.grid(True, which='both',
-            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-    
-    ax.legend(title='Reference')
-    
-    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
-    fig.savefig(output_png)
-
-
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot maps of all data
-
-q_geo7_sfc_frc_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_geo7_sfc_frc_alltime.pkl', 'rb') as f:
-    q_geo7_sfc_frc_alltime[expid[i]] = pickle.load(f)
-
-SO_vapor_oo2q = find_multi_gridvalue_at_site_time(
-    SO_vapor_isotopes[expid[i]]['time'],
-    SO_vapor_isotopes[expid[i]]['lat'],
-    SO_vapor_isotopes[expid[i]]['lon'],
-    q_geo7_sfc_frc_alltime[expid[i]]['daily'].time.values,
-    q_geo7_sfc_frc_alltime[expid[i]]['daily'].lat.values,
-    q_geo7_sfc_frc_alltime[expid[i]]['daily'].lon.values,
-    q_geo7_sfc_frc_alltime[expid[i]]['daily'].sel(geo_regions='Open Ocean').values,
-    )
-
-# output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.7_SO_cruise/8.3.0.7.0 ' + expid[i] + ' SO_cruise daily observation locations.png'
-
-output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.7_SO_cruise/8.3.0.7.0 ' + expid[i] + ' SO_cruise_20_60S daily observation locations.png'
-subset = ((SO_vapor_isotopes[expid[i]]['lat'] >= -60) & (SO_vapor_isotopes[expid[i]]['lat'] <= -20))
-
-# output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.7_SO_cruise/8.3.0.7.0 ' + expid[i] + ' SO_cruise_20S_ocean daily observation locations.png'
-# subset = ((SO_vapor_isotopes[expid[i]]['lat'] <= -20) & (SO_vapor_SLM == 0))
-
-# output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.7_SO_cruise/8.3.0.7.0 ' + expid[i] + ' SO_cruise_20S_oo2q daily observation locations.png'
-# subset = ((SO_vapor_isotopes[expid[i]]['lat'] <= -20) & (SO_vapor_oo2q >= 90) & (SO_vapor_SLM == 0))
-
-fig, ax = globe_plot(fm_left=0.1, fm_right=0.95, fm_bottom=0.35, )
-
-sns.scatterplot(
-        x=SO_vapor_isotopes[expid[i]]['lon'].values[subset],
-        y=SO_vapor_isotopes[expid[i]]['lat'].values[subset],
-        hue=SO_vapor_isotopes[expid[i]]['Reference'].values[subset],
-        s=12, palette='viridis', marker='x', transform=ccrs.PlateCarree(),
-    )
-ax.legend(title='Reference', loc=(0.25, -0.6), fontsize=8)
-
-fig.savefig(output_png)
-
-
-
-
-subset = ((SO_vapor_isotopes[expid[i]]['lat'] >= -60) & (SO_vapor_isotopes[expid[i]]['lat'] <= -20))
-np.unique(SO_vapor_isotopes[expid[i]]['Reference'].values[subset], return_counts=True)
-
-
-IT20_ACE_1d_sim = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.IT20_ACE_1d_sim.pkl', 'rb') as f:
-    IT20_ACE_1d_sim[expid[i]] = pickle.load(f)
-
-((IT20_ACE_1d_sim[expid[i]]['lat'] >= -60) & (IT20_ACE_1d_sim[expid[i]]['lat'] <= -20)).sum()
-
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -524,6 +135,10 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.IT20_ACE_1d_si
 # region plot subset data: SLM=0, SIC=0, lat:[-60, -20]
 
 subset = ((SO_vapor_isotopes_SLMSIC[expid[i]]['SLM'] == 0) & (SO_vapor_isotopes_SLMSIC[expid[i]]['SIC'] == 0) & (SO_vapor_isotopes_SLMSIC[expid[i]]['lat'] <= -20) & (SO_vapor_isotopes_SLMSIC[expid[i]]['lat'] >= -60))
+
+# (pd.DatetimeIndex(pd.to_datetime(SO_vapor_isotopes_SLMSIC[expid[i]][subset]['time'], utc=True)).year >= 2019).sum()
+
+# SO_vapor_isotopes_SLMSIC[expid[i]][subset]['time']
 
 
 for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', ]:
@@ -550,8 +165,8 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', ]:
     RMSE = np.sqrt(np.average(np.square(xdata - ydata)))
     
     sns.scatterplot(
-        x=xdata, y=ydata, hue=cdata,
-        s=12, palette='viridis',
+        x=xdata, y=ydata, hue=cdata, style=cdata,
+        s=12, palette='magma',
         # marker="o",
     )
     
@@ -640,8 +255,9 @@ sns.scatterplot(
         x=SO_vapor_isotopes_SLMSIC[expid[i]][subset]['lon'],
         y=SO_vapor_isotopes_SLMSIC[expid[i]][subset]['lat'],
         hue=SO_vapor_isotopes_SLMSIC[expid[i]][subset]['Reference'],
-        s=8, palette='viridis', marker='x', transform=ccrs.PlateCarree(),
-        linewidth=1,
+        style=SO_vapor_isotopes_SLMSIC[expid[i]][subset]['Reference'],
+        s=12, palette='magma', transform=ccrs.PlateCarree(),
+        # linewidth=1,
     )
 ax.legend(title='Reference', loc=(0.18, -0.32), fontsize=8)
 
@@ -745,3 +361,5 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', ]:
 
 # endregion
 # -----------------------------------------------------------------------------
+
+
