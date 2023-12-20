@@ -1,13 +1,13 @@
 
 
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_600_5.0',
     # 'pi_601_5.1',
-    # 'hist_700_5.0',
+    'hist_700_5.0',
     # 'nudged_701_5.0',
     
-    'nudged_703_6.0_k52',
+    # 'nudged_703_6.0_k52',
     ]
 i=0
 
@@ -50,7 +50,7 @@ with open(output_dir + expid[i] + '.pre_weighted_coslon.pkl', 'rb') as f:
 
 pre_weighted_lon = {}
 
-for ialltime in ['6h', 'daily', 'mon', 'mm', 'sea', 'sm', 'ann', 'am']:
+for ialltime in ['daily', 'mon', 'mm', 'sea', 'sm', 'ann', 'am']:
     print(ialltime)
     
     pre_weighted_lon[ialltime] = sincoslon_2_lon(

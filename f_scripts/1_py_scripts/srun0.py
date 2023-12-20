@@ -1,18 +1,32 @@
 
 
-# salloc --account=paleodyn.paleodyn --qos=12h --time=12:00:00 --nodes=1 --mem=120GB
-# source ${HOME}/miniconda3/bin/activate deepice
-# ipython
-
-
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
+<<<<<<< Updated upstream
     'nudged_703_6.0_k52',
     ]
 i = 0
 
 ifile_start = 0 #0 #120
 ifile_end   = 528 #1740 #840
+=======
+    # 'pi_600_5.0',
+    # 'pi_601_5.1',
+    # 'pi_602_5.2',
+    # 'pi_605_5.5',
+    # 'pi_606_5.6',
+    # 'pi_609_5.7',
+    # 'pi_610_5.8',
+    'hist_700_5.0',
+    # 'nudged_701_5.0',
+    
+    # 'nudged_703_6.0_k52',
+    ]
+i = 0
+
+ifile_start = 1380 #12 #0 #120
+ifile_end   = 1740 #516 #1740 #840
+>>>>>>> Stashed changes
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -25,6 +39,7 @@ warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
 sys.path.append('/albedo/work/user/qigao001')
+sys.path.append('/home/users/qino')
 import psutil
 
 # data analysis
@@ -36,12 +51,14 @@ from dask.diagnostics import ProgressBar
 pbar = ProgressBar()
 pbar.register()
 from scipy import stats
+import xesmf as xe
 import pandas as pd
+
 
 from a_basic_analysis.b_module.basic_calculations import (
     mon_sea_ann,
+    mean_over_ais,
 )
-
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -53,20 +70,69 @@ from a_basic_analysis.b_module.basic_calculations import (
 exp_org_o = {}
 exp_org_o[expid[i]] = {}
 
+<<<<<<< Updated upstream
 filenames_wiso_q_daily = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso_q_6h_daily.nc'))
 exp_org_o[expid[i]]['wiso_q_daily'] = xr.open_mfdataset(
     filenames_wiso_q_daily[ifile_start:ifile_end],
     chunks={'time': 10}
+=======
+filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'))
+exp_org_o[expid[i]]['wiso'] = xr.open_mfdataset(
+    filenames_wiso[ifile_start:ifile_end],
+>>>>>>> Stashed changes
     )
 
-
 '''
+<<<<<<< Updated upstream
 exp_org_o[expid[i]]['wiso_q_daily']
+=======
+#-------- check pre
+filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'))
+filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_echam.nc'))
+
+ifile = 1000
+nc1 = xr.open_dataset(filenames_wiso[ifile])
+nc2 = xr.open_dataset(filenames_echam[ifile])
+
+np.max(abs(nc1.wisoaprl[:, 0].mean(dim='time').values - nc2.aprl[0].values))
+
+
+#-------- input previous files
+
+for i in range(len(expid)):
+    # i=0
+    print('#-------- ' + expid[i])
+    exp_org_o[expid[i]] = {}
+    
+    
+    file_exists = os.path.exists(
+        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_echam.nc')
+    
+    if (file_exists):
+        exp_org_o[expid[i]]['echam'] = xr.open_dataset(
+            exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_echam.nc')
+        exp_org_o[expid[i]]['wiso'] = xr.open_dataset(
+            exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_wiso.nc')
+    else:
+        # filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*monthly.01_echam.nc'))
+        # exp_org_o[expid[i]]['echam'] = xr.open_mfdataset(filenames_echam, data_vars='minimal', coords='minimal', parallel=True)
+        
+        # filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*monthly.01_wiso.nc'))
+        # exp_org_o[expid[i]]['wiso'] = xr.open_mfdataset(filenames_wiso, data_vars='minimal', coords='minimal', parallel=True)
+        
+        # filenames_wiso_daily = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*daily.01_wiso.nc'))
+        # exp_org_o[expid[i]]['wiso_daily'] = xr.open_mfdataset(filenames_wiso_daily, data_vars='minimal', coords='minimal', parallel=True)
+        
+        filenames_echam_daily = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*daily.01_echam.nc'))
+        exp_org_o[expid[i]]['echam_daily'] = xr.open_mfdataset(filenames_echam_daily[120:], data_vars='minimal', coords='minimal', parallel=True)
+
+>>>>>>> Stashed changes
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
 
+<<<<<<< Updated upstream
 #SBATCH --mem=240GB
 # -----------------------------------------------------------------------------
 # region get mon_sea_ann ocean_q
@@ -135,21 +201,55 @@ del ocean_q
 
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_q_alltime.pkl', 'wb') as f:
     pickle.dump(ocean_q_alltime[expid[i]], f)
+=======
+#SBATCH --time=00:30:00
+# -----------------------------------------------------------------------------
+# region get mon/sea/ann wisoaprt
 
+wisoaprt = {}
+wisoaprt[expid[i]] = (
+    exp_org_o[expid[i]]['wiso'].wisoaprl[:, :3] + \
+        exp_org_o[expid[i]]['wiso'].wisoaprc[:, :3].values).compute()
+
+wisoaprt[expid[i]] = wisoaprt[expid[i]].rename('wisoaprt')
+
+wisoaprt_alltime = {}
+wisoaprt_alltime[expid[i]] = mon_sea_ann(wisoaprt[expid[i]])
+
+>>>>>>> Stashed changes
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'wb') as f:
+    pickle.dump(wisoaprt_alltime[expid[i]], f)
 
 
 '''
-#-------------------------------- check
+#-------- check calculation
+wisoaprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
+    wisoaprt_alltime[expid[i]] = pickle.load(f)
 
+<<<<<<< Updated upstream
 ocean_q_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_q_alltime.pkl', 'rb') as f:
     ocean_q_alltime[expid[i]] = pickle.load(f)
 print(psutil.Process().memory_info().rss / (2 ** 30))
+=======
+filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'))
+ifile = -1
+ncfile = xr.open_dataset(filenames_wiso[120:1080][ifile])
+
+(wisoaprt_alltime[expid[i]]['daily'][-31:,] == \
+    (ncfile.wisoaprl[:, :3] + ncfile.wisoaprc[:, :3].values)).all()
+
+(wisoaprt_alltime[expid[i]]['mon'][ifile,] == \
+    (ncfile.wisoaprl[:, :3] + ncfile.wisoaprc[:, :3].values).mean(dim='time')).all()
+>>>>>>> Stashed changes
 
 data1 = ocean_q_alltime[expid[i]]['am'].sel(var_names='lat').values
 data2 = ocean_q_alltime[expid[i]]['am'].sel(var_names='sinlon').values
 np.max(abs(data1[np.isfinite(data1)] - data2[np.isfinite(data2)]) / data2[np.isfinite(data2)])
 
+<<<<<<< Updated upstream
 filenames_wiso_q_plev = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_wiso_q_plev.nc'))
 ifile = -1
 ncfile = xr.open_dataset(filenames_wiso_q_plev[ifile_start:ifile_end][ifile])
@@ -169,6 +269,22 @@ data2 = (ocean_q_alltime[expid[i]]['mon'][ifile].sel(var_names='coslon')).values
 #     ncfile.xi_16[0] + ncfile.xi_18[0]).values
 # data2 = (ocean_q_alltime[expid[i]]['mon'][ifile].sel(var_names='geo7')).values
 # (data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all()
+=======
+#-------- check simulation of aprt and wisoaprt
+exp_org_o = {}
+exp_org_o[expid[i]] = {}
+
+filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_echam.nc'))
+exp_org_o[expid[i]]['echam'] = xr.open_mfdataset(filenames_echam[120:180], data_vars='minimal', coords='minimal', parallel=True)
+
+wisoaprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
+    wisoaprt_alltime[expid[i]] = pickle.load(f)
+
+np.max(abs(exp_org_o[expid[i]]['echam'].aprl.values + \
+    exp_org_o[expid[i]]['echam'].aprc.values - \
+        wisoaprt_alltime[expid[i]]['mon'][:60, 0].values))
+>>>>>>> Stashed changes
 
 #-------- include that of geo7
 var_names = ['lat', 'sst', 'rh2m', 'wind10', 'sinlon', 'coslon', 'geo7']
@@ -184,4 +300,7 @@ ocean_q[expid[i]].sel(var_names='geo7')[:] = \
 # endregion
 # -----------------------------------------------------------------------------
 
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes

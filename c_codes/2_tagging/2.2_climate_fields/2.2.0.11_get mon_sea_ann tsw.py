@@ -1,5 +1,6 @@
 
 
+<<<<<<< Updated upstream
 # salloc --account=paleodyn.paleodyn --qos=12h --time=12:00:00 --nodes=1 --mem=120GB
 # source ${HOME}/miniconda3/bin/activate deepice
 # ipython
@@ -13,6 +14,17 @@ expid = [
 i = 0
 ifile_start = 0
 ifile_end   = 528
+=======
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+expid = [
+    'hist_700_5.0',
+    # 'nudged_701_5.0',
+    ]
+i = 0
+
+ifile_start = 1380 #12
+ifile_end   = 1740 #516
+>>>>>>> Stashed changes
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -25,6 +37,7 @@ warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
 sys.path.append('/albedo/work/user/qigao001')
+sys.path.append('/home/users/qino')
 
 # data analysis
 import numpy as np
@@ -60,7 +73,6 @@ filenames_g3b_1m = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i]
 
 exp_org_o[expid[i]]['g3b_1m'] = xr.open_mfdataset(
     filenames_g3b_1m[ifile_start:ifile_end],
-    # data_vars='minimal', coords='minimal', parallel=True,
     )
 
 # endregion

@@ -1,20 +1,20 @@
 # #SBATCH --time=00:30:00
 
 
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_600_5.0',
-    # 'hist_700_5.0',
+    'hist_700_5.0',
     # 'nudged_701_5.0',
     # 'pi_1d_803_6.0',
-    'nudged_703_6.0_k52',
+    # 'nudged_703_6.0_k52',
     ]
 i=0
 
 output_dir = exp_odir + expid[i] + '/analysis/echam/'
 
-ifile_start = 0 #0 #120
-ifile_end   = 528 # 516 #1740 #840
+ifile_start = 1380 #0 #120
+ifile_end   = 1740 # 528 #1740 #840
 
 ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0,  3, 0]
 
@@ -62,6 +62,7 @@ import warnings
 warnings.filterwarnings('ignore')
 import sys  # print(sys.path)
 sys.path.append('/albedo/work/user/qigao001')
+sys.path.append('/home/users/qino')
 import os
 
 # data analysis
@@ -135,14 +136,14 @@ ocean_pre.values[ocean_pre.values < 2e-8] = 0
 
 #-------- monthly/seasonal/annual (mean) values
 
-ocean_pre_alltime      = mon_sea_ann(var_6hourly=ocean_pre)
-var_scaled_pre_alltime = mon_sea_ann(var_6hourly=var_scaled_pre)
+ocean_pre_alltime      = mon_sea_ann(ocean_pre)
+var_scaled_pre_alltime = mon_sea_ann(var_scaled_pre)
 
 #-------------------------------- pre-weighted var
 
 pre_weighted_var = {}
 
-for ialltime in ['6h', 'daily', 'mon', 'mm', 'sea', 'sm', 'ann', 'am']:
+for ialltime in ['daily', 'mon', 'mm', 'sea', 'sm', 'ann', 'am']:
     print(ialltime)
     
     pre_weighted_var[ialltime] = source_properties(

@@ -1334,7 +1334,7 @@ def regional_plot(
         fig.subplots_adjust(
             left=figure_margin['left'], right=figure_margin['right'],
             bottom=figure_margin['bottom'], top=figure_margin['top'])
-    else:
+    elif (ax_org is None):
         fig.tight_layout()
     
     if (ax_org is None):

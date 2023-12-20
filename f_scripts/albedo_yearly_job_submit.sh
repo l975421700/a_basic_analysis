@@ -4,8 +4,13 @@
 #SBATCH --time=12:00:00
 #SBATCH -o %A_%a.out
 #SBATCH -e %A_%a.err
+<<<<<<< Updated upstream
 #SBATCH --array=3-4
 #SBATCH --mem=2048GB
+=======
+#SBATCH --array=0-6
+# #SBATCH --mem=120GB
+>>>>>>> Stashed changes
 
 echo "Current time : " $(date +"%T")
 cd $WORK
