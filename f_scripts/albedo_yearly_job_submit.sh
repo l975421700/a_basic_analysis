@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH -p mpp
-# #SBATCH --qos=12h
-#SBATCH --time=00:30:00
+#SBATCH -p fat
+#SBATCH --qos=12h
+#SBATCH --time=12:00:00
 #SBATCH -o %A_%a.out
 #SBATCH -e %A_%a.err
-#SBATCH --array=1979-2022
-# #SBATCH --mem=120GB
+#SBATCH --array=3-4
+#SBATCH --mem=2048GB
 
 echo "Current time : " $(date +"%T")
 cd $WORK
@@ -27,9 +27,17 @@ source ${HOME}/miniconda3/bin/activate deepice
 
 # /albedo/work/user/qigao001/a_basic_analysis/f_scripts/0_echam_pp/0.7_get_6h_wisoq_sfc.sh ${SLURM_ARRAY_TASK_ID} /albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi nudged_703_6.0_k52
 
-/albedo/work/user/qigao001/a_basic_analysis/f_scripts/0_echam_pp/0.8_get_6h2monthly_wisoq.sh ${SLURM_ARRAY_TASK_ID} /albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi nudged_711_6.0_S6
+# /albedo/work/user/qigao001/a_basic_analysis/f_scripts/0_echam_pp/0.8_get_6h2monthly_wisoq.sh ${SLURM_ARRAY_TASK_ID} /albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi nudged_711_6.0_S6
 
-# python /albedo/work/user/qigao001/a_basic_analysis/f_scripts/1_py_scripts/srun${SLURM_ARRAY_TASK_ID}.py
+# /albedo/work/user/qigao001/a_basic_analysis/f_scripts/0_echam_pp/0.9_get_daily_uv.sh ${SLURM_ARRAY_TASK_ID} /albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi nudged_703_6.0_k52
+
+# /albedo/work/user/qigao001/a_basic_analysis/f_scripts/0_echam_pp/0.10_get_era5_uv.sh ${SLURM_ARRAY_TASK_ID}
+
+# /albedo/work/user/qigao001/a_basic_analysis/f_scripts/0_echam_pp/0.11_get_daily_geop_t_ml.sh ${SLURM_ARRAY_TASK_ID} /albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi nudged_703_6.0_k52
+
+# /albedo/work/user/qigao001/a_basic_analysis/f_scripts/0_echam_pp/0.12_get_6h2daily_wisoq.sh ${SLURM_ARRAY_TASK_ID} /albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi nudged_703_6.0_k52
+
+python /albedo/work/user/qigao001/a_basic_analysis/f_scripts/1_py_scripts/srun${SLURM_ARRAY_TASK_ID}.py
 
 echo "Current time : " $(date +"%T")
 

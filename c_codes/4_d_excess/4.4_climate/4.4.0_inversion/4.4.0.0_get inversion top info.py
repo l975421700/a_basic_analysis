@@ -1,11 +1,13 @@
+#SBATCH --time=12:00:00
 
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'pi_600_5.0',
-    'pi_601_5.1',
-    'pi_602_5.2',
-    'pi_603_5.3',
+    # 'pi_600_5.0',
+    # 'pi_601_5.1',
+    # 'pi_602_5.2',
+    # 'pi_603_5.3',
+    'nudged_703_6.0_k52',
     ]
 
 
@@ -19,7 +21,8 @@ import warnings
 warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
-# sys.path.append('/work/ollie/qigao001')
+sys.path.append('/work/ollie/qigao001')
+sys.path.append('/albedo/work/user/qigao001')
 
 # data analysis
 import numpy as np
@@ -132,7 +135,7 @@ for i in range(len(expid)):
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
         temp2_alltime[expid[i]] = pickle.load(f)
 
-echam6_t63_geosp = xr.open_dataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/pi_600_5.0/input/echam/unit.24')
+echam6_t63_geosp = xr.open_dataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/' + expid[i] + '/input/echam/unit.24')
 echam6_t63_surface_height = geopotential_to_height(
     echam6_t63_geosp.GEOSP * (units.m / units.s)**2)
 
@@ -159,8 +162,8 @@ for isite in ['EDC']: # t63_sites_indices.keys():
     ilon = t63_sites_indices[isite]['ilon']
     site_elevation = echam6_t63_surface_height[ilat, ilon].values
     
-    for ialltime in ['mon', 'mm', 'sea', 'sm', 'ann']:
-        # ialltime = 'mon'
+    for ialltime in ['daily', 'mon', 'mm', 'sea', 'sm', 'ann']:
+        # ialltime = 'daily'
         # ialltime = 'sm'
         print('#---------------- ' + ialltime)
         
@@ -186,7 +189,7 @@ for isite in ['EDC']: # t63_sites_indices.keys():
             nd_tas[itime] = tas
             nd_strength[itime] = nd_t_it[itime] - nd_tas[itime]
         
-        if (ialltime in ['mon', 'sea', 'ann']):
+        if (ialltime in ['daily', 'mon', 'sea', 'ann']):
             time = temp2_alltime[expid[i]][ialltime].time
         elif (ialltime == 'mm'):
             time = month[temp2_alltime[expid[i]]['mm'].month - 1]

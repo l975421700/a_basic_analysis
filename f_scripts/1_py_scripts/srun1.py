@@ -1,34 +1,46 @@
-#SBATCH --time=00:30:00
+
+
+# salloc --account=paleodyn.paleodyn --qos=12h --time=12:00:00 --nodes=1 --mem=120GB
+# source ${HOME}/miniconda3/bin/activate deepice
+# ipython
 
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'nudged_701_5.0',
-    
     'nudged_703_6.0_k52',
     ]
 i = 0
+
+ifile_start = 0 #0 #120
+ifile_end   = 528 #1740 #840
 
 # -----------------------------------------------------------------------------
 # region import packages
 
 # management
+import glob
 import pickle
 import warnings
 warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
 sys.path.append('/albedo/work/user/qigao001')
-import datetime
+import psutil
 
 # data analysis
 import numpy as np
+import xarray as xr
 import dask
 dask.config.set({"array.slicing.split_large_chunks": True})
 from dask.diagnostics import ProgressBar
 pbar = ProgressBar()
 pbar.register()
-from haversine import haversine_vector
+from scipy import stats
+import pandas as pd
+
+from a_basic_analysis.b_module.basic_calculations import (
+    mon_sea_ann,
+)
 
 
 # endregion
@@ -36,156 +48,73 @@ from haversine import haversine_vector
 
 
 # -----------------------------------------------------------------------------
-# region import data
+# region import output
 
-q_sfc_weighted_lon = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_sfc_weighted_lon.pkl', 'rb') as f:
-    q_sfc_weighted_lon[expid[i]] = pickle.load(f)
+exp_org_o = {}
+exp_org_o[expid[i]] = {}
 
-q_sfc_weighted_lat = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_sfc_weighted_lat.pkl', 'rb') as f:
-    q_sfc_weighted_lat[expid[i]] = pickle.load(f)
-
-lon = q_sfc_weighted_lat[expid[i]]['am'].lon
-lat = q_sfc_weighted_lat[expid[i]]['am'].lat
-lon_2d, lat_2d = np.meshgrid(lon, lat,)
+filenames_wiso_q_daily = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso_q_6h_daily.nc'))
+exp_org_o[expid[i]]['wiso_q_daily'] = xr.open_mfdataset(
+    filenames_wiso_q_daily[ifile_start:ifile_end],
+    chunks={'time': 10}
+    )
 
 
 '''
-import psutil
+exp_org_o[expid[i]]['wiso_q_daily']
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+#SBATCH --mem=240GB
+# -----------------------------------------------------------------------------
+# region get mon_sea_ann q16o, q18o, and qhdo
+
+wiso_q_daily = {}
+wiso_q_daily[expid[i]] = {}
+
+wiso_q_daily[expid[i]]['q16o'] = (exp_org_o[expid[i]]['wiso_q_daily']['q16o'] + exp_org_o[expid[i]]['wiso_q_daily']['xl16o'] + exp_org_o[expid[i]]['wiso_q_daily']['xi16o']).compute()
+
+wiso_q_daily[expid[i]]['q18o'] = (exp_org_o[expid[i]]['wiso_q_daily']['q18o'] + exp_org_o[expid[i]]['wiso_q_daily']['xl18o'] + exp_org_o[expid[i]]['wiso_q_daily']['xi18o']).compute()
+
+wiso_q_daily[expid[i]]['qhdo'] = (exp_org_o[expid[i]]['wiso_q_daily']['qhdo'] + exp_org_o[expid[i]]['wiso_q_daily']['xlhdo'] + exp_org_o[expid[i]]['wiso_q_daily']['xihdo']).compute()
+
 print(psutil.Process().memory_info().rss / (2 ** 30))
-'''
-# endregion
-# -----------------------------------------------------------------------------
 
+del exp_org_o
 
-# -----------------------------------------------------------------------------
-# region get transport distance
+print(psutil.Process().memory_info().rss / (2 ** 30))
 
-q_sfc_transport_distance = {}
-q_sfc_transport_distance[expid[i]] = {}
+wiso_q_daily_alltime = {}
+wiso_q_daily_alltime[expid[i]] = {}
 
-begin_time = datetime.datetime.now()
-print(begin_time)
+wiso_q_daily_alltime[expid[i]]['q16o'] = mon_sea_ann(
+    wiso_q_daily[expid[i]]['q16o'], lcopy=False)
 
-for ialltime in ['daily', 'mon', 'mm', 'sea', 'sm', 'ann', 'am']:
-    # ialltime = 'daily'
-    # ialltime = 'ann'
-    
-    q_sfc_transport_distance[expid[i]][ialltime] = q_sfc_weighted_lat[expid[i]][ialltime].copy().rename('q_sfc_transport_distance')
-    q_sfc_transport_distance[expid[i]][ialltime][:] = 0
-    
-    if (ialltime in ['daily', 'mon', 'sea', 'ann']):
-        print(ialltime)
-        
-        years = np.unique(q_sfc_transport_distance[expid[i]][ialltime].time.dt.year)
-        for iyear in years:
-            # iyear = 2010
-            print(str(iyear) + ' / ' + str(years[-1]))
-            
-            time_indices = np.where(
-                q_sfc_transport_distance[expid[i]][ialltime].time.dt.year == iyear)
-            
-            b_lon_2d = np.broadcast_to(
-                lon_2d,
-                q_sfc_transport_distance[expid[i]][ialltime][time_indices].shape,
-                )
-            b_lat_2d = np.broadcast_to(
-                lat_2d,
-                q_sfc_transport_distance[expid[i]][ialltime][time_indices].shape,
-                )
-            b_lon_2d_flatten = b_lon_2d.reshape(-1, 1)
-            b_lat_2d_flatten = b_lat_2d.reshape(-1, 1)
-            local_pairs = [[x, y] for x, y in zip(b_lat_2d_flatten, b_lon_2d_flatten)]
-            
-            lon_src_flatten = q_sfc_weighted_lon[expid[i]][
-                ialltime][time_indices].values.reshape(-1, 1).copy()
-            lat_src_flatten = q_sfc_weighted_lat[expid[i]][
-                ialltime][time_indices].values.reshape(-1, 1).copy()
-            source_pairs = [[x, y] for x, y in zip(
-                lat_src_flatten, lon_src_flatten)]
-            
-            q_sfc_transport_distance[expid[i]][ialltime][time_indices] = \
-                haversine_vector(
-                local_pairs, source_pairs, normalize=True).reshape(
-                    q_sfc_transport_distance[expid[i]][ialltime][time_indices].shape)
-            
-            print(datetime.datetime.now() - begin_time)
-            
-    elif (ialltime in ['mm', 'sm', 'am']):
-        print(ialltime)
-        b_lon_2d = np.broadcast_to(
-            lon_2d, q_sfc_weighted_lat[expid[i]][ialltime].shape, )
-        b_lat_2d = np.broadcast_to(
-            lat_2d, q_sfc_weighted_lat[expid[i]][ialltime].shape, )
-        b_lon_2d_flatten = b_lon_2d.reshape(-1, 1)
-        b_lat_2d_flatten = b_lat_2d.reshape(-1, 1)
-        local_pairs = [[x, y] for x, y in zip(b_lat_2d_flatten, b_lon_2d_flatten)]
+wiso_q_daily_alltime[expid[i]]['q18o'] = mon_sea_ann(
+    wiso_q_daily[expid[i]]['q18o'], lcopy=False)
 
-        lon_src_flatten = q_sfc_weighted_lon[expid[i]][
-            ialltime].values.reshape(-1, 1).copy()
-        lat_src_flatten = q_sfc_weighted_lat[expid[i]][
-            ialltime].values.reshape(-1, 1).copy()
-        source_pairs = [[x, y] for x, y in zip(lat_src_flatten, lon_src_flatten)]
+wiso_q_daily_alltime[expid[i]]['qhdo'] = mon_sea_ann(
+    wiso_q_daily[expid[i]]['qhdo'], lcopy=False)
 
-        q_sfc_transport_distance[expid[i]][ialltime][:] = haversine_vector(
-                    local_pairs, source_pairs, normalize=True).reshape(
-                        q_sfc_weighted_lat[expid[i]][ialltime].shape)
+print(psutil.Process().memory_info().rss / (2 ** 30))
 
-#-------- monthly without monthly mean
-q_sfc_transport_distance[expid[i]]['mon no mm'] = (q_sfc_transport_distance[expid[i]]['mon'].groupby('time.month') - q_sfc_transport_distance[expid[i]]['mon'].groupby('time.month').mean(skipna=True)).compute()
+del wiso_q_daily
 
-#-------- annual without annual mean
-q_sfc_transport_distance[expid[i]]['ann no am'] = (q_sfc_transport_distance[expid[i]]['ann'] - q_sfc_transport_distance[expid[i]]['ann'].mean(dim='time', skipna=True)).compute()
+print(psutil.Process().memory_info().rss / (2 ** 30))
 
-output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_sfc_transport_distance.pkl'
-
-if (os.path.isfile(output_file)):
-    os.remove(output_file)
-
-with open(output_file, 'wb') as f:
-    pickle.dump(q_sfc_transport_distance[expid[i]], f)
-
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wiso_q_daily_alltime.pkl', 'wb') as f:
+    pickle.dump(wiso_q_daily_alltime[expid[i]], f)
 
 
 
 '''
-#-------------------------------- check
-
-from haversine import haversine
-
-q_sfc_transport_distance = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_sfc_transport_distance.pkl', 'rb') as f:
-    q_sfc_transport_distance[expid[i]] = pickle.load(f)
-
-ilat = 50
-ilon = 90
-
-for ialltime in ['daily', 'mon', 'ann', 'mm', 'sm']:
-    # ialltime = 'mm'
-    itime = -3
-    
-    local = [lat_2d[ilat, ilon], lon_2d[ilat, ilon]]
-    source = [q_sfc_weighted_lat[expid[i]][ialltime][itime, ilat, ilon].values,
-              q_sfc_weighted_lon[expid[i]][ialltime][itime, ilat, ilon].values,]
-
-    print(haversine(local, source, normalize=True))
-    print(q_sfc_transport_distance[expid[i]][ialltime][itime, ilat, ilon].values)
-
-ialltime = 'am'
-
-local = [lat_2d[ilat, ilon], lon_2d[ilat, ilon]]
-source = [q_sfc_weighted_lat[expid[i]][ialltime][ilat, ilon].values,
-          q_sfc_weighted_lon[expid[i]][ialltime][ilat, ilon].values,]
-
-print(haversine(local, source, normalize=True))
-print(q_sfc_transport_distance[expid[i]][ialltime][ilat, ilon].values)
-
-
+wiso_q_plev_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wiso_q_plev_alltime.pkl', 'rb') as f:
+    wiso_q_plev_alltime[expid[i]] = pickle.load(f)
 
 
 '''
 # endregion
 # -----------------------------------------------------------------------------
-
-

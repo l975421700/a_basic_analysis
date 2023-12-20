@@ -1,8 +1,14 @@
 
 
+# salloc --account=paleodyn.paleodyn --qos=12h --time=12:00:00 --nodes=1 --mem=120GB
+# source ${HOME}/miniconda3/bin/activate deepice
+# ipython
+
+
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'pi_600_5.0',
+    # 'pi_600_5.0',
+    'nudged_703_6.0_k52',
     ]
 
 
@@ -69,7 +75,8 @@ for i in range(len(expid)):
         d_excess_alltime[expid[i]] = pickle.load(f)
 
 
-source_var = ['lat', 'lon', 'sst', 'rh2m', 'wind10', 'distance']
+source_var = ['lat', 'lon', 'sst', 'rh2m', 'wind10', 'RHsst']
+# 'distance',
 pre_weighted_var = {}
 
 for i in range(len(expid)):
@@ -86,7 +93,8 @@ for i in range(len(expid)):
         prefix + '.pre_weighted_sst.pkl',
         prefix + '.pre_weighted_rh2m.pkl',
         prefix + '.pre_weighted_wind10.pkl',
-        prefix + '.transport_distance.pkl',
+        # prefix + '.transport_distance.pkl',
+        prefix + '.pre_weighted_RHsst.pkl',
     ]
     
     for ivar, ifile in zip(source_var, source_var_files):
@@ -95,28 +103,28 @@ for i in range(len(expid)):
             pre_weighted_var[expid[i]][ivar] = pickle.load(f)
 
 
-temp2_alltime = {}
+# temp2_alltime = {}
 
-for i in range(len(expid)):
-    # i = 0
-    print(str(i) + ': ' + expid[i])
+# for i in range(len(expid)):
+#     # i = 0
+#     print(str(i) + ': ' + expid[i])
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
-        temp2_alltime[expid[i]] = pickle.load(f)
+#     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
+#         temp2_alltime[expid[i]] = pickle.load(f)
 
 
-sam_mon = {}
-b_sam_mon = {}
+# sam_mon = {}
+# b_sam_mon = {}
 
-for i in range(len(expid)):
-    print(str(i) + ': ' + expid[i])
+# for i in range(len(expid)):
+#     print(str(i) + ': ' + expid[i])
     
-    sam_mon[expid[i]] = xr.open_dataset(
-        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.sam_mon.nc')
+#     sam_mon[expid[i]] = xr.open_dataset(
+#         exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.sam_mon.nc')
     
-    b_sam_mon[expid[i]], _ = xr.broadcast(
-        sam_mon[expid[i]].sam,
-        d_ln_alltime[expid[i]]['mon'])
+#     b_sam_mon[expid[i]], _ = xr.broadcast(
+#         sam_mon[expid[i]].sam,
+#         d_ln_alltime[expid[i]]['mon'])
 
 '''
 '''
@@ -135,14 +143,16 @@ for i in range(len(expid)):
     
     corr_sources_isotopes[expid[i]] = {}
     
-    for ivar in ['lat', 'lon', 'sst', 'rh2m', 'wind10', 'distance']:
+    for ivar in ['lat', 'sst', 'rh2m', 'wind10', 'RHsst']:
         # ivar = 'sst'
+        # 'lon',
         print('#---------------- ' + ivar)
         
         corr_sources_isotopes[expid[i]][ivar] = {}
         
-        for iisotopes in ['wisoaprt', 'dO18', 'dD', 'd_ln', 'd_excess',]:
+        for iisotopes in ['d_ln', 'd_excess',]:
             # iisotopes = 'd_ln'
+            # 'wisoaprt', 'dO18', 'dD',
             print('#-------- ' + iisotopes)
             
             corr_sources_isotopes[expid[i]][ivar][iisotopes] = {}
@@ -207,6 +217,8 @@ for i in range(len(expid)):
 
 
 
+
+
 '''
 #-------------------------------- check
 
@@ -242,6 +254,39 @@ data6 = corr_sources_isotopes[expid[i]][ivar][iisotopes][ialltime]['r_significan
 print((data5[np.isfinite(data5)] == data6[np.isfinite(data6)]).all())
 
 
+#-------------------------------- check with site estimation
+
+i = 0
+
+corr_sources_isotopes = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.corr_sources_isotopes.pkl', 'rb') as f:
+    corr_sources_isotopes[expid[i]] = pickle.load(f)
+
+isite = 'EDC'
+with open('scratch/others/pi_m_502_5.0.t63_sites_indices.pkl', 'rb') as f:
+    t63_sites_indices = pickle.load(f)
+
+
+
+
+for ivar in ['sst', 'RHsst']:
+    print('#-------------------------------- ' + ivar)
+    
+    for iisotopes in ['d_ln', 'd_excess']:
+        print('#---------------- ' + iisotopes)
+        
+        for ialltime in ['daily', 'mon', 'mon no mm', 'ann', 'ann no am']:
+            print('#-------- ' + ialltime)
+            
+            print(np.round((corr_sources_isotopes[expid[i]][ivar][iisotopes][ialltime]['r'].sel(
+                lat=t63_sites_indices[isite]['lat'],
+                lon=t63_sites_indices[isite]['lon'],
+                method='nearest',
+            ).values) ** 2, 2))
+        
+        
+        
+        # corr_sources_isotopes[expid[i]]['sst']['d_ln']['daily'].keys()
 '''
 # endregion
 # -----------------------------------------------------------------------------

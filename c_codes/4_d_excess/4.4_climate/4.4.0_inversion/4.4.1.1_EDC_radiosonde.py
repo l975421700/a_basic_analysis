@@ -112,11 +112,18 @@ from a_basic_analysis.b_module.component_plot import (
 EDC_df_drvd = pd.read_pickle('scratch/radiosonde/igra2/EDC_df_drvd.pkl')
 date = np.unique(EDC_df_drvd.date)
 
+idatestart = np.where(date == np.datetime64('2014-12-25T12:00:00.000000000'))[0][0]
+idateend = np.where(date == np.datetime64('2015-01-16T12:00:00.000000000'))[0][0]
+
 # stats.describe(EDC_df_drvd.loc[EDC_df_drvd.calculated_height <= 5000, 'temperature'])
+
+# output_mp4 = 'figures/8_d-excess/8.2_climate/8.2.0_inversion/8.2.0.0_site_examples/8.2.0.0 vertical sounding profile at EDC 2006_2022.mp4'
+output_mp4 = 'figures/8_d-excess/8.2_climate/8.2.0_inversion/8.2.0.0_site_examples/8.2.0.0 vertical sounding profile at EDC 2014-12-25_2015-01-16.mp4'
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54, dpi=600)
 ims = []
-for i in range(len(date)):
+for i in np.arange(idatestart, idateend+1, 1):
+    # range(len(date))
     # i=0
     altitude = EDC_df_drvd.iloc[
         np.where(EDC_df_drvd.date == date[i])[0]][
@@ -152,7 +159,7 @@ ax.xaxis.set_minor_locator(AutoMinorLocator(2))
 
 ax.set_yticks(np.arange(3, 5.1, 0.5))
 ax.set_ylim(3, 5)
-ax.set_ylabel('Height [$km$]')
+ax.set_ylabel('Altitude [$km$]')
 ax.yaxis.set_minor_locator(AutoMinorLocator(2))
 ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
 
@@ -162,7 +169,7 @@ ax.grid(
 fig.subplots_adjust(left=0.16, right=0.96, bottom=0.15, top=0.96)
 ani = animation.ArtistAnimation(fig, ims, interval=500, blit=True)
 ani.save(
-    'figures/8_d-excess/8.2_climate/8.2.0_inversion/8.2.0.0_site_examples/8.2.0.0 vertical sounding profile at EDC 2006_2022.mp4',
+    output_mp4,
     progress_callback=lambda i, n: print(f'Saving frame {i} of {n}'),)
 
 

@@ -501,3 +501,54 @@ print(data2)
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region get daily u10 from hourly u10
+
+ERA5_hourly_u10_2013_2022 = xr.open_dataset('scratch/ERA5/wind10/ERA5_hourly_u10_2013_2022.nc', chunks={'time': 720})
+
+ERA5_daily_u10_2013_2022 = ERA5_hourly_u10_2013_2022.u10.resample(time='1d').mean().compute()
+
+ERA5_daily_u10_2013_2022.to_netcdf('scratch/ERA5/wind10/ERA5_daily_u10_2013_2022.nc')
+
+
+
+
+'''
+#-------------------------------- check
+ERA5_daily_u10_2013_2022 = xr.open_dataset('scratch/ERA5/wind10/ERA5_daily_u10_2013_2022.nc', chunks={'time': 720})
+
+ERA5_hourly_u10_2013_2022 = xr.open_dataset('scratch/ERA5/wind10/ERA5_hourly_u10_2013_2022.nc', chunks={'time': 720})
+
+data1 = ERA5_hourly_u10_2013_2022.u10[-24:].mean(dim='time').values
+data2 = ERA5_daily_u10_2013_2022.sp[-1].values
+
+(data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all()
+'''
+# endregion
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# region get daily v10 from hourly v10
+
+ERA5_hourly_v10_2013_2022 = xr.open_dataset('scratch/ERA5/wind10/ERA5_hourly_v10_2013_2022.nc', chunks={'time': 720})
+
+ERA5_daily_v10_2013_2022 = ERA5_hourly_v10_2013_2022.v10.resample(time='1d').mean().compute()
+
+ERA5_daily_v10_2013_2022.to_netcdf('scratch/ERA5/wind10/ERA5_daily_v10_2013_2022.nc')
+
+
+
+
+'''
+#-------------------------------- check
+ERA5_daily_v10_2013_2022 = xr.open_dataset('scratch/ERA5/wind10/ERA5_daily_v10_2013_2022.nc', chunks={'time': 720})
+
+ERA5_hourly_v10_2013_2022 = xr.open_dataset('scratch/ERA5/wind10/ERA5_hourly_v10_2013_2022.nc', chunks={'time': 720})
+
+data1 = ERA5_hourly_v10_2013_2022.v10[-24:].mean(dim='time').values
+data2 = ERA5_daily_v10_2013_2022.sp[-1].values
+
+(data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all()
+'''
+# endregion
+# -----------------------------------------------------------------------------

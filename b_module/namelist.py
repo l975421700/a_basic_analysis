@@ -119,6 +119,7 @@ plot_labels_no_unit = {
     'lat': 'Source latitude',
     'lon': 'Source longitude',
     'sst': 'Source SST',
+    'RHsst': 'Source RHsst',
     'rh2m': 'Source rh2m',
     'wind10': 'Source wind10',
     'distance': 'Source-sink distance',

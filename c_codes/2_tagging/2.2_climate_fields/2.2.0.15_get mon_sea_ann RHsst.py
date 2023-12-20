@@ -13,7 +13,7 @@ i=0
 
 
 ifile_start = 0 #12 #0 #120
-ifile_end   = 480 #528 #24 # 516 #1740 #840
+ifile_end   = 528 #528 #24 # 516 #1740 #840
 
 
 # -----------------------------------------------------------------------------
@@ -104,13 +104,29 @@ exp_org_o[expid[i]]['surf'] = xr.open_mfdataset(
 RHsst = (exp_org_o[expid[i]]['surf'].zqklevw / exp_org_o[expid[i]]['surf'].zqsw * 100).compute()
 
 RHsst_alltime = {}
-RHsst_alltime[expid[i]] = mon_sea_ann(var_daily=RHsst)
+RHsst_alltime[expid[i]] = mon_sea_ann(RHsst)
 
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.RHsst_alltime.pkl', 'wb') as f:
     pickle.dump(RHsst_alltime[expid[i]], f)
 
 
+
+
 '''
+RHsst_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.RHsst_alltime.pkl', 'rb') as f:
+    RHsst_alltime[expid[i]] = pickle.load(f)
+
+filenames_surf = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.01_surf.nc'))
+
+ifile = -1
+ncfile = xr.open_dataset(filenames_surf[ifile_start:ifile_end][ifile])
+
+data1 = (ncfile.zqklevw / ncfile.zqsw * 100).values
+data2 = RHsst_alltime[expid[i]]['daily'][-31:].values
+
+(data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all()
+
 RHsst_am = (exp_org_o[expid[i]]['surf'].zqklevw / exp_org_o[expid[i]]['surf'].zqsw).mean(dim='time').compute()
 
 # plot it

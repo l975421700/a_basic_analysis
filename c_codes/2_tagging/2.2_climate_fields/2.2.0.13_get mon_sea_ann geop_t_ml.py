@@ -1,15 +1,21 @@
 
 
+# salloc --account=paleodyn.paleodyn --qos=12h --time=12:00:00 --nodes=1 --mem=120GB
+# source ${HOME}/miniconda3/bin/activate deepice
+# ipython
+
+
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_600_5.0',
     # 'pi_601_5.1',
     # 'pi_602_5.2',
-    'pi_603_5.3',
+    # 'pi_603_5.3',
+    'nudged_703_6.0_k52',
     ]
 i = 0
-ifile_start = 120
-ifile_end   = 360
+ifile_start = 0
+ifile_end   = 528
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -83,6 +89,8 @@ from a_basic_analysis.b_module.source_properties import (
 # -----------------------------------------------------------------------------
 
 
+# Monthly data
+# -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 # region import output
 
@@ -139,5 +147,61 @@ for i in range(len(expid)):
 # -----------------------------------------------------------------------------
 
 
+# Daily data
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# region import output
+
+exp_org_o = {}
+exp_org_o[expid[i]] = {}
+
+filenames_zh_st_ml = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.daily_geop_t.nc'))
+
+exp_org_o[expid[i]]['zh_st_ml'] = xr.open_mfdataset(
+    filenames_zh_st_ml[ifile_start:ifile_end],
+    # data_vars='minimal', coords='minimal', parallel=True,
+    )
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region calculate mon_sea_ann zh and st
+
+zh_st_ml = {}
+zh_st_ml[expid[i]] = {}
+
+zh_st_ml[expid[i]]['zh'] = mon_sea_ann(exp_org_o[expid[i]]['zh_st_ml'].zh)
+zh_st_ml[expid[i]]['st'] = mon_sea_ann(exp_org_o[expid[i]]['zh_st_ml'].st)
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.zh_st_ml.pkl', 'wb') as f:
+    pickle.dump(zh_st_ml[expid[i]], f)
+
+
+
+
+'''
+#-------- import data
+expid = [
+    'pi_600_5.0',
+    'pi_601_5.1',
+    'pi_602_5.2',
+    'pi_603_5.3',
+    ]
+
+zh_st_ml = {}
+for i in range(len(expid)):
+    print(str(i) + ' ' + expid[i])
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.zh_st_ml.pkl', 'rb') as f:
+        zh_st_ml[expid[i]] = pickle.load(f)
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
 
 

@@ -7,30 +7,12 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'nudged_701_5.0',
-    
-    # 'nudged_712_6.0_k52_2yr',
-    # 'nudged_713_6.0_2yr',
-    # 'nudged_714_6.0_k52_88_2yr',
-    # 'nudged_715_6.0_k43_2yr',
-    # 'nudged_716_6.0_I01_2yr',
-    # 'nudged_717_6.0_I03_2yr',
-    # 'nudged_718_6.0_S3_2yr',
-    # 'nudged_719_6.0_S6_2yr',
-    
     'nudged_703_6.0_k52',
-    # 'nudged_705_6.0',
-    # 'nudged_706_6.0_k52_88',
-    # 'nudged_707_6.0_k43',
-    # 'nudged_708_6.0_I01',
-    # 'nudged_709_6.0_I03',
-    # 'nudged_710_6.0_S3',
-    # 'nudged_711_6.0_S6',
     ]
 i = 0
 
-ifile_start = 0 #12
-ifile_end   = 528 #516
+ifile_start = 0 #0 #120
+ifile_end   = 528 #1740 #840
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -71,25 +53,28 @@ from a_basic_analysis.b_module.basic_calculations import (
 exp_org_o = {}
 exp_org_o[expid[i]] = {}
 
-filenames_wiso_q_6h_sfc = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso_q_6h_sfc.nc'))
-exp_org_o[expid[i]]['wiso_q_6h_sfc'] = xr.open_mfdataset(
-    filenames_wiso_q_6h_sfc[ifile_start:ifile_end],
+filenames_wiso_q_daily = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso_q_6h_daily.nc'))
+exp_org_o[expid[i]]['wiso_q_daily'] = xr.open_mfdataset(
+    filenames_wiso_q_daily[ifile_start:ifile_end],
+    chunks={'time': 10}
     )
 
 
 '''
+exp_org_o[expid[i]]['wiso_q_daily']
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
 
-#SBATCH --time=12:00:00
+#SBATCH --mem=240GB
 # -----------------------------------------------------------------------------
-# region get mon_sea_ann q_sfc from 7 geo regions
+# region get mon_sea_ann q from 7 geo regions
 
-time = exp_org_o[expid[i]]['wiso_q_6h_sfc'].time
-lon  = exp_org_o[expid[i]]['wiso_q_6h_sfc'].lon
-lat  = exp_org_o[expid[i]]['wiso_q_6h_sfc'].lat
+time = exp_org_o[expid[i]]['wiso_q_daily'].time
+lon  = exp_org_o[expid[i]]['wiso_q_daily'].lon
+lat  = exp_org_o[expid[i]]['wiso_q_daily'].lat
+lev  = exp_org_o[expid[i]]['wiso_q_daily'].lev
 
 geo_regions = [
     'AIS', 'Land excl. AIS', 'Atlantic Ocean',
@@ -99,14 +84,15 @@ q_count = {'AIS': 13, 'Land excl. AIS': 14,
              'Atlantic Ocean': 15, 'Indian Ocean': 16, 'Pacific Ocean': 17,
              'SH seaice': 18, 'Southern Ocean': 19}
 
-q_geo7_sfc = {}
-q_geo7_sfc[expid[i]] = xr.DataArray(
+q_geo7 = {}
+q_geo7[expid[i]] = xr.DataArray(
     data = np.zeros(
-        (len(time), len(geo_regions), len(lat), len(lon)),
+        (len(time), len(geo_regions), len(lev), len(lat), len(lon)),
         dtype=np.float32),
     coords={
         'time':         time,
         'geo_regions':  geo_regions,
+        'lev':          lev,
         'lat':          lat,
         'lon':          lon,
     }
@@ -117,119 +103,129 @@ for iregion in geo_regions[:-2]:
     print('#-------------------------------- ' + iregion)
     print(q_count[iregion])
     
-    q_geo7_sfc[expid[i]].sel(geo_regions=iregion)[:] = \
-        (exp_org_o[expid[i]]['wiso_q_6h_sfc']['q_' + str(q_count[iregion])] + \
-            exp_org_o[expid[i]]['wiso_q_6h_sfc']['xl_' + str(q_count[iregion])] + \
-                exp_org_o[expid[i]]['wiso_q_6h_sfc']['xi_' + str(q_count[iregion])]).sel(lev=47).compute()
+    q_geo7[expid[i]].sel(geo_regions=iregion)[:] = \
+        (exp_org_o[expid[i]]['wiso_q_daily']['q_' + str(q_count[iregion])] + \
+            exp_org_o[expid[i]]['wiso_q_daily']['xl_' + str(q_count[iregion])] + \
+                exp_org_o[expid[i]]['wiso_q_daily']['xi_' + str(q_count[iregion])]).compute()
 
-q_geo7_sfc[expid[i]].sel(geo_regions='Open Ocean')[:] = \
-    q_geo7_sfc[expid[i]].sel(geo_regions=[
+print(psutil.Process().memory_info().rss / (2 ** 30))
+
+del exp_org_o
+
+print(psutil.Process().memory_info().rss / (2 ** 30))
+
+q_geo7[expid[i]].sel(geo_regions='Open Ocean')[:] = \
+    q_geo7[expid[i]].sel(geo_regions=[
         'Atlantic Ocean', 'Indian Ocean', 'Pacific Ocean', 'Southern Ocean',
         ]).sum(dim='geo_regions', skipna=False).compute()
 
-q_geo7_sfc[expid[i]].sel(geo_regions='Sum')[:] = \
-    q_geo7_sfc[expid[i]].sel(geo_regions=[
+q_geo7[expid[i]].sel(geo_regions='Sum')[:] = \
+    q_geo7[expid[i]].sel(geo_regions=[
         'AIS', 'Land excl. AIS', 'Atlantic Ocean',
         'Indian Ocean', 'Pacific Ocean', 'SH seaice', 'Southern Ocean',
         ]).sum(dim='geo_regions', skipna=False).compute()
 
-q_geo7_sfc_alltiime = {}
-q_geo7_sfc_alltiime[expid[i]] = mon_sea_ann(var_6hourly=q_geo7_sfc[expid[i]])
+q_geo7_alltiime = {}
+q_geo7_alltiime[expid[i]] = mon_sea_ann(q_geo7[expid[i]], lcopy=False)
 
-output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_geo7_sfc_alltiime.pkl'
+print(psutil.Process().memory_info().rss / (2 ** 30))
+
+del q_geo7
+
+print(psutil.Process().memory_info().rss / (2 ** 30))
+
+output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_geo7_alltiime.pkl'
 
 if (os.path.isfile(output_file)):
     os.remove(output_file)
 
 with open(output_file, 'wb') as f:
-    pickle.dump(q_geo7_sfc_alltiime[expid[i]], f)
-
-
+    pickle.dump(q_geo7_alltiime[expid[i]], f)
 
 
 '''
 #-------------------------------- check
 
-q_geo7_sfc_alltiime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_geo7_sfc_alltiime.pkl', 'rb') as f:
-    q_geo7_sfc_alltiime[expid[i]] = pickle.load(f)
+q_geo7_alltiime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_geo7_alltiime.pkl', 'rb') as f:
+    q_geo7_alltiime[expid[i]] = pickle.load(f)
 
-filenames_wiso_q_6h_sfc = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso_q_6h_sfc.nc'))
-ifile = -1
-wiso_6h_sfc = xr.open_dataset(filenames_wiso_q_6h_sfc[ifile_start:ifile_end][ifile])
+filenames_wiso_q_plev = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_wiso_q_plev.nc'))
 
-data1 = q_geo7_sfc_alltiime[expid[i]]['6h'].sel(geo_regions='Pacific Ocean')[-124:].values
-data2 = (wiso_6h_sfc['q_17'] + wiso_6h_sfc['xl_17'] + wiso_6h_sfc['xi_17']).compute().squeeze().values
+ifile = -10
+wiso_q_plev = xr.open_dataset(filenames_wiso_q_plev[ifile_start:ifile_end][ifile])
+
+data1 = q_geo7_alltiime[expid[i]]['mon'].sel(geo_regions='Pacific Ocean')[ifile].values
+data2 = (wiso_q_plev['q_17'] + wiso_q_plev['xl_17'] + wiso_q_plev['xi_17']).compute().squeeze().values
 print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
 
 
-data1 = q_geo7_sfc_alltiime[expid[i]]['6h'].sel(geo_regions='Open Ocean')[-124:].values
+data1 = q_geo7_alltiime[expid[i]]['mon'].sel(geo_regions='Open Ocean')[ifile].values
 data2 = (
-    wiso_6h_sfc['q_15'] + wiso_6h_sfc['xl_15'] + wiso_6h_sfc['xi_15'] + \
-        wiso_6h_sfc['q_16'] + wiso_6h_sfc['xl_16'] + wiso_6h_sfc['xi_16'] + \
-            wiso_6h_sfc['q_17'] + wiso_6h_sfc['xl_17'] + wiso_6h_sfc['xi_17'] + \
-                wiso_6h_sfc['q_19'] + wiso_6h_sfc['xl_19'] + wiso_6h_sfc['xi_19']).compute().squeeze().values
+    wiso_q_plev['q_15'] + wiso_q_plev['xl_15'] + wiso_q_plev['xi_15'] + \
+        wiso_q_plev['q_16'] + wiso_q_plev['xl_16'] + wiso_q_plev['xi_16'] + \
+            wiso_q_plev['q_17'] + wiso_q_plev['xl_17'] + wiso_q_plev['xi_17'] + \
+                wiso_q_plev['q_19'] + wiso_q_plev['xl_19'] + wiso_q_plev['xi_19']).compute().squeeze().values
 print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
 print(np.max(abs(data1[np.isfinite(data1)] - data2[np.isfinite(data2)]) / data1[np.isfinite(data1)]))
 
 
-data1 = q_geo7_sfc_alltiime[expid[i]]['6h'].sel(geo_regions='Sum')[-124:].values
+data1 = q_geo7_alltiime[expid[i]]['mon'].sel(geo_regions='Sum')[ifile].values
 data2 = (
-    wiso_6h_sfc['q_13'] + wiso_6h_sfc['xl_13'] + wiso_6h_sfc['xi_13'] + \
-    wiso_6h_sfc['q_14'] + wiso_6h_sfc['xl_14'] + wiso_6h_sfc['xi_14'] + \
-    wiso_6h_sfc['q_15'] + wiso_6h_sfc['xl_15'] + wiso_6h_sfc['xi_15'] + \
-    wiso_6h_sfc['q_16'] + wiso_6h_sfc['xl_16'] + wiso_6h_sfc['xi_16'] + \
-    wiso_6h_sfc['q_17'] + wiso_6h_sfc['xl_17'] + wiso_6h_sfc['xi_17'] + \
-    wiso_6h_sfc['q_18'] + wiso_6h_sfc['xl_18'] + wiso_6h_sfc['xi_18'] + \
-    wiso_6h_sfc['q_19'] + wiso_6h_sfc['xl_19'] + wiso_6h_sfc['xi_19']
+    wiso_q_plev['q_13'] + wiso_q_plev['xl_13'] + wiso_q_plev['xi_13'] + \
+    wiso_q_plev['q_14'] + wiso_q_plev['xl_14'] + wiso_q_plev['xi_14'] + \
+    wiso_q_plev['q_15'] + wiso_q_plev['xl_15'] + wiso_q_plev['xi_15'] + \
+    wiso_q_plev['q_16'] + wiso_q_plev['xl_16'] + wiso_q_plev['xi_16'] + \
+    wiso_q_plev['q_17'] + wiso_q_plev['xl_17'] + wiso_q_plev['xi_17'] + \
+    wiso_q_plev['q_18'] + wiso_q_plev['xl_18'] + wiso_q_plev['xi_18'] + \
+    wiso_q_plev['q_19'] + wiso_q_plev['xl_19'] + wiso_q_plev['xi_19']
     ).compute().squeeze().values
 print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
 print(np.max(abs(data1[np.isfinite(data1)] - data2[np.isfinite(data2)]) / data1[np.isfinite(data1)]))
 
 #-------------------------------- check 2
 
-q_geo7_sfc_alltiime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_geo7_sfc_alltiime.pkl', 'rb') as f:
-    q_geo7_sfc_alltiime[expid[i]] = pickle.load(f)
+q_geo7_alltiime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_geo7_alltiime.pkl', 'rb') as f:
+    q_geo7_alltiime[expid[i]] = pickle.load(f)
 
-wiso_q_6h_sfc_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wiso_q_6h_sfc_alltime.pkl', 'rb') as f:
-    wiso_q_6h_sfc_alltime[expid[i]] = pickle.load(f)
+wiso_q_plev_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wiso_q_plev_alltime.pkl', 'rb') as f:
+    wiso_q_plev_alltime[expid[i]] = pickle.load(f)
 
-data1 = q_geo7_sfc_alltiime[expid[i]]['am'][:7].sum(dim='geo_regions').values
-data2 = wiso_q_6h_sfc_alltime[expid[i]]['q16o']['am'].squeeze().values
+data1 = q_geo7_alltiime[expid[i]]['am'][:7].sum(dim='geo_regions').values
+data2 = wiso_q_plev_alltime[expid[i]]['q16o']['am'].values
 subset = np.isfinite(data1) & np.isfinite(data2)
 print(np.max(abs(data1[subset] - data2[subset]) / data2[subset]))
 
-data1 = q_geo7_sfc_alltiime[expid[i]]['am'].sel(geo_regions='Sum').values
-data2 = wiso_q_6h_sfc_alltime[expid[i]]['q16o']['am'].squeeze().values
+data1 = q_geo7_alltiime[expid[i]]['am'].sel(geo_regions='Sum').values
+data2 = wiso_q_plev_alltime[expid[i]]['q16o']['am'].values
 subset = np.isfinite(data1) & np.isfinite(data2)
 print(np.max(abs(data1[subset] - data2[subset]) / data2[subset]))
 
 
 #-------------------------------- check 3
 
-q_geo7_sfc_alltiime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_geo7_sfc_alltiime.pkl', 'rb') as f:
-    q_geo7_sfc_alltiime[expid[i]] = pickle.load(f)
+q_geo7_alltiime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_geo7_alltiime.pkl', 'rb') as f:
+    q_geo7_alltiime[expid[i]] = pickle.load(f)
 
-ocean_q_sfc_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_q_sfc_alltime.pkl', 'rb') as f:
-    ocean_q_sfc_alltime[expid[i]] = pickle.load(f)
+ocean_q_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_q_alltime.pkl', 'rb') as f:
+    ocean_q_alltime[expid[i]] = pickle.load(f)
 
 # Open ocean + Arctic sea ice
-# data1 = q_geo7_sfc_alltiime[expid[i]]['am'].sel(geo_regions=[
-#     'Atlantic Ocean', 'Indian Ocean', 'Pacific Ocean', 'Southern Ocean',
-#     ], lat=slice(0, -90)).sum(dim='geo_regions', skipna=False).compute().values
-data1 = q_geo7_sfc_alltiime[expid[i]]['am'].sel(geo_regions=['Open Ocean'], lat=slice(0, -90)).squeeze().values
+data1 = q_geo7_alltiime[expid[i]]['am'].sel(geo_regions=[
+    'Atlantic Ocean', 'Indian Ocean', 'Pacific Ocean', 'Southern Ocean',
+    ], lat=slice(0, -90), plev=1e+5).sum(dim='geo_regions', skipna=False).compute().values
+# data1 = q_geo7_alltiime[expid[i]]['am'].sel(geo_regions=['Open Ocean'], lat=slice(0, -90), plev=1e+5).squeeze().values
 # Open ocean
-data2 = ocean_q_sfc_alltime[expid[i]]['am'].sel(var_names='lat', lat=slice(0, -90)).values
+data2 = ocean_q_alltime[expid[i]]['am'].sel(var_names='lat', lat=slice(0, -90), plev=1e+5).values
 subset = np.isfinite(data1) & np.isfinite(data2)
 print(np.max(abs(data1[subset] - data2[subset]) / data2[subset]))
-print(np.max(abs(data1[subset] - data2[subset])))
 
-data1 = ocean_q_sfc_alltime[expid[i]]['am'].sel(var_names='lat').values
-data2 = ocean_q_sfc_alltime[expid[i]]['am'].sel(var_names='coslon').values
+data1 = ocean_q_alltime[expid[i]]['am'].sel(var_names='lat').values
+data2 = ocean_q_alltime[expid[i]]['am'].sel(var_names='coslon').values
 subset = np.isfinite(data1) & np.isfinite(data2)
 np.max(abs(data1[subset] - data2[subset]) / data2[subset])
 

@@ -2,10 +2,12 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'pi_600_5.0',
+    # 'pi_600_5.0',
     # 'pi_601_5.1',
     # 'pi_602_5.2',
     # 'pi_603_5.3',
+    
+    'nudged_703_6.0_k52',
     ]
 
 
@@ -116,12 +118,12 @@ from a_basic_analysis.b_module.component_plot import (
 # region import data
 
 corr_sources_isotopes = {}
-par_corr_sources_isotopes = {}
-corr_temp2_isotopes = {}
-par_corr_temp2_isotopes2 = {}
-par_corr_sst_isotopes2 = {}
-par_corr_isotopes_temp2_sst = {}
-corr_sam_isotopes_sources_temp2 = {}
+# par_corr_sources_isotopes = {}
+# corr_temp2_isotopes = {}
+# par_corr_temp2_isotopes2 = {}
+# par_corr_sst_isotopes2 = {}
+# par_corr_isotopes_temp2_sst = {}
+# corr_sam_isotopes_sources_temp2 = {}
 
 for i in range(len(expid)):
     print(str(i) + ': ' + expid[i])
@@ -129,22 +131,22 @@ for i in range(len(expid)):
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.corr_sources_isotopes.pkl', 'rb') as f:
         corr_sources_isotopes[expid[i]] = pickle.load(f)
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sources_isotopes.pkl', 'rb') as f:
-        par_corr_sources_isotopes[expid[i]] = pickle.load(f)
+    # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sources_isotopes.pkl', 'rb') as f:
+    #     par_corr_sources_isotopes[expid[i]] = pickle.load(f)
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.corr_temp2_isotopes.pkl', 'rb') as f:
-        corr_temp2_isotopes[expid[i]] = pickle.load(f)
+    # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.corr_temp2_isotopes.pkl', 'rb') as f:
+    #     corr_temp2_isotopes[expid[i]] = pickle.load(f)
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_temp2_isotopes2.pkl', 'rb') as f:
-        par_corr_temp2_isotopes2[expid[i]] = pickle.load(f)
+    # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_temp2_isotopes2.pkl', 'rb') as f:
+    #     par_corr_temp2_isotopes2[expid[i]] = pickle.load(f)
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sst_isotopes2.pkl', 'rb') as f:
-        par_corr_sst_isotopes2[expid[i]] = pickle.load(f)
+    # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sst_isotopes2.pkl', 'rb') as f:
+    #     par_corr_sst_isotopes2[expid[i]] = pickle.load(f)
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_isotopes_temp2_sst.pkl', 'rb') as f:
-        par_corr_isotopes_temp2_sst[expid[i]] = pickle.load(f)
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.corr_sam_isotopes_sources_temp2.pkl', 'rb') as f:
-        corr_sam_isotopes_sources_temp2[expid[i]] = pickle.load(f)
+    # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_isotopes_temp2_sst.pkl', 'rb') as f:
+    #     par_corr_isotopes_temp2_sst[expid[i]] = pickle.load(f)
+    # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.corr_sam_isotopes_sources_temp2.pkl', 'rb') as f:
+    #     corr_sam_isotopes_sources_temp2[expid[i]] = pickle.load(f)
 
 lon = corr_sources_isotopes[expid[i]]['sst']['d_ln']['mon']['r'].lon
 lat = corr_sources_isotopes[expid[i]]['sst']['d_ln']['mon']['r'].lat
@@ -203,22 +205,23 @@ for icores in ['EDC', 'DOME F']:
 
 
 # -----------------------------------------------------------------------------
-# region plot corr_sources_isotopes
+# region plot corr_sources_isotopes Antarctica
 
 for i in range(len(expid)):
     # i = 0
     print('#-------------------------------- ' + str(i) + ': ' + expid[i])
     
-    for ivar in ['sst', 'rh2m', 'wind10']:
+    for ivar in ['RHsst',]:
         # ivar = 'sst'
-        # 'lat', 'lon', 'distance',
+        # 'sst', 'lat', 'lon', 'distance', 'rh2m', 'wind10'
         print('#---------------- ' + ivar)
         
-        for iisotope in ['wisoaprt', 'dO18', 'dD', 'd_ln', 'd_excess']:
+        for iisotope in ['d_ln', 'd_excess']:
             # iisotope = 'd_ln'
+            # 'wisoaprt', 'dO18', 'dD',
             print('#-------- ' + iisotope)
             
-            for ialltime in ['daily', 'mon', 'mon_no_mm', 'ann']:
+            for ialltime in ['daily', 'mon', 'mon no mm', 'ann', 'ann no am']:
                 # ialltime = 'mon_no_mm'
                 print('#---- ' + ialltime)
                 
@@ -256,6 +259,62 @@ for i in range(len(expid)):
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot corr_sources_isotopes globe
+
+for i in range(len(expid)):
+    # i = 0
+    print('#-------------------------------- ' + str(i) + ': ' + expid[i])
+    
+    for ivar in ['sst', 'RHsst',]:
+        # ivar = 'sst'
+        # 'lat', 'lon', 'distance', 'rh2m', 'wind10'
+        print('#---------------- ' + ivar)
+        
+        for iisotope in ['d_ln', 'd_excess']:
+            # iisotope = 'd_ln'
+            # 'wisoaprt', 'dO18', 'dD',
+            print('#-------- ' + iisotope)
+            
+            for ialltime in ['daily', 'mon', 'mon no mm', 'ann', 'ann no am']:
+                # ialltime = 'daily'
+                print('#---- ' + ialltime)
+                
+                output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.0_sources_isotopes/8.1.5.0.0 ' + expid[i] + ' ' + ialltime + ' corr. ' + ivar + ' vs. ' + iisotope + '_global.png'
+                
+                cbar_label = 'Correlation: ' + plot_labels_no_unit[ivar] + ' & ' + plot_labels_no_unit[iisotope]
+                
+                fig, ax = globe_plot(
+                    add_grid_labels=False, figsize=np.array([8.8, 6]) / 2.54,
+                    fm_left=0.01, fm_right=0.99, fm_bottom=0.1, fm_top=0.99,)
+                
+                plt1 = plot_t63_contourf(
+                    lon, lat,
+                    corr_sources_isotopes[expid[i]][ivar][iisotope][ialltime]['r'],
+                    ax,
+                    pltlevel, 'neither', pltnorm, pltcmp, ccrs.PlateCarree(),)
+                
+                cbar = fig.colorbar(
+                    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
+                    orientation="horizontal", shrink=0.7, ticks=pltticks,
+                    pad=0.05, fraction=0.12,
+                    )
+                cbar.ax.tick_params(length=2, width=0.4)
+                cbar.ax.set_xlabel(cbar_label, linespacing=2)
+                
+                fig.savefig(output_png)
+
+
+
+'''
+6*5*5
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
 
 
 # -----------------------------------------------------------------------------

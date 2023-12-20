@@ -1,3 +1,10 @@
+
+
+# salloc --account=paleodyn.paleodyn --qos=12h --time=12:00:00 --nodes=1 --mem=120GB
+# source ${HOME}/miniconda3/bin/activate deepice
+# ipython
+
+
 #SBATCH --time=00:30:00, not PI control
 
 
