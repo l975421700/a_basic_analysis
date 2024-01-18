@@ -21,6 +21,13 @@ expid = [
     # 'nudged_701_5.0',
     
     'nudged_703_6.0_k52',
+    
+    # 'nudged_705_6.0',
+    # 'nudged_707_6.0_k43',
+    # 'nudged_708_6.0_I01',
+    # 'nudged_709_6.0_I03',
+    # 'nudged_710_6.0_S3',
+    # 'nudged_711_6.0_S6',
     ]
 i = 0
 
@@ -132,8 +139,7 @@ for icores in major_ice_core_site.Site:
 pre_weighted_var = {}
 pre_weighted_var[expid[i]] = {}
 
-source_var = ['lat', 'lon', 'sst', 'rh2m', 'wind10', 'RHsst']
-# 'distance',
+source_var = ['lat', 'lon', 'sst', 'rh2m', 'wind10', 'distance', 'RHsst']
 
 prefix = exp_odir + expid[i] + '/analysis/echam/' + expid[i]
 source_var_files = [
@@ -142,7 +148,7 @@ source_var_files = [
     prefix + '.pre_weighted_sst.pkl',
     prefix + '.pre_weighted_rh2m.pkl',
     prefix + '.pre_weighted_wind10.pkl',
-    # prefix + '.transport_distance.pkl',
+    prefix + '.transport_distance.pkl',
     prefix + '.pre_weighted_RHsst.pkl',
 ]
 

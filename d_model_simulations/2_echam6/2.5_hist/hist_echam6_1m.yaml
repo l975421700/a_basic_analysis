@@ -1,18 +1,19 @@
 general:
     setup_name: "echam"
+    version: "6.3.05p2-wiso"
     compute_time: "00:30:00"
-    initial_date: "1870-01-01"
+    initial_date: "1979-01-01"
     final_date: "2015-01-01"
     model_dir: "/albedo/work/user/qigao001/model_codes/echam-6.3.05p2-wiso/"
     base_dir: "/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/"
     nmonth: 1
     nyear: 0
+    with_wiso: True
     use_venv: False
     account: paleodyn.paleodyn
 
 echam:
-    version: "6.3.05p2-wiso"
-    executable: echam6_230519_5.0
+    executable: echam6_231103_6.0_k52
     bin_sources:
             echam_bin: "${bin_dir}/${executable}"
     bin_in_work:
@@ -21,13 +22,12 @@ echam:
     scenario: "HIST"
     res: T63
     lresume: True
-    ini_parent_exp_id: "pi_600_5.0"
-    ini_parent_date:  "2069-12-31T23:52:30"
-    ini_parent_dir: "/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/pi_600_5.0/restart/echam/"
-    with_wiso: True
-    wiso_code: True
     restart_rate: 1
     restart_unit: "months"
+    ini_parent_date:  "1983-12-31T23:52:30"
+    ini_parent_exp_id: "nudged_702_6.0_spinup"
+    ini_parent_dir: "/albedo/work/user/qigao001/albedo_scratch/output/echam-6.3.05p2-wiso/pi/nudged_702_6.0_spinup/restart/echam/"
+    wiso_code: True
     nproca: 24
     nprocb:  24
     nprocar: 0
@@ -47,8 +47,8 @@ echam:
                     lrad_async: False
                 wisoctl:
                     lwiso: True
-                    lwiso_rerun: ${lresume}
-                    nwiso: 28
+                    lwiso_rerun: True
+                    nwiso: 31
                     ntag: 0
                     ntag1: 0
                     ntag2: 0
@@ -63,7 +63,9 @@ echam:
                     ntags6_sinlon: 3
                     ntags7_coslon: 3
                     ntag5: 0
-                    ntag_sum: 25
+                    ntags8_RHsst: 3
+                    ntag6: 0
+                    ntag_sum: 28
                     lupdate_tagmap: True
                     tag_minsst: 268.15
                     tag_maxsst: 318.15
@@ -71,6 +73,8 @@ echam:
                     tag_maxrh2m: 1.6
                     tag_minwind10: 0
                     tag_maxwind10: 28.0
+                    tag_minRHsst: 0
+                    tag_maxRHsst: 1.4
                     ltag_corr1: True
                     ltag_corr3: True
                     latm_water: False
@@ -85,7 +89,7 @@ echam:
             all_directions: "link"
     forcing_sources:
         wiso_sw_observed: "/albedo/home/mwerner/model_input/ECHAM6-wiso/PI_ctrl/T63/T63_wisosw_d.nc"
-        wiso_tagmap_1: "/albedo/work/user/qigao001/startdump/tagging/tagmap/pi_6tagmap.nc"
+        wiso_tagmap_1: "/albedo/work/user/qigao001/startdump/tagging/tagmap/pi_7tagmap.nc"
     add_forcing_files:
         wiso_sw: wiso_sw_observed
         wiso_tagmap: wiso_tagmap_1

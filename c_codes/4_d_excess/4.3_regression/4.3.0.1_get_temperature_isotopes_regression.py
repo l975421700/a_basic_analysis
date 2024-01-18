@@ -11,7 +11,9 @@ expid = [
     # 'pi_609_5.7',
     # 'pi_610_5.8',
     # 'hist_700_5.0',
-    'nudged_701_5.0',
+    # 'nudged_701_5.0',
+    'nudged_703_6.0_k52',
+    # 'nudged_705_6.0',
     ]
 
 
@@ -46,19 +48,19 @@ from a_basic_analysis.b_module.statistics import (
 # -----------------------------------------------------------------------------
 # region import data
 
-dO18_alltime = {}
-dD_alltime = {}
+# dO18_alltime = {}
+# dD_alltime = {}
 d_ln_alltime = {}
 d_excess_alltime = {}
 
 for i in range(len(expid)):
     print(str(i) + ': ' + expid[i])
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_alltime.pkl', 'rb') as f:
-        dO18_alltime[expid[i]] = pickle.load(f)
+    # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_alltime.pkl', 'rb') as f:
+    #     dO18_alltime[expid[i]] = pickle.load(f)
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_alltime.pkl', 'rb') as f:
-        dD_alltime[expid[i]] = pickle.load(f)
+    # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_alltime.pkl', 'rb') as f:
+    #     dD_alltime[expid[i]] = pickle.load(f)
     
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_alltime.pkl', 'rb') as f:
         d_ln_alltime[expid[i]] = pickle.load(f)
@@ -87,14 +89,13 @@ for i in range(len(expid)):
         with open(ifile, 'rb') as f:
             pre_weighted_var[expid[i]][ivar] = pickle.load(f)
 
-temp2_alltime = {}
-
-for i in range(len(expid)):
-    # i = 0
-    print(str(i) + ': ' + expid[i])
+# temp2_alltime = {}
+# for i in range(len(expid)):
+#     # i = 0
+#     print(str(i) + ': ' + expid[i])
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
-        temp2_alltime[expid[i]] = pickle.load(f)
+#     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
+#         temp2_alltime[expid[i]] = pickle.load(f)
 
 with open('scratch/others/pi_m_502_5.0.t63_sites_indices.pkl', 'rb') as f:
     t63_sites_indices = pickle.load(f)
@@ -235,6 +236,8 @@ regression_sst_d_AIS[expid[i]]['d_ln']['mon']['RMSE']
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
 
 
 # -----------------------------------------------------------------------------

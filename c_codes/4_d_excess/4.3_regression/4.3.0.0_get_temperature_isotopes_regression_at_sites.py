@@ -10,7 +10,15 @@ expid = [
     # 'pi_609_5.7',
     # 'pi_610_5.8',
     # 'hist_700_5.0',
-    'nudged_701_5.0',
+    # 'nudged_701_5.0',
+    # 'nudged_703_6.0_k52',
+    
+    # 'nudged_705_6.0',
+    # 'nudged_707_6.0_k43',
+    # 'nudged_708_6.0_I01',
+    # 'nudged_709_6.0_I03',
+    # 'nudged_710_6.0_S3',
+    'nudged_711_6.0_S6',
     ]
 
 
@@ -43,7 +51,7 @@ import statsmodels.api as sm
 
 
 isotopes_alltime_icores = {}
-temp2_alltime_icores = {}
+# temp2_alltime_icores = {}
 pre_weighted_var_icores = {}
 
 for i in range(len(expid)):
@@ -53,9 +61,9 @@ for i in range(len(expid)):
         exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.isotopes_alltime_icores.pkl', 'rb') as f:
         isotopes_alltime_icores[expid[i]] = pickle.load(f)
     
-    with open(
-        exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.temp2_alltime_icores.pkl', 'rb') as f:
-        temp2_alltime_icores[expid[i]] = pickle.load(f)
+    # with open(
+    #     exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.temp2_alltime_icores.pkl', 'rb') as f:
+    #     temp2_alltime_icores[expid[i]] = pickle.load(f)
     
     with open(
         exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.pre_weighted_var_icores.pkl', 'rb') as f:

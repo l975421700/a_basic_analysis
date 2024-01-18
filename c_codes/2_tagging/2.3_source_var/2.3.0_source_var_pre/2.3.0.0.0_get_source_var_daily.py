@@ -242,33 +242,68 @@ for ivar in source_var:
 # -----------------------------------------------------------------------------
 # region copy output
 
-# import shutil
 
-# src_exp = 'pi_600_5.0'
-# # src_exp = 'pi_601_5.1'
+import shutil
+import os
+exp_odir = '/albedo/work/user/qigao001/albedo_scratch/output/echam-6.3.05p2-wiso/pi/'
 
-# expid = [
-#     # 'pi_602_5.2',
-#     # 'pi_605_5.5',
-#     # 'pi_606_5.6',
-#     # 'pi_609_5.7',
-#     'pi_610_5.8',
-#     ]
+src_exp = 'nudged_703_6.0_k52'
 
-# for var_name in ['sst', 'lat', 'rh2m', 'wind10', 'sinlon', 'coslon']:
-#     print('#---------------- ' + var_name)
+expid = [
+    # 'nudged_705_6.0',
+    'nudged_707_6.0_k43',
+    'nudged_708_6.0_I01',
+    'nudged_709_6.0_I03',
+    'nudged_710_6.0_S3',
+    'nudged_711_6.0_S6',
+    ]
+
+for file_suffix in [
+    # 'aprt_geo7_alltime',
+    # 'inversion_height_strength',
+    # 'ocean_aprt_alltime',
+    # 'ocean_q_alltime',
+    # 'ocean_q_sfc_alltime',
+    # 'pre_weighted_coslon',
+    # 'pre_weighted_lat',
+    # 'pre_weighted_lon',
+    # 'pre_weighted_rh2m',
+    # 'pre_weighted_RHsst',
+    # 'pre_weighted_sinlon',
+    # 'pre_weighted_sst',
+    # 'pre_weighted_wind10',
+    # 'q_geo7_alltiime',
+    'q_geo7_sfc_alltiime',
+    'q_sfc_transport_distance',
+    'q_sfc_weighted_coslon',
+    'q_sfc_weighted_lat',
+    'q_sfc_weighted_lon',
+    'q_sfc_weighted_rh2m',
+    'q_sfc_weighted_RHsst',
+    'q_sfc_weighted_sinlon',
+    'q_sfc_weighted_sst',
+    'q_sfc_weighted_wind10',
+    'RHsst_alltime',
+    'seaice_alltime',
+    'temp2_alltime',
+    'transport_distance',
+    'tsw_alltime',
+    'zh_st_ml',
+    ]:
+    print('#-------------------------------- ' + file_suffix)
     
-#     for i in range(len(expid)):
-#         print('#-------- ' + expid[i])
+    for i in range(len(expid)):
+        print('#---------------- ' + expid[i])
         
-#         input_file = exp_odir + src_exp + '/analysis/echam/' + src_exp + '.pre_weighted_' + var_name + '.pkl'
+        input_file = exp_odir + src_exp + '/analysis/echam/' + src_exp + '.' + file_suffix + '.pkl'
         
-#         output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_' + var_name + '.pkl'
+        output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.' + file_suffix + '.pkl'
         
-#         if (os.path.isfile(output_file)):
-#             os.remove(output_file)
+        if (os.path.isfile(output_file)):
+            os.remove(output_file)
+            print(output_file)
         
-#         shutil.copy2(input_file, output_file)
+        shutil.copy2(input_file, output_file)
 
 # endregion
 # -----------------------------------------------------------------------------

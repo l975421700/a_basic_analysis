@@ -8,7 +8,16 @@ expid = [
     # 'pi_605_5.5',
     # 'pi_606_5.6',
     # 'pi_609_5.7',
-    'hist_700_5.0',
+    # 'hist_700_5.0',
+    
+    'nudged_705_6.0',
+    'nudged_703_6.0_k52',
+    
+    'nudged_707_6.0_k43',
+    'nudged_708_6.0_I01',
+    'nudged_709_6.0_I03',
+    'nudged_710_6.0_S3',
+    'nudged_711_6.0_S6',
     ]
 
 
@@ -123,9 +132,9 @@ from a_basic_analysis.b_module.component_plot import (
 # region import data
 
 regression_sst_d = {}
-regression_sst_d_dD = {}
-regression_temp2_delta = {}
-regression_temp2_delta_d = {}
+# regression_sst_d_dD = {}
+# regression_temp2_delta = {}
+# regression_temp2_delta_d = {}
 
 for i in range(len(expid)):
     # i = 0
@@ -134,20 +143,20 @@ for i in range(len(expid)):
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.regression_sst_d.pkl', 'rb') as f:
         regression_sst_d[expid[i]] = pickle.load(f)
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.regression_sst_d_dD.pkl', 'rb') as f:
-        regression_sst_d_dD[expid[i]] = pickle.load(f)
+    # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.regression_sst_d_dD.pkl', 'rb') as f:
+    #     regression_sst_d_dD[expid[i]] = pickle.load(f)
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.regression_temp2_delta.pkl', 'rb') as f:
-        regression_temp2_delta[expid[i]] = pickle.load(f)
+    # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.regression_temp2_delta.pkl', 'rb') as f:
+    #     regression_temp2_delta[expid[i]] = pickle.load(f)
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.regression_temp2_delta_d.pkl', 'rb') as f:
-        regression_temp2_delta_d[expid[i]] = pickle.load(f)
+    # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.regression_temp2_delta_d.pkl', 'rb') as f:
+    #     regression_temp2_delta_d[expid[i]] = pickle.load(f)
 
 
 isotopes_alltime_icores = {}
-temp2_alltime_icores = {}
+# temp2_alltime_icores = {}
 pre_weighted_var_icores = {}
-wisoaprt_alltime_icores = {}
+# wisoaprt_alltime_icores = {}
 
 for i in range(len(expid)):
     print(i)
@@ -156,26 +165,26 @@ for i in range(len(expid)):
         exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.isotopes_alltime_icores.pkl', 'rb') as f:
         isotopes_alltime_icores[expid[i]] = pickle.load(f)
     
-    with open(
-        exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.temp2_alltime_icores.pkl', 'rb') as f:
-        temp2_alltime_icores[expid[i]] = pickle.load(f)
+    # with open(
+    #     exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.temp2_alltime_icores.pkl', 'rb') as f:
+    #     temp2_alltime_icores[expid[i]] = pickle.load(f)
     
     with open(
         exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.pre_weighted_var_icores.pkl', 'rb') as f:
         pre_weighted_var_icores[expid[i]] = pickle.load(f)
     
-    with open(
-        exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_alltime_icores.pkl', 'rb') as f:
-        wisoaprt_alltime_icores[expid[i]] = pickle.load(f)
+    # with open(
+    #     exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_alltime_icores.pkl', 'rb') as f:
+    #     wisoaprt_alltime_icores[expid[i]] = pickle.load(f)
 
 
-aprt_frc_alltime_icores = {}
-for i in range(len(expid)):
-    print(i)
+# aprt_frc_alltime_icores = {}
+# for i in range(len(expid)):
+#     print(i)
     
-    with open(
-        exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.aprt_frc_alltime_icores.pkl', 'rb') as f:
-        aprt_frc_alltime_icores[expid[i]] = pickle.load(f)
+#     with open(
+#         exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.aprt_frc_alltime_icores.pkl', 'rb') as f:
+#         aprt_frc_alltime_icores[expid[i]] = pickle.load(f)
 
 with open('scratch/others/pi_m_502_5.0.t63_sites_indices.pkl', 'rb') as f:
     t63_sites_indices = pickle.load(f)
@@ -201,9 +210,9 @@ for i in range(len(expid)):
             # icores = 'EDC'
             print('#-------- ' + icores)
             
-            for ialltime in ['ann no am']:
+            for ialltime in ['daily', 'mon', 'mm', 'mon no mm', 'ann', 'ann no am', ]:
                 # ialltime = 'mon'
-                # 'daily', 'mon', 'mm', 'mon no mm', 'ann', 'ann no am'
+                # ['daily', 'mon', 'mm', 'mon no mm', 'ann', 'ann no am']
                 print('#---- ' + ialltime)
                 
                 params = regression_sst_d[expid[i]][iisotope][icores][ialltime]['params']
@@ -309,7 +318,7 @@ for i in range(len(expid)):
     # i = 0
     print('#-------------------------------- ' + str(i) + ': ' + expid[i])
     
-    for iisotope in ['d_excess',]:
+    for iisotope in ['d_ln', 'd_excess',]:
         # iisotope = 'd_ln'
         print('#---------------- ' + iisotope)
         
@@ -406,6 +415,38 @@ for i in range(len(expid)):
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region check regression statistics
+
+
+icores = 'EDC'
+iisotope = 'd_ln'
+ialltime = 'ann no am'
+
+for i in range(len(expid)):
+    # i = 0
+    print('#-------------------------------- ' + str(i) + ': ' + expid[i])
+    
+    print('#---------------- rsquared')
+    print(np.round(regression_sst_d[expid[i]][iisotope][icores][ialltime]['rsquared'], 2))
+    
+    print('#---------------- RMSE')
+    print(np.round(regression_sst_d[expid[i]][iisotope][icores][ialltime]['RMSE'], 2))
+    
+    print('#---------------- Slope')
+    print(np.round(regression_sst_d[expid[i]][iisotope][icores][ialltime]['params'][1], 2))
+    
+    # print('#---------------- ols_fit')
+    # print(regression_sst_d[expid[i]][iisotope][icores][ialltime]['ols_fit'])
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
 
 
 # -----------------------------------------------------------------------------

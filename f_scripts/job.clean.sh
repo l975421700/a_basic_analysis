@@ -1,6 +1,6 @@
 
 output_dir='/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi'
-expid='nudged_703_6.0_k52'
+expid='hist_700_6.0'
 
 echo $'\n#-------- clean model output: ' ${expid}
 
@@ -21,7 +21,7 @@ rm log/*tidy*.log
 rm log/run_folders.log
 
 echo '#---- clean echam6 output'
-rm unknown/${expid}_*.01_nudg*
+# rm unknown/${expid}_*.01_nudg*
 # rm outdata/echam/${expid}_*.01_accw*
 # rm outdata/echam/${expid}_*.01_aclcim*
 # rm outdata/echam/${expid}_*.01_g3b1hi*

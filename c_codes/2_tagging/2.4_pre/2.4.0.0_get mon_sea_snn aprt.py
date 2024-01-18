@@ -1,6 +1,6 @@
 
 
-exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'albedo_scratch/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_600_5.0',
     # 'pi_601_5.1',
@@ -9,15 +9,22 @@ expid = [
     # 'pi_606_5.6',
     # 'pi_609_5.7',
     # 'pi_610_5.8',
-    'hist_700_5.0',
+    # 'hist_700_5.0',
     # 'nudged_701_5.0',
     
     # 'nudged_703_6.0_k52',
+    
+    'nudged_705_6.0',
+    # 'nudged_707_6.0_k43',
+    # 'nudged_708_6.0_I01',
+    # 'nudged_709_6.0_I03',
+    # 'nudged_710_6.0_S3',
+    # 'nudged_711_6.0_S6',
     ]
 i = 0
 
-ifile_start = 1380 #12 #0 #120
-ifile_end   = 1740 #516 #1740 #840
+ifile_start = 0 #1380 #12 #0 #120
+ifile_end   = 528 #1740 #516 #1740 #840
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -124,7 +131,7 @@ wisoaprt[expid[i]] = (
 wisoaprt[expid[i]] = wisoaprt[expid[i]].rename('wisoaprt')
 
 wisoaprt_alltime = {}
-wisoaprt_alltime[expid[i]] = mon_sea_ann(wisoaprt[expid[i]])
+wisoaprt_alltime[expid[i]] = mon_sea_ann(var_6hourly=wisoaprt[expid[i]])
 
 
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'wb') as f:

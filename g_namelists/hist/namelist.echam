@@ -1,17 +1,10 @@
 &runctl
-    dt_start = 1850, 1, 1, 0, 0, 0
-    dt_stop = 2402, 1, 1, 0, 0, 0
     putrerun = 1, 'months', 'last', 0
     default_output = .false.
-    lcouple = .true.
-    lcouple_co2 = .true.
+    lcouple = .false.
+    lcouple_co2 = .false.
     lfractional_mask = .false.
-    lresume = .true.
-    out_expname = 'TST'
-    out_datapath = '/work/bk0988/awicm/a270062/fesom_echam/glob//cpl_work_test/'
     rerun_filetype = 4
-    getocean = 1, 'days', 'last', 0
-    putocean = 1, 'days', 'last', 0
     putdata = 1, 'months', 'last', 0
 /
 
@@ -19,7 +12,7 @@
     lwiso = .false.
     lwiso_rerun = .false.
     nwiso = 0
-    ntagtyp = 4, 4, 4, 3, 1, 1, 3, 1, 1, 3, 1, 1, 3, 1, 1, 0, 0, 5, 5, 5, 2, 1, 3, 1, 1, 3, 1, 1
+    ntagtyp = 4, 4, 4, 3, 1, 1, 3, 1, 1, 3, 1, 1, 3, 1, 1, 0, 0, 5, 5, 5, 2, 1, 3, 1, 1, 3, 1, 1, 3, 1, 1
 /
 
 &parctl
@@ -116,8 +109,8 @@
     lpost = 1
 /
 &mvstreamctl
-    interval = 1, 'months', 'last', 0
-    target = 'wiso_q_1m'
+    interval = 1, 'days', 'last', 0
+    target = 'wiso_q_1d'
     source = 'wiso'
     variables = 'q16o:mean', 'xl16o:mean', 'xi16o:mean',
                 'q18o:mean', 'xl18o:mean', 'xi18o:mean',
@@ -287,11 +280,9 @@
     target = 'g3b_1m'
     source = 'g3b'
     variables = 'q2m:mean', 'rh2m:mean', 'aps:mean', 'seaice:mean',
-                'relhum:mean', 'tpot:mean', 'wind10:mean', 'tsw:mean', 'temp2:mean'
+                'relhum:mean', 'tpot:mean', 'wind10:mean', 'tsw:mean', 'temp2:mean', 'tsurf:mean'
 /
 &mvstreamctl
-    interval = 1, 'days', 'last', 0
-    target = 'g3b_1d'
-    source = 'g3b'
-    variables = 'temp2:mean'
+    filetag = 'echam'
+    source = 'sp', 'gl', 'g3b'
 /

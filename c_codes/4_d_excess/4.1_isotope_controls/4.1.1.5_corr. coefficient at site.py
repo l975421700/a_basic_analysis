@@ -2,7 +2,15 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'pi_600_5.0',
+    # 'pi_600_5.0',
+    'nudged_703_6.0_k52',
+    
+    # 'nudged_705_6.0',
+    # 'nudged_707_6.0_k43',
+    # 'nudged_708_6.0_I01',
+    # 'nudged_709_6.0_I03',
+    # 'nudged_710_6.0_S3',
+    # 'nudged_711_6.0_S6',
     ]
 
 
@@ -116,11 +124,11 @@ from a_basic_analysis.b_module.component_plot import (
 
 
 isotopes_alltime_icores = {}
-temp2_alltime_icores = {}
+# temp2_alltime_icores = {}
 pre_weighted_var_icores = {}
 corr_sources_isotopes = {}
-par_corr_sources_isotopes = {}
-par_corr_sst_isotopes2 = {}
+# par_corr_sources_isotopes = {}
+# par_corr_sst_isotopes2 = {}
 
 for i in range(len(expid)):
     print(i)
@@ -129,9 +137,9 @@ for i in range(len(expid)):
         exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.isotopes_alltime_icores.pkl', 'rb') as f:
         isotopes_alltime_icores[expid[i]] = pickle.load(f)
     
-    with open(
-        exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.temp2_alltime_icores.pkl', 'rb') as f:
-        temp2_alltime_icores[expid[i]] = pickle.load(f)
+    # with open(
+    #     exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.temp2_alltime_icores.pkl', 'rb') as f:
+    #     temp2_alltime_icores[expid[i]] = pickle.load(f)
     
     with open(
         exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.pre_weighted_var_icores.pkl', 'rb') as f:
@@ -140,11 +148,11 @@ for i in range(len(expid)):
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.corr_sources_isotopes.pkl', 'rb') as f:
         corr_sources_isotopes[expid[i]] = pickle.load(f)
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sources_isotopes.pkl', 'rb') as f:
-        par_corr_sources_isotopes[expid[i]] = pickle.load(f)
+    # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sources_isotopes.pkl', 'rb') as f:
+    #     par_corr_sources_isotopes[expid[i]] = pickle.load(f)
     
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sst_isotopes2.pkl', 'rb') as f:
-        par_corr_sst_isotopes2[expid[i]] = pickle.load(f)
+    # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sst_isotopes2.pkl', 'rb') as f:
+    #     par_corr_sst_isotopes2[expid[i]] = pickle.load(f)
 
 
 # par_corr_sources_isotopes = {}
@@ -168,11 +176,98 @@ with open('scratch/others/pi_m_502_5.0.t63_sites_indices.pkl', 'rb') as f:
 
 
 # -----------------------------------------------------------------------------
+# region Correlation between d_ln/d_xs and sources
+
+icores = 'EDC'
+
+for iisotopes in ['d_ln', 'd_excess']:
+    print('#-------------------------------- ' + iisotopes)
+    
+    for ivar in ['sst', 'rh2m', 'wind10', 'RHsst', 'lat',]:
+        #  'distance'
+        print('#---------------- ' + ivar)
+        
+        for ialltime in ['ann no am', 'mon', 'mon no mm', 'daily', ]:
+            print('#-------- ' + ialltime)
+            
+            r_squared = corr_sources_isotopes[expid[i]][ivar][iisotopes][ialltime]['r'][
+                t63_sites_indices[icores]['ilat'],
+                t63_sites_indices[icores]['ilon'],
+            ].values ** 2
+            
+            p_value = corr_sources_isotopes[expid[i]][ivar][iisotopes][ialltime]['p'][
+                t63_sites_indices[icores]['ilat'],
+                t63_sites_indices[icores]['ilon'],
+            ].values
+            
+            if (p_value < 0.001):
+                plabel = '***'
+            elif (p_value < 0.01):
+                plabel = '** '
+            elif (p_value < 0.05):
+                plabel = '*  '
+            else:
+                plabel = '   '
+            
+            print(str(np.round(r_squared, 2)) + ' ' + plabel)
+
+
+# check
+
+icores = 'EDC'
+
+for iisotopes in ['d_ln', 'd_excess']:
+    print('#-------------------------------- ' + iisotopes)
+    
+    for ivar in ['sst', 'rh2m', 'wind10', 'RHsst', 'lat', 'distance']:
+        print('#---------------- ' + ivar)
+        
+        for ialltime in ['ann no am', 'mon', 'mon no mm', 'daily', ]:
+            # ['ann no am', 'mon', 'mon no mm', 'daily', ]
+            print('#-------- ' + ialltime)
+            
+            data1 = isotopes_alltime_icores[expid[i]][iisotopes][icores][ialltime].values
+            data2 = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime].values
+            subset = np.isfinite(data1) & np.isfinite(data2)
+            data1 = data1[subset]
+            data2 = data2[subset]
+            
+            r_squared = pearsonr(
+                data1,
+                data2,
+            ).statistic ** 2
+            
+            # p_value = pearsonr(
+            #     data1,
+            #     data2,
+            # ).pvalue
+            
+            p_value = xs.pearson_r_eff_p_value(
+                xr.DataArray(data1), xr.DataArray(data2)).values
+            
+            if (p_value < 0.001):
+                plabel = '***'
+            elif (p_value < 0.01):
+                plabel = '**'
+            elif (p_value < 0.05):
+                plabel = '*'
+            else:
+                plabel = ' '
+            
+            print(str(np.round(r_squared, 2)) + ' ' + plabel)
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
 # region partial correlation d_ln, d_xs and source properties
 
 icores = 'EDC'
 
-cvar = 'sst'
+cvar = 'distance'
 
 for i in [0,]:
     # i = 0
@@ -180,16 +275,18 @@ for i in [0,]:
     
     for iisotope in ['d_ln', 'd_excess']:
         # iisotope = 'd_ln'
+        # ['d_ln', 'd_excess']
         print('#---------------- ' + iisotope)
         
-        for ivar in ['rh2m', 'wind10']:
+        for ivar in ['sst']:
             # ivar = 'rh2m'
             # ['sst']
-            # ['rh2m', 'wind10']
+            # ['rh2m', 'wind10', 'RHsst', 'lat', 'distance']
             print('#-------- ' + ivar)
             
-            for ialltime in ['ann no am', 'mon no mm', 'mon', 'daily', 'mm']:
+            for ialltime in ['ann no am', 'mon', 'mon no mm', 'daily']:
                 # ialltime = 'daily'
+                # ['ann no am', 'mon', 'mon no mm', 'daily', 'mm']
                 print('#---- ' + ialltime)
                 
                 iso_var = isotopes_alltime_icores[expid[i]][iisotope][icores][ialltime]
@@ -275,94 +372,6 @@ for ivar in ['rh2m', 'wind10']:
 
 
 # -----------------------------------------------------------------------------
-# region partial correlation d_ln, d_xs, dD and temp2
-
-icores = 'EDC'
-
-for i in [0,]:
-    # i = 0
-    print('#-------------------------------- ' + expid[i])
-    
-    for iisotope in ['dD',]:
-        # iisotope = 'd_excess'
-        print('#---------------- ' + iisotope)
-        
-        for iisotope1 in ['d_ln']:
-            # iisotope1 = 'dD'
-            print('#-------- ' + iisotope1)
-            
-            for ialltime in ['mon', 'mm', 'ann']:
-                # ialltime = 'mon'
-                print('#---- ' + ialltime)
-                
-                temp2_var = temp2_alltime_icores[expid[i]][icores][ialltime]
-                iso_var = isotopes_alltime_icores[expid[i]][iisotope][icores][ialltime]
-                ctl_var = isotopes_alltime_icores[expid[i]][iisotope1][icores][ialltime]
-                
-                r_squared = xr_par_cor(temp2_var, iso_var, ctl_var) ** 2
-                p_value   = xr_par_cor(temp2_var, iso_var, ctl_var, output='p')
-                
-                if (p_value < 0.001):
-                    plabel = '***'
-                elif (p_value < 0.01):
-                    plabel = '**'
-                elif (p_value < 0.05):
-                    plabel = '*'
-                else:
-                    plabel = ' '
-                
-                print(str(np.round(r_squared, 2)) + ' ' + plabel)
-            
-            print('#---- mon no mm')
-            temp2_var = temp2_alltime_icores[expid[i]][icores]['mon']
-            iso_var = isotopes_alltime_icores[expid[i]][iisotope][icores]['mon']
-            ctl_var = isotopes_alltime_icores[expid[i]][iisotope1][icores]['mon']
-            
-            temp2_var = temp2_var.groupby('time.month') - temp2_var.groupby('time.month').mean(dim='time')
-            iso_var = iso_var.groupby('time.month') - iso_var.groupby('time.month').mean(dim='time')
-            ctl_var = ctl_var.groupby('time.month') - ctl_var.groupby('time.month').mean(dim='time')
-            
-            r_squared = xr_par_cor(temp2_var, iso_var, ctl_var) ** 2
-            p_value   = xr_par_cor(temp2_var, iso_var, ctl_var, output='p')
-            
-            if (p_value < 0.001):
-                plabel = '***'
-            elif (p_value < 0.01):
-                plabel = '**'
-            elif (p_value < 0.05):
-                plabel = '*'
-            else:
-                plabel = ' '
-            
-            print(str(np.round(r_squared, 2)) + ' ' + plabel)
-
-
-
-'''
-icores = 'EDC'
-i = 0
-iisotope = 'd_excess'
-iisotope1 = 'dD'
-ialltime = 'mon'
-temp2_var = temp2_alltime_icores[expid[i]][icores][ialltime]
-iso_var = isotopes_alltime_icores[expid[i]][iisotope][icores][ialltime]
-ctl_var = isotopes_alltime_icores[expid[i]][iisotope1][icores][ialltime]
-
-(pearsonr(temp2_var, iso_var).statistic) ** 2
-xr_par_cor(temp2_var, iso_var, ctl_var) ** 2
-
-(par_corr_temp2_isotopes2[expid[i]][iisotope][iisotope1]['mon']['r'][
-    t63_sites_indices[icores]['ilat'],
-    t63_sites_indices[icores]['ilon'],
-].values) ** 2
-
-
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
 # region partial correlation d_ln, dD and source SST
 
 icores = 'EDC'
@@ -371,15 +380,15 @@ for i in [0,]:
     # i = 0
     print('#-------------------------------- ' + expid[i])
     
-    for iisotope in ['d_ln', 'd_excess', ]:
+    for iisotope in ['dD', ]:
         # iisotope = 'd_excess'
         print('#---------------- ' + iisotope)
         
-        for iisotope1 in ['dD',]:
+        for iisotope1 in ['d_ln', 'd_excess', ]:
             # iisotope1 = 'dD'
             print('#-------- ' + iisotope1)
             
-            for ialltime in ['ann no am', 'mon no mm', 'mon', 'daily', 'mm']:
+            for ialltime in ['ann no am', 'mon', 'mon no mm', 'daily', 'mm']:
                 # ialltime = 'mon'
                 print('#---- ' + ialltime)
                 
@@ -511,81 +520,58 @@ xr_par_cor(src_var, iso_var, ctl_var) ** 2
 # -----------------------------------------------------------------------------
 
 
+
+
 # -----------------------------------------------------------------------------
-# region Correlation between d_ln/d_xs and sources
+# region partial correlation d_ln, d_xs, dD and temp2
 
 icores = 'EDC'
 
-for ivar in ['sst', 'rh2m', 'wind10']:
-    print('#-------------------------------- ' + ivar)
+for i in [0,]:
+    # i = 0
+    print('#-------------------------------- ' + expid[i])
     
-    for iisotopes in ['d_ln', 'd_excess']:
-        print('#---------------- ' + iisotopes)
+    for iisotope in ['dD',]:
+        # iisotope = 'd_excess'
+        print('#---------------- ' + iisotope)
         
-        for ialltime in ['daily', 'mon', 'mon no mm', 'ann no am']:
-            print('#-------- ' + ialltime)
+        for iisotope1 in ['d_ln']:
+            # iisotope1 = 'dD'
+            print('#-------- ' + iisotope1)
             
-            r_squared = corr_sources_isotopes[expid[i]][ivar][iisotopes][ialltime]['r'][
-                t63_sites_indices[icores]['ilat'],
-                t63_sites_indices[icores]['ilon'],
-            ].values ** 2
+            for ialltime in ['mon', 'mm', 'ann']:
+                # ialltime = 'mon'
+                print('#---- ' + ialltime)
+                
+                temp2_var = temp2_alltime_icores[expid[i]][icores][ialltime]
+                iso_var = isotopes_alltime_icores[expid[i]][iisotope][icores][ialltime]
+                ctl_var = isotopes_alltime_icores[expid[i]][iisotope1][icores][ialltime]
+                
+                r_squared = xr_par_cor(temp2_var, iso_var, ctl_var) ** 2
+                p_value   = xr_par_cor(temp2_var, iso_var, ctl_var, output='p')
+                
+                if (p_value < 0.001):
+                    plabel = '***'
+                elif (p_value < 0.01):
+                    plabel = '**'
+                elif (p_value < 0.05):
+                    plabel = '*'
+                else:
+                    plabel = ' '
+                
+                print(str(np.round(r_squared, 2)) + ' ' + plabel)
             
-            p_value = corr_sources_isotopes[expid[i]][ivar][iisotopes][ialltime]['p'][
-                t63_sites_indices[icores]['ilat'],
-                t63_sites_indices[icores]['ilon'],
-            ].values
+            print('#---- mon no mm')
+            temp2_var = temp2_alltime_icores[expid[i]][icores]['mon']
+            iso_var = isotopes_alltime_icores[expid[i]][iisotope][icores]['mon']
+            ctl_var = isotopes_alltime_icores[expid[i]][iisotope1][icores]['mon']
             
-            if (p_value < 0.001):
-                plabel = '***'
-            elif (p_value < 0.01):
-                plabel = '**'
-            elif (p_value < 0.05):
-                plabel = '*'
-            else:
-                plabel = ' '
+            temp2_var = temp2_var.groupby('time.month') - temp2_var.groupby('time.month').mean(dim='time')
+            iso_var = iso_var.groupby('time.month') - iso_var.groupby('time.month').mean(dim='time')
+            ctl_var = ctl_var.groupby('time.month') - ctl_var.groupby('time.month').mean(dim='time')
             
-            print(str(np.round(r_squared, 2)) + ' ' + plabel)
-
-
-# check
-
-icores = 'EDC'
-
-for ivar in ['sst', 'rh2m', 'wind10']:
-    print('#-------------------------------- ' + ivar)
-    
-    for iisotopes in ['d_ln', 'd_excess']:
-        print('#---------------- ' + iisotopes)
-        
-        for ialltime in ['mm']:
-            # ['daily', 'mon', 'mon no mm', 'ann no am']
-            print('#-------- ' + ialltime)
-            
-            # r_squared = corr_sources_isotopes[expid[i]][ivar][iisotopes][ialltime]['r'][
-            #     t63_sites_indices[icores]['ilat'],
-            #     t63_sites_indices[icores]['ilon'],
-            # ].values ** 2
-            
-            # p_value = corr_sources_isotopes[expid[i]][ivar][iisotopes][ialltime]['p'][
-            #     t63_sites_indices[icores]['ilat'],
-            #     t63_sites_indices[icores]['ilon'],
-            # ].values
-            
-            data1 = isotopes_alltime_icores[expid[i]][iisotopes][icores][ialltime].values
-            data2 = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime].values
-            subset = np.isfinite(data1) & np.isfinite(data2)
-            data1 = data1[subset]
-            data2 = data2[subset]
-            
-            r_squared = pearsonr(
-                data1,
-                data2,
-            ).statistic ** 2
-            
-            p_value = pearsonr(
-                data1,
-                data2,
-            ).pvalue
+            r_squared = xr_par_cor(temp2_var, iso_var, ctl_var) ** 2
+            p_value   = xr_par_cor(temp2_var, iso_var, ctl_var, output='p')
             
             if (p_value < 0.001):
                 plabel = '***'
@@ -600,6 +586,27 @@ for ivar in ['sst', 'rh2m', 'wind10']:
 
 
 
+'''
+icores = 'EDC'
+i = 0
+iisotope = 'd_excess'
+iisotope1 = 'dD'
+ialltime = 'mon'
+temp2_var = temp2_alltime_icores[expid[i]][icores][ialltime]
+iso_var = isotopes_alltime_icores[expid[i]][iisotope][icores][ialltime]
+ctl_var = isotopes_alltime_icores[expid[i]][iisotope1][icores][ialltime]
+
+(pearsonr(temp2_var, iso_var).statistic) ** 2
+xr_par_cor(temp2_var, iso_var, ctl_var) ** 2
+
+(par_corr_temp2_isotopes2[expid[i]][iisotope][iisotope1]['mon']['r'][
+    t63_sites_indices[icores]['ilat'],
+    t63_sites_indices[icores]['ilon'],
+].values) ** 2
+
+
+'''
 # endregion
 # -----------------------------------------------------------------------------
+
 
