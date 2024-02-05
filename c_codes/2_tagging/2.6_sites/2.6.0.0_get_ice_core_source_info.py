@@ -20,14 +20,14 @@ expid = [
     # 'hist_700_5.0',
     # 'nudged_701_5.0',
     
-    'nudged_703_6.0_k52',
+    # 'nudged_703_6.0_k52',
     
     # 'nudged_705_6.0',
     # 'nudged_707_6.0_k43',
     # 'nudged_708_6.0_I01',
     # 'nudged_709_6.0_I03',
     # 'nudged_710_6.0_S3',
-    # 'nudged_711_6.0_S6',
+    'nudged_711_6.0_S6',
     ]
 i = 0
 
@@ -470,6 +470,86 @@ for icores in wisoaprt_alltime_icores[expid[i]].keys():
 
 
 # -----------------------------------------------------------------------------
+# region get temp2 at ice core sites
+
+# temp2
+temp2_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
+    temp2_alltime[expid[i]] = pickle.load(f)
+
+
+temp2_alltime_icores = {}
+temp2_alltime_icores[expid[i]] = {}
+
+for icores in stations_sites.Site:
+    # icores = 'EDC'
+    # print('#--------' + icores)
+    temp2_alltime_icores[expid[i]][icores] = {}
+    
+    for ialltime in temp2_alltime[expid[i]].keys():
+        # print('#----' + ialltime)
+        if ialltime in ['daily', 'mon', 'sea', 'ann', 'mm', 'sm', 'mon no mm', 'ann no am']:
+            # ialltime = 'mon'
+            temp2_alltime_icores[expid[i]][icores][ialltime] = \
+                temp2_alltime[expid[i]][ialltime][
+                    :,
+                    t63_sites_indices[icores]['ilat'],
+                    t63_sites_indices[icores]['ilon']]
+        elif (ialltime == 'am'):
+            temp2_alltime_icores[expid[i]][icores][ialltime] = \
+                temp2_alltime[expid[i]][ialltime][
+                    t63_sites_indices[icores]['ilat'],
+                    t63_sites_indices[icores]['ilon']]
+
+output_file = exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.temp2_alltime_icores.pkl'
+
+if (os.path.isfile(output_file)):
+    os.remove(output_file)
+
+with open(
+    output_file, 'wb') as f:
+    pickle.dump(temp2_alltime_icores[expid[i]], f)
+
+
+del temp2_alltime, temp2_alltime_icores
+
+'''
+for icores in temp2_alltime_icores[expid[i]].keys():
+    # icores = 'EDC'
+    print('#----------------' + icores)
+    temp2_am_icores = \
+        np.round(temp2_alltime_icores[expid[i]][icores]['am'].values, 1)
+    temp2_annstd_icores = \
+        np.round(
+            temp2_alltime_icores[expid[i]][icores]['ann'].std(ddof=1).values,
+            1)
+    print(str(temp2_am_icores) + ' ± ' + str(temp2_annstd_icores))
+
+
+#-------------------------------- check
+temp2_alltime_icores = {}
+with open(
+    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.temp2_alltime_icores.pkl', 'rb') as f:
+    temp2_alltime_icores[expid[i]] = pickle.load(f)
+
+for icores in temp2_alltime_icores[expid[i]].keys():
+    # icores = 'EDC'
+    print('#----------------' + icores)
+    print('local lat:  ' + str(t63_sites_indices[icores]['lat']))
+    print('grid lat:   ' + \
+        str(np.round(temp2_alltime_icores[expid[i]][icores]['am'].lat.values, 2)))
+    print('local lon:  ' + str(t63_sites_indices[icores]['lon']))
+    print('grid lon:   ' + \
+        str(temp2_alltime_icores[expid[i]][icores]['am'].lon.values))
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+
+
+# -----------------------------------------------------------------------------
 # region get aprt_frc at ice core sites
 
 aprt_frc = {}
@@ -569,84 +649,6 @@ for i in range(len(expid)):
         os.remove(exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.isotopes_alltime_icores.pkl')
     if (os.path.isfile(exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.aprt_frc_alltime_icores.pkl')):
         os.remove(exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.aprt_frc_alltime_icores.pkl')
-
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region get temp2 at ice core sites
-
-# temp2
-temp2_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
-    temp2_alltime[expid[i]] = pickle.load(f)
-
-
-temp2_alltime_icores = {}
-temp2_alltime_icores[expid[i]] = {}
-
-for icores in stations_sites.Site:
-    # icores = 'EDC'
-    # print('#--------' + icores)
-    temp2_alltime_icores[expid[i]][icores] = {}
-    
-    for ialltime in temp2_alltime[expid[i]].keys():
-        # print('#----' + ialltime)
-        if ialltime in ['daily', 'mon', 'sea', 'ann', 'mm', 'sm', 'mon no mm', 'ann no am']:
-            # ialltime = 'mon'
-            temp2_alltime_icores[expid[i]][icores][ialltime] = \
-                temp2_alltime[expid[i]][ialltime][
-                    :,
-                    t63_sites_indices[icores]['ilat'],
-                    t63_sites_indices[icores]['ilon']]
-        elif (ialltime == 'am'):
-            temp2_alltime_icores[expid[i]][icores][ialltime] = \
-                temp2_alltime[expid[i]][ialltime][
-                    t63_sites_indices[icores]['ilat'],
-                    t63_sites_indices[icores]['ilon']]
-
-output_file = exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.temp2_alltime_icores.pkl'
-
-if (os.path.isfile(output_file)):
-    os.remove(output_file)
-
-with open(
-    output_file, 'wb') as f:
-    pickle.dump(temp2_alltime_icores[expid[i]], f)
-
-
-del temp2_alltime, temp2_alltime_icores
-
-'''
-for icores in temp2_alltime_icores[expid[i]].keys():
-    # icores = 'EDC'
-    print('#----------------' + icores)
-    temp2_am_icores = \
-        np.round(temp2_alltime_icores[expid[i]][icores]['am'].values, 1)
-    temp2_annstd_icores = \
-        np.round(
-            temp2_alltime_icores[expid[i]][icores]['ann'].std(ddof=1).values,
-            1)
-    print(str(temp2_am_icores) + ' ± ' + str(temp2_annstd_icores))
-
-
-#-------------------------------- check
-temp2_alltime_icores = {}
-with open(
-    exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.temp2_alltime_icores.pkl', 'rb') as f:
-    temp2_alltime_icores[expid[i]] = pickle.load(f)
-
-for icores in temp2_alltime_icores[expid[i]].keys():
-    # icores = 'EDC'
-    print('#----------------' + icores)
-    print('local lat:  ' + str(t63_sites_indices[icores]['lat']))
-    print('grid lat:   ' + \
-        str(np.round(temp2_alltime_icores[expid[i]][icores]['am'].lat.values, 2)))
-    print('local lon:  ' + str(t63_sites_indices[icores]['lon']))
-    print('grid lon:   ' + \
-        str(temp2_alltime_icores[expid[i]][icores]['am'].lon.values))
 
 '''
 # endregion

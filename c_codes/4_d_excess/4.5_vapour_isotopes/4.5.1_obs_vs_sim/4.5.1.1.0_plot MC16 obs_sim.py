@@ -10,13 +10,13 @@ expid = [
     # 'nudged_701_5.0',
     
     'nudged_705_6.0',
-    'nudged_703_6.0_k52',
+    # 'nudged_703_6.0_k52',
     # 'nudged_706_6.0_k52_88',
-    'nudged_707_6.0_k43',
-    'nudged_708_6.0_I01',
-    'nudged_709_6.0_I03',
-    'nudged_710_6.0_S3',
-    'nudged_711_6.0_S6',
+    # 'nudged_707_6.0_k43',
+    # 'nudged_708_6.0_I01',
+    # 'nudged_709_6.0_I03',
+    # 'nudged_710_6.0_S3',
+    # 'nudged_711_6.0_S6',
     
     # 'nudged_713_6.0_2yr',
     # 'nudged_712_6.0_k52_2yr',
@@ -212,9 +212,69 @@ print(find_gridvalue_at_site(
 
 
 # -----------------------------------------------------------------------------
+# region plot time series
+
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', 't_3m']:
+    # var_name = 'q'
+    print('#-------- ' + var_name)
+    
+    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.1_MC16/8.3.0.1.1 ' + expid[i] + ' MC16 time series of observed and simulated daily ' + var_name + '.png'
+    
+    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+    
+    xdata = MC16_Dome_C_1d_sim[expid[i]]['time'].values
+    ydata = MC16_Dome_C_1d_sim[expid[i]][var_name].values
+    ydata_sim = MC16_Dome_C_1d_sim[expid[i]][var_name + '_sim'].values
+    
+    if (var_name == 'q'):
+        ydata = ydata * 1000
+        ydata_sim = ydata_sim * 1000
+    
+    RMSE = np.sqrt(np.average(np.square(ydata - ydata_sim)))
+    rsquared = pearsonr(ydata, ydata_sim).statistic ** 2
+    
+    ax.plot(xdata, ydata, 'o', ls='-', ms=2, lw=0.5,
+            c='k', label='Observation',)
+    ax.plot(xdata, ydata_sim, 'o', ls='-', ms=2, lw=0.5,
+            c=expid_colours[expid[i]],
+            label=expid_labels[expid[i]] + \
+                    ': $R^2 = $' + str(np.round(rsquared, 2)) +\
+                        ', $RMSE = $' + str(np.round(RMSE, 1)),
+                        )
+    
+    # hourly_y = MC16_Dome_C['1h'][var_name].values
+    # if (var_name == 'q'):
+    #     hourly_y = hourly_y * 1000
+    # ax.plot(
+    #     MC16_Dome_C['1h']['time'].values,
+    #     hourly_y,
+    #     ls='-', lw=0.2, label='Hourly Obs.',)
+    
+    ax.set_xticks(xdata[::4])
+    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+    # ax.set_xlabel('Date', labelpad=6)
+    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_ylabel(plot_labels[var_name], labelpad=6)
+    plt.xticks(rotation=30, ha='right')
+    
+    ax.legend(
+        handlelength=1, loc=(-0.16, -0.35),
+        framealpha=0.25, ncol=2, columnspacing=1, fontsize=9)
+    
+    ax.grid(True, which='both',
+            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.28, top=0.98)
+    fig.savefig(output_png)
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
 # region Q-Q plot
 
-for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', 't_3m']:
     # var_name = 'q', 't_3m'
     print('#-------- ' + var_name)
     
@@ -240,6 +300,12 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
         # marker="o",
     )
     
+    xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
+    xylim_min = np.min(xylim)
+    xylim_max = np.max(xylim)
+    ax.set_xlim(xylim_min, xylim_max)
+    ax.set_ylim(xylim_min, xylim_max)
+    
     linearfit = linregress(x = xdata, y = ydata,)
     ax.axline(
         (0, linearfit.intercept), slope = linearfit.slope, lw=1,)
@@ -248,24 +314,18 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
         eq_text = '$y = $' + \
             str(np.round(linearfit.slope, 2)) + '$x + $' + \
                 str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        ', $RMSE = $' + str(np.round(RMSE, 1))
+                    '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
+                        '\n$RMSE = $' + str(np.round(RMSE, 1))
     if (linearfit.intercept < 0):
         eq_text = '$y = $' + \
             str(np.round(linearfit.slope, 2)) + '$x $' + \
                 str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        ', $RMSE = $' + str(np.round(RMSE, 1))
+                    '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
+                        '\n$RMSE = $' + str(np.round(RMSE, 1))
     
     plt.text(
-        0.05, 0.9, eq_text,
-        transform=ax.transAxes, fontsize=8, ha='left')
-    
-    xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
-    xylim_min = np.min(xylim)
-    xylim_max = np.max(xylim)
-    ax.set_xlim(xylim_min, xylim_max)
-    ax.set_ylim(xylim_min, xylim_max)
+        0.65, 0.05, eq_text,
+        transform=ax.transAxes, fontsize=10, ha='left', va='bottom')
     
     ax.axline((0, 0), slope = 1, lw=1, color='grey', alpha=0.5)
     
@@ -281,58 +341,6 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
     fig.savefig(output_png)
 
 
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot time series
-
-for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
-    # var_name = 'q'
-    print('#-------- ' + var_name)
-    
-    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.1_MC16/8.3.0.1.1 ' + expid[i] + ' MC16 time series of observed and simulated daily ' + var_name + '.png'
-    
-    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 6.6]) / 2.54)
-    
-    xdata = MC16_Dome_C_1d_sim[expid[i]]['time'].values
-    ydata = MC16_Dome_C_1d_sim[expid[i]][var_name].values
-    ydata_sim = MC16_Dome_C_1d_sim[expid[i]][var_name + '_sim'].values
-    
-    if (var_name == 'q'):
-        ydata = ydata * 1000
-        ydata_sim = ydata_sim * 1000
-    
-    ax.plot(xdata, ydata_sim, 'o', ls='-', ms=2, lw=0.5, label='Sim.',)
-    ax.plot(xdata, ydata, 'o', ls='-', ms=2, lw=0.5, label='Obs.',)
-    
-    hourly_y = MC16_Dome_C['1h'][var_name].values
-    if (var_name == 'q'):
-        hourly_y = hourly_y * 1000
-    ax.plot(
-        MC16_Dome_C['1h']['time'].values,
-        hourly_y,
-        ls='-', lw=0.2, label='Hourly Obs.',)
-    
-    ax.set_xticks(xdata[::4])
-    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-    ax.set_xlabel('Date', labelpad=6)
-    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-    ax.set_ylabel(plot_labels[var_name], labelpad=6)
-    plt.xticks(rotation=30, ha='right')
-    
-    ax.legend(handlelength=1, loc='upper right', framealpha=0.25,)
-    
-    ax.grid(True, which='both',
-            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.3, top=0.98)
-    fig.savefig(output_png)
-
-
-
-# MC16_Dome_C_1d_sim[expid[i]]['time']
 
 # endregion
 # -----------------------------------------------------------------------------

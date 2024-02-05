@@ -167,6 +167,8 @@ subset = (np.isfinite(d18O) & np.isfinite(pre))
 np.average(d18O[subset], weights=pre[subset])
 
 
+
+
 #-------------------------------- mm
 BS13_Dome_C['mm'] = BS13_Dome_C['1d'][['date', 'temp2', 'pre']].groupby(BS13_Dome_C['1d']['date'].dt.month).mean()
 

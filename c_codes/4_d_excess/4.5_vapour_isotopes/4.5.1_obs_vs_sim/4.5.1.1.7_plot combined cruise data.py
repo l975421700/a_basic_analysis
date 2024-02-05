@@ -10,13 +10,13 @@ expid = [
     # 'nudged_701_5.0',
     
     'nudged_705_6.0',
-    'nudged_703_6.0_k52',
+    # 'nudged_703_6.0_k52',
     # 'nudged_706_6.0_k52_88',
-    'nudged_707_6.0_k43',
-    'nudged_708_6.0_I01',
-    'nudged_709_6.0_I03',
-    'nudged_710_6.0_S3',
-    'nudged_711_6.0_S6',
+    # 'nudged_707_6.0_k43',
+    # 'nudged_708_6.0_I01',
+    # 'nudged_709_6.0_I03',
+    # 'nudged_710_6.0_S3',
+    # 'nudged_711_6.0_S6',
     ]
 i = 0
 
@@ -170,6 +170,12 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', ]:
         # marker="o",
     )
     
+    xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
+    xylim_min = np.min(xylim)
+    xylim_max = np.max(xylim)
+    ax.set_xlim(xylim_min, xylim_max)
+    ax.set_ylim(xylim_min, xylim_max)
+    
     linearfit = linregress(x = xdata, y = ydata,)
     ax.axline(
         (0, linearfit.intercept), slope = linearfit.slope, lw=1,)
@@ -178,24 +184,19 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', ]:
         eq_text = '$y = $' + \
             str(np.round(linearfit.slope, 2)) + '$x + $' + \
                 str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        ', $RMSE = $' + str(np.round(RMSE, 1))
+                    '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
+                        '\n$RMSE = $' + str(np.round(RMSE, 1))
     if (linearfit.intercept < 0):
         eq_text = '$y = $' + \
             str(np.round(linearfit.slope, 2)) + '$x $' + \
                 str(np.round(linearfit.intercept, 1)) + \
-                    ', $R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        ', $RMSE = $' + str(np.round(RMSE, 1))
+                    '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
+                        '\n$RMSE = $' + str(np.round(RMSE, 1))
     
     plt.text(
-        0.32, 0.15, eq_text,
-        transform=ax.transAxes, fontsize=8, ha='left')
-    
-    xylim = np.concatenate((np.array(ax.get_xlim()), np.array(ax.get_ylim())))
-    xylim_min = np.min(xylim)
-    xylim_max = np.max(xylim)
-    ax.set_xlim(xylim_min, xylim_max)
-    ax.set_ylim(xylim_min, xylim_max)
+        0.65, 0.05, eq_text,
+        transform=ax.transAxes, fontsize=10, ha='left', va='bottom',
+        linespacing=2,)
     
     ax.axline((0, 0), slope = 1, lw=1, color='grey', alpha=0.5)
     
@@ -207,7 +208,17 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', ]:
     ax.grid(True, which='both',
             linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
     
-    ax.legend(title='Reference')
+    if (var_name == 'q'):
+        ax.legend(title='Data sources', handletextpad=0.4)
+    else:
+        ax.legend().set_visible(False)
+    
+    if (var_name == 'q'):
+        ax.set_xticks(np.arange(2, 18+1e-4, 2))
+        ax.set_yticks(np.arange(2, 18+1e-4, 2))
+    elif (var_name == 'd18O'):
+        ax.set_xticks(np.arange(-22, -10+1e-4, 2))
+        ax.set_yticks(np.arange(-22, -10+1e-4, 2))
     
     fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
     fig.savefig(output_png)
@@ -259,7 +270,13 @@ sns.scatterplot(
         s=12, palette='magma', transform=ccrs.PlateCarree(),
         # linewidth=1,
     )
-ax.legend(title='Reference', loc=(0.18, -0.32), fontsize=8)
+ax.legend(
+    # labels=[
+    #     'Kurita et al. (2016)',
+    #     'Thurnherr et al. (2020)',
+    #     'Bonne et al. (2019)',
+    # ],
+    title='Data sources', loc=(0.18, -0.32), fontsize=8)
 
 fig.savefig(output_png)
 
