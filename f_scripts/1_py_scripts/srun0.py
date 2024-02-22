@@ -1,6 +1,6 @@
 
 
-exp_odir = 'albedo_scratch/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_600_5.0',
     # 'pi_601_5.1',
@@ -11,166 +11,230 @@ expid = [
     # 'pi_610_5.8',
     # 'hist_700_5.0',
     # 'nudged_701_5.0',
-    
     # 'nudged_703_6.0_k52',
-    
     'nudged_705_6.0',
-    # 'nudged_707_6.0_k43',
-    # 'nudged_708_6.0_I01',
-    # 'nudged_709_6.0_I03',
-    # 'nudged_710_6.0_S3',
-    # 'nudged_711_6.0_S6',
     ]
-i = 0
 
-ifile_start = 0 #1380 #12 #0 #120
-ifile_end   = 528 #1740 #516 #1740 #840
 
 # -----------------------------------------------------------------------------
 # region import packages
 
 # management
-import glob
 import pickle
 import warnings
 warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
 sys.path.append('/albedo/work/user/qigao001')
-sys.path.append('/home/users/qino')
-import psutil
 
 # data analysis
-import numpy as np
 import xarray as xr
 import dask
 dask.config.set({"array.slicing.split_large_chunks": True})
 from dask.diagnostics import ProgressBar
 pbar = ProgressBar()
 pbar.register()
-from scipy import stats
-import xesmf as xe
-import pandas as pd
 
-
-from a_basic_analysis.b_module.basic_calculations import (
-    mon_sea_ann,
-    mean_over_ais,
+from a_basic_analysis.b_module.statistics import (
+    xr_regression_y_x1,
 )
 
+
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region import output
+# region import data
 
-exp_org_o = {}
-exp_org_o[expid[i]] = {}
-
-filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'))
-exp_org_o[expid[i]]['wiso'] = xr.open_mfdataset(
-    filenames_wiso[ifile_start:ifile_end],
-    )
-
-'''
-#-------- check pre
-filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'))
-filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_echam.nc'))
-
-ifile = 1000
-nc1 = xr.open_dataset(filenames_wiso[ifile])
-nc2 = xr.open_dataset(filenames_echam[ifile])
-
-np.max(abs(nc1.wisoaprl[:, 0].mean(dim='time').values - nc2.aprl[0].values))
-
-
-#-------- input previous files
+# dO18_alltime = {}
+# dD_alltime = {}
+d_ln_alltime = {}
+d_excess_alltime = {}
 
 for i in range(len(expid)):
-    # i=0
-    print('#-------- ' + expid[i])
-    exp_org_o[expid[i]] = {}
+    print(str(i) + ': ' + expid[i])
     
+    # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_alltime.pkl', 'rb') as f:
+    #     dO18_alltime[expid[i]] = pickle.load(f)
     
-    file_exists = os.path.exists(
-        exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_echam.nc')
+    # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_alltime.pkl', 'rb') as f:
+    #     dD_alltime[expid[i]] = pickle.load(f)
     
-    if (file_exists):
-        exp_org_o[expid[i]]['echam'] = xr.open_dataset(
-            exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_echam.nc')
-        exp_org_o[expid[i]]['wiso'] = xr.open_dataset(
-            exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.01_wiso.nc')
-    else:
-        # filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*monthly.01_echam.nc'))
-        # exp_org_o[expid[i]]['echam'] = xr.open_mfdataset(filenames_echam, data_vars='minimal', coords='minimal', parallel=True)
-        
-        # filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*monthly.01_wiso.nc'))
-        # exp_org_o[expid[i]]['wiso'] = xr.open_mfdataset(filenames_wiso, data_vars='minimal', coords='minimal', parallel=True)
-        
-        # filenames_wiso_daily = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*daily.01_wiso.nc'))
-        # exp_org_o[expid[i]]['wiso_daily'] = xr.open_mfdataset(filenames_wiso_daily, data_vars='minimal', coords='minimal', parallel=True)
-        
-        filenames_echam_daily = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '*daily.01_echam.nc'))
-        exp_org_o[expid[i]]['echam_daily'] = xr.open_mfdataset(filenames_echam_daily[120:], data_vars='minimal', coords='minimal', parallel=True)
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_alltime.pkl', 'rb') as f:
+        d_ln_alltime[expid[i]] = pickle.load(f)
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_alltime.pkl', 'rb') as f:
+        d_excess_alltime[expid[i]] = pickle.load(f)
 
+
+source_var = ['sst', ]
+pre_weighted_var = {}
+
+for i in range(len(expid)):
+    # i = 0
+    print(str(i) + ': ' + expid[i])
+    
+    pre_weighted_var[expid[i]] = {}
+    
+    prefix = exp_odir + expid[i] + '/analysis/echam/' + expid[i]
+    
+    source_var_files = [
+        prefix + '.pre_weighted_sst.pkl',
+    ]
+    
+    for ivar, ifile in zip(source_var, source_var_files):
+        print(ivar + ':    ' + ifile)
+        with open(ifile, 'rb') as f:
+            pre_weighted_var[expid[i]][ivar] = pickle.load(f)
+
+# temp2_alltime = {}
+# for i in range(len(expid)):
+#     # i = 0
+#     print(str(i) + ': ' + expid[i])
+    
+#     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
+#         temp2_alltime[expid[i]] = pickle.load(f)
+
+with open('scratch/others/pi_m_502_5.0.t63_sites_indices.pkl', 'rb') as f:
+    t63_sites_indices = pickle.load(f)
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get regression source SST = f(d_ln / d_xs)
+
+regression_sst_d_AIS = {}
+
+ivar = 'sst'
+
+for i in range(len(expid)):
+    # i = 0
+    print('#-------------------------------- ' + str(i) + ': ' + expid[i])
+    
+    regression_sst_d_AIS[expid[i]] = {}
+    
+    for iisotope in ['d_ln', 'd_excess']:
+        # iisotope = 'd_ln'
+        print('#---------------- ' + iisotope)
+        
+        regression_sst_d_AIS[expid[i]][iisotope] = {}
+        
+        for ialltime in ['daily', 'mon', 'mon no mm', 'ann', 'ann no am',]:
+            # ialltime = 'mon'
+            print('#-------- ' + ialltime)
+            
+            regression_sst_d_AIS[expid[i]][iisotope][ialltime] = {}
+            
+            if (iisotope == 'd_ln'):
+                iso_var = d_ln_alltime[expid[i]][ialltime]
+            elif (iisotope == 'd_excess'):
+                iso_var = d_excess_alltime[expid[i]][ialltime]
+            
+            src_var = pre_weighted_var[expid[i]][ivar][ialltime]
+            
+            for ioutput in ['rsquared', 'RMSE', 'slope', 'intercept']:
+                # ioutput = 'rsquared'
+                print('#---- ' + ioutput)
+                
+                regression_sst_d_AIS[expid[i]][iisotope][ialltime][ioutput] = \
+                    xr.apply_ufunc(
+                        xr_regression_y_x1,
+                        src_var, iso_var,
+                        input_core_dims=[['time'], ['time']],
+                        kwargs={'output': ioutput},
+                        dask = 'allowed', vectorize = True,
+                    )
+        # print('#-------- mon no mm')
+        
+        # regression_sst_d_AIS[expid[i]][iisotope]['mon no mm'] = {}
+        
+        # if (iisotope == 'd_ln'):
+        #     iso_var = d_ln_alltime[expid[i]]['mon'].groupby('time.month') - \
+        #         d_ln_alltime[expid[i]]['mon'].groupby('time.month').mean()
+        # elif (iisotope == 'd_excess'):
+        #     iso_var = d_excess_alltime[expid[i]]['mon'].groupby('time.month')-\
+        #         d_excess_alltime[expid[i]]['mon'].groupby('time.month').mean()
+        
+        # src_var=pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month')-\
+        #     pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month').mean()
+        
+        # for ioutput in ['rsquared', 'RMSE', 'slope', 'intercept']:
+        #     # ioutput = 'RMSE'
+        #     print('#---- ' + ioutput)
+            
+        #     regression_sst_d_AIS[expid[i]][iisotope]['mon no mm'][ioutput] = \
+        #         xr.apply_ufunc(
+        #             xr_regression_y_x1,
+        #             src_var, iso_var,
+        #             input_core_dims=[['time'], ['time']],
+        #             kwargs={'output': ioutput},
+        #             dask = 'allowed', vectorize = True,
+        #         )
+    
+    output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.regression_sst_d_AIS.pkl'
+    
+    if (os.path.isfile(output_file)):
+        os.remove(output_file)
+    
+    with open(output_file, 'wb') as f:
+        pickle.dump(regression_sst_d_AIS[expid[i]], f)
+
+
+
+
+'''
+#-------------------------------- check
+ivar = 'sst'
+
+regression_sst_d = {}
+regression_sst_d_AIS = {}
+
+for i in range(len(expid)):
+    # i = 0
+    print('#-------------------------------- ' + str(i) + ': ' + expid[i])
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.regression_sst_d_AIS.pkl', 'rb') as f:
+        regression_sst_d_AIS[expid[i]] = pickle.load(f)
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.regression_sst_d.pkl', 'rb') as f:
+        regression_sst_d[expid[i]] = pickle.load(f)
+    
+    for iisotope in ['d_ln', 'd_excess']:
+        # iisotope = 'd_ln'
+        print('#---------------- ' + iisotope)
+        
+        for ialltime in ['daily', 'mon', 'mon no mm', 'ann',]:
+            # ialltime = 'mon'
+            print('#-------- ' + ialltime)
+            
+            for ioutput in ['rsquared', 'RMSE', 'slope', 'intercept']:
+                # ioutput = 'RMSE'
+                print('#---- ' + ioutput)
+                
+                data1 = regression_sst_d_AIS[expid[i]][iisotope][ialltime][ioutput][
+                    t63_sites_indices['EDC']['ilat'],
+                    t63_sites_indices['EDC']['ilon'],
+                    ].values
+                
+                if (ioutput in ['rsquared', 'RMSE']):
+                    data2 = regression_sst_d[expid[i]][iisotope]['EDC'][ialltime][ioutput]
+                elif (ioutput == 'slope'):
+                    data2 = regression_sst_d[expid[i]][iisotope]['EDC'][ialltime]['params'][1]
+                elif (ioutput == 'intercept'):
+                    data2 = regression_sst_d[expid[i]][iisotope]['EDC'][ialltime]['params'][0]
+                
+                if (data1 != data2):
+                    print(np.round(data1, 2))
+                    print(np.round(data2, 2))
+
+
+regression_sst_d_AIS[expid[i]]['d_ln']['mon']['RMSE']
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
 
-#SBATCH --time=00:30:00
-# -----------------------------------------------------------------------------
-# region get mon/sea/ann wisoaprt
-
-wisoaprt = {}
-wisoaprt[expid[i]] = (
-    exp_org_o[expid[i]]['wiso'].wisoaprl[:, :3] + \
-        exp_org_o[expid[i]]['wiso'].wisoaprc[:, :3].values).compute()
-
-wisoaprt[expid[i]] = wisoaprt[expid[i]].rename('wisoaprt')
-
-wisoaprt_alltime = {}
-wisoaprt_alltime[expid[i]] = mon_sea_ann(var_6hourly=wisoaprt[expid[i]])
-
-
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'wb') as f:
-    pickle.dump(wisoaprt_alltime[expid[i]], f)
-
-
-'''
-#-------- check calculation
-wisoaprt_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
-    wisoaprt_alltime[expid[i]] = pickle.load(f)
-
-filenames_wiso = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'))
-ifile = -1
-ncfile = xr.open_dataset(filenames_wiso[120:1080][ifile])
-
-(wisoaprt_alltime[expid[i]]['daily'][-31:,] == \
-    (ncfile.wisoaprl[:, :3] + ncfile.wisoaprc[:, :3].values)).all()
-
-(wisoaprt_alltime[expid[i]]['mon'][ifile,] == \
-    (ncfile.wisoaprl[:, :3] + ncfile.wisoaprc[:, :3].values).mean(dim='time')).all()
-
-
-#-------- check simulation of aprt and wisoaprt
-exp_org_o = {}
-exp_org_o[expid[i]] = {}
-
-filenames_echam = sorted(glob.glob(exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_echam.nc'))
-exp_org_o[expid[i]]['echam'] = xr.open_mfdataset(filenames_echam[120:180], data_vars='minimal', coords='minimal', parallel=True)
-
-wisoaprt_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
-    wisoaprt_alltime[expid[i]] = pickle.load(f)
-
-np.max(abs(exp_org_o[expid[i]]['echam'].aprl.values + \
-    exp_org_o[expid[i]]['echam'].aprc.values - \
-        wisoaprt_alltime[expid[i]]['mon'][:60, 0].values))
-
-'''
-# endregion
-# -----------------------------------------------------------------------------
 

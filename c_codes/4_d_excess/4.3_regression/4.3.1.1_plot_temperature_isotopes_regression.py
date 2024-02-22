@@ -10,7 +10,8 @@ expid = [
     # 'pi_606_5.6',
     # 'pi_609_5.7',
     # 'hist_700_5.0',
-    'nudged_703_6.0_k52',
+    # 'nudged_703_6.0_k52',
+    'nudged_705_6.0',
     ]
 
 
@@ -176,11 +177,13 @@ for i in range(len(expid)):
             
             output_png = 'figures/8_d-excess/8.1_controls/8.1.6_regression_analysis/8.1.6.4_sst_d_spatial/8.1.6.4.0 ' + expid[i] + ' ' + ialltime + ' regression source sst vs. ' + iisotope + '.png'
             
-            cbar_label = 'Slope: ' + plot_labels_no_unit['sst'] + ' vs. ' + plot_labels_no_unit[iisotope]
+            cbar_label = 'Slope [$°C / ‰$]: ' + plot_labels_no_unit['sst'] + ' vs. ' + plot_labels_no_unit[iisotope]
             
             fig, ax = hemisphere_plot(northextent=-60,)
             
-            cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
+            # cplot_ice_cores(ten_sites_loc.lon, ten_sites_loc.lat, ax)
+            cplot_ice_cores(123.35, -75.10, ax)
+            cplot_ice_cores(0.04, -75, ax)
             
             plt1 = plot_t63_contourf(
                 lon, lat,

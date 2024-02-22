@@ -7,7 +7,14 @@
 
 exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'nudged_701_5.0',
+    'nudged_705_6.0',
+    'nudged_703_6.0_k52',
+    # 'nudged_706_6.0_k52_88',
+    'nudged_707_6.0_k43',
+    'nudged_708_6.0_I01',
+    'nudged_709_6.0_I03',
+    'nudged_710_6.0_S3',
+    'nudged_711_6.0_S6',
     ]
 i = 0
 
@@ -78,6 +85,8 @@ from a_basic_analysis.b_module.basic_calculations import (
 from a_basic_analysis.b_module.namelist import (
     panel_labels,
     plot_labels,
+    expid_colours,
+    expid_labels,
 )
 
 from a_basic_analysis.b_module.component_plot import (
@@ -96,10 +105,14 @@ with open('data_sources/water_isotopes/FR16/FR16_Kohnen.pkl', 'rb') as f:
     FR16_Kohnen = pickle.load(f)
 
 FR16_Kohnen_1d_sim = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.FR16_Kohnen_1d_sim.pkl', 'rb') as f:
-    FR16_Kohnen_1d_sim[expid[i]] = pickle.load(f)
+for i in range(len(expid)):
+    print('#-------------------------------- ' + expid[i])
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.FR16_Kohnen_1d_sim.pkl', 'rb') as f:
+        FR16_Kohnen_1d_sim[expid[i]] = pickle.load(f)
 
 ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
+
+
 
 
 q_geo7_sfc_frc_alltime = {}
@@ -259,13 +272,16 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', 'temp2']:
 # -----------------------------------------------------------------------------
 # region plot time series
 
+# plot_labels = {'temp2': 'temp2 [$°C$]',}
+
 for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'temp2', 'q']:
     # var_name = 'q'
+    # ['dD', 'd18O', 'd_xs', 'd_ln', 'temp2', 'q']
     print('#-------- ' + var_name)
     
     output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.4_FR16/8.3.0.4.0 ' + expid[i] + ' FR16 time series of observed vs. simulated daily ' + var_name + '.png'
     
-    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 6.6]) / 2.54)
+    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
     
     xdata = FR16_Kohnen_1d_sim[expid[i]]['time'].values.copy()
     ydata = FR16_Kohnen_1d_sim[expid[i]][var_name].values.copy()
@@ -275,49 +291,71 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'temp2', 'q']:
         ydata = ydata * 1000
         ydata_sim = ydata_sim * 1000
     
-    ax.plot(xdata, ydata_sim, 'o', ls='-', ms=2, lw=0.5, label='Simulation',)
-    ax.plot(xdata, ydata, 'o', ls='-', ms=2, lw=0.5, label='Observation',)
+    subset = (np.isfinite(ydata) & np.isfinite(ydata_sim))
+    # xdata = xdata[subset]
+    # ydata = ydata[subset]
+    # ydata_sim = ydata_sim[subset]
+    
+    RMSE = np.sqrt(np.average(np.square(ydata[subset] - ydata_sim[subset])))
+    rsquared = pearsonr(ydata[subset], ydata_sim[subset]).statistic ** 2
+    
+    ax.plot(xdata, ydata, 'o', ls='-', ms=2, lw=0.5,
+            c='k', label='Observation',)
+    ax.plot(xdata, ydata_sim, 'o', ls='-', ms=2, lw=0.5,
+            c=expid_colours[expid[i]],
+            label=expid_labels[expid[i]])
+    
+    #  + \
+    #                 ': $R^2 = $' + str(np.round(rsquared, 2)) +\
+    #                     ', $RMSE = $' + str(np.round(RMSE, 1)),
+    
+    # # plot original observations
+    # if (var_name == 'dD'):
+    #     xdata = FR16_Kohnen['isotopes']['time'].values.copy()
+    #     ydata = FR16_Kohnen['isotopes']['dD'].values.copy()
+    # elif (var_name == 'd18O'):
+    #     xdata = FR16_Kohnen['isotopes']['time'].values.copy()
+    #     ydata = FR16_Kohnen['isotopes']['d18O'].values.copy()
+    # elif (var_name == 'd_xs'):
+    #     xdata = FR16_Kohnen['isotopes']['time'].values.copy()
+    #     ydata = FR16_Kohnen['isotopes']['dD'].values.copy()-8*FR16_Kohnen['isotopes']['d18O'].values.copy()
+    # elif (var_name == 'd_ln'):
+    #     xdata = FR16_Kohnen['isotopes']['time'].values.copy()
+    #     ln_dD = 1000 * np.log(1 + FR16_Kohnen['isotopes']['dD'].values.copy() / 1000)
+    #     ln_d18O = 1000 * np.log(1 + FR16_Kohnen['isotopes']['d18O'].values.copy() / 1000)
+    #     ydata = ln_dD - 8.47 * ln_d18O + 0.0285 * (ln_d18O ** 2)
+    # elif (var_name == 'q'):
+    #     xdata = FR16_Kohnen['isotopes']['time'].values.copy()
+    #     ydata = FR16_Kohnen['isotopes']['humidity'].values.copy() * 18.01528 / (28.9645 * 1e6) * 1000
+    # elif (var_name == 'temp2'):
+    #     xdata = FR16_Kohnen['T']['time'].values.copy()
+    #     ydata = FR16_Kohnen['T']['temp2'].values.copy()
+    # ax.plot(xdata, ydata, ls='-', lw=0.2, label='Hourly Observation',)
+    
     ax.set_xticks(xdata[::4])
-    
-    # plot original observations
-    if (var_name == 'dD'):
-        xdata = FR16_Kohnen['isotopes']['time'].values.copy()
-        ydata = FR16_Kohnen['isotopes']['dD'].values.copy()
-    elif (var_name == 'd18O'):
-        xdata = FR16_Kohnen['isotopes']['time'].values.copy()
-        ydata = FR16_Kohnen['isotopes']['d18O'].values.copy()
-    elif (var_name == 'd_xs'):
-        xdata = FR16_Kohnen['isotopes']['time'].values.copy()
-        ydata = FR16_Kohnen['isotopes']['dD'].values.copy()-8*FR16_Kohnen['isotopes']['d18O'].values.copy()
-    elif (var_name == 'd_ln'):
-        xdata = FR16_Kohnen['isotopes']['time'].values.copy()
-        ln_dD = 1000 * np.log(1 + FR16_Kohnen['isotopes']['dD'].values.copy() / 1000)
-        ln_d18O = 1000 * np.log(1 + FR16_Kohnen['isotopes']['d18O'].values.copy() / 1000)
-        ydata = ln_dD - 8.47 * ln_d18O + 0.0285 * (ln_d18O ** 2)
-    elif (var_name == 'q'):
-        xdata = FR16_Kohnen['isotopes']['time'].values.copy()
-        ydata = FR16_Kohnen['isotopes']['humidity'].values.copy() * 18.01528 / (28.9645 * 1e6) * 1000
-    elif (var_name == 'temp2'):
-        xdata = FR16_Kohnen['T']['time'].values.copy()
-        ydata = FR16_Kohnen['T']['temp2'].values.copy()
-    ax.plot(xdata, ydata, ls='-', lw=0.2, label='Hourly Observation',)
-    
-    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-    ax.set_xlabel('Date', labelpad=6)
+    # ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+    # ax.set_xlabel('Date', labelpad=6)
     ax.yaxis.set_minor_locator(AutoMinorLocator(2))
     ax.set_ylabel(plot_labels[var_name], labelpad=6)
     plt.xticks(rotation=30, ha='right')
     
-    ax.legend(handlelength=1, loc='upper right', framealpha=0.25,)
+    # ax.legend(
+    #     handlelength=1, loc=(-0.16, -0.35),
+    #     framealpha=0.25, ncol=2, columnspacing=1, fontsize=9)
+    
+    ax.legend().set_visible(False)
+    ax.set_xlabel(
+        '$R^2 = $' + str(np.round(rsquared, 2)) + \
+            ', $RMSE = $' + str(np.round(RMSE, 1)),
+            labelpad=9)
     
     ax.grid(True, which='both',
             linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.3, top=0.98)
+    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.26, top=0.98)
     fig.savefig(output_png)
 
 
 
-# MC16_Dome_C_1d_sim[expid[i]]['time']
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -342,5 +380,63 @@ echam6_t63_surface_height.sel(lon = FR16_Kohnen_1d_sim[expid[i]]['lon'][0], lat 
 
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot time series multiple models
+
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln',]:
+    # var_name = 'q'
+    # ['dD', 'd18O', 'd_xs', 'd_ln']
+    print('#-------- ' + var_name)
+    
+    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.4_FR16/8.3.0.4.1 nudged_712_9 FR16 time series of observed and simulated daily ' + var_name + '.png'
+    
+    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 9.8]) / 2.54)
+    
+    for i in range(len(expid)):
+        print(str(i) + ': ' + expid[i])
+        
+        xdata = FR16_Kohnen_1d_sim[expid[i]]['time'].values.copy()
+        ydata = FR16_Kohnen_1d_sim[expid[i]][var_name].values.copy()
+        ydata_sim = FR16_Kohnen_1d_sim[expid[i]][var_name + '_sim'].values.copy()
+        subset = (np.isfinite(ydata) & np.isfinite(ydata_sim))
+        
+        if (var_name == 'q'):
+            ydata = ydata * 1000
+            ydata_sim = ydata_sim * 1000
+        
+        if (i == 0):
+            ax.plot(xdata, ydata, 'o', ls='-', ms=2, lw=0.5,
+                    c='k', label='Observation',)
+        
+        RMSE = np.sqrt(np.average(np.square(ydata[subset] - ydata_sim[subset])))
+        rsquared = pearsonr(ydata[subset], ydata_sim[subset]).statistic ** 2
+        
+        ax.plot(xdata, ydata_sim, 'o', ls='-', ms=2, lw=0.5,
+                c=expid_colours[expid[i]],
+                label=expid_labels[expid[i]] + \
+                    ': $RMSE = $' + str(np.round(RMSE, 1)),)
+    
+    ax.set_xticks(xdata[::4])
+    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+    # ax.set_xlabel('Date', labelpad=6)
+    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_ylabel(plot_labels[var_name], labelpad=6)
+    plt.xticks(rotation=30, ha='right')
+    
+    ax.legend(
+        handlelength=1, loc=(-0.2, -0.64),
+        framealpha=0.25, ncol=2, columnspacing=1, fontsize=9, )
+    
+    ax.grid(True, which='both',
+            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.4, top=0.98)
+    fig.savefig(output_png)
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
 
 

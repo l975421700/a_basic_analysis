@@ -110,8 +110,6 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.SO_vapor_isoto
 
 ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
-
-
 '''
 SO_vapor_isotopes = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.SO_vapor_isotopes.pkl', 'rb') as f:
@@ -277,6 +275,9 @@ ax.legend(
     #     'Bonne et al. (2019)',
     # ],
     title='Data sources', loc=(0.18, -0.32), fontsize=8)
+
+cplot_ice_cores(123.35, -75.10, ax)
+cplot_ice_cores(0.04, -75, ax)
 
 fig.savefig(output_png)
 

@@ -102,7 +102,7 @@ plot_labels = {
     'temperature': 'Surface temperature [$°C$]',
     'accumulation': 'Accumulation [$cm \; year^{-1}$]',
     't_air': 'Air temperature [$°C$]',
-    't_3m': 'Air temperature [$°C$]',
+    't_3m': 'temp2 [$°C$]',
     'q': 'Specific humidity [$g/kg$]',
     'pre': 'Precipitation [$mm \; day^{-1}$]',
     'local_rh2m': 'rh2m [$\%$]',
