@@ -1,6 +1,52 @@
 
 
 # -----------------------------------------------------------------------------
+# region plot station location
+
+fig, ax = hemisphere_plot(northextent=-60)
+
+cplot_ice_cores(FR16_Kohnen_1d_sim[expid[i]]['lon'][0], FR16_Kohnen_1d_sim[expid[i]]['lat'][0], ax=ax, s=50, marker='*', edgecolors='b')
+
+fig.savefig('figures/test/trial.png')
+
+from metpy.calc import geopotential_to_height
+from metpy.units import units
+echam6_t63_geosp = xr.open_dataset(exp_odir + expid[i] + '/input/echam/unit.24')
+echam6_t63_surface_height = geopotential_to_height(
+    echam6_t63_geosp.GEOSP * (units.m / units.s)**2)
+
+echam6_t63_surface_height.sel(lon = FR16_Kohnen_1d_sim[expid[i]]['lon'][0], lat = FR16_Kohnen_1d_sim[expid[i]]['lat'][0], method='nearest').values
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot station location
+
+fig, ax = hemisphere_plot(northextent=-60)
+
+cplot_ice_cores(MC16_Dome_C_1d_sim[expid[i]]['lon'][0], MC16_Dome_C_1d_sim[expid[i]]['lat'][0], ax=ax, s=50, marker='*', edgecolors='b')
+
+fig.savefig('figures/test/trial.png')
+
+
+from metpy.calc import geopotential_to_height
+from metpy.units import units
+echam6_t63_geosp = xr.open_dataset(exp_odir + expid[i] + '/input/echam/unit.24')
+echam6_t63_surface_height = geopotential_to_height(
+    echam6_t63_geosp.GEOSP * (units.m / units.s)**2)
+
+echam6_t63_surface_height.sel(lon = MC16_Dome_C_1d_sim[expid[i]]['lon'][0], lat = MC16_Dome_C_1d_sim[expid[i]]['lat'][0], method='nearest').values
+
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
 # region plot all data
 
 for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', ]:

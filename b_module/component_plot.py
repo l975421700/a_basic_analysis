@@ -1,6 +1,40 @@
 
 
 # -----------------------------------------------------------------------------
+# region partial colouring of text
+
+
+def rainbow_text(x,y,ls,lc,ax,**kw):
+    '''
+    x,y:    locations
+    ls:     list of strings
+    lc:     list of colors
+    '''
+    
+    import matplotlib.pyplot as plt
+    from matplotlib import transforms
+    
+    # t = plt.gca().transData
+    t = ax.transAxes
+    fig = plt.gcf()
+    # plt.show()
+
+    #horizontal version
+    for s,c in zip(ls,lc):
+        text = plt.text(x,y,s,color=c, transform=t, **kw)
+        text.draw(fig.canvas.get_renderer())
+        ex = text.get_window_extent()
+        t = transforms.offset_copy(text._transform, x=ex.width, units='dots')
+
+
+'''
+https://github.com/matplotlib/matplotlib/issues/697
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
 # region plot ocean mask
 
 import cartopy.crs as ccrs

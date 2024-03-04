@@ -5,11 +5,10 @@
 # ipython
 
 
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
     'nudged_705_6.0',
     'nudged_703_6.0_k52',
-    # 'nudged_706_6.0_k52_88',
     'nudged_707_6.0_k43',
     'nudged_708_6.0_I01',
     'nudged_709_6.0_I03',
@@ -73,6 +72,7 @@ from a_basic_analysis.b_module.mapplot import (
     remove_trailing_zero,
     remove_trailing_zero_pos,
     hemisphere_conic_plot,
+    hemisphere_plot,
 )
 
 from a_basic_analysis.b_module.basic_calculations import (
@@ -87,11 +87,14 @@ from a_basic_analysis.b_module.namelist import (
     plot_labels,
     expid_colours,
     expid_labels,
+    zerok,
 )
 
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
     plt_mesh_pars,
+    plot_t63_contourf,
+    rainbow_text,
 )
 
 # endregion
@@ -111,10 +114,14 @@ for i in range(len(expid)):
         FR16_Kohnen_1d_sim[expid[i]] = pickle.load(f)
 
 ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
+site_lat = -75
+site_lon = 0.04
+
+ERA5_daily_q_2013_2022 = xr.open_dataset('scratch/ERA5/q/ERA5_daily_q_2013_2022.nc', chunks={'time': 720})
+ERA5_daily_temp2_2013_2022 = xr.open_dataset('scratch/ERA5/temp2/ERA5_daily_temp2_2013_2022.nc', chunks={'time': 720})
 
 
-
-
+'''
 q_geo7_sfc_frc_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_geo7_sfc_frc_alltime.pkl', 'rb') as f:
     q_geo7_sfc_frc_alltime[expid[i]] = pickle.load(f)
@@ -127,6 +134,7 @@ FR16_1d_oo2q = find_multi_gridvalue_at_site_time(
     q_geo7_sfc_frc_alltime[expid[i]]['daily'].lon.values,
     q_geo7_sfc_frc_alltime[expid[i]]['daily'].sel(geo_regions='Open Ocean').values,
     )
+'''
 
 '''
 echam6_t63_geosp = xr.open_dataset(exp_odir + expid[i] + '/input/echam/unit.24')
@@ -270,7 +278,7 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', 'temp2']:
 
 
 # -----------------------------------------------------------------------------
-# region plot time series
+# region plot time series - only one model
 
 # plot_labels = {'temp2': 'temp2 [$°C$]',}
 
@@ -281,7 +289,7 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'temp2', 'q']:
     
     output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.4_FR16/8.3.0.4.0 ' + expid[i] + ' FR16 time series of observed vs. simulated daily ' + var_name + '.png'
     
-    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 5.5]) / 2.54)
     
     xdata = FR16_Kohnen_1d_sim[expid[i]]['time'].values.copy()
     ydata = FR16_Kohnen_1d_sim[expid[i]][var_name].values.copy()
@@ -292,10 +300,6 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'temp2', 'q']:
         ydata_sim = ydata_sim * 1000
     
     subset = (np.isfinite(ydata) & np.isfinite(ydata_sim))
-    # xdata = xdata[subset]
-    # ydata = ydata[subset]
-    # ydata_sim = ydata_sim[subset]
-    
     RMSE = np.sqrt(np.average(np.square(ydata[subset] - ydata_sim[subset])))
     rsquared = pearsonr(ydata[subset], ydata_sim[subset]).statistic ** 2
     
@@ -332,51 +336,33 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'temp2', 'q']:
     #     ydata = FR16_Kohnen['T']['temp2'].values.copy()
     # ax.plot(xdata, ydata, ls='-', lw=0.2, label='Hourly Observation',)
     
-    ax.set_xticks(xdata[::4])
-    # ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_xticks(xdata[::6])
+    plt.xticks(rotation=30, ha='right')
+    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
     # ax.set_xlabel('Date', labelpad=6)
     ax.yaxis.set_minor_locator(AutoMinorLocator(2))
     ax.set_ylabel(plot_labels[var_name], labelpad=6)
-    plt.xticks(rotation=30, ha='right')
+    ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
     
     # ax.legend(
     #     handlelength=1, loc=(-0.16, -0.35),
     #     framealpha=0.25, ncol=2, columnspacing=1, fontsize=9)
     
     ax.legend().set_visible(False)
+    
     ax.set_xlabel(
         '$R^2 = $' + str(np.round(rsquared, 2)) + \
             ', $RMSE = $' + str(np.round(RMSE, 1)),
-            labelpad=9)
+            color=expid_colours[expid[i]],
+            labelpad=6)
     
     ax.grid(True, which='both',
             linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.26, top=0.98)
+    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.36, top=0.98)
     fig.savefig(output_png)
 
 
 
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot station location
-
-fig, ax = hemisphere_plot(northextent=-60)
-
-cplot_ice_cores(FR16_Kohnen_1d_sim[expid[i]]['lon'][0], FR16_Kohnen_1d_sim[expid[i]]['lat'][0], ax=ax, s=50, marker='*', edgecolors='b')
-
-fig.savefig('figures/test/trial.png')
-
-from metpy.calc import geopotential_to_height
-from metpy.units import units
-echam6_t63_geosp = xr.open_dataset(exp_odir + expid[i] + '/input/echam/unit.24')
-echam6_t63_surface_height = geopotential_to_height(
-    echam6_t63_geosp.GEOSP * (units.m / units.s)**2)
-
-echam6_t63_surface_height.sel(lon = FR16_Kohnen_1d_sim[expid[i]]['lon'][0], lat = FR16_Kohnen_1d_sim[expid[i]]['lat'][0], method='nearest').values
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -390,9 +376,10 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln',]:
     # ['dD', 'd18O', 'd_xs', 'd_ln']
     print('#-------- ' + var_name)
     
-    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.4_FR16/8.3.0.4.1 nudged_712_9 FR16 time series of observed and simulated daily ' + var_name + '.png'
+    # output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.4_FR16/8.3.0.4.1 nudged_712_9 FR16 time series of observed and simulated daily ' + var_name + '.png'
+    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.4_FR16/8.3.0.4.1 nudged_712_9 FR16 time series of observed and simulated daily ' + var_name + ' No RMSE.png'
     
-    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 9.8]) / 2.54)
+    fig, ax = plt.subplots(1, 1, figsize=np.array([10, 9.8]) / 2.54)
     
     for i in range(len(expid)):
         print(str(i) + ': ' + expid[i])
@@ -413,21 +400,25 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln',]:
         RMSE = np.sqrt(np.average(np.square(ydata[subset] - ydata_sim[subset])))
         rsquared = pearsonr(ydata[subset], ydata_sim[subset]).statistic ** 2
         
+        # ax.plot(xdata, ydata_sim, 'o', ls='-', ms=2, lw=0.5,
+        #         c=expid_colours[expid[i]],
+        #         label=expid_labels[expid[i]] + \
+        #             ': $RMSE = $' + str(np.round(RMSE, 1)),)
         ax.plot(xdata, ydata_sim, 'o', ls='-', ms=2, lw=0.5,
                 c=expid_colours[expid[i]],
-                label=expid_labels[expid[i]] + \
-                    ': $RMSE = $' + str(np.round(RMSE, 1)),)
+                label=expid_labels[expid[i]],)
     
-    ax.set_xticks(xdata[::4])
+    ax.set_xticks(xdata[::6])
     ax.xaxis.set_minor_locator(AutoMinorLocator(2))
     # ax.set_xlabel('Date', labelpad=6)
     ax.yaxis.set_minor_locator(AutoMinorLocator(2))
     ax.set_ylabel(plot_labels[var_name], labelpad=6)
     plt.xticks(rotation=30, ha='right')
+    ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
     
     ax.legend(
-        handlelength=1, loc=(-0.2, -0.64),
-        framealpha=0.25, ncol=2, columnspacing=1, fontsize=9, )
+        handlelength=1, loc=(-0.2, -0.66),
+        framealpha=0.25, ncol=2, columnspacing=1, )
     
     ax.grid(True, which='both',
             linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
@@ -438,5 +429,179 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln',]:
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region plot time series - one model and ERA5
+
+# plot_labels = {'temp2': 'temp2 [$°C$]',}
+
+for var_name in ['temp2', 'q']:
+    # var_name = 'q'
+    # ['temp2', 'q']
+    print('#-------- ' + var_name)
+    
+    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.4_FR16/8.3.0.4.0 ' + expid[i] + ' FR16 time series of observed, simulated, and ERA5 daily ' + var_name + '.png'
+    
+    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 5.5]) / 2.54)
+    
+    xdata = FR16_Kohnen_1d_sim[expid[i]]['time'].values.copy()
+    ydata = FR16_Kohnen_1d_sim[expid[i]][var_name].values.copy()
+    ydata_sim = FR16_Kohnen_1d_sim[expid[i]][var_name + '_sim'].values.copy()
+    
+    if (var_name == 'q'):
+        ydata = ydata * 1000
+        ydata_sim = ydata_sim * 1000
+    
+    subset = (np.isfinite(ydata) & np.isfinite(ydata_sim))
+    RMSE = np.sqrt(np.average(np.square(ydata[subset] - ydata_sim[subset])))
+    rsquared = pearsonr(ydata[subset], ydata_sim[subset]).statistic ** 2
+    
+    ax.plot(xdata, ydata, 'o', ls='-', ms=2, lw=0.5,
+            c='k', label='Observation',)
+    ax.plot(xdata, ydata_sim, 'o', ls='-', ms=2, lw=0.5,
+            c=expid_colours[expid[i]],
+            label=expid_labels[expid[i]])
+    
+    #  + \
+    #                 ': $R^2 = $' + str(np.round(rsquared, 2)) +\
+    #                     ', $RMSE = $' + str(np.round(RMSE, 1)),
+    
+    # # plot original observations
+    # if (var_name == 'dD'):
+    #     xdata = FR16_Kohnen['isotopes']['time'].values.copy()
+    #     ydata = FR16_Kohnen['isotopes']['dD'].values.copy()
+    # elif (var_name == 'd18O'):
+    #     xdata = FR16_Kohnen['isotopes']['time'].values.copy()
+    #     ydata = FR16_Kohnen['isotopes']['d18O'].values.copy()
+    # elif (var_name == 'd_xs'):
+    #     xdata = FR16_Kohnen['isotopes']['time'].values.copy()
+    #     ydata = FR16_Kohnen['isotopes']['dD'].values.copy()-8*FR16_Kohnen['isotopes']['d18O'].values.copy()
+    # elif (var_name == 'd_ln'):
+    #     xdata = FR16_Kohnen['isotopes']['time'].values.copy()
+    #     ln_dD = 1000 * np.log(1 + FR16_Kohnen['isotopes']['dD'].values.copy() / 1000)
+    #     ln_d18O = 1000 * np.log(1 + FR16_Kohnen['isotopes']['d18O'].values.copy() / 1000)
+    #     ydata = ln_dD - 8.47 * ln_d18O + 0.0285 * (ln_d18O ** 2)
+    # elif (var_name == 'q'):
+    #     xdata = FR16_Kohnen['isotopes']['time'].values.copy()
+    #     ydata = FR16_Kohnen['isotopes']['humidity'].values.copy() * 18.01528 / (28.9645 * 1e6) * 1000
+    # elif (var_name == 'temp2'):
+    #     xdata = FR16_Kohnen['T']['time'].values.copy()
+    #     ydata = FR16_Kohnen['T']['temp2'].values.copy()
+    # ax.plot(xdata, ydata, ls='-', lw=0.2, label='Hourly Observation',)
+    
+    if (var_name == 'q'):
+        ERA5_data   = ERA5_daily_q_2013_2022.q.sel(latitude=site_lat, longitude=site_lon, method='nearest').sel(time=slice('2013-12-16', '2014-01-21')).values
+    elif (var_name == 'temp2'):
+        ERA5_data   = ERA5_daily_temp2_2013_2022.t2m.sel(latitude=site_lat, longitude=site_lon, method='nearest').sel(time=slice('2013-12-16', '2014-01-21')).values - zerok
+    
+    ax.plot(xdata, ERA5_data,
+            'o', ls='-', ms=2, lw=0.5, c='tab:pink', label='ERA5')
+    
+    subset = (np.isfinite(ydata) & np.isfinite(ERA5_data))
+    RMSE2 = np.sqrt(np.average(np.square(ydata[subset] - ERA5_data[subset])))
+    rsquared2 = pearsonr(ydata[subset], ERA5_data[subset]).statistic ** 2
+    
+    ax.set_xticks(xdata[::6])
+    plt.xticks(rotation=30, ha='right')
+    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+    # ax.set_xlabel('Date', labelpad=6)
+    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_ylabel(plot_labels[var_name], labelpad=6)
+    ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
+    
+    # ax.legend(
+    #     handlelength=1, loc=(-0.16, -0.35),
+    #     framealpha=0.25, ncol=2, columnspacing=1, fontsize=9)
+    
+    ax.legend().set_visible(False)
+    
+    if (var_name == 'q'):
+        round_digit = 3
+    else:
+        round_digit = 1
+    
+    rainbow_text(
+        -0.1, -0.54,
+        ['$R^2 = $' + str(np.round(rsquared, 2)) + ', $RMSE = $' + str(np.round(RMSE, round_digit)),
+         '; ',
+         '$R^2 = $' + str(np.round(rsquared2, 2)) + ', $RMSE = $' + str(np.round(RMSE2, round_digit)),
+         ],
+        [expid_colours[expid[i]], 'k', 'tab:pink'],
+        ax,
+    )
+    # ax.set_xlabel(
+    #     '$R^2 = $' + str(np.round(rsquared, 2)) + \
+    #         ', $RMSE = $' + str(np.round(RMSE, 1)),
+    #         color=expid_colours[expid[i]],
+    #         labelpad=6)
+    
+    ax.grid(True, which='both',
+            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.36, top=0.98)
+    fig.savefig(output_png)
+
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region check statistics
+
+var_name = 'd_ln' # ['dD', 'd18O', 'd_xs', 'd_ln', 'q', 'temp2']
+
+xdata = FR16_Kohnen_1d_sim[expid[i]]['time'].values.copy()
+ydata = FR16_Kohnen_1d_sim[expid[i]][var_name].values.copy()
+ydata_sim = FR16_Kohnen_1d_sim[expid[i]][var_name + '_sim'].values.copy()
+
+if (var_name == 'q'):
+    ydata = ydata * 1000
+    ydata_sim = ydata_sim * 1000
+
+if (var_name == 'q'):
+    ERA5_data   = ERA5_daily_q_2013_2022.q.sel(latitude=site_lat, longitude=site_lon, method='nearest').sel(time=slice('2013-12-16', '2014-01-21')).values
+elif (var_name == 'temp2'):
+    ERA5_data   = ERA5_daily_temp2_2013_2022.t2m.sel(latitude=site_lat, longitude=site_lon, method='nearest').sel(time=slice('2013-12-16', '2014-01-21')).values - zerok
+
+
+#-------------------------------- check d_ln
+
+np.nanstd(ydata_sim, ddof=1)
+np.nanstd(ydata, ddof=1)
+
+np.nanmin(ydata_sim - ydata)
+np.nanmax(ydata_sim - ydata)
+
+subset = (np.isfinite(ydata) & np.isfinite(ydata_sim))
+np.sqrt(np.average(np.square(ydata[subset] - ydata_sim[subset])))
+pearsonr(ydata[subset], ydata_sim[subset]).statistic ** 2
+
+
+#-------------------------------- check dD
+np.nanmin(ydata_sim - ydata)
+np.nanmax(ydata_sim - ydata)
+
+subset = (np.isfinite(ydata) & np.isfinite(ydata_sim))
+np.sqrt(np.average(np.square(ydata[subset] - ydata_sim[subset])))
+pearsonr(ydata[subset], ydata_sim[subset]).statistic ** 2
+
+
+#-------------------------------- check q
+subset = (np.isfinite(ydata) & np.isfinite(ydata_sim))
+np.sqrt(np.average(np.square(ydata[subset] - ydata_sim[subset])))
+pearsonr(ydata[subset], ydata_sim[subset]).statistic ** 2
+
+
+#-------------------------------- check temp2
+
+subset = (np.isfinite(ydata) & np.isfinite(ERA5_data))
+np.sqrt(np.average(np.square(ydata[subset] - ERA5_data[subset])))
+pearsonr(ydata[subset], ERA5_data[subset]).statistic ** 2
+
+
+# endregion
+# -----------------------------------------------------------------------------
 
 

@@ -1,15 +1,7 @@
 
 
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_600_5.0',
-    # 'pi_601_5.1',
-    # 'pi_602_5.2',
-    # 'pi_603_5.3',
-    # 'pi_605_5.5',
-    # 'pi_606_5.6',
-    # 'pi_609_5.7',
-    # 'hist_700_5.0',
     # 'nudged_703_6.0_k52',
     'nudged_705_6.0',
     ]
@@ -154,13 +146,27 @@ with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
 # -----------------------------------------------------------------------------
 # region plot regression source SST = f(d_ln / d_xs), revised
 
-pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=0.2, cm_max=1, cm_interval1=0.05, cm_interval2=0.1,
-    cmap='viridis', asymmetric=False, reversed=True)
+# ['rsquared', 'RMSE', 'slope']
+iparameter = 'rsquared'
 
-# #---------------- settings
-# RMSE_interval       = np.arange(0.5, 2.5 + 1e-4, 2)
-# rsquared_interval   = np.arange(0.5, 2.5 + 1e-4, 2)
+if (iparameter == 'slope'):
+    pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+        cm_min=0.2, cm_max=0.9, cm_interval1=0.1, cm_interval2=0.1,
+        cmap='viridis',)
+    cbar_label = 'Slope [$°C / ‰$]'
+elif (iparameter == 'RMSE'):
+    pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+        cm_min=0.3, cm_max=0.9, cm_interval1=0.1, cm_interval2=0.1,
+        cmap='Oranges', reversed=False,)
+    cbar_label = 'RMSE [$°C$]'
+    contour_c = 'b'
+elif (iparameter == 'rsquared'):
+    pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+        cm_min=0.3, cm_max=0.9, cm_interval1=0.1, cm_interval2=0.1,
+        cmap='cividis', reversed=False,)
+    cbar_label = '$R^2$ [-]'
+    contour_c = 'r'
+
 
 for i in range(len(expid)):
     # i = 0
@@ -175,9 +181,9 @@ for i in range(len(expid)):
             # ['daily', 'mon', 'mon no mm', 'ann', 'ann no am']
             print('#-------- ' + ialltime)
             
-            output_png = 'figures/8_d-excess/8.1_controls/8.1.6_regression_analysis/8.1.6.4_sst_d_spatial/8.1.6.4.0 ' + expid[i] + ' ' + ialltime + ' regression source sst vs. ' + iisotope + '.png'
+            output_png = 'figures/8_d-excess/8.1_controls/8.1.6_regression_analysis/8.1.6.4_sst_d_spatial/8.1.6.4.0 ' + expid[i] + ' ' + ialltime + ' regression source sst vs. ' + iisotope + ' ' + iparameter + '.png'
             
-            cbar_label = 'Slope [$°C / ‰$]: ' + plot_labels_no_unit['sst'] + ' vs. ' + plot_labels_no_unit[iisotope]
+            # cbar_label = 'Slope [$°C / ‰$]: ' + plot_labels_no_unit['sst'] + '$=f($' + plot_labels_no_unit[iisotope] + '$)$'
             
             fig, ax = hemisphere_plot(northextent=-60,)
             
@@ -187,9 +193,53 @@ for i in range(len(expid)):
             
             plt1 = plot_t63_contourf(
                 lon, lat,
-                regression_sst_d_AIS[expid[i]][iisotope][ialltime]['slope'],
+                regression_sst_d_AIS[expid[i]][iisotope][ialltime][iparameter],
                 ax, pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
             
+            if ((iparameter == 'RMSE') | (iparameter == 'rsquared')):
+                plt_ctr1 = ax.contour(
+                    lon, lat.sel(lat=slice(-62, -90)),
+                    regression_sst_d_AIS[expid[i]][iisotope][ialltime][
+                        iparameter].sel(lat=slice(-62, -90)),
+                    colors=contour_c, levels=[0.5], linewidths=0.8,
+                    clip_on=True, zorder=1, transform=ccrs.PlateCarree(),)
+                # if ((ialltime == 'ann') | (ialltime == 'ann no am')):
+                #     ax_clabel = ax.clabel(
+                #         plt_ctr1, inline=1, colors=contour_c,
+                #         fmt=remove_trailing_zero, levels=[0.5],
+                #         zorder=1, )
+            
+            ax.add_feature(
+                cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
+            
+            cbar = fig.colorbar(
+                plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
+                orientation="horizontal", shrink=0.9, ticks=pltticks,
+                extend='neither', pad=0.02, fraction=0.2,
+                )
+            cbar.ax.set_xlabel(cbar_label, labelpad=8,)
+            
+            fig.savefig(output_png)
+
+
+'''
+#-------------------------------- check spatial statistics
+iisotope = 'd_ln'
+ialltime = 'ann no am'
+stats.describe(regression_sst_d_AIS[expid[i]][iisotope][ialltime]['slope'].values[echam6_t63_ais_mask['mask']['AIS']])
+
+stats.describe(regression_sst_d_AIS[expid[i]][iisotope][ialltime]['RMSE'].values[echam6_t63_ais_mask['mask']['AIS']])
+
+rsquared_AIS = regression_sst_d_AIS[expid[i]][iisotope][ialltime][
+    'rsquared'].values[echam6_t63_ais_mask['mask']['AIS']]
+stats.describe(rsquared_AIS)
+
+
+#-------------------------------- plot contours of RMSE and R2
+#---------------- settings
+RMSE_interval       = np.arange(0.5, 2.5 + 1e-4, 2)
+rsquared_interval   = np.arange(0.5, 2.5 + 1e-4, 2)
+
             # # RMSE
             # plt_ctr1 = ax.contour(
             #     lon, lat.sel(lat=slice(-62, -90)),
@@ -214,16 +264,6 @@ for i in range(len(expid)):
             #     levels=rsquared_interval, inline_spacing=1, fontsize=8,
             #     zorder=1, )
             
-            ax.add_feature(
-                cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
-            
-            cbar = fig.colorbar(
-                plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
-                orientation="horizontal", shrink=0.9, ticks=pltticks,
-                extend='neither', pad=0.02, fraction=0.2,
-                )
-            cbar.ax.set_xlabel(cbar_label)
-            
             # # contours legend
             # h1, _ = plt_ctr1.legend_elements()
             # h2, _ = plt_ctr2.legend_elements()
@@ -236,23 +276,8 @@ for i in range(len(expid)):
             #     handlelength=1, columnspacing=1,
             #     )
             
-            fig.savefig(output_png)
 
 
-
-
-
-stats.describe(regression_sst_d_AIS[expid[i]][iisotope][ialltime]['slope'].values[echam6_t63_ais_mask['mask']['AIS']])
-
-stats.describe(regression_sst_d_AIS[expid[i]][iisotope][ialltime]['RMSE'].values[echam6_t63_ais_mask['mask']['AIS']])
-
-rsquared_AIS = regression_sst_d_AIS[expid[i]][iisotope][ialltime][
-    'rsquared'].values[echam6_t63_ais_mask['mask']['AIS']]
-stats.describe(rsquared_AIS)
-
-
-
-'''
 icores = 'EDC'
 iisotope = 'd_ln'
 ialltime = 'ann no am'

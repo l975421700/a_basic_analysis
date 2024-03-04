@@ -5,10 +5,10 @@
 # ipython
 
 
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_600_5.0',
-    'nudged_703_6.0_k52',
+    # 'nudged_703_6.0_k52',
+    'nudged_705_6.0',
     ]
 
 
@@ -75,8 +75,7 @@ for i in range(len(expid)):
         d_excess_alltime[expid[i]] = pickle.load(f)
 
 
-source_var = ['lat', 'lon', 'sst', 'rh2m', 'wind10', 'RHsst']
-# 'distance',
+source_var = ['lat', 'lon', 'sst', 'rh2m', 'wind10', 'distance', 'RHsst']
 pre_weighted_var = {}
 
 for i in range(len(expid)):
@@ -93,7 +92,7 @@ for i in range(len(expid)):
         prefix + '.pre_weighted_sst.pkl',
         prefix + '.pre_weighted_rh2m.pkl',
         prefix + '.pre_weighted_wind10.pkl',
-        # prefix + '.transport_distance.pkl',
+        prefix + '.transport_distance.pkl',
         prefix + '.pre_weighted_RHsst.pkl',
     ]
     
@@ -143,7 +142,7 @@ for i in range(len(expid)):
     
     corr_sources_isotopes[expid[i]] = {}
     
-    for ivar in ['lat', 'sst', 'rh2m', 'wind10', 'RHsst']:
+    for ivar in ['lat', 'lon', 'sst', 'rh2m', 'wind10', 'distance', 'RHsst']:
         # ivar = 'sst'
         # 'lon',
         print('#---------------- ' + ivar)
@@ -303,19 +302,19 @@ for i in range(len(expid)):
     
     par_corr_sources_isotopes[expid[i]] = {}
     
-    for ivar in ['lat', 'lon', 'rh2m', 'wind10', 'distance']:
+    for ivar in ['lat', 'rh2m', 'wind10', 'distance', 'RHsst']:
         # ivar = 'lat'
         print('#---------------- ' + ivar)
         
         par_corr_sources_isotopes[expid[i]][ivar] = {}
         
-        for iisotopes in ['wisoaprt', 'dO18', 'dD', 'd_ln', 'd_excess',]:
+        for iisotopes in ['d_ln', 'd_excess',]:
             # iisotopes = 'd_ln'
             print('#-------- ' + iisotopes)
             
             par_corr_sources_isotopes[expid[i]][ivar][iisotopes] = {}
             
-            for ialltime in ['mon', 'mon no mm', 'ann', 'ann no am']:
+            for ialltime in ['daily', 'mon', 'mon no mm', 'ann', 'ann no am']:
                 # ialltime = 'ann'
                 print('#---- ' + ialltime)
                 
@@ -725,13 +724,13 @@ for i in range(len(expid)):
     
     par_corr_sst_isotopes2[expid[i]] = {}
     
-    for iisotopes in ['wisoaprt', 'dO18', 'dD', 'd_ln', 'd_excess',]:
+    for iisotopes in ['dO18', 'dD', 'd_ln', 'd_excess',]:
         # iisotopes = 'd_ln'
         print('#---------------- ' + iisotopes)
         
         par_corr_sst_isotopes2[expid[i]][iisotopes] = {}
         
-        for ctr_iisotopes in list(set(['wisoaprt', 'dO18', 'dD', 'd_ln', 'd_excess']) - set([iisotopes])):
+        for ctr_iisotopes in list(set(['dO18', 'dD', 'd_ln', 'd_excess']) - set([iisotopes])):
             # ctr_iisotopes = 'd_ln'
             print('#-------- ' + ctr_iisotopes)
             

@@ -5,27 +5,15 @@
 # ipython
 
 
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'nudged_701_5.0',
-    
     'nudged_705_6.0',
     'nudged_703_6.0_k52',
-    # 'nudged_706_6.0_k52_88',
     'nudged_707_6.0_k43',
     'nudged_708_6.0_I01',
     'nudged_709_6.0_I03',
     'nudged_710_6.0_S3',
     'nudged_711_6.0_S6',
-    
-    # 'nudged_713_6.0_2yr',
-    # 'nudged_712_6.0_k52_2yr',
-    # 'nudged_714_6.0_k52_88_2yr',
-    # 'nudged_715_6.0_k43_2yr',
-    # 'nudged_716_6.0_I01_2yr',
-    # 'nudged_717_6.0_I03_2yr',
-    # 'nudged_718_6.0_S3_2yr',
-    # 'nudged_719_6.0_S6_2yr',
     ]
 i = 0
 
@@ -99,12 +87,14 @@ from a_basic_analysis.b_module.namelist import (
     plot_labels,
     expid_colours,
     expid_labels,
+    zerok,
 )
 
 from a_basic_analysis.b_module.component_plot import (
     cplot_ice_cores,
     plt_mesh_pars,
     plot_t63_contourf,
+    rainbow_text,
 )
 
 # endregion
@@ -121,6 +111,9 @@ for i in range(len(expid)):
         MC16_Dome_C_1d_sim[expid[i]] = pickle.load(f)
 
 ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
+isite = 'EDC'
+site_lat = ten_sites_loc[ten_sites_loc['Site'] == isite]['lat'][0]
+site_lon = ten_sites_loc[ten_sites_loc['Site'] == isite]['lon'][0]
 
 with open('data_sources/water_isotopes/MC16/MC16_Dome_C.pkl', 'rb') as f:
     MC16_Dome_C = pickle.load(f)
@@ -128,7 +121,8 @@ with open('data_sources/water_isotopes/MC16/MC16_Dome_C.pkl', 'rb') as f:
 with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
     echam6_t63_ais_mask = pickle.load(f)
 
-
+ERA5_daily_q_2013_2022 = xr.open_dataset('scratch/ERA5/q/ERA5_daily_q_2013_2022.nc', chunks={'time': 720})
+ERA5_daily_temp2_2013_2022 = xr.open_dataset('scratch/ERA5/temp2/ERA5_daily_temp2_2013_2022.nc', chunks={'time': 720})
 
 
 '''
@@ -212,7 +206,7 @@ print(find_gridvalue_at_site(
 
 
 # -----------------------------------------------------------------------------
-# region plot time series
+# region time series - only one model
 
 for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', 't_3m']:
     # var_name = 'q'
@@ -221,7 +215,7 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', 't_3m']:
     
     output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.1_MC16/8.3.0.1.1 ' + expid[i] + ' MC16 time series of observed and simulated daily ' + var_name + '.png'
     
-    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 5.5]) / 2.54)
     
     xdata = MC16_Dome_C_1d_sim[expid[i]]['time'].values
     ydata = MC16_Dome_C_1d_sim[expid[i]][var_name].values
@@ -253,21 +247,24 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', 't_3m']:
     #     ls='-', lw=0.2, label='Hourly Obs.',)
     
     ax.set_xticks(xdata[::4])
+    plt.xticks(rotation=30, ha='right')
     ax.xaxis.set_minor_locator(AutoMinorLocator(2))
     # ax.set_xlabel('Date', labelpad=6)
     ax.yaxis.set_minor_locator(AutoMinorLocator(2))
     ax.set_ylabel(plot_labels[var_name], labelpad=6)
-    plt.xticks(rotation=30, ha='right')
+    ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
     
-    if (var_name == 't_3m'):
-        ax.legend(handlelength=1.5, loc='upper right')
-    else:
-        ax.legend().set_visible(False)
+    # if (var_name == 't_3m'):
+    #     ax.legend(handlelength=1.5, loc='upper right')
+    # else:
+    #     ax.legend().set_visible(False)
+    ax.legend().set_visible(False)
     
     ax.set_xlabel(
         '$R^2 = $' + str(np.round(rsquared, 2)) + \
             ', $RMSE = $' + str(np.round(RMSE, 1)),
-            labelpad=9)
+            color=expid_colours[expid[i]],
+            labelpad=6)
     
     # ax.legend(
     #     handlelength=1, loc=(-0.16, -0.35),
@@ -275,7 +272,7 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', 't_3m']:
     
     ax.grid(True, which='both',
             linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.26, top=0.98)
+    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.36, top=0.98)
     fig.savefig(output_png)
 
 
@@ -284,7 +281,7 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', 't_3m']:
 
 
 # -----------------------------------------------------------------------------
-# region Q-Q plot
+# region Q-Q plot - only one model
 
 for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', 't_3m']:
     # var_name = 'q', 't_3m'
@@ -351,31 +348,6 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', 't_3m']:
     
     fig.subplots_adjust(left=0.2, right=0.98, bottom=0.18, top=0.98)
     fig.savefig(output_png)
-
-
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot station location
-
-fig, ax = hemisphere_plot(northextent=-60)
-
-cplot_ice_cores(MC16_Dome_C_1d_sim[expid[i]]['lon'][0], MC16_Dome_C_1d_sim[expid[i]]['lat'][0], ax=ax, s=50, marker='*', edgecolors='b')
-
-fig.savefig('figures/test/trial.png')
-
-
-from metpy.calc import geopotential_to_height
-from metpy.units import units
-echam6_t63_geosp = xr.open_dataset(exp_odir + expid[i] + '/input/echam/unit.24')
-echam6_t63_surface_height = geopotential_to_height(
-    echam6_t63_geosp.GEOSP * (units.m / units.s)**2)
-
-echam6_t63_surface_height.sel(lon = MC16_Dome_C_1d_sim[expid[i]]['lon'][0], lat = MC16_Dome_C_1d_sim[expid[i]]['lat'][0], method='nearest').values
-
 
 
 
@@ -540,6 +512,77 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', 't_3m']:
 
 
 # -----------------------------------------------------------------------------
+# region time series multiple models
+
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln',]:
+    # var_name = 'q'
+    # ['dD', 'd18O', 'd_xs', 'd_ln', 'q']
+    print('#-------- ' + var_name)
+    
+    # output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.1_MC16/8.3.0.1.1 nudged_712_9 MC16 time series of observed and simulated daily ' + var_name + '.png'
+    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.1_MC16/8.3.0.1.1 nudged_712_9 MC16 time series of observed and simulated daily ' + var_name + ' No RMSE.png'
+    
+    fig, ax = plt.subplots(1, 1, figsize=np.array([10, 9.8]) / 2.54)
+    
+    for i in range(len(expid)):
+        print(str(i) + ': ' + expid[i])
+        
+        xdata = MC16_Dome_C_1d_sim[expid[i]]['time'].values
+        ydata = MC16_Dome_C_1d_sim[expid[i]][var_name].values
+        ydata_sim = MC16_Dome_C_1d_sim[expid[i]][var_name + '_sim'].values
+        
+        if (var_name == 'q'):
+            ydata = ydata * 1000
+            ydata_sim = ydata_sim * 1000
+        
+        if (i == 0):
+            ax.plot(xdata, ydata, 'o', ls='-', ms=2, lw=0.5,
+                    c='k', label='Observation',)
+        
+        RMSE = np.sqrt(np.average(np.square(ydata - ydata_sim)))
+        rsquared = pearsonr(ydata, ydata_sim).statistic ** 2
+        
+        # ax.plot(xdata, ydata_sim, 'o', ls='-', ms=2, lw=0.5,
+        #         c=expid_colours[expid[i]],
+        #         label=expid_labels[expid[i]] + \
+        #             ': $RMSE = $' + str(np.round(RMSE, 1)),)
+        ax.plot(xdata, ydata_sim, 'o', ls='-', ms=2, lw=0.5,
+                c=expid_colours[expid[i]],
+                label=expid_labels[expid[i]])
+    
+    # hourly_y = MC16_Dome_C['1h'][var_name].values
+    # if (var_name == 'q'):
+    #     hourly_y = hourly_y * 1000
+    # ax.plot(
+    #     MC16_Dome_C['1h']['time'].values,
+    #     hourly_y,
+    #     ls='-', lw=0.2, label='Hourly Obs.',)
+    
+    ax.set_xticks(xdata[::4])
+    ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+    # ax.set_xlabel('Date', labelpad=6)
+    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_ylabel(plot_labels[var_name], labelpad=6)
+    plt.xticks(rotation=30, ha='right')
+    ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
+    
+    ax.legend(
+        handlelength=1, loc=(-0.2, -0.66),
+        framealpha=0.25, ncol=2, columnspacing=1,)
+    
+    ax.grid(True, which='both',
+            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.4, top=0.98)
+    fig.savefig(output_png)
+
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
 # region Q-Q plot multiple models
 
 
@@ -627,39 +670,37 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
 
 
 # -----------------------------------------------------------------------------
-# region time series multiple models
+# region time series - one model and ERA5
 
-for var_name in ['dD', 'd18O', 'd_xs', 'd_ln',]:
+for var_name in ['q',]:
     # var_name = 'q'
-    # ['dD', 'd18O', 'd_xs', 'd_ln', 'q']
+    # ['q', 't_3m']
     print('#-------- ' + var_name)
     
-    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.1_MC16/8.3.0.1.1 nudged_712_9 MC16 time series of observed and simulated daily ' + var_name + '.png'
+    output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.1_MC16/8.3.0.1.1 ' + expid[i] + ' MC16 time series of observed, simulated, and ERA5 daily ' + var_name + '.png'
     
-    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 9.8]) / 2.54)
+    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 5.5]) / 2.54)
     
-    for i in range(len(expid)):
-        print(str(i) + ': ' + expid[i])
-        
-        xdata = MC16_Dome_C_1d_sim[expid[i]]['time'].values
-        ydata = MC16_Dome_C_1d_sim[expid[i]][var_name].values
-        ydata_sim = MC16_Dome_C_1d_sim[expid[i]][var_name + '_sim'].values
-        
-        if (var_name == 'q'):
-            ydata = ydata * 1000
-            ydata_sim = ydata_sim * 1000
-        
-        if (i == 0):
-            ax.plot(xdata, ydata, 'o', ls='-', ms=2, lw=0.5,
-                    c='k', label='Observation',)
-        
-        RMSE = np.sqrt(np.average(np.square(ydata - ydata_sim)))
-        rsquared = pearsonr(ydata, ydata_sim).statistic ** 2
-        
-        ax.plot(xdata, ydata_sim, 'o', ls='-', ms=2, lw=0.5,
-                c=expid_colours[expid[i]],
-                label=expid_labels[expid[i]] + \
-                    ': $RMSE = $' + str(np.round(RMSE, 1)),)
+    xdata = MC16_Dome_C_1d_sim[expid[i]]['time'].values
+    ydata = MC16_Dome_C_1d_sim[expid[i]][var_name].values
+    ydata_sim = MC16_Dome_C_1d_sim[expid[i]][var_name + '_sim'].values
+    
+    if (var_name == 'q'):
+        ydata = ydata * 1000
+        ydata_sim = ydata_sim * 1000
+    
+    RMSE = np.sqrt(np.average(np.square(ydata - ydata_sim)))
+    rsquared = pearsonr(ydata, ydata_sim).statistic ** 2
+    
+    ax.plot(xdata, ydata, 'o', ls='-', ms=2, lw=0.5,
+            c='k', label='Observation',)
+    ax.plot(xdata, ydata_sim, 'o', ls='-', ms=2, lw=0.5,
+            c=expid_colours[expid[i]],
+            label=expid_labels[expid[i]],)
+    
+    #  + \
+    #                 ': $R^2 = $' + str(np.round(rsquared, 2)) +\
+    #                     ', $RMSE = $' + str(np.round(RMSE, 1))
     
     # hourly_y = MC16_Dome_C['1h'][var_name].values
     # if (var_name == 'q'):
@@ -669,24 +710,137 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln',]:
     #     hourly_y,
     #     ls='-', lw=0.2, label='Hourly Obs.',)
     
+    if (var_name == 'q'):
+        ERA5_data   = ERA5_daily_q_2013_2022.q.sel(latitude=site_lat, longitude=site_lon, method='nearest').sel(time=slice('2014-12-25', '2015-01-16')).values
+    elif (var_name == 't_3m'):
+        ERA5_data   = ERA5_daily_temp2_2013_2022.t2m.sel(latitude=site_lat, longitude=site_lon, method='nearest').sel(time=slice('2014-12-25', '2015-01-16')).values - zerok
+    
+    ax.plot(xdata, ERA5_data,
+            'o', ls='-', ms=2, lw=0.5, c='tab:pink', label='ERA5')
+    
+    RMSE2 = np.sqrt(np.average(np.square(ydata-ERA5_data)))
+    rsquared2 = pearsonr(ydata, ERA5_data).statistic ** 2
+    
     ax.set_xticks(xdata[::4])
+    plt.xticks(rotation=30, ha='right')
     ax.xaxis.set_minor_locator(AutoMinorLocator(2))
     # ax.set_xlabel('Date', labelpad=6)
     ax.yaxis.set_minor_locator(AutoMinorLocator(2))
     ax.set_ylabel(plot_labels[var_name], labelpad=6)
-    plt.xticks(rotation=30, ha='right')
+    ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
     
-    ax.legend(
-        handlelength=1, loc=(-0.2, -0.64),
-        framealpha=0.25, ncol=2, columnspacing=1, fontsize=9, )
+    if (var_name == 'q'):
+        ax.set_ylim(0.19, 0.54)
+        ax.legend(loc='upper right', handlelength=1, handletextpad=0.5,
+                  labelspacing=0.4,)
+    else:
+        ax.legend().set_visible(False)
+    # ax.legend().set_visible(False)
+    
+    if (var_name == 'q'):
+        round_digit = 3
+    else:
+        round_digit = 1
+    
+    rainbow_text(
+        -0.1, -0.54,
+        ['$R^2 = $' + str(np.round(rsquared, 2)) + ', $RMSE = $' + str(np.round(RMSE, round_digit)),
+         '; ',
+         '$R^2 = $' + str(np.round(rsquared2, 2)) + ', $RMSE = $' + str(np.round(RMSE2, round_digit)),
+         ],
+        [expid_colours[expid[i]], 'k', 'tab:pink'],
+        ax,
+    )
+    # ax.set_xlabel(
+    #     '$R^2 = $' + str(np.round(rsquared, 2)) + \
+    #         ', $RMSE = $' + str(np.round(RMSE, 1)),
+    #         color=expid_colours[expid[i]],
+    #         labelpad=6)
+    
+    # ax.legend(
+    #     handlelength=1, loc=(-0.16, -0.35),
+    #     framealpha=0.25, ncol=2, columnspacing=1, fontsize=9)
     
     ax.grid(True, which='both',
             linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.4, top=0.98)
+    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.36, top=0.98)
     fig.savefig(output_png)
 
 
+# endregion
+# -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region check statistics
+
+var_name = 'd_ln' # ['dD', 'd18O', 'd_xs', 'd_ln', 'q', 't_3m']
+
+xdata = MC16_Dome_C_1d_sim[expid[i]]['time'].values
+ydata = MC16_Dome_C_1d_sim[expid[i]][var_name].values
+ydata_sim = MC16_Dome_C_1d_sim[expid[i]][var_name + '_sim'].values
+
+if (var_name == 'q'):
+    ERA5_data   = ERA5_daily_q_2013_2022.q.sel(latitude=site_lat, longitude=site_lon, method='nearest').sel(time=slice('2014-12-25', '2015-01-16')).values
+elif (var_name == 't_3m'):
+    ERA5_data   = ERA5_daily_temp2_2013_2022.t2m.sel(latitude=site_lat, longitude=site_lon, method='nearest').sel(time=slice('2014-12-25', '2015-01-16')).values - zerok
+
+
+#-------------------------------- check d_ln
+
+np.std(ydata, ddof=1)
+np.std(ydata_sim, ddof=1)
+
+np.min(ydata_sim - ydata)
+np.max(ydata_sim - ydata)
+
+pearsonr(ydata, ydata_sim).statistic ** 2
+np.sqrt(np.average(np.square(ydata - ydata_sim)))
+
+
+
+#-------------------------------- check d18O
+pearsonr(ydata, ydata_sim).statistic ** 2
+np.sqrt(np.average(np.square(ydata - ydata_sim)))
+
+
+#-------------------------------- check dD
+np.min(ydata_sim - ydata)
+np.max(ydata_sim - ydata)
+np.average(
+    MC16_Dome_C_1d_sim[expid[i]]['dD'].values,
+    weights=MC16_Dome_C_1d_sim[expid[i]]['q'].values,
+)
+np.average(
+    MC16_Dome_C_1d_sim[expid[i]]['dD_sim'].values,
+    weights=MC16_Dome_C_1d_sim[expid[i]]['q_sim'].values,
+)
+
+pearsonr(ydata, ydata_sim).statistic ** 2
+np.sqrt(np.average(np.square(ydata - ydata_sim)))
+
+
+#-------------------------------- check q
+
+np.min(ydata_sim - ydata)
+np.max(ydata_sim - ydata)
+
+
+if (var_name == 'q'):
+    ydata = ydata * 1000
+    ydata_sim = ydata_sim * 1000
+
+pearsonr(ydata, ydata_sim).statistic ** 2
+np.sqrt(np.average(np.square(ydata - ydata_sim)))
+
+
+#-------------------------------- check t_3m
+
+np.min(ydata_sim - ydata)
+np.max(ydata_sim - ydata)
+
+pearsonr(ydata, ERA5_data).statistic ** 2
+np.sqrt(np.average(np.square(ydata - ERA5_data)))
 
 # endregion
 # -----------------------------------------------------------------------------

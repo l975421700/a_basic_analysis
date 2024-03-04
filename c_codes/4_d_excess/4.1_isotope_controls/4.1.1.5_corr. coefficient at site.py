@@ -1,11 +1,11 @@
 
 
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_600_5.0',
-    'nudged_703_6.0_k52',
+    # 'nudged_703_6.0_k52',
     
-    # 'nudged_705_6.0',
+    'nudged_705_6.0',
     # 'nudged_707_6.0_k43',
     # 'nudged_708_6.0_I01',
     # 'nudged_709_6.0_I03',
@@ -129,6 +129,7 @@ pre_weighted_var_icores = {}
 corr_sources_isotopes = {}
 # par_corr_sources_isotopes = {}
 # par_corr_sst_isotopes2 = {}
+# wisoaprt_alltime_icores = {}
 
 for i in range(len(expid)):
     print(i)
@@ -144,6 +145,10 @@ for i in range(len(expid)):
     with open(
         exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.pre_weighted_var_icores.pkl', 'rb') as f:
         pre_weighted_var_icores[expid[i]] = pickle.load(f)
+    
+    # with open(
+    #     exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_alltime_icores.pkl', 'rb') as f:
+    #     wisoaprt_alltime_icores[expid[i]] = pickle.load(f)
     
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.corr_sources_isotopes.pkl', 'rb') as f:
         corr_sources_isotopes[expid[i]] = pickle.load(f)
@@ -181,10 +186,12 @@ with open('scratch/others/pi_m_502_5.0.t63_sites_indices.pkl', 'rb') as f:
 icores = 'EDC'
 
 for iisotopes in ['d_ln', 'd_excess']:
+    # ['d_ln', 'd_excess']
     print('#-------------------------------- ' + iisotopes)
     
-    for ivar in ['sst', 'rh2m', 'wind10', 'RHsst', 'lat',]:
+    for ivar in ['sst', ]:
         #  'distance'
+        # ['sst', 'rh2m', 'wind10', 'RHsst', 'lat', 'distance', ]
         print('#---------------- ' + ivar)
         
         for ialltime in ['ann no am', 'mon', 'mon no mm', 'daily', ]:
@@ -201,13 +208,13 @@ for iisotopes in ['d_ln', 'd_excess']:
             ].values
             
             if (p_value < 0.001):
-                plabel = '***'
+                plabel = '*'
             elif (p_value < 0.01):
-                plabel = '** '
+                plabel = '*'
             elif (p_value < 0.05):
-                plabel = '*  '
+                plabel = ' '
             else:
-                plabel = '   '
+                plabel = ' '
             
             print(str(np.round(r_squared, 2)) + ' ' + plabel)
 
@@ -215,16 +222,27 @@ for iisotopes in ['d_ln', 'd_excess']:
 # check
 
 icores = 'EDC'
+# icores = 'DOME F'
+# icores = 'Vostok'
 
-for iisotopes in ['d_ln', 'd_excess']:
+for iisotopes in ['dD']:
+    # ['d_ln', 'd_excess']
     print('#-------------------------------- ' + iisotopes)
     
-    for ivar in ['sst', 'rh2m', 'wind10', 'RHsst', 'lat', 'distance']:
-        print('#---------------- ' + ivar)
+    for ialltime in ['ann no am', 'mon', 'mon no mm', 'daily',]:
+        # ['ann no am', 'mon', 'mon no mm', 'daily', ]
+        print('#---------------- ' + ialltime)
         
-        for ialltime in ['ann no am', 'mon', 'mon no mm', 'daily', ]:
-            # ['ann no am', 'mon', 'mon no mm', 'daily', ]
-            print('#-------- ' + ialltime)
+        for ivar in ['sst',]:
+            # ['sst', 'rh2m', 'wind10', 'RHsst',]
+            print('#-------- ' + ivar)
+        
+    # for ivar in ['sst', 'rh2m', 'wind10', 'RHsst', 'lat', 'distance']:
+    #     print('#---------------- ' + ivar)
+        
+    #     for ialltime in ['ann no am', 'mon', 'mon no mm', 'daily',]:
+    #         # ['ann no am', 'mon', 'mon no mm', 'daily', ]
+    #         print('#-------- ' + ialltime)
             
             data1 = isotopes_alltime_icores[expid[i]][iisotopes][icores][ialltime].values
             data2 = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime].values
@@ -232,10 +250,7 @@ for iisotopes in ['d_ln', 'd_excess']:
             data1 = data1[subset]
             data2 = data2[subset]
             
-            r_squared = pearsonr(
-                data1,
-                data2,
-            ).statistic ** 2
+            r_squared = pearsonr(data1, data2, ).statistic ** 2
             
             # p_value = pearsonr(
             #     data1,
@@ -246,16 +261,30 @@ for iisotopes in ['d_ln', 'd_excess']:
                 xr.DataArray(data1), xr.DataArray(data2)).values
             
             if (p_value < 0.001):
-                plabel = '***'
-            elif (p_value < 0.01):
-                plabel = '**'
-            elif (p_value < 0.05):
                 plabel = '*'
+            elif (p_value < 0.01):
+                plabel = '*'
+            elif (p_value < 0.05):
+                plabel = ' '
             else:
                 plabel = ' '
             
             print(str(np.round(r_squared, 2)) + ' ' + plabel)
 
+
+icores = 'EDC'
+iisotopes = 'd_ln'
+ivar = 'sst'
+ialltime = 'daily'
+
+data1 = isotopes_alltime_icores[expid[i]][iisotopes][icores][ialltime].values
+data2 = pre_weighted_var_icores[expid[i]][icores][ivar][ialltime].values
+
+subset = np.isfinite(data1) & np.isfinite(data2)
+pearsonr(data1[subset], data2[subset], ).statistic ** 2
+
+subset = np.isfinite(data1) & np.isfinite(data2) & (wisoaprt_alltime_icores[expid[i]][icores][ialltime].values * seconds_per_d >= 0.02)
+pearsonr(data1[subset], data2[subset], ).statistic ** 2
 
 
 # endregion
@@ -297,11 +326,11 @@ for i in [0,]:
                 p_value   = xr_par_cor(iso_var, src_var, ctl_var, output='p')
                 
                 if (p_value < 0.001):
-                    plabel = '***'
-                elif (p_value < 0.01):
-                    plabel = '**'
-                elif (p_value < 0.05):
                     plabel = '*'
+                elif (p_value < 0.01):
+                    plabel = '*'
+                elif (p_value < 0.05):
+                    plabel = ' '
                 else:
                     plabel = ' '
                 
@@ -331,14 +360,18 @@ for i in [0,]:
             # print(str(np.round(r_squared, 2)) + ' ' + plabel)
 
 
-for ivar in ['rh2m', 'wind10']:
+icores = 'EDC'
+cvar = 'sst'
+
+for ivar in ['rh2m', 'wind10', 'RHsst', 'lat', 'distance']:
+    # ['rh2m', 'wind10', 'RHsst', 'lat', 'distance']
     print('#-------------------------------- ' + ivar)
     
     for iisotope in ['d_ln', 'd_excess']:
         # iisotope = 'd_ln'
         print('#---------------- ' + iisotope)
         
-        for ialltime in ['ann no am', 'mon no mm', 'mon', ]:
+        for ialltime in ['ann no am', 'mon', 'mon no mm', 'daily',]:
             # ialltime = 'daily'
             print('#---- ' + ialltime)
             
@@ -353,11 +386,11 @@ for ivar in ['rh2m', 'wind10']:
             ].values
             
             if (p_value < 0.001):
-                plabel = '***'
-            elif (p_value < 0.01):
-                plabel = '**'
-            elif (p_value < 0.05):
                 plabel = '*'
+            elif (p_value < 0.01):
+                plabel = '*'
+            elif (p_value < 0.05):
+                plabel = ' '
             else:
                 plabel = ' '
             
@@ -380,15 +413,16 @@ for i in [0,]:
     # i = 0
     print('#-------------------------------- ' + expid[i])
     
-    for iisotope in ['dD', ]:
+    for iisotope in ['d_excess', ]:
         # iisotope = 'd_excess'
+        # ['d_ln', 'd_excess', ]
         print('#---------------- ' + iisotope)
         
-        for iisotope1 in ['d_ln', 'd_excess', ]:
+        for iisotope1 in ['dD', ]:
             # iisotope1 = 'dD'
             print('#-------- ' + iisotope1)
             
-            for ialltime in ['ann no am', 'mon', 'mon no mm', 'daily', 'mm']:
+            for ialltime in ['ann no am', 'mon', 'mon no mm', 'daily',]:
                 # ialltime = 'mon'
                 print('#---- ' + ialltime)
                 
@@ -400,11 +434,11 @@ for i in [0,]:
                 p_value   = xr_par_cor(src_var, iso_var, ctl_var, output='p')
                 
                 if (p_value < 0.001):
-                    plabel = '***'
-                elif (p_value < 0.01):
-                    plabel = '**'
-                elif (p_value < 0.05):
                     plabel = '*'
+                elif (p_value < 0.01):
+                    plabel = '*'
+                elif (p_value < 0.05):
+                    plabel = ' '
                 else:
                     plabel = ' '
                 

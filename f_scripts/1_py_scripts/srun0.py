@@ -1,16 +1,12 @@
 
 
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+# salloc --account=paleodyn.paleodyn --qos=12h --time=12:00:00 --nodes=1 --mem=120GB
+# source ${HOME}/miniconda3/bin/activate deepice
+# ipython
+
+
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_600_5.0',
-    # 'pi_601_5.1',
-    # 'pi_602_5.2',
-    # 'pi_605_5.5',
-    # 'pi_606_5.6',
-    # 'pi_609_5.7',
-    # 'pi_610_5.8',
-    # 'hist_700_5.0',
-    # 'nudged_701_5.0',
     # 'nudged_703_6.0_k52',
     'nudged_705_6.0',
     ]
@@ -28,15 +24,21 @@ import sys  # print(sys.path)
 sys.path.append('/albedo/work/user/qigao001')
 
 # data analysis
+import numpy as np
 import xarray as xr
 import dask
 dask.config.set({"array.slicing.split_large_chunks": True})
 from dask.diagnostics import ProgressBar
 pbar = ProgressBar()
 pbar.register()
+import xskillscore as xs
+
+from a_basic_analysis.b_module.namelist import (
+    seconds_per_d,
+)
 
 from a_basic_analysis.b_module.statistics import (
-    xr_regression_y_x1,
+    xr_par_cor,
 )
 
 
@@ -47,19 +49,24 @@ from a_basic_analysis.b_module.statistics import (
 # -----------------------------------------------------------------------------
 # region import data
 
-# dO18_alltime = {}
-# dD_alltime = {}
+
+wisoaprt_alltime = {}
+dO18_alltime = {}
+dD_alltime = {}
 d_ln_alltime = {}
 d_excess_alltime = {}
 
 for i in range(len(expid)):
     print(str(i) + ': ' + expid[i])
     
-    # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_alltime.pkl', 'rb') as f:
-    #     dO18_alltime[expid[i]] = pickle.load(f)
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
+        wisoaprt_alltime[expid[i]] = pickle.load(f)
     
-    # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_alltime.pkl', 'rb') as f:
-    #     dD_alltime[expid[i]] = pickle.load(f)
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_alltime.pkl', 'rb') as f:
+        dO18_alltime[expid[i]] = pickle.load(f)
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_alltime.pkl', 'rb') as f:
+        dD_alltime[expid[i]] = pickle.load(f)
     
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_alltime.pkl', 'rb') as f:
         d_ln_alltime[expid[i]] = pickle.load(f)
@@ -68,7 +75,7 @@ for i in range(len(expid)):
         d_excess_alltime[expid[i]] = pickle.load(f)
 
 
-source_var = ['sst', ]
+source_var = ['lat', 'lon', 'sst', 'rh2m', 'wind10', 'distance', 'RHsst']
 pre_weighted_var = {}
 
 for i in range(len(expid)):
@@ -80,7 +87,13 @@ for i in range(len(expid)):
     prefix = exp_odir + expid[i] + '/analysis/echam/' + expid[i]
     
     source_var_files = [
+        prefix + '.pre_weighted_lat.pkl',
+        prefix + '.pre_weighted_lon.pkl',
         prefix + '.pre_weighted_sst.pkl',
+        prefix + '.pre_weighted_rh2m.pkl',
+        prefix + '.pre_weighted_wind10.pkl',
+        prefix + '.transport_distance.pkl',
+        prefix + '.pre_weighted_RHsst.pkl',
     ]
     
     for ivar, ifile in zip(source_var, source_var_files):
@@ -88,7 +101,9 @@ for i in range(len(expid)):
         with open(ifile, 'rb') as f:
             pre_weighted_var[expid[i]][ivar] = pickle.load(f)
 
+
 # temp2_alltime = {}
+
 # for i in range(len(expid)):
 #     # i = 0
 #     print(str(i) + ': ' + expid[i])
@@ -96,145 +111,182 @@ for i in range(len(expid)):
 #     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
 #         temp2_alltime[expid[i]] = pickle.load(f)
 
-with open('scratch/others/pi_m_502_5.0.t63_sites_indices.pkl', 'rb') as f:
-    t63_sites_indices = pickle.load(f)
 
+# sam_mon = {}
+# b_sam_mon = {}
+
+# for i in range(len(expid)):
+#     print(str(i) + ': ' + expid[i])
+    
+#     sam_mon[expid[i]] = xr.open_dataset(
+#         exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.sam_mon.nc')
+    
+#     b_sam_mon[expid[i]], _ = xr.broadcast(
+#         sam_mon[expid[i]].sam,
+#         d_ln_alltime[expid[i]]['mon'])
+
+'''
+'''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region get regression source SST = f(d_ln / d_xs)
+# region get partial Corr. source SST and isotopes, given d018, d_ln, dD etc.
 
-regression_sst_d_AIS = {}
-
-ivar = 'sst'
+par_corr_sst_isotopes2 = {}
 
 for i in range(len(expid)):
     # i = 0
     print('#-------------------------------- ' + str(i) + ': ' + expid[i])
     
-    regression_sst_d_AIS[expid[i]] = {}
+    par_corr_sst_isotopes2[expid[i]] = {}
     
-    for iisotope in ['d_ln', 'd_excess']:
-        # iisotope = 'd_ln'
-        print('#---------------- ' + iisotope)
+    for iisotopes in ['dO18', 'dD', 'd_ln', 'd_excess',]:
+        # iisotopes = 'd_ln'
+        print('#---------------- ' + iisotopes)
         
-        regression_sst_d_AIS[expid[i]][iisotope] = {}
+        par_corr_sst_isotopes2[expid[i]][iisotopes] = {}
         
-        for ialltime in ['daily', 'mon', 'mon no mm', 'ann', 'ann no am',]:
-            # ialltime = 'mon'
-            print('#-------- ' + ialltime)
+        for ctr_iisotopes in list(set(['dO18', 'dD', 'd_ln', 'd_excess']) - set([iisotopes])):
+            # ctr_iisotopes = 'd_ln'
+            print('#-------- ' + ctr_iisotopes)
             
-            regression_sst_d_AIS[expid[i]][iisotope][ialltime] = {}
+            par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes] = {}
             
-            if (iisotope == 'd_ln'):
-                iso_var = d_ln_alltime[expid[i]][ialltime]
-            elif (iisotope == 'd_excess'):
-                iso_var = d_excess_alltime[expid[i]][ialltime]
-            
-            src_var = pre_weighted_var[expid[i]][ivar][ialltime]
-            
-            for ioutput in ['rsquared', 'RMSE', 'slope', 'intercept']:
-                # ioutput = 'rsquared'
-                print('#---- ' + ioutput)
+            for ialltime in ['mon', 'mon no mm', 'ann', 'ann no am']:
+                # ialltime = 'mon'
+                print('#---- ' + ialltime)
                 
-                regression_sst_d_AIS[expid[i]][iisotope][ialltime][ioutput] = \
-                    xr.apply_ufunc(
-                        xr_regression_y_x1,
-                        src_var, iso_var,
-                        input_core_dims=[['time'], ['time']],
-                        kwargs={'output': ioutput},
-                        dask = 'allowed', vectorize = True,
+                if (iisotopes == 'wisoaprt'):
+                    isotopevar = wisoaprt_alltime[expid[i]][ialltime].sel(
+                        wisotype=1) * seconds_per_d
+                elif (iisotopes == 'dO18'):
+                    isotopevar = dO18_alltime[expid[i]][ialltime]
+                elif (iisotopes == 'dD'):
+                    isotopevar = dD_alltime[expid[i]][ialltime]
+                elif (iisotopes == 'd_ln'):
+                    isotopevar = d_ln_alltime[expid[i]][ialltime]
+                elif (iisotopes == 'd_excess'):
+                    isotopevar = d_excess_alltime[expid[i]][ialltime]
+                
+                if (ctr_iisotopes == 'wisoaprt'):
+                    ctr_var = wisoaprt_alltime[expid[i]][ialltime].sel(
+                        wisotype=1) * seconds_per_d
+                elif (ctr_iisotopes == 'dO18'):
+                    ctr_var = dO18_alltime[expid[i]][ialltime]
+                elif (ctr_iisotopes == 'dD'):
+                    ctr_var = dD_alltime[expid[i]][ialltime]
+                elif (ctr_iisotopes == 'd_ln'):
+                    ctr_var = d_ln_alltime[expid[i]][ialltime]
+                elif (ctr_iisotopes == 'd_excess'):
+                    ctr_var = d_excess_alltime[expid[i]][ialltime]
+                
+                sst_var = pre_weighted_var[expid[i]]['sst'][ialltime]
+                
+                par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes][ialltime] = {}
+                
+                par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes][ialltime]['r'] = xr.apply_ufunc(
+                        xr_par_cor,
+                        sst_var,
+                        isotopevar,
+                        ctr_var,
+                        input_core_dims=[["time"], ["time"], ["time"]],
+                        kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
                     )
-        # print('#-------- mon no mm')
-        
-        # regression_sst_d_AIS[expid[i]][iisotope]['mon no mm'] = {}
-        
-        # if (iisotope == 'd_ln'):
-        #     iso_var = d_ln_alltime[expid[i]]['mon'].groupby('time.month') - \
-        #         d_ln_alltime[expid[i]]['mon'].groupby('time.month').mean()
-        # elif (iisotope == 'd_excess'):
-        #     iso_var = d_excess_alltime[expid[i]]['mon'].groupby('time.month')-\
-        #         d_excess_alltime[expid[i]]['mon'].groupby('time.month').mean()
-        
-        # src_var=pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month')-\
-        #     pre_weighted_var[expid[i]][ivar]['mon'].groupby('time.month').mean()
-        
-        # for ioutput in ['rsquared', 'RMSE', 'slope', 'intercept']:
-        #     # ioutput = 'RMSE'
-        #     print('#---- ' + ioutput)
-            
-        #     regression_sst_d_AIS[expid[i]][iisotope]['mon no mm'][ioutput] = \
-        #         xr.apply_ufunc(
-        #             xr_regression_y_x1,
-        #             src_var, iso_var,
-        #             input_core_dims=[['time'], ['time']],
-        #             kwargs={'output': ioutput},
-        #             dask = 'allowed', vectorize = True,
-        #         )
+                
+                par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes][ialltime]['p'] = xr.apply_ufunc(
+                        xr_par_cor,
+                        sst_var,
+                        isotopevar,
+                        ctr_var,
+                        input_core_dims=[["time"], ["time"], ["time"]],
+                        kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
+                    )
+                
+                par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes][ialltime]['r_significant'] = par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes][ialltime]['r'].copy()
+                
+                par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes][ialltime]['r_significant'].values[par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes][ialltime]['p'].values > 0.05] = np.nan
+                
+                # if (ialltime == 'mon'):
+                    
+                #     par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm'] = {}
+
+                #     par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['r'] = xr.apply_ufunc(
+                #             xr_par_cor,
+                #             sst_var.groupby('time.month') - sst_var.groupby('time.month').mean(),
+                #             isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
+                #             ctr_var.groupby('time.month') - ctr_var.groupby('time.month').mean(),
+                #             input_core_dims=[["time"], ["time"], ["time"]],
+                #             kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
+                #         )
+
+                #     par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['p'] = xr.apply_ufunc(
+                #             xr_par_cor,
+                #             sst_var.groupby('time.month') - sst_var.groupby('time.month').mean(),
+                #             isotopevar.groupby('time.month') - isotopevar.groupby('time.month').mean(),
+                #             ctr_var.groupby('time.month') - ctr_var.groupby('time.month').mean(),
+                #             input_core_dims=[["time"], ["time"], ["time"]],
+                #             kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
+                #         )
+
+                #     par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['r_significant'] = par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['r'].copy()
+
+                #     par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['r_significant'].values[par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes]['mon_no_mm']['p'].values > 0.05] = np.nan
     
-    output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.regression_sst_d_AIS.pkl'
+    output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sst_isotopes2.pkl'
     
     if (os.path.isfile(output_file)):
         os.remove(output_file)
     
     with open(output_file, 'wb') as f:
-        pickle.dump(regression_sst_d_AIS[expid[i]], f)
+        pickle.dump(par_corr_sst_isotopes2[expid[i]], f)
 
 
 
 
 '''
 #-------------------------------- check
-ivar = 'sst'
+i = 0
 
-regression_sst_d = {}
-regression_sst_d_AIS = {}
+par_corr_sst_isotopes2 = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sst_isotopes2.pkl', 'rb') as f:
+    par_corr_sst_isotopes2[expid[i]] = pickle.load(f)
 
-for i in range(len(expid)):
-    # i = 0
-    print('#-------------------------------- ' + str(i) + ': ' + expid[i])
-    
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.regression_sst_d_AIS.pkl', 'rb') as f:
-        regression_sst_d_AIS[expid[i]] = pickle.load(f)
-    
-    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.regression_sst_d.pkl', 'rb') as f:
-        regression_sst_d[expid[i]] = pickle.load(f)
-    
-    for iisotope in ['d_ln', 'd_excess']:
-        # iisotope = 'd_ln'
-        print('#---------------- ' + iisotope)
-        
-        for ialltime in ['daily', 'mon', 'mon no mm', 'ann',]:
-            # ialltime = 'mon'
-            print('#-------- ' + ialltime)
-            
-            for ioutput in ['rsquared', 'RMSE', 'slope', 'intercept']:
-                # ioutput = 'RMSE'
-                print('#---- ' + ioutput)
-                
-                data1 = regression_sst_d_AIS[expid[i]][iisotope][ialltime][ioutput][
-                    t63_sites_indices['EDC']['ilat'],
-                    t63_sites_indices['EDC']['ilon'],
-                    ].values
-                
-                if (ioutput in ['rsquared', 'RMSE']):
-                    data2 = regression_sst_d[expid[i]][iisotope]['EDC'][ialltime][ioutput]
-                elif (ioutput == 'slope'):
-                    data2 = regression_sst_d[expid[i]][iisotope]['EDC'][ialltime]['params'][1]
-                elif (ioutput == 'intercept'):
-                    data2 = regression_sst_d[expid[i]][iisotope]['EDC'][ialltime]['params'][0]
-                
-                if (data1 != data2):
-                    print(np.round(data1, 2))
-                    print(np.round(data2, 2))
+iisotopes = 'd_ln'
+ctr_iisotopes = 'dO18'
+ialltime = 'mon'
+
+isotopevar = d_ln_alltime[expid[i]][ialltime]
+ctr_var = dO18_alltime[expid[i]][ialltime]
+sst_var = pre_weighted_var[expid[i]]['sst'][ialltime]
+
+data1 = xr.apply_ufunc(
+    xr_par_cor,
+    sst_var, isotopevar, ctr_var,
+    input_core_dims=[["time"], ["time"], ["time"]],
+    kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
+    ).values
+data2 = par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes][ialltime]['r'].values
+print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
+
+data3 = xr.apply_ufunc(
+    xr_par_cor,
+    sst_var, isotopevar, ctr_var,
+    input_core_dims=[["time"], ["time"], ["time"]],
+    kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
+    ).values
+data4 = par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes][ialltime]['p'].values
+print((data3[np.isfinite(data3)] == data4[np.isfinite(data4)]).all())
+
+data5 = data1.copy()
+data5[data3 > 0.05] = np.nan
+data6 = par_corr_sst_isotopes2[expid[i]][iisotopes][ctr_iisotopes][ialltime]['r_significant'].values
+print((data5[np.isfinite(data5)] == data6[np.isfinite(data6)]).all())
 
 
-regression_sst_d_AIS[expid[i]]['d_ln']['mon']['RMSE']
 '''
 # endregion
 # -----------------------------------------------------------------------------
-
 
 

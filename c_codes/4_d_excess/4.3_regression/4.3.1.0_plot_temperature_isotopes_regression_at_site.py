@@ -1,23 +1,14 @@
 
 
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_600_5.0',
-    # 'pi_601_5.1',
-    # 'pi_602_5.2',
-    # 'pi_605_5.5',
-    # 'pi_606_5.6',
-    # 'pi_609_5.7',
-    # 'hist_700_5.0',
-    
     'nudged_705_6.0',
-    'nudged_703_6.0_k52',
-    
-    'nudged_707_6.0_k43',
-    'nudged_708_6.0_I01',
-    'nudged_709_6.0_I03',
-    'nudged_710_6.0_S3',
-    'nudged_711_6.0_S6',
+    # 'nudged_703_6.0_k52',
+    # 'nudged_707_6.0_k43',
+    # 'nudged_708_6.0_I01',
+    # 'nudged_709_6.0_I03',
+    # 'nudged_710_6.0_S3',
+    # 'nudged_711_6.0_S6',
     ]
 
 
@@ -132,7 +123,7 @@ from a_basic_analysis.b_module.component_plot import (
 # region import data
 
 regression_sst_d = {}
-# regression_sst_d_dD = {}
+regression_sst_d_dD = {}
 # regression_temp2_delta = {}
 # regression_temp2_delta_d = {}
 
@@ -143,8 +134,8 @@ for i in range(len(expid)):
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.regression_sst_d.pkl', 'rb') as f:
         regression_sst_d[expid[i]] = pickle.load(f)
     
-    # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.regression_sst_d_dD.pkl', 'rb') as f:
-    #     regression_sst_d_dD[expid[i]] = pickle.load(f)
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.regression_sst_d_dD.pkl', 'rb') as f:
+        regression_sst_d_dD[expid[i]] = pickle.load(f)
     
     # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.regression_temp2_delta.pkl', 'rb') as f:
     #     regression_temp2_delta[expid[i]] = pickle.load(f)
@@ -189,6 +180,9 @@ for i in range(len(expid)):
 with open('scratch/others/pi_m_502_5.0.t63_sites_indices.pkl', 'rb') as f:
     t63_sites_indices = pickle.load(f)
 
+
+regression_sst_d[expid[i]]['d_ln']['EDC']['ann']['RMSE']
+regression_sst_d_dD[expid[i]]['d_excess']['EDC']['ann']['RMSE']
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -241,13 +235,14 @@ for i in range(len(expid)):
                 
                 output_png = 'figures/8_d-excess/8.1_controls/8.1.6_regression_analysis/8.1.6.0_sst_d/8.1.6.0.0 ' + expid[i] + ' ' + icores + ' ' + ialltime + ' sim vs. rec source ' + ivar + ' using '+ iisotope + '.png'
                 
-                fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
+                fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
                 
                 ax.scatter(
                     sim_src, rec_src,
-                    s=6, lw=0.1, facecolors='white', edgecolors='k',)
+                    s=12, lw=1, facecolors='white', edgecolors='k',)
                 ax.axline((0, 0), slope = 1, lw=0.5, color='k')
-                plt.text(0.05, 0.9, icores, transform=ax.transAxes, color='k',)
+                # plt.text(0.05, 0.9, icores, transform=ax.transAxes, color='k',
+                #          va='bottom', ha='right')
                 
                 if (ialltime in ['mon no mm', 'ann no am']):
                     eq_text = plot_labels_no_unit[ivar] + ' = ' + str(np.round(params[1], 2)) + plot_labels_no_unit[iisotope] + \
@@ -269,26 +264,23 @@ for i in range(len(expid)):
                                 '\n$RMSE = $' + str(np.round(RMSE, 1))
                 
                 plt.text(
-                    0.1, 0.05, eq_text,
-                    transform=ax.transAxes, fontsize=6, linespacing=1.5)
+                    0.05, 0.95, eq_text,
+                    transform=ax.transAxes, linespacing=1.5,
+                    va='top', ha='left',)
                 
-                ax.set_xlabel(
-                    'Simulated ' + plot_labels[ivar],
-                    labelpad=2, fontsize=8)
-                ax.set_xlim(xymin, xymax)
+                ax.set_xlabel('Simulated ' + plot_labels[ivar],)
+                ax.set_xlim(xymin-0.1, xymax+0.1)
                 ax.xaxis.set_minor_locator(AutoMinorLocator(2))
                 
-                ax.set_ylabel(
-                    'Derived ' + plot_labels[ivar],
-                    labelpad=2, fontsize=8)
-                ax.set_ylim(xymin, xymax)
+                ax.set_ylabel('Estimated ' + plot_labels[ivar],)
+                ax.set_ylim(xymin-0.1, xymax+0.1)
                 ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-                ax.tick_params(axis='both', labelsize=8)
+                ax.tick_params(axis='both',)
                 
                 ax.grid(True, which='both',
                         linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
                 fig.subplots_adjust(
-                    left=0.32, right=0.95, bottom=0.25, top=0.95)
+                    left=0.16, right=0.98, bottom=0.16, top=0.98)
                 fig.savefig(output_png)
 
 
@@ -354,13 +346,13 @@ for i in range(len(expid)):
                 
                 output_png = 'figures/8_d-excess/8.1_controls/8.1.6_regression_analysis/8.1.6.1_sst_d_dD/8.1.6.1.0 ' + expid[i] + ' ' + icores + ' ' + ialltime + ' sim vs. rec source ' + ivar + ' using '+ iisotope + ' and dD.png'
                 
-                fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
+                fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
                 
                 ax.scatter(
                     sim_src, rec_src,
-                    s=6, lw=0.1, facecolors='white', edgecolors='k',)
+                    s=12, lw=1, facecolors='white', edgecolors='k',)
                 ax.axline((0, 0), slope = 1, lw=0.5, color='k')
-                plt.text(0.05, 0.9, icores, transform=ax.transAxes, color='k',)
+                # plt.text(0.05, 0.9, icores, transform=ax.transAxes, color='k',)
                 
                 if (ialltime in ['mon no mm', 'ann no am']):
                     eq_text = plot_labels_no_unit[ivar] + ' = ' + str(np.round(params[1], 2)) + plot_labels_no_unit[iisotope] + ' + ' + \
@@ -386,26 +378,23 @@ for i in range(len(expid)):
                                 '\n$RMSE = $' + str(np.round(RMSE, 1))
                 
                 plt.text(
-                    0.1, 0.05, eq_text,
-                    transform=ax.transAxes, fontsize=4, linespacing=1.5)
+                    0.05, 0.95, eq_text,
+                    transform=ax.transAxes, linespacing=1.5,
+                    va='top', ha='left',)
                 
-                ax.set_xlabel(
-                    'Simulated ' + plot_labels[ivar],
-                    labelpad=2, fontsize=8)
-                ax.set_xlim(xymin, xymax)
+                ax.set_xlabel('Simulated ' + plot_labels[ivar],)
+                ax.set_xlim(xymin-0.1, xymax+0.1)
                 ax.xaxis.set_minor_locator(AutoMinorLocator(2))
                 
-                ax.set_ylabel(
-                    'Derived ' + plot_labels[ivar],
-                    labelpad=2, fontsize=8)
-                ax.set_ylim(xymin, xymax)
+                ax.set_ylabel('Estimated ' + plot_labels[ivar],)
+                ax.set_ylim(xymin-0.1, xymax+0.1)
                 ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-                ax.tick_params(axis='both', labelsize=8)
+                ax.tick_params(axis='both',)
                 
                 ax.grid(True, which='both',
                         linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
                 fig.subplots_adjust(
-                    left=0.32, right=0.95, bottom=0.25, top=0.95)
+                    left=0.16, right=0.98, bottom=0.16, top=0.98)
                 fig.savefig(output_png)
 
 

@@ -1,6 +1,6 @@
 
 
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'nudged_701_5.0',
     
@@ -68,6 +68,15 @@ from a_basic_analysis.b_module.namelist import (
     plot_labels,
     expid_colours,
     expid_labels,
+    zerok,
+)
+
+from a_basic_analysis.b_module.mapplot import (
+    remove_trailing_zero_pos,
+)
+
+from a_basic_analysis.b_module.component_plot import (
+    rainbow_text,
 )
 
 
@@ -100,6 +109,12 @@ for i in range(len(expid)):
         exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.wisoaprt_alltime_icores.pkl', 'rb') as f:
         wisoaprt_alltime_icores[expid[i]] = pickle.load(f)
 
+ERA5_monthly_tp_temp2_tsurf_1979_2022 = xr.open_dataset('scratch/ERA5/ERA5_monthly_tp_temp2_tsurf_1979_2022.nc')
+
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
+isite = 'EDC'
+site_lat = ten_sites_loc[ten_sites_loc['Site'] == isite]['lat'][0]
+site_lon = ten_sites_loc[ten_sites_loc['Site'] == isite]['lon'][0]
 
 
 # endregion
@@ -213,6 +228,118 @@ for ivar in ['dD', 'd18O', 'd_xs', 'd_ln', 'pre', 'temp2', ]:
 
 
 # -----------------------------------------------------------------------------
+# region time series plot - only one model
+
+
+for ivar in ['dD', ]:
+    # ivar = 'd_ln'
+    # ['dD', 'd18O', 'd_xs', 'd_ln', 'pre', 'temp2', ]
+    print('#-------------------------------- ' + ivar)
+    
+    output_png = 'figures/8_d-excess/8.0_records/8.0.4_dome_c/8.0.4.0_sim_obs/8.0.4.0.1 ' + expid[i] + ' BS13 time series of observed vs. simulated mon ' + ivar + '.png'
+    
+    xdata = BS13_Dome_C['mon']['date'].values
+    obs_var = BS13_Dome_C['mon'][ivar].values
+    # obs_var_am = BS13_Dome_C['am'][ivar]
+    
+    fig, ax = plt.subplots(1, 1, figsize=np.array([11, 11]) / 2.54)
+    
+    ax.plot(xdata,
+            obs_var, 'o', ls='-', ms=2, lw=0.5, c='k', label='Observation',
+            )
+    
+    for i in range(1):
+        # len(expid)
+        print('#---------------- ' + expid[i])
+        
+        if (ivar == 'dD'):
+            sim_var = isotopes_alltime_icores[expid[i]][ivar]['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+        elif (ivar == 'd18O'):
+            sim_var = isotopes_alltime_icores[expid[i]]['dO18']['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+        elif (ivar == 'd_xs'):
+            sim_var = isotopes_alltime_icores[expid[i]]['d_excess']['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+        elif (ivar == 'd_ln'):
+            sim_var = isotopes_alltime_icores[expid[i]][ivar]['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+        elif (ivar == 'pre'):
+            sim_var = wisoaprt_alltime_icores[expid[i]]['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31')) * seconds_per_d
+        elif (ivar == 'temp2'):
+            sim_var = temp2_alltime_icores[expid[i]]['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+        
+        # sim_var_am = np.nanmean(sim_var)
+        
+        subset = np.isfinite(obs_var) & np.isfinite(sim_var)
+        RMSE = np.sqrt(np.average(np.square(obs_var[subset] - sim_var[subset])))
+        rsquared = pearsonr(obs_var[subset], sim_var[subset]).statistic ** 2
+        
+        if (ivar == 'pre'):
+            round_digit = 3
+        else:
+            round_digit = 1
+        
+        if ((ivar != 'd_ln') & (ivar != 'dD')):
+            ax.plot(xdata,
+                    sim_var, 'o', ls='-', ms=2, lw=0.5,
+                    c=expid_colours[expid[i]],
+                    label=expid_labels[expid[i]],
+                    )
+        else:
+            ax.plot(xdata[:-1],
+                    sim_var[:-1], 'o', ls='-', ms=2, lw=0.5,
+                    c=expid_colours[expid[i]],
+                    label=expid_labels[expid[i]],
+                    )
+        # ax.plot(xdata,
+        #         sim_var, 'o', ls='-', ms=2, lw=0.5,
+        #         c=expid_colours[expid[i]],
+        #         label=expid_labels[expid[i]] + \
+        #             ': $R^2 = $' + str(np.round(rsquared, 2)) +\
+        #                 ', $RMSE = $' + str(np.round(RMSE, round_digit))
+        #         )
+    
+    ax.set_xticks(xdata[::3])
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%b'))
+    plt.xticks(rotation=45, ha='right')
+    # ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+    # ax.set_xlabel('Date', labelpad=3)
+    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_ylabel(plot_labels[ivar], labelpad=6)
+    ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
+    
+    # if (ivar == 'd_ln'):
+    #     ax.legend(handlelength=1.5, loc='lower left')
+    # else:
+    #     ax.legend().set_visible(False)
+    ax.legend().set_visible(False)
+    # ax.legend(
+    #     handlelength=1, loc=(-0.2, -0.3),
+    #     framealpha=0.25, ncol=2, columnspacing=1, fontsize=9)
+    
+    # ax.get_xticklabels()
+    ax.set_xticklabels(['2008-Jan', 'Apr', 'Jul', 'Oct',
+                       '2009-Jan', 'Apr', 'Jul', 'Oct',
+                       '2010-Jan', 'Apr', 'Jul', 'Oct',])
+    ax.tick_params(axis='x', which='major', pad=0.5)
+    
+    ax.set_xlabel(
+        '$R^2 = $' + str(np.round(rsquared, 2)) + \
+            ', $RMSE = $' + str(np.round(RMSE, round_digit)),
+            color=expid_colours[expid[i]],
+            labelpad=9)
+    
+    ax.grid(True, which='both',
+            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+    fig.subplots_adjust(left=0.16, right=0.98, bottom=0.18, top=0.98)
+    fig.savefig(output_png)
+
+
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
 # region time series plot - multiple models
 
 
@@ -297,7 +424,7 @@ for ivar in ['dD', 'd18O', 'd_xs', 'd_ln', 'pre', 'temp2', ]:
 
 
 # -----------------------------------------------------------------------------
-# region time series plot - only one model
+# region time series plot of bias - only one model
 
 
 for ivar in ['dD', 'd18O', 'd_xs', 'd_ln', 'pre', 'temp2', ]:
@@ -305,13 +432,90 @@ for ivar in ['dD', 'd18O', 'd_xs', 'd_ln', 'pre', 'temp2', ]:
     # ['dD', 'd18O', 'd_xs', 'd_ln', 'pre', 'temp2', ]
     print('#-------------------------------- ' + ivar)
     
-    output_png = 'figures/8_d-excess/8.0_records/8.0.4_dome_c/8.0.4.0_sim_obs/8.0.4.0.1 ' + expid[i] + ' BS13 time series of observed vs. simulated mon ' + ivar + '.png'
+    output_png = 'figures/8_d-excess/8.0_records/8.0.4_dome_c/8.0.4.0_sim_obs/8.0.4.0.1 ' + expid[i] + ' BS13 time series of bias in mon ' + ivar + '.png'
+    
+    xdata = BS13_Dome_C['mon']['date'].values
+    obs_var = BS13_Dome_C['mon'][ivar].values
+    
+    for i in range(1):
+        # len(expid)
+        print('#---------------- ' + expid[i])
+        
+        if (ivar == 'dD'):
+            sim_var = isotopes_alltime_icores[expid[i]][ivar]['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+        elif (ivar == 'd18O'):
+            sim_var = isotopes_alltime_icores[expid[i]]['dO18']['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+        elif (ivar == 'd_xs'):
+            sim_var = isotopes_alltime_icores[expid[i]]['d_excess']['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+        elif (ivar == 'd_ln'):
+            sim_var = isotopes_alltime_icores[expid[i]][ivar]['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+        elif (ivar == 'pre'):
+            sim_var = wisoaprt_alltime_icores[expid[i]]['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31')) * seconds_per_d
+        elif (ivar == 'temp2'):
+            sim_var = temp2_alltime_icores[expid[i]]['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+    
+    subset = np.isfinite(obs_var) & np.isfinite(sim_var)
+    RMSE = np.sqrt(np.average(np.square(sim_var[subset] - obs_var[subset])))
+    rsquared = pearsonr(obs_var[subset], sim_var[subset]).statistic ** 2
+    
+    if (ivar == 'pre'):
+        round_digit = 2
+    else:
+        round_digit = 1
+    
+    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+    
+    ax.plot(xdata, sim_var-obs_var,
+            'o', ls='-', ms=2, lw=0.5, c='k',
+            label=expid_labels[expid[i]] + ' vs. Observation' + \
+                ': $R^2 = $' + str(np.round(rsquared, 2)) + \
+                    ', $RMSE = $' + str(np.round(RMSE, round_digit)),)
+    
+    ax.set_xticks(xdata[::4])
+    
+    # ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+    # ax.set_xlabel('Date', labelpad=3)
+    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_ylabel(plot_labels[ivar], labelpad=6)
+    plt.xticks(rotation=30, ha='right')
+    
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%b'))
+    
+    ax.legend(
+        handlelength=1, loc=(-0.2, -0.3),
+        framealpha=0.25, fontsize=9)
+    
+    ax.axhline(y=0, color='gray', linestyle='-', linewidth=0.8,)
+    
+    ax.grid(True, which='both',
+            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.25, top=0.98)
+    fig.savefig(output_png)
+
+
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region time series plot - one model and ERA5
+
+
+for ivar in ['temp2',]:
+    # ivar = 'temp2'
+    # ['temp2', 'pre',]
+    print('#-------------------------------- ' + ivar)
+    
+    output_png = 'figures/8_d-excess/8.0_records/8.0.4_dome_c/8.0.4.0_sim_obs/8.0.4.0.1 ' + expid[i] + ' BS13 time series of observed, simulated, and EAR5 mon ' + ivar + '.png'
     
     xdata = BS13_Dome_C['mon']['date'].values
     obs_var = BS13_Dome_C['mon'][ivar].values
     # obs_var_am = BS13_Dome_C['am'][ivar]
     
-    fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+    fig, ax = plt.subplots(1, 1, figsize=np.array([11, 11]) / 2.54)
     
     ax.plot(xdata,
             obs_var, 'o', ls='-', ms=2, lw=0.5, c='k', label='Observation',
@@ -337,46 +541,91 @@ for ivar in ['dD', 'd18O', 'd_xs', 'd_ln', 'pre', 'temp2', ]:
         # sim_var_am = np.nanmean(sim_var)
         
         subset = np.isfinite(obs_var) & np.isfinite(sim_var)
-        
         RMSE = np.sqrt(np.average(np.square(obs_var[subset] - sim_var[subset])))
         rsquared = pearsonr(obs_var[subset], sim_var[subset]).statistic ** 2
         
         if (ivar == 'pre'):
-            round_digit = 2
+            round_digit = 3
         else:
             round_digit = 1
         
         ax.plot(xdata,
                 sim_var, 'o', ls='-', ms=2, lw=0.5,
                 c=expid_colours[expid[i]],
-                label=expid_labels[expid[i]] + \
-                    ': $R^2 = $' + str(np.round(rsquared, 2)) +\
-                        ', $RMSE = $' + str(np.round(RMSE, round_digit))
+                label=expid_labels[expid[i]],
                 )
+        # ax.plot(xdata,
+        #         sim_var, 'o', ls='-', ms=2, lw=0.5,
+        #         c=expid_colours[expid[i]],
+        #         label=expid_labels[expid[i]] + \
+        #             ': $R^2 = $' + str(np.round(rsquared, 2)) +\
+        #                 ', $RMSE = $' + str(np.round(RMSE, round_digit))
+        #         )
     
-    ax.set_xticks(xdata[::4])
+    if (ivar == 'temp2'):
+        ERA5_data   = ERA5_monthly_tp_temp2_tsurf_1979_2022.t2m.sel(latitude=site_lat, longitude=site_lon, method='nearest').sel(time=slice('2008-01-1', '2010-12-31')).values - zerok
+    elif (ivar == 'pre'):
+        ERA5_data   = ERA5_monthly_tp_temp2_tsurf_1979_2022.tp.sel(latitude=site_lat, longitude=site_lon, method='nearest').sel(time=slice('2008-01-1', '2010-12-31')).values * 1000
     
+    ax.plot(xdata, ERA5_data,
+            'o', ls='-', ms=2, lw=0.5, c='tab:pink', label='ERA5')
+    
+    subset2 = np.isfinite(obs_var) & np.isfinite(ERA5_data)
+    RMSE2 = np.sqrt(np.average(np.square(obs_var[subset2]-ERA5_data[subset2])))
+    rsquared2 = pearsonr(obs_var[subset2], ERA5_data[subset2]).statistic ** 2
+    
+    ax.set_xticks(xdata[::3])
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%b'))
+    plt.xticks(rotation=45, ha='right')
     # ax.xaxis.set_minor_locator(AutoMinorLocator(2))
     # ax.set_xlabel('Date', labelpad=3)
     ax.yaxis.set_minor_locator(AutoMinorLocator(2))
     ax.set_ylabel(plot_labels[ivar], labelpad=6)
-    plt.xticks(rotation=30, ha='right')
+    ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
     
-    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%b'))
+    if (ivar == 'pre'):
+        ax.legend(handlelength=1.5, loc='upper right')
+    else:
+        ax.legend().set_visible(False)
+    # ax.legend(
+    #     handlelength=1, loc=(-0.2, -0.3),
+    #     framealpha=0.25, ncol=2, columnspacing=1, fontsize=9)
     
-    ax.legend(
-        handlelength=1, loc=(-0.2, -0.3),
-        framealpha=0.25, ncol=2, columnspacing=1, fontsize=9)
+    rainbow_text(
+        0, -0.2,
+        ['$R^2 = $' + str(np.round(rsquared, 2)) + ', $RMSE = $' + str(np.round(RMSE, round_digit)),
+         '; ',
+         '$R^2 = $' + str(np.round(rsquared2, 2)) + ', $RMSE = $' + str(np.round(RMSE2, round_digit)),
+         ],
+        [expid_colours[expid[i]], 'k', 'tab:pink'],
+        ax,
+    )
+    
+    # ax.get_xticklabels()
+    ax.set_xticklabels(['2008-Jan', 'Apr', 'Jul', 'Oct',
+                       '2009-Jan', 'Apr', 'Jul', 'Oct',
+                       '2010-Jan', 'Apr', 'Jul', 'Oct',])
+    ax.tick_params(axis='x', which='major', pad=0.5)
+    
+    # ax.set_xlabel(
+    #     '$R^2 = $' + str(np.round(rsquared, 2)) + \
+    #         ', $RMSE = $' + str(np.round(RMSE, round_digit)) + '; ' + \
+    #             '$R^2 = $' + str(np.round(rsquared2, 2)) + \
+    #                 ', $RMSE = $' + str(np.round(RMSE2, round_digit)),
+    #         labelpad=9)
     
     ax.grid(True, which='both',
             linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-    fig.subplots_adjust(left=0.2, right=0.98, bottom=0.25, top=0.98)
+    fig.subplots_adjust(left=0.16, right=0.98, bottom=0.18, top=0.98)
     fig.savefig(output_png)
 
 
 
 
-
+'''
+partial coloring of text:
+https://github.com/matplotlib/matplotlib/issues/697
+'''
 # endregion
 # -----------------------------------------------------------------------------
 

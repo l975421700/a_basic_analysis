@@ -5,9 +5,10 @@
 # ipython
 
 
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'nudged_703_6.0_k52',
+    # 'nudged_703_6.0_k52',
+    'nudged_705_6.0',
     ]
 
 # -----------------------------------------------------------------------------

@@ -5,13 +5,10 @@
 # ipython
 
 
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'nudged_701_5.0',
-    
     'nudged_705_6.0',
     # 'nudged_703_6.0_k52',
-    # 'nudged_706_6.0_k52_88',
     # 'nudged_707_6.0_k43',
     # 'nudged_708_6.0_I01',
     # 'nudged_709_6.0_I03',
@@ -132,15 +129,18 @@ SO_vapor_SLM = find_multi_gridvalue_at_site(
 # -----------------------------------------------------------------------------
 # region plot subset data: SLM=0, SIC=0, lat:[-60, -20]
 
-subset = ((SO_vapor_isotopes_SLMSIC[expid[i]]['SLM'] == 0) & (SO_vapor_isotopes_SLMSIC[expid[i]]['SIC'] == 0) & (SO_vapor_isotopes_SLMSIC[expid[i]]['lat'] <= -20) & (SO_vapor_isotopes_SLMSIC[expid[i]]['lat'] >= -60))
+# subset = ((SO_vapor_isotopes_SLMSIC[expid[i]]['SLM'] == 0) & (SO_vapor_isotopes_SLMSIC[expid[i]]['SIC'] == 0) & (SO_vapor_isotopes_SLMSIC[expid[i]]['lat'] <= -20) & (SO_vapor_isotopes_SLMSIC[expid[i]]['lat'] >= -60))
+
+subset = ((SO_vapor_isotopes_SLMSIC[expid[i]]['SLM'] == 0) & (SO_vapor_isotopes_SLMSIC[expid[i]]['SIC'] == 0) & (SO_vapor_isotopes_SLMSIC[expid[i]]['lat'] <= -20) & (SO_vapor_isotopes_SLMSIC[expid[i]]['lat'] >= -60) & np.isfinite(SO_vapor_isotopes_SLMSIC[expid[i]]['d18O']) & np.isfinite(SO_vapor_isotopes_SLMSIC[expid[i]]['dD']))
 
 # (pd.DatetimeIndex(pd.to_datetime(SO_vapor_isotopes_SLMSIC[expid[i]][subset]['time'], utc=True)).year >= 2019).sum()
 
 # SO_vapor_isotopes_SLMSIC[expid[i]][subset]['time']
 
 
-for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', ]:
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', ]:
     # var_name = 'q'
+    # ['dD', 'd18O', 'd_xs', 'd_ln', 'q', ]
     print('#-------- ' + var_name)
     
     output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.7_SO_cruise/8.3.0.7.1 ' + expid[i] + ' SO_cruise observed vs. simulated daily ' + var_name + ' SLM0 SIC0 lat_20_60.png'
@@ -178,18 +178,23 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', ]:
     ax.axline(
         (0, linearfit.intercept), slope = linearfit.slope, lw=1,)
     
+    if (var_name == 'q'):
+        round_digit = 2
+    else:
+        round_digit = 1
+    
     if (linearfit.intercept >= 0):
         eq_text = '$y = $' + \
             str(np.round(linearfit.slope, 2)) + '$x + $' + \
                 str(np.round(linearfit.intercept, 1)) + \
                     '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        '\n$RMSE = $' + str(np.round(RMSE, 1))
+                        '\n$RMSE = $' + str(np.round(RMSE, round_digit))
     if (linearfit.intercept < 0):
         eq_text = '$y = $' + \
             str(np.round(linearfit.slope, 2)) + '$x $' + \
                 str(np.round(linearfit.intercept, 1)) + \
                     '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        '\n$RMSE = $' + str(np.round(RMSE, 1))
+                        '\n$RMSE = $' + str(np.round(RMSE, round_digit))
     
     plt.text(
         0.65, 0.05, eq_text,
@@ -255,6 +260,13 @@ for idataset in ['Kurita et al. (2016)', 'Bonne et al. (2019)', 'Thurnherr et al
 # region plot maps of subset data
 
 subset = ((SO_vapor_isotopes_SLMSIC[expid[i]]['SLM'] == 0) & (SO_vapor_isotopes_SLMSIC[expid[i]]['SIC'] == 0) & (SO_vapor_isotopes_SLMSIC[expid[i]]['lat'] <= -20) & (SO_vapor_isotopes_SLMSIC[expid[i]]['lat'] >= -60) & np.isfinite(SO_vapor_isotopes_SLMSIC[expid[i]]['d18O']) & np.isfinite(SO_vapor_isotopes_SLMSIC[expid[i]]['dD']))
+
+np.unique(SO_vapor_isotopes_SLMSIC[expid[i]][subset]['Reference'], return_counts=True)
+
+min(pd.to_datetime(SO_vapor_isotopes_SLMSIC[expid[i]][subset]['time'], utc=True))
+max(pd.to_datetime(SO_vapor_isotopes_SLMSIC[expid[i]][subset]['time'], utc=True))
+
+np.unique(pd.to_datetime(SO_vapor_isotopes_SLMSIC[expid[i]][subset]['time'], utc=True).dt.month, return_counts=True)
 
 output_png = 'figures/8_d-excess/8.3_vapour/8.3.0_obs_vs_sim/8.3.0.7_SO_cruise/8.3.0.7.2 SO_cruise daily observation locations SLM0 SIC0 lat_20_60.png'
 
@@ -379,5 +391,31 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', ]:
 
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region check statistics
+
+subset = (SO_vapor_isotopes_SLMSIC[expid[i]]['SLM'] == 0) & (SO_vapor_isotopes_SLMSIC[expid[i]]['SIC'] == 0) & (SO_vapor_isotopes_SLMSIC[expid[i]]['lat'] <= -20) & (SO_vapor_isotopes_SLMSIC[expid[i]]['lat'] >= -60) & np.isfinite(SO_vapor_isotopes_SLMSIC[expid[i]]['d18O']) & np.isfinite(SO_vapor_isotopes_SLMSIC[expid[i]]['dD']) & (SO_vapor_isotopes_SLMSIC[expid[i]]['Reference'] == 'Bonne et al. (2019)')
+
+# 'Kurita et al. (2016)'; 'Thurnherr et al. (2020)'; 'Bonne et al. (2019)'
+
+var_name = 'd_ln' # ['dD', 'd18O', 'd_xs', 'd_ln', 'q', ]
+
+xdata = SO_vapor_isotopes_SLMSIC[expid[i]][subset][var_name].copy()
+ydata = SO_vapor_isotopes_SLMSIC[expid[i]][subset][var_name + '_sim'].copy()
+
+if (var_name == 'q'):
+    xdata = xdata * 1000
+    ydata = ydata * 1000
+
+pearsonr(xdata, ydata).statistic ** 2
+np.sqrt(np.average(np.square(ydata - xdata)))
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
 
 

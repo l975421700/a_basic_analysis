@@ -1,8 +1,10 @@
 
 
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'nudged_703_6.0_k52',
+    # 'nudged_703_6.0_k52',
+    
+    'nudged_705_6.0',
     ]
 i = 0
 
@@ -141,7 +143,7 @@ nrow = 2
 ncol = 2
 
 for ialltime in ['daily', 'mon', 'mon no mm', 'ann no am']:
-    # ialltime = 'daily'
+    # ialltime = 'ann no am'
     print('#-------------------------------- ' + ialltime)
     
     for iisotope in ['d_ln', 'd_excess']:
@@ -169,39 +171,49 @@ for ialltime in ['daily', 'mon', 'mon no mm', 'ann no am']:
                 ipanel += 1
         
         # (a)
+        plt_data = corr_sources_isotopes[expid[i]]['sst'][iisotope][ialltime]['r'].copy()
+        # plt_data.values[corr_sources_isotopes[expid[i]]['sst'][iisotope][ialltime]['p'].values >= 0.01] = np.nan
         plt1 = plot_t63_contourf(
             lon, lat,
-            corr_sources_isotopes_q_sfc[expid[i]]['RHsst'][iisotope][ialltime]['r'],
+            plt_data,
             axs[0, 0], pltlevel, 'neither', pltnorm, pltcmp,ccrs.PlateCarree(),)
+        # (b)
+        plt_data = corr_sources_isotopes[expid[i]]['RHsst'][iisotope][ialltime]['r'].copy()
+        # plt_data.values[corr_sources_isotopes[expid[i]]['RHsst'][iisotope][ialltime]['p'].values >= 0.01] = np.nan
         plt1 = plot_t63_contourf(
             lon, lat,
-            corr_sources_isotopes_q_sfc[expid[i]]['sst'][iisotope][ialltime]['r'],
+            plt_data,
             axs[0, 1], pltlevel, 'neither', pltnorm, pltcmp,ccrs.PlateCarree(),)
-        
+        # (c)
+        plt_data = corr_sources_isotopes_q_sfc[expid[i]]['sst'][iisotope][ialltime]['r'].copy()
+        # plt_data.values[corr_sources_isotopes_q_sfc[expid[i]]['sst'][iisotope][ialltime]['p'].values >= 0.01] = np.nan
         plt1 = plot_t63_contourf(
             lon, lat,
-            corr_sources_isotopes[expid[i]]['RHsst'][iisotope][ialltime]['r'],
+            plt_data,
             axs[1, 0], pltlevel, 'neither', pltnorm, pltcmp,ccrs.PlateCarree(),)
+        # (d)
+        plt_data = corr_sources_isotopes_q_sfc[expid[i]]['RHsst'][iisotope][ialltime]['r'].copy()
+        # plt_data.values[corr_sources_isotopes_q_sfc[expid[i]]['RHsst'][iisotope][ialltime]['p'].values >= 0.01] = np.nan
         plt1 = plot_t63_contourf(
             lon, lat,
-            corr_sources_isotopes[expid[i]]['sst'][iisotope][ialltime]['r'],
+            plt_data,
             axs[1, 1], pltlevel, 'neither', pltnorm, pltcmp,ccrs.PlateCarree(),)
         
         plt.text(
-            0.5, 1.05, 'Source RHsst and ' + plot_labels_no_unit[iisotope],
+            0.5, 1.05, plot_labels_no_unit[iisotope] + ' and Source SST',
             transform=axs[0, 0].transAxes,
             ha='center', va='center', rotation='horizontal')
         plt.text(
-            0.5, 1.05, 'Source SST and ' + plot_labels_no_unit[iisotope],
+            0.5, 1.05, plot_labels_no_unit[iisotope] + ' and Source RHsst',
             transform=axs[0, 1].transAxes,
             ha='center', va='center', rotation='horizontal')
         
         plt.text(
-            -0.05, 0.5, 'Surface vapour',
+            -0.05, 0.5, 'Precipitation',
             transform=axs[0, 0].transAxes,
             ha='center', va='center', rotation='vertical')
         plt.text(
-            -0.05, 0.5, 'Precipitation',
+            -0.05, 0.5, 'Surface vapour',
             transform=axs[1, 0].transAxes,
             ha='center', va='center', rotation='vertical')
         
@@ -240,5 +252,6 @@ for ivar in ['RHsst', 'sst']:
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
 
 
