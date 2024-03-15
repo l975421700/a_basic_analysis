@@ -128,6 +128,33 @@ plot_labels_no_unit = {
     'q': 'Specific humidity',
 }
 
+plot_labels_only_unit = {
+    'dO18': '$‰$',
+    'd18O': '$‰$',
+    'dD': '$‰$',
+    'd_excess': '$‰$',
+    'd_xs': '$‰$',
+    'd_ln': '$‰$',
+    'lat': '$°\;S$',
+    'lon': '$°$',
+    'sst': '$°C$',
+    'RHsst': '$\%$',
+    'rh2m': '$\%$',
+    'wind10': ' $m \; s^{-1}$',
+    'distance': ' $× 10^2 km$',
+    'temp2': '$°C$',
+    'pressure': ' $hPa$',
+    'wind_speed': ' $m \; s^{-1}$',
+    'wisoaprt': ' $mm \; day^{-1}$',
+    'temperature': '$°C$',
+    'accumulation': ' $cm \; year^{-1}$',
+    't_air': '$°C$',
+    't_3m': '$°C$',
+    'q': ' $g/kg$',
+    'pre': ' $mm \; day^{-1}$',
+    'local_rh2m': '$\%$',
+}
+
 expid_labels = {
     'pi_600_5.0': '$PI_{control}$',
     'pi_601_5.1': '$PI_{smooth}$',
@@ -159,13 +186,13 @@ expid_labels = {
 }
 
 expid_colours = {
-    'nudged_705_6.0': 'tab:blue',
-    'nudged_703_6.0_k52': 'tab:orange',
-    'nudged_707_6.0_k43': 'tab:green',
-    'nudged_708_6.0_I01': 'tab:red',
-    'nudged_709_6.0_I03': 'tab:purple',
-    'nudged_710_6.0_S3': 'tab:brown',
-    'nudged_711_6.0_S6': 'grey',
+    'nudged_705_6.0':       'tab:blue',
+    'nudged_703_6.0_k52':   'tab:orange',
+    'nudged_707_6.0_k43':   'tab:green',
+    'nudged_708_6.0_I01':   'tab:red',
+    'nudged_709_6.0_I03':   'tab:purple',
+    'nudged_710_6.0_S3':    'tab:brown',
+    'nudged_711_6.0_S6':    'grey',
     
     # 'nudged_706_6.0_k52_88': 'tab:orange',
     'pi_600_5.0': 'black',
@@ -179,6 +206,13 @@ expid_colours = {
 
 }
 
+time_labels = {
+    'daily'         : 'daily',
+    'mon'           : 'monthly',
+    'mon no mm'     : 'monthly (w/o monthly mean)',
+    'ann'           : 'annual',
+    'ann no am'     : 'annual (w/o annual mean)',
+}
 
 # endregion
 # -----------------------------------------------------------------------------

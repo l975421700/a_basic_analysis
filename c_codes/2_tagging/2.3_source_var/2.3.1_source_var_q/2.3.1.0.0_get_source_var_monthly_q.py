@@ -1,23 +1,21 @@
 #SBATCH --time=00:30:00
 
 
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_m_416_4.9',
-    # 'pi_m_502_5.0',
-    'nudged_701_5.0',
+    'nudged_703_6.0_k52',
     ]
 i = 0
 
-ifile_start = 12 #0 #120
-ifile_end   = 516 #1740 #840
+ifile_start = 0 #0 #120
+ifile_end   = 528 #1740 #840
 
-ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
+ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0,  3, 0]
 
-# var_name  = 'sst'
-# itag      = 7
-# min_sf    = 268.15
-# max_sf    = 318.15
+var_name  = 'sst'
+itag      = 7
+min_sf    = 268.15
+max_sf    = 318.15
 
 # var_name  = 'lat'
 # itag      = 5
@@ -44,6 +42,11 @@ ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0]
 # min_sf    = -1
 # max_sf    = 1
 
+
+# var_name  = 'RHsst'
+# itag      = 14
+# min_sf    = 0
+# max_sf    = 1.4
 
 # -----------------------------------------------------------------------------
 # region import packages

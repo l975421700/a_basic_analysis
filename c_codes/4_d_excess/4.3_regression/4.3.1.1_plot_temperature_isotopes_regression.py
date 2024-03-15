@@ -36,6 +36,8 @@ import xskillscore as xs
 from scipy.stats import pearsonr
 import statsmodels.api as sm
 from scipy.stats import linregress
+from metpy.calc import pressure_to_height_std, geopotential_to_height
+from metpy.units import units
 
 # plot
 import matplotlib as mpl
@@ -139,6 +141,10 @@ with open('scratch/others/pi_m_502_5.0.t63_sites_indices.pkl', 'rb') as f:
 with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
     echam6_t63_ais_mask = pickle.load(f)
 
+echam6_t63_geosp = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/nudged_705_6.0/input/echam/unit.24')
+echam6_t63_surface_height = geopotential_to_height(
+    echam6_t63_geosp.GEOSP * (units.m / units.s)**2)
+
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -220,6 +226,24 @@ for i in range(len(expid)):
             cbar.ax.set_xlabel(cbar_label, labelpad=8,)
             
             fig.savefig(output_png)
+
+
+
+
+#-------------------------------- check
+
+imask = 'AIS'
+mask_high = echam6_t63_ais_mask['mask'][imask] & \
+    (echam6_t63_surface_height.values >= 2250)
+mask_low = echam6_t63_ais_mask['mask'][imask] & \
+    (echam6_t63_surface_height.values < 2250)
+
+iisotope = 'd_ln'
+ialltime = 'ann no am'
+stats.describe(regression_sst_d_AIS[expid[i]][iisotope][ialltime]['slope'].values[echam6_t63_ais_mask['mask']['AIS']])
+stats.describe(regression_sst_d_AIS[expid[i]][iisotope][ialltime]['slope'].values[mask_high])
+stats.describe(regression_sst_d_AIS[expid[i]][iisotope][ialltime]['slope'].values[mask_low])
+
 
 
 '''

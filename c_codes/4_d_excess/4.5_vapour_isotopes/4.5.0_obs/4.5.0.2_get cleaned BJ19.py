@@ -29,7 +29,7 @@ import pandas as pd
 
 
 # -----------------------------------------------------------------------------
-# region import data
+# region get cleaned isotopes
 
 fl_cruise_data = sorted(glob.glob('data_sources/water_isotopes/BJ19/datasets/PS*_water_vapour_stable_isotopes.tab'))
 fl_cruise_data = np.concatenate([fl_cruise_data[7:], fl_cruise_data[:7]])

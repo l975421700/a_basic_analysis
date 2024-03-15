@@ -25,13 +25,13 @@ task(){
     mkdir tmp_${YEAR}${MONTH}
     cd tmp_${YEAR}${MONTH}
 
-    # ${cdo} -selname,aps ../unknown/${expid}_${YEAR}${MONTH}.aps_1m.nc aps
-    ${cdo} -selname,aps /albedo/work/user/qigao001/output/echam-6.3.05p2-wiso/pi/nudged_703_6.0_k52/unknown/nudged_703_6.0_k52_${YEAR}${MONTH}.aps_1m.nc aps
+    ${cdo} -selname,aps ../unknown/${expid}_${YEAR}${MONTH}.01_g3b_1d.nc aps
+    # ${cdo} -selname,aps /albedo/work/user/qigao001/output/echam-6.3.05p2-wiso/pi/nudged_703_6.0_k52/unknown/nudged_703_6.0_k52_${YEAR}${MONTH}.01_g3b_1d.nc aps
 
     # ${cdo} -merge aps ../unknown/${expid}_${YEAR}${MONTH}.01_wiso_q_1m.nc aps_q
-    ${cdo} -merge aps ../unknown/${expid}_${YEAR}${MONTH}.01_wiso_q_6h_mon.nc aps_q
+    ${cdo} -merge aps ../unknown/${expid}_${YEAR}${MONTH}.01_wiso_q_6h_daily.nc aps_q
 
-    ${cdo} -ml2pl,100000,97500,95000,92500,90000,87500,85000,82500,80000,77500,75000,70000,65000,60000,55000,50000,45000,40000,35000,30000,25000,22500,20000,17500,15000,12500,10000,7000,5000,3000,2000,1000,700,500,300,200,100 aps_q ../outdata/echam/${expid}_${YEAR}${MONTH}.monthly_wiso_q_plev.nc
+    ${cdo} -ml2pl,100000,97500,95000,92500,90000,87500,85000,82500,80000,77500,75000,70000,65000,60000,55000,50000,45000,40000,35000,30000,25000,22500,20000,17500,15000,12500,10000,7000,5000,3000,2000,1000,700,500,300,200,100 aps_q ../outdata/echam/${expid}_${YEAR}${MONTH}.daily_wiso_q_plev.nc
 
     cd ..
     rm -rf tmp_${YEAR}${MONTH}

@@ -245,17 +245,17 @@ for ivar in source_var:
 
 import shutil
 import os
-exp_odir = '/albedo/work/user/qigao001/albedo_scratch/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = '/albedo/work/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 
 src_exp = 'nudged_703_6.0_k52'
 
 expid = [
-    # 'nudged_705_6.0',
-    'nudged_707_6.0_k43',
-    'nudged_708_6.0_I01',
-    'nudged_709_6.0_I03',
-    'nudged_710_6.0_S3',
-    'nudged_711_6.0_S6',
+    'nudged_705_6.0',
+    # 'nudged_707_6.0_k43',
+    # 'nudged_708_6.0_I01',
+    # 'nudged_709_6.0_I03',
+    # 'nudged_710_6.0_S3',
+    # 'nudged_711_6.0_S6',
     ]
 
 for file_suffix in [
@@ -273,22 +273,37 @@ for file_suffix in [
     # 'pre_weighted_sst',
     # 'pre_weighted_wind10',
     # 'q_geo7_alltiime',
-    'q_geo7_sfc_alltiime',
-    'q_sfc_transport_distance',
-    'q_sfc_weighted_coslon',
-    'q_sfc_weighted_lat',
-    'q_sfc_weighted_lon',
-    'q_sfc_weighted_rh2m',
-    'q_sfc_weighted_RHsst',
-    'q_sfc_weighted_sinlon',
-    'q_sfc_weighted_sst',
-    'q_sfc_weighted_wind10',
-    'RHsst_alltime',
-    'seaice_alltime',
-    'temp2_alltime',
-    'transport_distance',
-    'tsw_alltime',
-    'zh_st_ml',
+    # 'q_geo7_sfc_alltiime',
+    # 'q_sfc_transport_distance',
+    # 'q_sfc_weighted_coslon',
+    # 'q_sfc_weighted_lat',
+    # 'q_sfc_weighted_lon',
+    # 'q_sfc_weighted_rh2m',
+    # 'q_sfc_weighted_RHsst',
+    # 'q_sfc_weighted_sinlon',
+    # 'q_sfc_weighted_sst',
+    # 'q_sfc_weighted_wind10',
+    # 'RHsst_alltime',
+    # 'seaice_alltime',
+    # 'temp2_alltime',
+    # 'transport_distance',
+    # 'tsw_alltime',
+    # 'zh_st_ml',
+    # 'q_weighted_coslon',
+    # 'q_weighted_lat',
+    # 'q_weighted_rh2m',
+    # 'q_weighted_RHsst',
+    # 'q_weighted_sinlon',
+    # 'q_weighted_sst',
+    # 'q_weighted_wind10',
+    # 'q_weighted_coslon_zm',
+    # 'q_weighted_lat_zm',
+    # 'q_weighted_rh2m_zm',
+    # 'q_weighted_RHsst_zm',
+    # 'q_weighted_sinlon_zm',
+    # 'q_weighted_sst_zm',
+    # 'q_weighted_wind10_zm',
+    'q_geo7_alltiime',
     ]:
     print('#-------------------------------- ' + file_suffix)
     

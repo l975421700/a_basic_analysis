@@ -84,6 +84,7 @@ from a_basic_analysis.b_module.basic_calculations import (
 from a_basic_analysis.b_module.namelist import (
     panel_labels,
     plot_labels,
+    plot_labels_only_unit,
     expid_colours,
     expid_labels,
 )
@@ -138,7 +139,7 @@ subset = ((SO_vapor_isotopes_SLMSIC[expid[i]]['SLM'] == 0) & (SO_vapor_isotopes_
 # SO_vapor_isotopes_SLMSIC[expid[i]][subset]['time']
 
 
-for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', ]:
+for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', ]:
     # var_name = 'q'
     # ['dD', 'd18O', 'd_xs', 'd_ln', 'q', ]
     print('#-------- ' + var_name)
@@ -188,17 +189,17 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', ]:
             str(np.round(linearfit.slope, 2)) + '$x + $' + \
                 str(np.round(linearfit.intercept, 1)) + \
                     '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        '\n$RMSE = $' + str(np.round(RMSE, round_digit))
+                        '\n$RMSE = $' + str(np.round(RMSE, round_digit)) + plot_labels_only_unit[var_name]
     if (linearfit.intercept < 0):
         eq_text = '$y = $' + \
             str(np.round(linearfit.slope, 2)) + '$x $' + \
                 str(np.round(linearfit.intercept, 1)) + \
                     '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 2)) +\
-                        '\n$RMSE = $' + str(np.round(RMSE, round_digit))
+                        '\n$RMSE = $' + str(np.round(RMSE, round_digit)) + plot_labels_only_unit[var_name]
     
     plt.text(
-        0.65, 0.05, eq_text,
-        transform=ax.transAxes, fontsize=10, ha='left', va='bottom',
+        0.95, 0.05, eq_text,
+        transform=ax.transAxes, fontsize=10, ha='right', va='bottom',
         linespacing=2,)
     
     ax.axline((0, 0), slope = 1, lw=1, color='grey', alpha=0.5)

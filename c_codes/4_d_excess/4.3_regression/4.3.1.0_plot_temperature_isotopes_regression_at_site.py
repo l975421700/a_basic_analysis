@@ -93,6 +93,7 @@ from a_basic_analysis.b_module.namelist import (
     seconds_per_d,
     plot_labels,
     plot_labels_no_unit,
+    plot_labels_only_unit,
 )
 
 from a_basic_analysis.b_module.source_properties import (
@@ -225,7 +226,7 @@ for i in range(len(expid)):
                 rec_src = rec_src[subset]
                 sim_src = sim_src[subset]
                 
-                print(len(rec_src))
+                # print(len(rec_src))
                 
                 # print(np.round(pearsonr(rec_src, sim_src).statistic ** 2, 3))
                 # print(np.round(rsquared, 3))
@@ -247,25 +248,25 @@ for i in range(len(expid)):
                 if (ialltime in ['mon no mm', 'ann no am']):
                     eq_text = plot_labels_no_unit[ivar] + ' = ' + str(np.round(params[1], 2)) + plot_labels_no_unit[iisotope] + \
                             '\n$R^2 = $' + str(np.round(rsquared, 2)) + \
-                                '\n$RMSE = $' + str(np.round(RMSE, 1))
+                                '\n$RMSE = $' + str(np.round(RMSE, 1)) + plot_labels_only_unit[ivar]
                 elif (params[0] > 0):
                     eq_text = plot_labels_no_unit[ivar] + ' = ' + str(np.round(params[1], 2)) + plot_labels_no_unit[iisotope] + ' + ' + \
                         str(np.round(params[0], 1)) + \
                             '\n$R^2 = $' + str(np.round(rsquared, 2)) + \
-                                '\n$RMSE = $' + str(np.round(RMSE, 1))
+                                '\n$RMSE = $' + str(np.round(RMSE, 1)) + plot_labels_only_unit[ivar]
                 elif (params[0] < 0):
                     eq_text = plot_labels_no_unit[ivar] + ' = ' + str(np.round(params[1], 2)) + plot_labels_no_unit[iisotope] + ' ' + \
                         str(np.round(params[0], 1)) + \
                             '\n$R^2 = $' + str(np.round(rsquared, 2)) + \
-                                '\n$RMSE = $' + str(np.round(RMSE, 1))
+                                '\n$RMSE = $' + str(np.round(RMSE, 1)) + plot_labels_only_unit[ivar]
                 elif (params[0] == 0):
                     eq_text = plot_labels_no_unit[ivar] + ' = ' + str(np.round(params[1], 2)) + plot_labels_no_unit[iisotope] + \
                             '\n$R^2 = $' + str(np.round(rsquared, 2)) + \
-                                '\n$RMSE = $' + str(np.round(RMSE, 1))
+                                '\n$RMSE = $' + str(np.round(RMSE, 1)) + plot_labels_only_unit[ivar]
                 
                 plt.text(
                     0.05, 0.95, eq_text,
-                    transform=ax.transAxes, linespacing=1.5,
+                    transform=ax.transAxes, linespacing=2,
                     va='top', ha='left',)
                 
                 ax.set_xlabel('Simulated ' + plot_labels[ivar],)
@@ -358,28 +359,28 @@ for i in range(len(expid)):
                     eq_text = plot_labels_no_unit[ivar] + ' = ' + str(np.round(params[1], 2)) + plot_labels_no_unit[iisotope] + ' + ' + \
                         str(np.round(params[2], 3)) + plot_labels_no_unit['dD'] + \
                             '\n$R^2 = $' + str(np.round(rsquared, 2)) + \
-                                '\n$RMSE = $' + str(np.round(RMSE, 1))
+                                '\n$RMSE = $' + str(np.round(RMSE, 1)) + plot_labels_only_unit[ivar]
                 elif (params[0] > 0):
                     eq_text = plot_labels_no_unit[ivar] + ' = ' + str(np.round(params[1], 2)) + plot_labels_no_unit[iisotope] + ' + ' + \
                         str(np.round(params[2], 3)) + plot_labels_no_unit['dD'] + ' + ' + \
                         str(np.round(params[0], 1)) + \
                             '\n$R^2 = $' + str(np.round(rsquared, 2)) + \
-                                '\n$RMSE = $' + str(np.round(RMSE, 1))
+                                '\n$RMSE = $' + str(np.round(RMSE, 1)) + plot_labels_only_unit[ivar]
                 elif (params[0] < 0):
                     eq_text = plot_labels_no_unit[ivar] + ' = ' + str(np.round(params[1], 2)) + plot_labels_no_unit[iisotope] + ' + ' + \
                         str(np.round(params[2], 3)) + plot_labels_no_unit['dD'] + ' ' + \
                         str(np.round(params[0], 1)) + \
                             '\n$R^2 = $' + str(np.round(rsquared, 2)) + \
-                                '\n$RMSE = $' + str(np.round(RMSE, 1))
+                                '\n$RMSE = $' + str(np.round(RMSE, 1)) + plot_labels_only_unit[ivar]
                 elif (params[0] == 0):
                     eq_text = plot_labels_no_unit[ivar] + ' = ' + str(np.round(params[1], 2)) + plot_labels_no_unit[iisotope] + ' + ' + \
                         str(np.round(params[2], 3)) + plot_labels_no_unit['dD'] + \
                             '\n$R^2 = $' + str(np.round(rsquared, 2)) + \
-                                '\n$RMSE = $' + str(np.round(RMSE, 1))
+                                '\n$RMSE = $' + str(np.round(RMSE, 1)) + plot_labels_only_unit[ivar]
                 
                 plt.text(
                     0.05, 0.95, eq_text,
-                    transform=ax.transAxes, linespacing=1.5,
+                    transform=ax.transAxes, linespacing=2,
                     va='top', ha='left',)
                 
                 ax.set_xlabel('Simulated ' + plot_labels[ivar],)

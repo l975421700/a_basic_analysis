@@ -5,9 +5,9 @@
 # ipython
 
 
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'nudged_701_5.0',
+    'nudged_705_6.0',
     ]
 i = 0
 
@@ -92,12 +92,18 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
+with open('data_sources/water_isotopes/BJ19/BJ19_polarstern.pkl', 'rb') as f:
+    BJ19_polarstern = pickle.load(f)
+
 BJ19_polarstern_1d_sim = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.BJ19_polarstern_1d_sim.pkl', 'rb') as f:
     BJ19_polarstern_1d_sim[expid[i]] = pickle.load(f)
 
-T63GR15_jan_surf = xr.open_dataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/nudged_701_5.0/input/echam/unit.24')
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
 
+
+'''
+T63GR15_jan_surf = xr.open_dataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/nudged_701_5.0/input/echam/unit.24')
 BJ19_1d_SLM = find_multi_gridvalue_at_site(
     BJ19_polarstern_1d_sim[expid[i]]['lat'].values,
     BJ19_polarstern_1d_sim[expid[i]]['lon'].values,
@@ -109,7 +115,6 @@ BJ19_1d_SLM = find_multi_gridvalue_at_site(
 echam6_t63_geosp = xr.open_dataset(exp_odir + expid[i] + '/input/echam/unit.24')
 echam6_t63_surface_height = geopotential_to_height(
     echam6_t63_geosp.GEOSP * (units.m / units.s)**2)
-
 BJ19_1d_height = find_multi_gridvalue_at_site(
     BJ19_polarstern_1d_sim[expid[i]]['lat'].values,
     BJ19_polarstern_1d_sim[expid[i]]['lon'].values,
@@ -118,10 +123,7 @@ BJ19_1d_height = find_multi_gridvalue_at_site(
     echam6_t63_surface_height.values,
 )
 
-ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
-
 ERA5_daily_SIC_2013_2022 = xr.open_dataset('scratch/ERA5/SIC/ERA5_daily_SIC_2013_2022.nc', chunks={'time': 720})
-
 BJ19_1d_SIC = find_multi_gridvalue_at_site_time(
     BJ19_polarstern_1d_sim[expid[i]]['time'],
     BJ19_polarstern_1d_sim[expid[i]]['lat'],
@@ -135,7 +137,6 @@ BJ19_1d_SIC = find_multi_gridvalue_at_site_time(
 q_geo7_sfc_frc_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_geo7_sfc_frc_alltime.pkl', 'rb') as f:
     q_geo7_sfc_frc_alltime[expid[i]] = pickle.load(f)
-
 BJ19_1d_oo2q = find_multi_gridvalue_at_site_time(
     BJ19_polarstern_1d_sim[expid[i]]['time'],
     BJ19_polarstern_1d_sim[expid[i]]['lat'],
@@ -145,6 +146,8 @@ BJ19_1d_oo2q = find_multi_gridvalue_at_site_time(
     q_geo7_sfc_frc_alltime[expid[i]]['daily'].lon.values,
     q_geo7_sfc_frc_alltime[expid[i]]['daily'].sel(geo_regions='Open Ocean').values,
     )
+'''
+
 
 
 
@@ -161,6 +164,18 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q']:
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region linear regression
+
+BJ19_polarstern['1d']
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
 
 
 # clean data

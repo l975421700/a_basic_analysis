@@ -231,7 +231,7 @@ for ivar in ['dD', 'd18O', 'd_xs', 'd_ln', 'pre', 'temp2', ]:
 # region time series plot - only one model
 
 
-for ivar in ['dD', ]:
+for ivar in ['dD', 'd18O', 'd_xs', 'd_ln', 'pre', 'temp2', ]:
     # ivar = 'd_ln'
     # ['dD', 'd18O', 'd_xs', 'd_ln', 'pre', 'temp2', ]
     print('#-------------------------------- ' + ivar)
@@ -254,16 +254,22 @@ for ivar in ['dD', ]:
         
         if (ivar == 'dD'):
             sim_var = isotopes_alltime_icores[expid[i]][ivar]['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+            unit = '$‰$'
         elif (ivar == 'd18O'):
             sim_var = isotopes_alltime_icores[expid[i]]['dO18']['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+            unit = '$‰$'
         elif (ivar == 'd_xs'):
             sim_var = isotopes_alltime_icores[expid[i]]['d_excess']['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+            unit = '$‰$'
         elif (ivar == 'd_ln'):
             sim_var = isotopes_alltime_icores[expid[i]][ivar]['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+            unit = '$‰$'
         elif (ivar == 'pre'):
             sim_var = wisoaprt_alltime_icores[expid[i]]['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31')) * seconds_per_d
+            unit = '$mm \; day^{-1}$'
         elif (ivar == 'temp2'):
             sim_var = temp2_alltime_icores[expid[i]]['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+            unit = '$°C$'
         
         # sim_var_am = np.nanmean(sim_var)
         
@@ -322,7 +328,7 @@ for ivar in ['dD', ]:
     
     ax.set_xlabel(
         '$R^2 = $' + str(np.round(rsquared, 2)) + \
-            ', $RMSE = $' + str(np.round(RMSE, round_digit)),
+            ', $RMSE = $' + str(np.round(RMSE, round_digit)) + unit,
             color=expid_colours[expid[i]],
             labelpad=9)
     
@@ -504,7 +510,7 @@ for ivar in ['dD', 'd18O', 'd_xs', 'd_ln', 'pre', 'temp2', ]:
 # region time series plot - one model and ERA5
 
 
-for ivar in ['temp2',]:
+for ivar in ['pre',]:
     # ivar = 'temp2'
     # ['temp2', 'pre',]
     print('#-------------------------------- ' + ivar)
@@ -527,16 +533,22 @@ for ivar in ['temp2',]:
         
         if (ivar == 'dD'):
             sim_var = isotopes_alltime_icores[expid[i]][ivar]['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+            unit = '$‰$'
         elif (ivar == 'd18O'):
             sim_var = isotopes_alltime_icores[expid[i]]['dO18']['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+            unit = '$‰$'
         elif (ivar == 'd_xs'):
             sim_var = isotopes_alltime_icores[expid[i]]['d_excess']['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+            unit = '$‰$'
         elif (ivar == 'd_ln'):
             sim_var = isotopes_alltime_icores[expid[i]][ivar]['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+            unit = '$‰$'
         elif (ivar == 'pre'):
             sim_var = wisoaprt_alltime_icores[expid[i]]['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31')) * seconds_per_d
+            unit = ' $mm \; day^{-1}$'
         elif (ivar == 'temp2'):
             sim_var = temp2_alltime_icores[expid[i]]['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+            unit = '$°C$'
         
         # sim_var_am = np.nanmean(sim_var)
         
@@ -592,13 +604,13 @@ for ivar in ['temp2',]:
     #     framealpha=0.25, ncol=2, columnspacing=1, fontsize=9)
     
     rainbow_text(
-        0, -0.2,
-        ['$R^2 = $' + str(np.round(rsquared, 2)) + ', $RMSE = $' + str(np.round(RMSE, round_digit)),
+        -0.12, -0.2,
+        ['$R^2 = $' + str(np.round(rsquared, 2)) + ', $RMSE = $' + str(np.round(RMSE, round_digit)) + unit,
          '; ',
-         '$R^2 = $' + str(np.round(rsquared2, 2)) + ', $RMSE = $' + str(np.round(RMSE2, round_digit)),
+         '$R^2 = $' + str(np.round(rsquared2, 2)) + ', $RMSE = $' + str(np.round(RMSE2, round_digit)) + unit,
          ],
         [expid_colours[expid[i]], 'k', 'tab:pink'],
-        ax,
+        ax, ha='left',
     )
     
     # ax.get_xticklabels()

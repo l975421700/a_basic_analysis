@@ -10,7 +10,7 @@ expid = [
     # 'nudged_703_6.0_k52',
     'nudged_705_6.0',
     ]
-
+i = 0
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -32,6 +32,7 @@ from dask.diagnostics import ProgressBar
 pbar = ProgressBar()
 pbar.register()
 import xskillscore as xs
+from scipy.stats import pearsonr
 
 from a_basic_analysis.b_module.namelist import (
     seconds_per_d,
@@ -216,8 +217,6 @@ for i in range(len(expid)):
 
 
 
-
-
 '''
 #-------------------------------- check
 
@@ -256,25 +255,37 @@ print((data5[np.isfinite(data5)] == data6[np.isfinite(data6)]).all())
 #-------------------------------- check with site estimation
 
 i = 0
-
 corr_sources_isotopes = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.corr_sources_isotopes.pkl', 'rb') as f:
     corr_sources_isotopes[expid[i]] = pickle.load(f)
 
-isite = 'EDC'
 with open('scratch/others/pi_m_502_5.0.t63_sites_indices.pkl', 'rb') as f:
     t63_sites_indices = pickle.load(f)
 
+isotopes_alltime_icores = {}
+pre_weighted_var_icores = {}
+for i in range(len(expid)):
+    print(i)
+    
+    with open(
+        exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.isotopes_alltime_icores.pkl', 'rb') as f:
+        isotopes_alltime_icores[expid[i]] = pickle.load(f)
+    
+    with open(
+        exp_odir + expid[i] + '/analysis/jsbach/' + expid[i] + '.pre_weighted_var_icores.pkl', 'rb') as f:
+        pre_weighted_var_icores[expid[i]] = pickle.load(f)
 
-
-
+isite = 'Neumayer'
 for ivar in ['sst', 'RHsst']:
+    # ivar = 'sst'
     print('#-------------------------------- ' + ivar)
     
     for iisotopes in ['d_ln', 'd_excess']:
+        # iisotopes = 'd_ln'
         print('#---------------- ' + iisotopes)
         
         for ialltime in ['daily', 'mon', 'mon no mm', 'ann', 'ann no am']:
+            # ialltime = 'daily'
             print('#-------- ' + ialltime)
             
             print(np.round((corr_sources_isotopes[expid[i]][ivar][iisotopes][ialltime]['r'].sel(
@@ -282,10 +293,32 @@ for ivar in ['sst', 'RHsst']:
                 lon=t63_sites_indices[isite]['lon'],
                 method='nearest',
             ).values) ** 2, 2))
-        
-        
-        
-        # corr_sources_isotopes[expid[i]]['sst']['d_ln']['daily'].keys()
+            
+            subset=np.isfinite(isotopes_alltime_icores[expid[i]][iisotopes][isite][ialltime]) & np.isfinite(pre_weighted_var_icores[expid[i]][isite][ivar][ialltime])
+            print(np.round(pearsonr(
+                isotopes_alltime_icores[expid[i]][iisotopes][isite][ialltime][subset],
+                pre_weighted_var_icores[expid[i]][isite][ivar][ialltime][subset],
+            ).statistic ** 2, 2))
+
+ivar = 'RHsst'
+iisotopes = 'd_excess'
+ialltime = 'mon no mm'
+
+corr_sources_isotopes[expid[i]][ivar][iisotopes][ialltime]['r'][t63_sites_indices[isite]['ilat'], t63_sites_indices[isite]['ilon'],]
+
+subset=np.isfinite(isotopes_alltime_icores[expid[i]][iisotopes][isite][ialltime]) & np.isfinite(pre_weighted_var_icores[expid[i]][isite][ivar][ialltime])
+pearsonr(
+    isotopes_alltime_icores[expid[i]][iisotopes][isite][ialltime][subset],
+    pre_weighted_var_icores[expid[i]][isite][ivar][ialltime][subset],
+    ).statistic
+
+pearsonr(d_excess_alltime[expid[i]][ialltime][:, t63_sites_indices[isite]['ilat'], t63_sites_indices[isite]['ilon'],], pre_weighted_var[expid[i]][ivar][ialltime][:, t63_sites_indices[isite]['ilat'], t63_sites_indices[isite]['ilon'],])
+
+
+
+
+
+
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -433,6 +466,131 @@ data6 = par_corr_sources_isotopes[expid[i]][ivar][iisotopes][ialltime]['r_signif
 print((data5[np.isfinite(data5)] == data6[np.isfinite(data6)]).all())
 
 
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get partial Corr. isotopes and sources (RHsst & SST)
+
+par_corr_sources_RHsst_SST = {}
+
+for i in range(len(expid)):
+    # i = 0
+    print('#-------------------------------- ' + str(i) + ': ' + expid[i])
+    
+    par_corr_sources_RHsst_SST[expid[i]] = {}
+    
+    for iisotopes in ['d_ln', 'd_excess',]:
+        # iisotopes = 'd_ln'
+        print('#---------------- ' + iisotopes)
+        
+        par_corr_sources_RHsst_SST[expid[i]][iisotopes] = {}
+        
+        for ivar in ['sst', 'RHsst']:
+            # ivar = 'sst'
+            print('#---------------- ' + ivar)
+            
+            par_corr_sources_RHsst_SST[expid[i]][iisotopes][ivar] = {}
+            
+            for ctr_var in list(set(['sst', 'RHsst']) - set([ivar])):
+                # ctr_var = 'RHsst'
+                print('#-------- ' + ctr_var)
+                
+                par_corr_sources_RHsst_SST[expid[i]][iisotopes][ivar][ctr_var] = {}
+                
+                for ialltime in ['daily', 'mon', 'mon no mm', 'ann', 'ann no am']:
+                    # ialltime = 'mon'
+                    print('#---- ' + ialltime)
+                    
+                    par_corr_sources_RHsst_SST[expid[i]][iisotopes][ivar][ctr_var][ialltime] = {}
+                    
+                    if (iisotopes == 'd_ln'):
+                        isotopevar = d_ln_alltime[expid[i]][ialltime]
+                    elif (iisotopes == 'd_excess'):
+                        isotopevar = d_excess_alltime[expid[i]][ialltime]
+                    
+                    par_corr_sources_RHsst_SST[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'] = xr.apply_ufunc(
+                        xr_par_cor,
+                        isotopevar,
+                        pre_weighted_var[expid[i]][ivar][ialltime],
+                        pre_weighted_var[expid[i]][ctr_var][ialltime],
+                        input_core_dims=[["time"], ["time"], ["time"]],
+                        kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
+                    )
+                    
+                    par_corr_sources_RHsst_SST[expid[i]][iisotopes][ivar][ctr_var][ialltime]['p'] = xr.apply_ufunc(
+                        xr_par_cor,
+                        isotopevar,
+                        pre_weighted_var[expid[i]][ivar][ialltime],
+                        pre_weighted_var[expid[i]][ctr_var][ialltime],
+                        input_core_dims=[["time"], ["time"], ["time"]],
+                        kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
+                    )
+    
+    output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sources_RHsst_SST.pkl'
+    
+    if (os.path.isfile(output_file)):
+        os.remove(output_file)
+    
+    with open(output_file, 'wb') as f:
+        pickle.dump(par_corr_sources_RHsst_SST[expid[i]], f)
+
+
+
+
+'''
+#-------------------------------- check
+i = 0
+par_corr_sources_RHsst_SST = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sources_RHsst_SST.pkl', 'rb') as f:
+    par_corr_sources_RHsst_SST[expid[i]] = pickle.load(f)
+
+iisotopes = 'd_ln'
+ivar = 'sst'
+ctr_var = 'RHsst'
+ialltime = 'ann no am'
+
+data1 = par_corr_sources_RHsst_SST[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r']
+
+data2 = xr.apply_ufunc(
+    xr_par_cor,
+    d_ln_alltime[expid[i]][ialltime],
+    pre_weighted_var[expid[i]][ivar][ialltime],
+    pre_weighted_var[expid[i]][ctr_var][ialltime],
+    input_core_dims=[["time"], ["time"], ["time"]],
+    kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
+    )
+
+print((data1.values[np.isfinite(data1.values)] == data2.values[np.isfinite(data2.values)]).all())
+np.max(abs((data1.values[np.isfinite(data1.values)] - data2.values[np.isfinite(data2.values)]) / data2.values[np.isfinite(data2.values)]))
+
+
+#-------------------------------- check site calculation
+
+i = 0
+par_corr_sources_RHsst_SST = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sources_RHsst_SST.pkl', 'rb') as f:
+    par_corr_sources_RHsst_SST[expid[i]] = pickle.load(f)
+
+iisotopes = 'd_ln'
+ivar = 'sst'
+ctr_var = 'RHsst'
+ialltime = 'ann no am'
+
+isite = 'EDC'
+with open('scratch/others/pi_m_502_5.0.t63_sites_indices.pkl', 'rb') as f:
+    t63_sites_indices = pickle.load(f)
+
+print(par_corr_sources_RHsst_SST[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'][t63_sites_indices[isite]['ilat'], t63_sites_indices[isite]['ilon']])
+
+print(xr_par_cor(
+    d_ln_alltime[expid[i]][ialltime][:, t63_sites_indices[isite]['ilat'], t63_sites_indices[isite]['ilon']],
+    pre_weighted_var[expid[i]][ivar][ialltime][:, t63_sites_indices[isite]['ilat'], t63_sites_indices[isite]['ilon']],
+    pre_weighted_var[expid[i]][ctr_var][ialltime][:, t63_sites_indices[isite]['ilat'], t63_sites_indices[isite]['ilon']],
+))
 
 '''
 # endregion

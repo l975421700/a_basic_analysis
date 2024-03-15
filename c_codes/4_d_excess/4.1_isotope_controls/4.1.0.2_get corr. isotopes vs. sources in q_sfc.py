@@ -31,6 +31,7 @@ from dask.diagnostics import ProgressBar
 pbar = ProgressBar()
 pbar.register()
 import xskillscore as xs
+from scipy.stats import pearsonr
 
 from a_basic_analysis.b_module.namelist import (
     seconds_per_d,
@@ -176,9 +177,9 @@ corr_sources_isotopes_q_sfc = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.corr_sources_isotopes_q_sfc.pkl', 'rb') as f:
     corr_sources_isotopes_q_sfc[expid[i]] = pickle.load(f)
 
-ivar = 'sst'
+ivar = 'RHsst'
 iisotopes = 'd_ln'
-ialltime = 'mon'
+ialltime = 'ann no am'
 
 isotopevar = d_ln_q_sfc_alltime[expid[i]][ialltime]
 
@@ -202,6 +203,28 @@ data6 = corr_sources_isotopes_q_sfc[expid[i]][ivar][iisotopes][ialltime]['r_sign
 print((data5[np.isfinite(data5)] == data6[np.isfinite(data6)]).all())
 
 
+#-------------------------------- check site calculation
+
+i = 0
+
+corr_sources_isotopes_q_sfc = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.corr_sources_isotopes_q_sfc.pkl', 'rb') as f:
+    corr_sources_isotopes_q_sfc[expid[i]] = pickle.load(f)
+
+with open('scratch/others/pi_m_502_5.0.t63_sites_indices.pkl', 'rb') as f:
+    t63_sites_indices = pickle.load(f)
+
+ivar = 'RHsst'
+iisotopes = 'd_ln'
+ialltime = 'ann no am'
+
+isite = 'Neumayer'
+corr_sources_isotopes_q_sfc[expid[i]][ivar][iisotopes][ialltime]['r'][t63_sites_indices[isite]['ilat'], t63_sites_indices[isite]['ilon']]
+
+subset = np.isfinite(d_ln_q_sfc_alltime[expid[i]][ialltime][:, t63_sites_indices[isite]['ilat'], t63_sites_indices[isite]['ilon']]) & np.isfinite(q_sfc_weighted_var[expid[i]][ivar][ialltime][:, t63_sites_indices[isite]['ilat'], t63_sites_indices[isite]['ilon']])
+pearsonr(d_ln_q_sfc_alltime[expid[i]][ialltime][:, t63_sites_indices[isite]['ilat'], t63_sites_indices[isite]['ilon']][subset], q_sfc_weighted_var[expid[i]][ivar][ialltime][:, t63_sites_indices[isite]['ilat'], t63_sites_indices[isite]['ilon']][subset])
+
+
 #-------------------------------- check
 
 i = 0
@@ -220,4 +243,140 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.corr_sources_i
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region get Partial Corr. isotopes and sources
+
+par_corr_sources_isotopes_q_sfc = {}
+
+for i in range(len(expid)):
+    # i = 0
+    print('#-------------------------------- ' + str(i) + ': ' + expid[i])
+    
+    par_corr_sources_isotopes_q_sfc[expid[i]] = {}
+    
+    for iisotopes in ['d_ln', 'd_excess',]:
+        # iisotopes = 'd_ln'
+        print('#---------------- ' + iisotopes)
+        
+        par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes] = {}
+        
+        for ivar in ['sst', 'RHsst']:
+            # ivar = 'sst'
+            print('#---------------- ' + ivar)
+            
+            par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar] = {}
+            
+            for ctr_var in list(set(['sst', 'RHsst']) - set([ivar])):
+                # ctr_var = 'RHsst'
+                print('#-------- ' + ctr_var)
+                
+                par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var] = {}
+                
+                for ialltime in ['daily', 'mon', 'mon no mm', 'ann', 'ann no am']:
+                    # ialltime = 'mon'
+                    print('#---- ' + ialltime)
+                    
+                    par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime] = {}
+                    
+                    if (iisotopes == 'd_ln'):
+                        isotopevar = d_ln_q_sfc_alltime[expid[i]][ialltime]
+                    elif (iisotopes == 'd_excess'):
+                        isotopevar = d_excess_q_sfc_alltime[expid[i]][ialltime]
+                    
+                    par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'] = xr.apply_ufunc(
+                        xr_par_cor,
+                        isotopevar,
+                        q_sfc_weighted_var[expid[i]][ivar][ialltime],
+                        q_sfc_weighted_var[expid[i]][ctr_var][ialltime],
+                        input_core_dims=[["time"], ["time"], ["time"]],
+                        kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
+                    )
+                    
+                    par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['p'] = xr.apply_ufunc(
+                        xr_par_cor,
+                        isotopevar,
+                        q_sfc_weighted_var[expid[i]][ivar][ialltime],
+                        q_sfc_weighted_var[expid[i]][ctr_var][ialltime],
+                        input_core_dims=[["time"], ["time"], ["time"]],
+                        kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
+                    )
+    
+    output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sources_isotopes_q_sfc.pkl'
+    
+    if (os.path.isfile(output_file)):
+        os.remove(output_file)
+    
+    with open(output_file, 'wb') as f:
+        pickle.dump(par_corr_sources_isotopes_q_sfc[expid[i]], f)
+
+
+'''
+#-------------------------------- check
+i = 0
+par_corr_sources_isotopes_q_sfc={}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sources_isotopes_q_sfc.pkl', 'rb') as f:
+    par_corr_sources_isotopes_q_sfc[expid[i]] = pickle.load(f)
+
+par_corr_sources_isotopes_q_sfc[expid[i]]['d_ln']['sst']['RHsst']['ann']['r'].to_netcdf('scratch/test/test0.nc')
+
+corr_sources_isotopes_q_sfc = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.corr_sources_isotopes_q_sfc.pkl', 'rb') as f:
+    corr_sources_isotopes_q_sfc[expid[i]] = pickle.load(f)
+
+corr_sources_isotopes_q_sfc[expid[i]]['sst']['d_ln']['ann']['r'].to_netcdf('scratch/test/test1.nc')
+
+#-------------------------------- check the calculation
+
+par_corr_sources_isotopes_q_sfc={}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sources_isotopes_q_sfc.pkl', 'rb') as f:
+    par_corr_sources_isotopes_q_sfc[expid[i]] = pickle.load(f)
+
+iisotopes = 'd_ln'
+ivar = 'sst'
+ctr_var = 'RHsst'
+ialltime = 'ann no am'
+
+data1 = par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r']
+
+data2 = xr.apply_ufunc(
+    xr_par_cor,
+    d_ln_q_sfc_alltime[expid[i]][ialltime],
+    q_sfc_weighted_var[expid[i]][ivar][ialltime],
+    q_sfc_weighted_var[expid[i]][ctr_var][ialltime],
+    input_core_dims=[["time"], ["time"], ["time"]],
+    kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
+    )
+
+print((data1.values[np.isfinite(data1.values)] == data2.values[np.isfinite(data2.values)]).all())
+
+np.max(abs((data1.values[np.isfinite(data1.values)] - data2.values[np.isfinite(data2.values)]) / data2.values[np.isfinite(data2.values)]))
+
+#-------------------------------- check site calculation
+
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sources_isotopes_q_sfc.pkl', 'rb') as f:
+    par_corr_sources_isotopes_q_sfc[expid[i]] = pickle.load(f)
+
+iisotopes = 'd_ln'
+ivar = 'sst'
+ctr_var = 'RHsst'
+ialltime = 'ann no am'
+
+isite = 'EDC'
+
+with open('scratch/others/pi_m_502_5.0.t63_sites_indices.pkl', 'rb') as f:
+    t63_sites_indices = pickle.load(f)
+
+print(par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'][t63_sites_indices[isite]['ilat'], t63_sites_indices[isite]['ilon']])
+
+print(xr_par_cor(
+    d_ln_q_sfc_alltime[expid[i]][ialltime][:, t63_sites_indices[isite]['ilat'], t63_sites_indices[isite]['ilon']],
+    q_sfc_weighted_var[expid[i]][ivar][ialltime][:, t63_sites_indices[isite]['ilat'], t63_sites_indices[isite]['ilon']],
+    q_sfc_weighted_var[expid[i]][ctr_var][ialltime][:, t63_sites_indices[isite]['ilat'], t63_sites_indices[isite]['ilon']],
+))
+
+
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
 

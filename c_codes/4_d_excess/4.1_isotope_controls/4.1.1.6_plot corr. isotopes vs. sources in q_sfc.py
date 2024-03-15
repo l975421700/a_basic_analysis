@@ -1,9 +1,11 @@
 
 
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'nudged_703_6.0_k52',
+    # 'nudged_703_6.0_k52',
+    'nudged_705_6.0',
     ]
+i = 0
 
 
 # -----------------------------------------------------------------------------
@@ -113,12 +115,16 @@ from a_basic_analysis.b_module.component_plot import (
 # region import data
 
 corr_sources_isotopes_q_sfc = {}
+par_corr_sources_isotopes_q_sfc={}
 
 for i in range(len(expid)):
     print(str(i) + ': ' + expid[i])
     
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.corr_sources_isotopes_q_sfc.pkl', 'rb') as f:
         corr_sources_isotopes_q_sfc[expid[i]] = pickle.load(f)
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sources_isotopes_q_sfc.pkl', 'rb') as f:
+        par_corr_sources_isotopes_q_sfc[expid[i]] = pickle.load(f)
 
 lon = corr_sources_isotopes_q_sfc[expid[i]]['sst']['d_ln']['mon']['r'].lon
 lat = corr_sources_isotopes_q_sfc[expid[i]]['sst']['d_ln']['mon']['r'].lat
@@ -135,7 +141,7 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
 
 
 # -----------------------------------------------------------------------------
-# region plot corr_sources_isotopes globe
+# region plot corr_sources_isotopes_q_sfc globe
 
 for i in range(len(expid)):
     # i = 0
@@ -186,5 +192,154 @@ for i in range(len(expid)):
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region Find the maximum point
+
+
+#-------------------------------- Daily negative corr.
+iisotopes = 'd_ln'
+ivar = 'sst'
+ctr_var = 'RHsst'
+ialltime = 'daily'
+
+daily_par_corr = par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'].sel(lat=slice(-20, -60)).values
+daily_min = np.min(daily_par_corr)
+where_daily_min = np.where(daily_par_corr == daily_min)
+# print(daily_min)
+# print(daily_par_corr[where_daily_min[0][0], where_daily_min[1][0]])
+
+daily_min_lon = par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'].sel(lat=slice(-20, -60))[where_daily_min[0][0], where_daily_min[1][0]].lon.values
+daily_min_lat = par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'].sel(lat=slice(-20, -60))[where_daily_min[0][0], where_daily_min[1][0]].lat.values
+
+daily_min_ilon = np.where(lon == daily_min_lon)[0][0]
+daily_min_ilat = np.where(lat == daily_min_lat)[0][0]
+# print(par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'].values[daily_min_ilat, daily_min_ilon])
+
+
+#-------------------------------- Daily positive corr.
+iisotopes = 'd_ln'
+ivar = 'sst'
+ctr_var = 'RHsst'
+ialltime = 'daily'
+
+daily_par_corr = par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'].sel(lat=slice(-20, -60)).values
+daily_max = np.max(daily_par_corr)
+where_daily_max = np.where(daily_par_corr == daily_max)
+# print(daily_max)
+# print(daily_par_corr[where_daily_max[0][0], where_daily_max[1][0]])
+
+daily_max_lon = par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'].sel(lat=slice(-20, -60))[where_daily_max[0][0], where_daily_max[1][0]].lon.values
+daily_max_lat = par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'].sel(lat=slice(-20, -60))[where_daily_max[0][0], where_daily_max[1][0]].lat.values
+
+daily_max_ilon = np.where(lon == daily_max_lon)[0][0]
+daily_max_ilat = np.where(lat == daily_max_lat)[0][0]
+# print(par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'].values[daily_max_ilat, daily_max_ilon])
+
+
+#-------------------------------- Annual negative corr.
+iisotopes = 'd_ln'
+ivar = 'sst'
+ctr_var = 'RHsst'
+ialltime = 'ann'
+
+annual_par_corr = par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'].sel(lat=slice(-20, -60)).values
+annual_min = np.min(annual_par_corr)
+where_annual_min = np.where(annual_par_corr == annual_min)
+# print(annual_min)
+# print(annual_par_corr[where_annual_min[0][0], where_annual_min[1][0]])
+
+annual_min_lon = par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'].sel(lat=slice(-20, -60))[where_annual_min[0][0], where_annual_min[1][0]].lon.values
+annual_min_lat = par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'].sel(lat=slice(-20, -60))[where_annual_min[0][0], where_annual_min[1][0]].lat.values
+
+annual_min_ilon = np.where(lon == annual_min_lon)[0][0]
+annual_min_ilat = np.where(lat == annual_min_lat)[0][0]
+# print(par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'].values[annual_min_ilat, annual_min_ilon])
+
+
+#-------------------------------- Annual positive corr.
+iisotopes = 'd_ln'
+ivar = 'sst'
+ctr_var = 'RHsst'
+ialltime = 'ann'
+
+annual_par_corr = par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'].sel(lat=slice(-20, -60)).values
+annual_max = np.max(annual_par_corr)
+where_annual_max = np.where(annual_par_corr == annual_max)
+# print(annual_max)
+# print(annual_par_corr[where_annual_max[0][0], where_annual_max[1][0]])
+
+annual_max_lon = par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'].sel(lat=slice(-20, -60))[where_annual_max[0][0], where_annual_max[1][0]].lon.values
+annual_max_lat = par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'].sel(lat=slice(-20, -60))[where_annual_max[0][0], where_annual_max[1][0]].lat.values
+
+annual_max_ilon = np.where(lon == annual_max_lon)[0][0]
+annual_max_ilat = np.where(lat == annual_max_lat)[0][0]
+# print(par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'].values[annual_max_ilat, annual_max_ilon])
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot par_corr_sources_isotopes_q_sfc
+
+for i in range(len(expid)):
+    # i = 0
+    print('#-------------------------------- ' + str(i) + ': ' + expid[i])
+    
+    for iisotopes in ['d_ln',]:
+        # iisotopes = 'd_ln'
+        # ['d_ln', 'd_excess',]
+        print('#---------------- ' + iisotopes)
+        
+        for ivar in ['sst',]:
+            # ivar = 'sst'
+            # ['sst', 'RHsst']
+            print('#---------------- ' + ivar)
+            
+            for ctr_var in list(set(['sst', 'RHsst']) - set([ivar])):
+                # ctr_var = 'RHsst'
+                print('#-------- ' + ctr_var)
+                
+                for ialltime in ['daily', 'ann',]:
+                    # ialltime = 'mon'
+                    # ['daily', 'mon', 'mon no mm', 'ann', 'ann no am']
+                    print('#---- ' + ialltime)
+                    
+                    output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.0_sources_isotopes/8.1.5.0.3 ' + expid[i] + ' ' + ialltime + ' corr. ' + iisotopes + ' vs. ' + ivar + ' while controlling ' + ctr_var + '.png'
+                    
+                    cbar_label = 'Partial correlation: ' + plot_labels_no_unit[iisotopes] + ' & ' + plot_labels_no_unit[ivar] + '\nwhile controlling ' + plot_labels_no_unit[ctr_var]
+                    
+                    fig, ax = hemisphere_plot(northextent=-20, figsize=np.array([5.8, 7.5]) / 2.54,)
+                    
+                    plt1 = plot_t63_contourf(
+                        lon, lat,
+                        par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'],
+                        ax, pltlevel, 'neither', pltnorm, pltcmp, ccrs.PlateCarree(),)
+                    
+                    if ((iisotopes == 'd_ln') & (ivar == 'sst') & (ialltime == 'daily')):
+                        cplot_ice_cores(daily_min_lon, daily_min_lat, ax, s=12)
+                        cplot_ice_cores(daily_max_lon, daily_max_lat, ax, s=12)
+                    elif ((iisotopes == 'd_ln') & (ivar == 'sst') & (ialltime == 'ann')):
+                        cplot_ice_cores(annual_min_lon, annual_min_lat, ax,s=12)
+                        cplot_ice_cores(annual_max_lon, annual_max_lat, ax,s=12)
+                    
+                    cbar = fig.colorbar(
+                        plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
+                        orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+                        pad=0.02, fraction=0.2,
+                        )
+                    
+                    # cbar.ax.tick_params(labelsize=8)
+                    cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
+                    fig.savefig(output_png)
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
 
 

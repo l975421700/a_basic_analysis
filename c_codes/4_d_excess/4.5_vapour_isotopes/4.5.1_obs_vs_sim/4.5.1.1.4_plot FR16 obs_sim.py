@@ -8,12 +8,12 @@
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
     'nudged_705_6.0',
-    'nudged_703_6.0_k52',
-    'nudged_707_6.0_k43',
-    'nudged_708_6.0_I01',
-    'nudged_709_6.0_I03',
-    'nudged_710_6.0_S3',
-    'nudged_711_6.0_S6',
+    # 'nudged_703_6.0_k52',
+    # 'nudged_707_6.0_k43',
+    # 'nudged_708_6.0_I01',
+    # 'nudged_709_6.0_I03',
+    # 'nudged_710_6.0_S3',
+    # 'nudged_711_6.0_S6',
     ]
 i = 0
 
@@ -85,6 +85,7 @@ from a_basic_analysis.b_module.basic_calculations import (
 from a_basic_analysis.b_module.namelist import (
     panel_labels,
     plot_labels,
+    plot_labels_only_unit,
     expid_colours,
     expid_labels,
     zerok,
@@ -352,7 +353,7 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'temp2', 'q']:
     
     ax.set_xlabel(
         '$R^2 = $' + str(np.round(rsquared, 2)) + \
-            ', $RMSE = $' + str(np.round(RMSE, 1)),
+            ', $RMSE = $' + str(np.round(RMSE, 1)) + plot_labels_only_unit[var_name],
             color=expid_colours[expid[i]],
             labelpad=6)
     
@@ -435,7 +436,7 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln',]:
 
 # plot_labels = {'temp2': 'temp2 [$°C$]',}
 
-for var_name in ['temp2', 'q']:
+for var_name in ['q']:
     # var_name = 'q'
     # ['temp2', 'q']
     print('#-------- ' + var_name)
@@ -516,15 +517,15 @@ for var_name in ['temp2', 'q']:
     ax.legend().set_visible(False)
     
     if (var_name == 'q'):
-        round_digit = 3
+        round_digit = 2
     else:
         round_digit = 1
     
     rainbow_text(
-        -0.1, -0.54,
-        ['$R^2 = $' + str(np.round(rsquared, 2)) + ', $RMSE = $' + str(np.round(RMSE, round_digit)),
+        -0.22, -0.54,
+        ['$R^2 = $' + str(np.round(rsquared, 2)) + ', $RMSE = $' + str(np.round(RMSE, round_digit)) + plot_labels_only_unit[var_name],
          '; ',
-         '$R^2 = $' + str(np.round(rsquared2, 2)) + ', $RMSE = $' + str(np.round(RMSE2, round_digit)),
+         '$R^2 = $' + str(np.round(rsquared2, 2)) + ', $RMSE = $' + str(np.round(RMSE2, round_digit)) + plot_labels_only_unit[var_name],
          ],
         [expid_colours[expid[i]], 'k', 'tab:pink'],
         ax,

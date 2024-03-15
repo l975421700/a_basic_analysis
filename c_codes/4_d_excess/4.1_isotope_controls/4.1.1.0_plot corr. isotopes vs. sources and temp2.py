@@ -1,14 +1,11 @@
 
 
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_600_5.0',
-    # 'pi_601_5.1',
-    # 'pi_602_5.2',
-    # 'pi_603_5.3',
-    
-    'nudged_703_6.0_k52',
+    # 'nudged_703_6.0_k52',
+    'nudged_705_6.0',
     ]
+i = 0
 
 
 # -----------------------------------------------------------------------------
@@ -119,6 +116,7 @@ from a_basic_analysis.b_module.component_plot import (
 
 corr_sources_isotopes = {}
 # par_corr_sources_isotopes = {}
+par_corr_sources_RHsst_SST = {}
 # corr_temp2_isotopes = {}
 # par_corr_temp2_isotopes2 = {}
 # par_corr_sst_isotopes2 = {}
@@ -133,6 +131,9 @@ for i in range(len(expid)):
     
     # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sources_isotopes.pkl', 'rb') as f:
     #     par_corr_sources_isotopes[expid[i]] = pickle.load(f)
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sources_RHsst_SST.pkl', 'rb') as f:
+        par_corr_sources_RHsst_SST[expid[i]] = pickle.load(f)
     
     # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.corr_temp2_isotopes.pkl', 'rb') as f:
     #     corr_temp2_isotopes[expid[i]] = pickle.load(f)
@@ -314,6 +315,59 @@ for i in range(len(expid)):
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region plot par_corr_sources_RHsst_SST Antarctica
+
+for i in range(len(expid)):
+    # i = 0
+    print('#-------------------------------- ' + str(i) + ': ' + expid[i])
+    
+    for iisotopes in ['d_ln', 'd_excess',]:
+        # iisotopes = 'd_ln'
+        # ['d_ln', 'd_excess',]
+        print('#---------------- ' + iisotopes)
+        
+        for ivar in ['sst', 'RHsst']:
+            # ivar = 'sst'
+            # ['sst', 'RHsst']
+            print('#---------------- ' + ivar)
+            
+            for ctr_var in list(set(['sst', 'RHsst']) - set([ivar])):
+                # ctr_var = 'RHsst'
+                print('#-------- ' + ctr_var)
+                
+                for ialltime in ['daily', 'mon', 'mon no mm', 'ann', 'ann no am']:
+                    # ialltime = 'mon'
+                    # ['daily', 'mon', 'mon no mm', 'ann', 'ann no am']
+                    print('#---- ' + ialltime)
+                    
+                    output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.0_sources_isotopes/8.1.5.0.4 ' + expid[i] + ' ' + ialltime + ' corr. pre ' + iisotopes + ' vs. ' + ivar + ' while controlling ' + ctr_var + '.png'
+                    
+                    cbar_label = 'Partial correlation: ' + plot_labels_no_unit[iisotopes] + ' & ' + plot_labels_no_unit[ivar] + '\nwhile controlling ' + plot_labels_no_unit[ctr_var]
+                    
+                    fig, ax = hemisphere_plot(northextent=-20, figsize=np.array([5.8, 7.5]) / 2.54,)
+                    
+                    plt1 = plot_t63_contourf(
+                        lon, lat,
+                        par_corr_sources_RHsst_SST[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'],
+                        ax, pltlevel, 'neither', pltnorm, pltcmp, ccrs.PlateCarree(),)
+                    
+                    cbar = fig.colorbar(
+                        plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
+                        orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
+                        pad=0.02, fraction=0.2,
+                        )
+                    
+                    # cbar.ax.tick_params(labelsize=8)
+                    cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
+                    fig.savefig(output_png)
+
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
 
 
 

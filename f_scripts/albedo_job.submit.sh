@@ -1,10 +1,10 @@
 #!/bin/bash
-#SBATCH -p mpp
+#SBATCH -p fat
 #SBATCH --qos=12h
 #SBATCH --time=12:00:00
 #SBATCH -o %A.out
 #SBATCH -e %A.err
-#SBATCH --mem=120GB
+#SBATCH --mem=512GB
 
 echo "Current time : " $(date +"%T")
 cd $WORK

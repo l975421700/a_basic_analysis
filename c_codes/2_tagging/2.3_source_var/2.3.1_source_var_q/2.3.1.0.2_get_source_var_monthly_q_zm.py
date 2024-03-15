@@ -12,10 +12,10 @@ ifile_end   = 528 #1740 #840
 
 ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0,  3, 0]
 
-# var_name  = 'sst'
-# itag      = 7
-# min_sf    = 268.15
-# max_sf    = 318.15
+var_name  = 'sst'
+itag      = 7
+min_sf    = 268.15
+max_sf    = 318.15
 
 # var_name  = 'lat'
 # itag      = 5
@@ -37,10 +37,10 @@ ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0,  3, 0]
 # min_sf    = -1
 # max_sf    = 1
 
-var_name  = 'coslon'
-itag      = 12
-min_sf    = -1
-max_sf    = 1
+# var_name  = 'coslon'
+# itag      = 12
+# min_sf    = -1
+# max_sf    = 1
 
 # var_name  = 'RHsst'
 # itag      = 14
