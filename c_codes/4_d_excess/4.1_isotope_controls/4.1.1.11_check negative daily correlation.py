@@ -360,6 +360,95 @@ pearsonr(d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilo
 
 
 # -----------------------------------------------------------------------------
+# region plot distribution of SST at daily_max and daily_min
+
+ialltime = 'daily'
+
+stats.describe(tsw_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon])
+
+stats.describe(tsw_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon])
+
+output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.0 ' + expid[i] + ' histogram of daily SST in daily_min and daily max correlation points.png'
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+
+sns.histplot(
+    tsw_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon],
+    binwidth=1, color='tab:blue', alpha=0.5, label = 'Daily min'
+    )
+sns.histplot(
+    tsw_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon],
+    binwidth=1, color='tab:orange', alpha=0.5, label = 'Daily max'
+    )
+
+ax.set_xlabel('Daily SST [$°C$]',)
+ax.xaxis.set_major_formatter(remove_trailing_zero_pos)
+ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+
+ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+
+ax.legend()
+
+ax.grid(True, which='both',
+        linewidth=0.4, color='lightgray', alpha=0.5, linestyle=':')
+fig.subplots_adjust(left=0.18, right=0.98, bottom=0.14, top=0.98)
+fig.savefig(output_png)
+
+
+
+'''
+subset = np.isfinite(d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon]) & np.isfinite(q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_min_ilat, daily_min_ilon])
+pearsonr(d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon].values[subset], q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_min_ilat, daily_min_ilon].values[subset])
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot distribution of source SST at daily_max and daily_min
+
+ialltime = 'daily'
+
+stats.describe(q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_min_ilat, daily_min_ilon], nan_policy='omit')
+stats.describe(q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_max_ilat, daily_max_ilon], nan_policy='omit')
+
+output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.0 ' + expid[i] + ' histogram of daily source SST in daily_min and daily max correlation points.png'
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+
+sns.histplot(
+    q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_min_ilat, daily_min_ilon],
+    binwidth=1, color='tab:blue', alpha=0.5, label = 'Daily min'
+    )
+sns.histplot(
+    q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_max_ilat, daily_max_ilon],
+    binwidth=1, color='tab:orange', alpha=0.5, label = 'Daily max'
+    )
+
+ax.set_xlabel('Daily ' + plot_labels['sst'],)
+ax.xaxis.set_major_formatter(remove_trailing_zero_pos)
+ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+
+ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+
+ax.legend()
+
+ax.grid(True, which='both',
+        linewidth=0.4, color='lightgray', alpha=0.5, linestyle=':')
+fig.subplots_adjust(left=0.18, right=0.98, bottom=0.14, top=0.98)
+fig.savefig(output_png)
+
+
+
+'''
+subset = np.isfinite(d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon]) & np.isfinite(q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_min_ilat, daily_min_ilon])
+pearsonr(d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon].values[subset], q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_min_ilat, daily_min_ilon].values[subset])
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
 # region plot d_ln vs. source SST
 
 #-------------------------------- daily

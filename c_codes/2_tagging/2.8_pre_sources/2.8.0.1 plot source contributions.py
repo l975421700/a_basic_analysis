@@ -1,6 +1,6 @@
 
 
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_m_502_5.0',
     'pi_600_5.0',

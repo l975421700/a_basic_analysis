@@ -3,12 +3,13 @@
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_m_416_4.9',
-    'pi_m_502_5.0',
+    # 'pi_m_502_5.0',
+    'nudged_705_6.0',
     ]
 i = 0
 
-ifile_start = 120
-ifile_end   = 720 # 1080
+ifile_start = 0 # 120
+ifile_end   = 528 # 720 # 1080
 
 # -----------------------------------------------------------------------------
 # region import packages

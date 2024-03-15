@@ -3,7 +3,8 @@
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_m_416_4.9',
-    'pi_m_502_5.0',
+    # 'pi_m_502_5.0',
+    'nudged_705_6.0',
     ]
 i = 0
 
@@ -104,9 +105,9 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-rh2m_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.rh2m_alltime.pkl', 'rb') as f:
-    rh2m_alltime[expid[i]] = pickle.load(f)
+# rh2m_alltime = {}
+# with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.rh2m_alltime.pkl', 'rb') as f:
+#     rh2m_alltime[expid[i]] = pickle.load(f)
 
 wind10_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wind10_alltime.pkl', 'rb') as f:
@@ -116,9 +117,9 @@ lon = wind10_alltime[expid[i]]['am'].lon
 lat = wind10_alltime[expid[i]]['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
-major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
-major_ice_core_site = major_ice_core_site.loc[
-    major_ice_core_site['age (kyr)'] > 120, ]
+# major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
+# major_ice_core_site = major_ice_core_site.loc[
+#     major_ice_core_site['age (kyr)'] > 120, ]
 
 # endregion
 # -----------------------------------------------------------------------------
