@@ -1,7 +1,15 @@
 
 
+# salloc --account=paleodyn.paleodyn --qos=12h --time=12:00:00 --nodes=1 --mem=120GB
+# source ${HOME}/miniconda3/bin/activate deepice
+# ipython
+
+
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
-expid = ['pi_m_502_5.0',]
+expid = [
+    # 'pi_m_502_5.0',
+    'nudged_705_6.0',
+    ]
 i = 0
 
 # -----------------------------------------------------------------------------
@@ -676,8 +684,8 @@ cbar_labels = [
     'Source SST [$°C$]', 'Source rh2m [$\%$]', 'Source vel10 [$m \; s^{-1}$]',
 ]
 
-output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3 ' + expid[i] + ' pre_weighted_var am Antarctica + am aprt.png'
-
+# output_png = 'figures/6_awi/6.1_echam6/6.1.3_source_var/6.1.3 ' + expid[i] + ' pre_weighted_var am Antarctica + am aprt.png'
+output_png = 'figures/test/test.png'
 
 nrow = 2
 ncol = 3
