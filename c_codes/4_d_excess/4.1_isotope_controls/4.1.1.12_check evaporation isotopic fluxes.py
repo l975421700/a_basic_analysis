@@ -387,6 +387,19 @@ print(pearsonr(np.arange(0, 25 + 1e-4, 0.05) + zerok, daily_min_d_xs_evap))
 print(pearsonr(np.arange(0, 25 + 1e-4, 0.05) + zerok, daily_min_d_ln_evap))
 
 
+fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+
+ax.scatter(
+    np.arange(0, 25 + 1e-4, 0.05), daily_min_d_ln_evap,
+    s=6, lw=1, facecolors='white', edgecolors='k',)
+
+ax.set_xlabel(plot_labels['sst'],)
+ax.set_ylabel(plot_labels['d_ln'],)
+
+ax.grid(True, which='both',
+        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+fig.subplots_adjust(left=0.16, right=0.98, bottom=0.16, top=0.98)
+fig.savefig('figures/test/test.png')
 
 
 #-------------------------------- Daily max

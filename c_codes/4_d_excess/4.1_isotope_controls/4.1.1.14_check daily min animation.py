@@ -1,8 +1,12 @@
 
 
+# salloc --account=paleodyn.paleodyn --qos=12h --time=12:00:00 --nodes=1 --mem=120GB
+# source ${HOME}/miniconda3/bin/activate deepice
+# ipython
+
+
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'nudged_703_6.0_k52',
     'nudged_705_6.0',
     ]
 i = 0
@@ -34,6 +38,8 @@ import pandas as pd
 from statsmodels.stats import multitest
 import pycircstat as circ
 import xskillscore as xs
+from scipy.stats import linregress
+import pingouin as pg
 
 # plot
 import matplotlib as mpl
@@ -61,6 +67,7 @@ from a_basic_analysis.b_module.mapplot import (
     framework_plot1,
     remove_trailing_zero,
     remove_trailing_zero_pos,
+    remove_trailing_zero_pos_abs,
 )
 
 from a_basic_analysis.b_module.basic_calculations import (
@@ -84,6 +91,7 @@ from a_basic_analysis.b_module.namelist import (
     panel_labels,
     seconds_per_d,
     plot_labels_no_unit,
+    plot_labels,
 )
 
 from a_basic_analysis.b_module.source_properties import (
@@ -114,6 +122,42 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
+d_ln_q_sfc_alltime = {}
+# d_excess_q_sfc_alltime = {}
+
+for i in range(len(expid)):
+    print(str(i) + ': ' + expid[i])
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_q_sfc_alltime.pkl', 'rb') as f:
+        d_ln_q_sfc_alltime[expid[i]] = pickle.load(f)
+    
+    # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_q_sfc_alltime.pkl', 'rb') as f:
+    #     d_excess_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+source_var = ['lat', 'lon', 'sst', 'RHsst', 'distance']
+q_sfc_weighted_var = {}
+
+for i in range(len(expid)):
+    # i = 0
+    print(str(i) + ': ' + expid[i])
+    
+    q_sfc_weighted_var[expid[i]] = {}
+    
+    prefix = exp_odir + expid[i] + '/analysis/echam/' + expid[i]
+    
+    source_var_files = [
+        prefix + '.q_sfc_weighted_lat.pkl',
+        prefix + '.q_sfc_weighted_lon.pkl',
+        prefix + '.q_sfc_weighted_sst.pkl',
+        prefix + '.q_sfc_weighted_RHsst.pkl',
+        prefix + '.q_sfc_transport_distance.pkl',
+    ]
+    
+    for ivar, ifile in zip(source_var, source_var_files):
+        print(ivar + ':    ' + ifile)
+        with open(ifile, 'rb') as f:
+            q_sfc_weighted_var[expid[i]][ivar] = pickle.load(f)
+
 corr_sources_isotopes_q_sfc = {}
 par_corr_sources_isotopes_q_sfc={}
 
@@ -133,62 +177,27 @@ pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
     cm_min=-1, cm_max=1, cm_interval1=0.1, cm_interval2=0.4,
     cmap='PuOr', asymmetric=False, reversed=True)
 
+RHsst_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.RHsst_alltime.pkl', 'rb') as f:
+    RHsst_alltime[expid[i]] = pickle.load(f)
+
+tsw_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.tsw_alltime.pkl', 'rb') as f:
+    tsw_alltime[expid[i]] = pickle.load(f)
+
+wisoaprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
+    wisoaprt_alltime[expid[i]] = pickle.load(f)
+
+daily_uv_ml_k_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.daily_uv_ml_k_alltime.pkl', 'rb') as f:
+    daily_uv_ml_k_alltime[expid[i]] = pickle.load(f)
+
+psl_zh = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.psl_zh.pkl', 'rb') as f:
+    psl_zh[expid[i]] = pickle.load(f)
 
 '''
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot corr_sources_isotopes_q_sfc globe
-
-for i in range(len(expid)):
-    # i = 0
-    print('#-------------------------------- ' + str(i) + ': ' + expid[i])
-    
-    for ivar in ['sst', 'RHsst',]:
-        # ivar = 'sst'
-        # 'lat', 'lon', 'distance', 'rh2m', 'wind10'
-        print('#---------------- ' + ivar)
-        
-        for iisotope in ['d_ln', 'd_excess']:
-            # iisotope = 'd_ln'
-            # 'wisoaprt', 'dO18', 'dD',
-            print('#-------- ' + iisotope)
-            
-            for ialltime in ['daily', 'mon', 'mon no mm', 'ann', 'ann no am']:
-                # ialltime = 'daily'
-                print('#---- ' + ialltime)
-                
-                output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.0_sources_isotopes/8.1.5.0.1 ' + expid[i] + ' q_sfc ' + ialltime + ' corr. ' + ivar + ' vs. ' + iisotope + '_global.png'
-                
-                cbar_label = 'Correlation: ' + plot_labels_no_unit[ivar] + ' & ' + plot_labels_no_unit[iisotope] + ' in surface vapour'
-                
-                fig, ax = globe_plot(
-                    add_grid_labels=False, figsize=np.array([8.8, 6]) / 2.54,
-                    fm_left=0.01, fm_right=0.99, fm_bottom=0.1, fm_top=0.99,)
-                
-                plt1 = plot_t63_contourf(
-                    lon, lat,
-                    corr_sources_isotopes_q_sfc[expid[i]][ivar][iisotope][ialltime]['r'],
-                    ax,
-                    pltlevel, 'neither', pltnorm, pltcmp, ccrs.PlateCarree(),)
-                
-                cbar = fig.colorbar(
-                    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
-                    orientation="horizontal", shrink=0.7, ticks=pltticks,
-                    pad=0.05, fraction=0.12,
-                    )
-                cbar.ax.tick_params(length=2, width=0.4)
-                cbar.ax.set_xlabel(cbar_label, linespacing=2)
-                
-                fig.savefig(output_png)
-
-
-
-'''
-6*5*5
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -283,122 +292,16 @@ annual_max_ilat = np.where(lat == annual_max_lat)[0][0]
 
 
 # -----------------------------------------------------------------------------
-# region plot par_corr_sources_isotopes_q_sfc
+# region animate wind and mslp
 
-for i in range(len(expid)):
-    # i = 0
-    print('#-------------------------------- ' + str(i) + ': ' + expid[i])
-    
-    for iisotopes in ['d_ln',]:
-        # iisotopes = 'd_ln'
-        # ['d_ln', 'd_excess',]
-        print('#---------------- ' + iisotopes)
-        
-        for ivar in ['sst',]:
-            # ivar = 'sst'
-            # ['sst', 'RHsst']
-            print('#---------------- ' + ivar)
-            
-            for ctr_var in list(set(['sst', 'RHsst']) - set([ivar])):
-                # ctr_var = 'RHsst'
-                print('#-------- ' + ctr_var)
-                
-                for ialltime in ['daily', 'ann',]:
-                    # ialltime = 'mon'
-                    # ['daily', 'mon', 'mon no mm', 'ann', 'ann no am']
-                    print('#---- ' + ialltime)
-                    
-                    output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.0_sources_isotopes/8.1.5.0.3 ' + expid[i] + ' ' + ialltime + ' corr. ' + iisotopes + ' vs. ' + ivar + ' while controlling ' + ctr_var + '.png'
-                    
-                    cbar_label = 'Partial correlation: ' + plot_labels_no_unit[iisotopes] + ' & ' + plot_labels_no_unit[ivar] + '\nwhile controlling ' + plot_labels_no_unit[ctr_var]
-                    
-                    fig, ax = hemisphere_plot(northextent=-20, figsize=np.array([5.8, 7.5]) / 2.54,)
-                    
-                    plt1 = plot_t63_contourf(
-                        lon, lat,
-                        par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'],
-                        ax, pltlevel, 'neither', pltnorm, pltcmp, ccrs.PlateCarree(),)
-                    
-                    if ((iisotopes == 'd_ln') & (ivar == 'sst') & (ialltime == 'daily')):
-                        cplot_ice_cores(daily_min_lon, daily_min_lat, ax, s=12)
-                        cplot_ice_cores(daily_max_lon, daily_max_lat, ax, s=12)
-                    elif ((iisotopes == 'd_ln') & (ivar == 'sst') & (ialltime == 'ann')):
-                        cplot_ice_cores(annual_min_lon, annual_min_lat, ax,s=12)
-                        cplot_ice_cores(annual_max_lon, annual_max_lat, ax,s=12)
-                    
-                    cbar = fig.colorbar(
-                        plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
-                        orientation="horizontal", shrink=0.9, ticks=pltticks, extend='both',
-                        pad=0.02, fraction=0.2,
-                        )
-                    
-                    # cbar.ax.tick_params(labelsize=8)
-                    cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
-                    fig.savefig(output_png)
 
+ialltime = 'daily'
+itimestart = 11730
+idatalength = 30
+
+daily_uv_ml_k_alltime[expid[i]]['u'][ialltime]
 
 
 # endregion
 # -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot par_corr_sources_isotopes_q_sfc globe
-
-for i in range(len(expid)):
-    # i = 0
-    print('#-------------------------------- ' + str(i) + ': ' + expid[i])
-    
-    for iisotopes in ['d_ln',]:
-        # iisotopes = 'd_ln'
-        # 'd_excess'
-        print('#------------------------ ' + iisotopes)
-        
-        for ivar in ['sst',]:
-          # ivar = 'sst'
-          #  'RHsst',
-          print('#---------------- ' + ivar)
-          
-          for ctr_var in list(set(['sst', 'RHsst']) - set([ivar])):
-            # ctr_var = 'RHsst'
-            print('#-------- ' + ctr_var)
-            
-            for ialltime in ['daily', 'mon', 'mon no mm', 'ann no am']:
-                # ialltime = 'daily'
-                # ['daily', 'mon', 'mon no mm', 'ann no am']
-                print('#---- ' + ialltime)
-                
-                output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.0_sources_isotopes/8.1.5.0.5 ' + expid[i] + ' q_sfc ' + ialltime + ' corr. ' + ivar + ' vs. ' + iisotopes + ' while controlling ' + ctr_var + '_global.png'
-                
-                cbar_label = 'Partial correlation: ' + plot_labels_no_unit[iisotopes] + ' & ' + plot_labels_no_unit[ivar] + ' while controlling ' + plot_labels_no_unit[ctr_var]
-                
-                fig, ax = globe_plot(
-                    add_grid_labels=False, figsize=np.array([8.8, 6]) / 2.54,
-                    fm_left=0.01, fm_right=0.99, fm_bottom=0.1, fm_top=0.99,)
-                
-                plt1 = plot_t63_contourf(
-                    lon, lat,
-                    par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'],
-                    ax,
-                    pltlevel, 'neither', pltnorm, pltcmp, ccrs.PlateCarree(),)
-                
-                cbar = fig.colorbar(
-                    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
-                    orientation="horizontal", shrink=0.7, ticks=pltticks,
-                    pad=0.05, fraction=0.12,
-                    )
-                cbar.ax.tick_params(length=0.5, width=0.4)
-                cbar.ax.set_xlabel(cbar_label, linespacing=2, size=9)
-                
-                fig.savefig(output_png)
-
-
-
-'''
-6*5*5
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
 

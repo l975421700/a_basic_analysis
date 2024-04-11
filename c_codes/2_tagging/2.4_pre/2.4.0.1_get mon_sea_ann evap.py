@@ -1,20 +1,15 @@
 
 
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_600_5.0',
-    # 'pi_601_5.1',
-    # 'pi_602_5.2',
-    # 'pi_605_5.5',
-    # 'pi_606_5.6',
-    # 'pi_609_5.7',
-    # 'pi_610_5.8',
     # 'hist_700_5.0',
-    'nudged_701_5.0',
+    # 'nudged_701_5.0',
+    
+    'nudged_705_6.0',
     ]
 i = 0
 
-ifile_start = 12 #0 #120
+ifile_start = 0 #0 #120
 ifile_end   = 516 #1740 #840
 
 # -----------------------------------------------------------------------------

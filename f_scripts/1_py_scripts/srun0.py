@@ -7,26 +7,21 @@
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'nudged_703_6.0_k52',
-    # 'nudged_705_6.0',
+    # 'nudged_703_6.0_k52',
+    'nudged_705_6.0',
     ]
 i = 0
-
-ifile_start = 0 #0 #120
-ifile_end   = 528 #1740 #840
 
 # -----------------------------------------------------------------------------
 # region import packages
 
 # management
-import glob
 import pickle
 import warnings
 warnings.filterwarnings('ignore')
 import os
 import sys  # print(sys.path)
 sys.path.append('/albedo/work/user/qigao001')
-import psutil
 
 # data analysis
 import numpy as np
@@ -36,11 +31,16 @@ dask.config.set({"array.slicing.split_large_chunks": True})
 from dask.diagnostics import ProgressBar
 pbar = ProgressBar()
 pbar.register()
-from scipy import stats
-import pandas as pd
+import xskillscore as xs
+from scipy.stats import pearsonr
 
-from a_basic_analysis.b_module.basic_calculations import (
-    mon_sea_ann,
+from a_basic_analysis.b_module.namelist import (
+    seconds_per_d,
+)
+
+from a_basic_analysis.b_module.statistics import (
+    xr_par_cor,
+    xr_par_cor_subset,
 )
 
 
@@ -49,183 +49,164 @@ from a_basic_analysis.b_module.basic_calculations import (
 
 
 # -----------------------------------------------------------------------------
-# region import output
-
-exp_org_o = {}
-exp_org_o[expid[i]] = {}
-
-filenames_wiso_q_plev = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_wiso_q_plev.nc'))
-exp_org_o[expid[i]]['wiso_q_plev'] = xr.open_mfdataset(
-    filenames_wiso_q_plev[ifile_start:ifile_end],
-    )
+# region import data
 
 
-'''
-filenames_wiso_q_plev = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_wiso_q_plev.nc'))
+wisoaprt_alltime = {}
+dO18_alltime = {}
+dD_alltime = {}
+d_ln_alltime = {}
+d_excess_alltime = {}
 
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-#SBATCH --time=00:30:00
-# -----------------------------------------------------------------------------
-# region get mon_sea_ann q from 7 geo regions
-
-time = exp_org_o[expid[i]]['wiso_q_plev'].time
-lon  = exp_org_o[expid[i]]['wiso_q_plev'].lon
-lat  = exp_org_o[expid[i]]['wiso_q_plev'].lat
-plev = exp_org_o[expid[i]]['wiso_q_plev'].plev
-
-geo_regions = [
-    'AIS', 'Land excl. AIS', 'Atlantic Ocean',
-    'Indian Ocean', 'Pacific Ocean', 'SH seaice', 'Southern Ocean',
-    'Open Ocean', 'Sum']
-q_count = {'AIS': 13, 'Land excl. AIS': 14,
-             'Atlantic Ocean': 15, 'Indian Ocean': 16, 'Pacific Ocean': 17,
-             'SH seaice': 18, 'Southern Ocean': 19}
-
-q_geo7 = {}
-q_geo7[expid[i]] = xr.DataArray(
-    data = np.zeros(
-        (len(time), len(geo_regions), len(plev), len(lat), len(lon)),
-        dtype=np.float32),
-    coords={
-        'time':         time,
-        'geo_regions':  geo_regions,
-        'plev':         plev,
-        'lat':          lat,
-        'lon':          lon,
-    }
-)
-
-for iregion in geo_regions[:-2]:
-    # iregion = 'AIS'
-    print('#-------------------------------- ' + iregion)
-    print(q_count[iregion])
+for i in range(len(expid)):
+    print(str(i) + ': ' + expid[i])
     
-    q_geo7[expid[i]].sel(geo_regions=iregion)[:] = \
-        (exp_org_o[expid[i]]['wiso_q_plev']['q_' + str(q_count[iregion])] + \
-            exp_org_o[expid[i]]['wiso_q_plev']['xl_' + str(q_count[iregion])] + \
-                exp_org_o[expid[i]]['wiso_q_plev']['xi_' + str(q_count[iregion])]).compute()
-
-q_geo7[expid[i]].sel(geo_regions='Open Ocean')[:] = \
-    q_geo7[expid[i]].sel(geo_regions=[
-        'Atlantic Ocean', 'Indian Ocean', 'Pacific Ocean', 'Southern Ocean',
-        ]).sum(dim='geo_regions', skipna=False).compute()
-
-q_geo7[expid[i]].sel(geo_regions='Sum')[:] = \
-    q_geo7[expid[i]].sel(geo_regions=[
-        'AIS', 'Land excl. AIS', 'Atlantic Ocean',
-        'Indian Ocean', 'Pacific Ocean', 'SH seaice', 'Southern Ocean',
-        ]).sum(dim='geo_regions', skipna=False).compute()
-
-q_geo7_alltiime = {}
-q_geo7_alltiime[expid[i]] = mon_sea_ann(var_monthly=q_geo7[expid[i]])
-
-print(psutil.Process().memory_info().rss / (2 ** 30))
-
-del q_geo7[expid[i]]
-
-output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_geo7_alltiime.pkl'
-
-if (os.path.isfile(output_file)):
-    os.remove(output_file)
-
-with open(output_file, 'wb') as f:
-    pickle.dump(q_geo7_alltiime[expid[i]], f)
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
+        wisoaprt_alltime[expid[i]] = pickle.load(f)
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_alltime.pkl', 'rb') as f:
+        dO18_alltime[expid[i]] = pickle.load(f)
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_alltime.pkl', 'rb') as f:
+        dD_alltime[expid[i]] = pickle.load(f)
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_alltime.pkl', 'rb') as f:
+        d_ln_alltime[expid[i]] = pickle.load(f)
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_alltime.pkl', 'rb') as f:
+        d_excess_alltime[expid[i]] = pickle.load(f)
 
 
+source_var = ['lat', 'lon', 'sst', 'rh2m', 'wind10', 'distance', 'RHsst']
+pre_weighted_var = {}
+
+for i in range(len(expid)):
+    # i = 0
+    print(str(i) + ': ' + expid[i])
+    
+    pre_weighted_var[expid[i]] = {}
+    
+    prefix = exp_odir + expid[i] + '/analysis/echam/' + expid[i]
+    
+    source_var_files = [
+        prefix + '.pre_weighted_lat.pkl',
+        prefix + '.pre_weighted_lon.pkl',
+        prefix + '.pre_weighted_sst.pkl',
+        prefix + '.pre_weighted_rh2m.pkl',
+        prefix + '.pre_weighted_wind10.pkl',
+        prefix + '.transport_distance.pkl',
+        prefix + '.pre_weighted_RHsst.pkl',
+    ]
+    
+    for ivar, ifile in zip(source_var, source_var_files):
+        print(ivar + ':    ' + ifile)
+        with open(ifile, 'rb') as f:
+            pre_weighted_var[expid[i]][ivar] = pickle.load(f)
+
+
+# temp2_alltime = {}
+
+# for i in range(len(expid)):
+#     # i = 0
+#     print(str(i) + ': ' + expid[i])
+    
+#     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.temp2_alltime.pkl', 'rb') as f:
+#         temp2_alltime[expid[i]] = pickle.load(f)
+
+
+# sam_mon = {}
+# b_sam_mon = {}
+
+# for i in range(len(expid)):
+#     print(str(i) + ': ' + expid[i])
+    
+#     sam_mon[expid[i]] = xr.open_dataset(
+#         exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.sam_mon.nc')
+    
+#     b_sam_mon[expid[i]], _ = xr.broadcast(
+#         sam_mon[expid[i]].sam,
+#         d_ln_alltime[expid[i]]['mon'])
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region get partial Corr. isotopes and sources (RHsst & SST)
+
+par_corr_sources_RHsst_SST_dthreshold = {}
+
+for i in range(len(expid)):
+    # i = 0
+    print('#-------------------------------- ' + str(i) + ': ' + expid[i])
+    
+    par_corr_sources_RHsst_SST_dthreshold[expid[i]] = {}
+    
+    for iisotopes in ['d_ln', 'd_excess',]:
+        # ['d_ln', 'd_excess',]
+        # iisotopes = 'd_ln'
+        print('#---------------- ' + iisotopes)
+        
+        par_corr_sources_RHsst_SST_dthreshold[expid[i]][iisotopes] = {}
+        
+        for ivar in ['sst', 'RHsst',]:
+            # ['sst', 'RHsst']
+            # ivar = 'sst'
+            print('#---------------- ' + ivar)
+            
+            par_corr_sources_RHsst_SST_dthreshold[expid[i]][iisotopes][ivar] = {}
+            
+            for ctr_var in list(set(['sst', 'RHsst']) - set([ivar])):
+                # ctr_var = 'RHsst'
+                print('#-------- ' + ctr_var)
+                
+                par_corr_sources_RHsst_SST_dthreshold[expid[i]][iisotopes][ivar][ctr_var] = {}
+                
+                for ialltime in ['daily',]:
+                    # ialltime = 'daily'
+                    print('#---- ' + ialltime)
+                    
+                    par_corr_sources_RHsst_SST_dthreshold[expid[i]][iisotopes][ivar][ctr_var][ialltime] = {}
+                    
+                    if (iisotopes == 'd_ln'):
+                        isotopevar = d_ln_alltime[expid[i]][ialltime]
+                    elif (iisotopes == 'd_excess'):
+                        isotopevar = d_excess_alltime[expid[i]][ialltime]
+                    
+                    par_corr_sources_RHsst_SST_dthreshold[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'] = xr.apply_ufunc(
+                        xr_par_cor_subset,
+                        isotopevar,
+                        pre_weighted_var[expid[i]][ivar][ialltime],
+                        pre_weighted_var[expid[i]][ctr_var][ialltime],
+                        wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1) * seconds_per_d >= 0.02,
+                        input_core_dims=[["time"], ["time"], ["time"],["time"]],
+                        kwargs={'output': 'r'}, dask = 'allowed', vectorize = True
+                    )
+                    
+                    par_corr_sources_RHsst_SST_dthreshold[expid[i]][iisotopes][ivar][ctr_var][ialltime]['p'] = xr.apply_ufunc(
+                        xr_par_cor_subset,
+                        isotopevar,
+                        pre_weighted_var[expid[i]][ivar][ialltime],
+                        pre_weighted_var[expid[i]][ctr_var][ialltime],
+                        wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1) * seconds_per_d >= 0.02,
+                        input_core_dims=[["time"], ["time"], ["time"],["time"]],
+                        kwargs={'output': 'p'}, dask = 'allowed', vectorize = True
+                    )
+    
+    output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sources_RHsst_SST_dthreshold.pkl'
+    
+    if (os.path.isfile(output_file)):
+        os.remove(output_file)
+    
+    with open(output_file, 'wb') as f:
+        pickle.dump(par_corr_sources_RHsst_SST_dthreshold[expid[i]], f)
 
 
 
 
 '''
-#-------------------------------- check
-
-q_geo7_alltiime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_geo7_alltiime.pkl', 'rb') as f:
-    q_geo7_alltiime[expid[i]] = pickle.load(f)
-
-filenames_wiso_q_plev = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_wiso_q_plev.nc'))
-
-ifile = -10
-wiso_q_plev = xr.open_dataset(filenames_wiso_q_plev[ifile_start:ifile_end][ifile])
-
-data1 = q_geo7_alltiime[expid[i]]['mon'].sel(geo_regions='Pacific Ocean')[ifile].values
-data2 = (wiso_q_plev['q_17'] + wiso_q_plev['xl_17'] + wiso_q_plev['xi_17']).compute().squeeze().values
-print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
-
-
-data1 = q_geo7_alltiime[expid[i]]['mon'].sel(geo_regions='Open Ocean')[ifile].values
-data2 = (
-    wiso_q_plev['q_15'] + wiso_q_plev['xl_15'] + wiso_q_plev['xi_15'] + \
-        wiso_q_plev['q_16'] + wiso_q_plev['xl_16'] + wiso_q_plev['xi_16'] + \
-            wiso_q_plev['q_17'] + wiso_q_plev['xl_17'] + wiso_q_plev['xi_17'] + \
-                wiso_q_plev['q_19'] + wiso_q_plev['xl_19'] + wiso_q_plev['xi_19']).compute().squeeze().values
-print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
-print(np.max(abs(data1[np.isfinite(data1)] - data2[np.isfinite(data2)]) / data1[np.isfinite(data1)]))
-
-
-data1 = q_geo7_alltiime[expid[i]]['mon'].sel(geo_regions='Sum')[ifile].values
-data2 = (
-    wiso_q_plev['q_13'] + wiso_q_plev['xl_13'] + wiso_q_plev['xi_13'] + \
-    wiso_q_plev['q_14'] + wiso_q_plev['xl_14'] + wiso_q_plev['xi_14'] + \
-    wiso_q_plev['q_15'] + wiso_q_plev['xl_15'] + wiso_q_plev['xi_15'] + \
-    wiso_q_plev['q_16'] + wiso_q_plev['xl_16'] + wiso_q_plev['xi_16'] + \
-    wiso_q_plev['q_17'] + wiso_q_plev['xl_17'] + wiso_q_plev['xi_17'] + \
-    wiso_q_plev['q_18'] + wiso_q_plev['xl_18'] + wiso_q_plev['xi_18'] + \
-    wiso_q_plev['q_19'] + wiso_q_plev['xl_19'] + wiso_q_plev['xi_19']
-    ).compute().squeeze().values
-print((data1[np.isfinite(data1)] == data2[np.isfinite(data2)]).all())
-print(np.max(abs(data1[np.isfinite(data1)] - data2[np.isfinite(data2)]) / data1[np.isfinite(data1)]))
-
-#-------------------------------- check 2
-
-q_geo7_alltiime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_geo7_alltiime.pkl', 'rb') as f:
-    q_geo7_alltiime[expid[i]] = pickle.load(f)
-
-wiso_q_plev_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wiso_q_plev_alltime.pkl', 'rb') as f:
-    wiso_q_plev_alltime[expid[i]] = pickle.load(f)
-
-data1 = q_geo7_alltiime[expid[i]]['am'][:7].sum(dim='geo_regions').values
-data2 = wiso_q_plev_alltime[expid[i]]['q16o']['am'].values
-subset = np.isfinite(data1) & np.isfinite(data2)
-print(np.max(abs(data1[subset] - data2[subset]) / data2[subset]))
-
-data1 = q_geo7_alltiime[expid[i]]['am'].sel(geo_regions='Sum').values
-data2 = wiso_q_plev_alltime[expid[i]]['q16o']['am'].values
-subset = np.isfinite(data1) & np.isfinite(data2)
-print(np.max(abs(data1[subset] - data2[subset]) / data2[subset]))
-
-
-#-------------------------------- check 3
-
-q_geo7_alltiime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_geo7_alltiime.pkl', 'rb') as f:
-    q_geo7_alltiime[expid[i]] = pickle.load(f)
-
-ocean_q_alltime = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.ocean_q_alltime.pkl', 'rb') as f:
-    ocean_q_alltime[expid[i]] = pickle.load(f)
-
-# Open ocean + Arctic sea ice
-data1 = q_geo7_alltiime[expid[i]]['am'].sel(geo_regions=[
-    'Atlantic Ocean', 'Indian Ocean', 'Pacific Ocean', 'Southern Ocean',
-    ], lat=slice(0, -90), plev=1e+5).sum(dim='geo_regions', skipna=False).compute().values
-# data1 = q_geo7_alltiime[expid[i]]['am'].sel(geo_regions=['Open Ocean'], lat=slice(0, -90), plev=1e+5).squeeze().values
-# Open ocean
-data2 = ocean_q_alltime[expid[i]]['am'].sel(var_names='lat', lat=slice(0, -90), plev=1e+5).values
-subset = np.isfinite(data1) & np.isfinite(data2)
-print(np.max(abs(data1[subset] - data2[subset]) / data2[subset]))
-
-data1 = ocean_q_alltime[expid[i]]['am'].sel(var_names='lat').values
-data2 = ocean_q_alltime[expid[i]]['am'].sel(var_names='coslon').values
-subset = np.isfinite(data1) & np.isfinite(data2)
-np.max(abs(data1[subset] - data2[subset]) / data2[subset])
-
 '''
 # endregion
 # -----------------------------------------------------------------------------

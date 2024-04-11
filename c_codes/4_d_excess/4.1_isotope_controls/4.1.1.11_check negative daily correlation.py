@@ -127,7 +127,7 @@ for i in range(len(expid)):
     with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_q_sfc_alltime.pkl', 'rb') as f:
         d_excess_q_sfc_alltime[expid[i]] = pickle.load(f)
 
-source_var = ['sst', 'RHsst',]
+source_var = ['sst', 'RHsst', 'distance']
 q_sfc_weighted_var = {}
 
 for i in range(len(expid)):
@@ -141,6 +141,7 @@ for i in range(len(expid)):
     source_var_files = [
         prefix + '.q_sfc_weighted_sst.pkl',
         prefix + '.q_sfc_weighted_RHsst.pkl',
+        prefix + '.q_sfc_transport_distance.pkl',
     ]
     
     for ivar, ifile in zip(source_var, source_var_files):
@@ -623,6 +624,21 @@ for iRHsst in range(len(RHsst_threshold)):
     # )
 
 
+fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+
+ax.scatter(
+    RHsst_threshold, Partial_corr_below_RHsst,
+    s=6, lw=1, facecolors='white', edgecolors='k',)
+
+ax.set_xlabel('Upper threshold of local RHsst [$\%$]',)
+ax.set_ylabel('Partial correlation between source SST and $d_{ln}$\nwhile controlling source RHsst',)
+
+ax.grid(True, which='both',
+        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+fig.subplots_adjust(left=0.24, right=0.98, bottom=0.16, top=0.98)
+fig.savefig('figures/test/test.png')
+
+
 
 # When RHsst is smaller, partial correlation between d_ln and source SST while controlling source RHsst is less negative, but still significant.
 
@@ -685,6 +701,53 @@ pearsonr(
 
 
 
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region check variations of partial correlation with transport distance
+
+ialltime = 'daily'
+
+stats.describe(q_sfc_weighted_var[expid[i]]['distance'][ialltime][:, daily_min_ilat, daily_min_ilon], nan_policy='omit')
+
+distance_threshold = np.arange(500, 1500+1e-4, 20)
+Partial_corr_below_distance = np.zeros_like(distance_threshold)
+
+
+for ithreshold in range(len(distance_threshold)):
+    # iRHsst = 0
+    
+    subset = np.isfinite(d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon]).values & np.isfinite(q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_min_ilat, daily_min_ilon]).values & np.isfinite(q_sfc_weighted_var[expid[i]]['RHsst'][ialltime][:, daily_min_ilat, daily_min_ilon]).values & (q_sfc_weighted_var[expid[i]]['distance'][ialltime][:, daily_min_ilat, daily_min_ilon] < distance_threshold[ithreshold]).values
+    
+    print('#---------------- ' + str(ithreshold) + ' ' + str(distance_threshold[ithreshold]) + ' ' + str(subset.sum()))
+    
+    Partial_corr_below_distance[ithreshold] = xr_par_cor(
+        d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon].values[subset],
+        q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_min_ilat, daily_min_ilon].values[subset],
+        q_sfc_weighted_var[expid[i]]['RHsst'][ialltime][:, daily_min_ilat, daily_min_ilon].values[subset],
+    )
+
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+
+ax.scatter(
+    distance_threshold / 100, Partial_corr_below_distance,
+    s=6, lw=1, facecolors='white', edgecolors='k',)
+
+ax.set_xlabel('Upper threshold of source-sink distance [$× 10^2 km$]',)
+ax.set_ylabel('Partial correlation between source SST and $d_{ln}$\nwhile controlling source RHsst',)
+
+ax.grid(True, which='both',
+        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+fig.subplots_adjust(left=0.24, right=0.95, bottom=0.16, top=0.98)
+fig.savefig('figures/test/test1.png')
+
+
+
+# When RHsst is smaller, partial correlation between d_ln and source SST while controlling source RHsst is less negative, but still significant.
 
 # endregion
 # -----------------------------------------------------------------------------

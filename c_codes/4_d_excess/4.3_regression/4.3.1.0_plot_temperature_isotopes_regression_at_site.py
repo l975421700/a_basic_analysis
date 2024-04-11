@@ -413,7 +413,9 @@ for i in range(len(expid)):
 
 icores = 'EDC'
 iisotope = 'd_ln'
-ialltime = 'ann no am'
+ialltime = 'mon'
+
+# ['daily', 'mon', 'mm', 'mon no mm', 'ann', 'ann no am']
 
 for i in range(len(expid)):
     # i = 0
@@ -428,8 +430,8 @@ for i in range(len(expid)):
     print('#---------------- Slope')
     print(np.round(regression_sst_d[expid[i]][iisotope][icores][ialltime]['params'][1], 2))
     
-    # print('#---------------- ols_fit')
-    # print(regression_sst_d[expid[i]][iisotope][icores][ialltime]['ols_fit'])
+    print('#---------------- ols_fit')
+    print(regression_sst_d[expid[i]][iisotope][icores][ialltime]['ols_fit'])
 
 
 

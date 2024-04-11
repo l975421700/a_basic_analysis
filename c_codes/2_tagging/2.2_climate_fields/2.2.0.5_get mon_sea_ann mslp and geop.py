@@ -1,17 +1,12 @@
 
 
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_600_5.0',
-    # 'pi_601_5.1',
-    # 'pi_602_5.2',
-    # 'pi_610_5.8',
-    # 'hist_700_5.0',
-    'nudged_701_5.0',
+    'nudged_703_6.0_k52',
     ]
 i = 0
-ifile_start = 12 #0 #120
-ifile_end   = 516 #1740 #840
+ifile_start = 0 #0 #120
+ifile_end   = 528 #1740 #840
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -46,11 +41,10 @@ from a_basic_analysis.b_module.basic_calculations import (
 # -----------------------------------------------------------------------------
 # region import output
 
+filenames_psl_zh = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.daily_psl_zh.nc'))
+
 exp_org_o = {}
 exp_org_o[expid[i]] = {}
-
-filenames_psl_zh = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_psl_zh.nc'))
-
 exp_org_o[expid[i]]['psl_zh'] = xr.open_mfdataset(
     filenames_psl_zh[ifile_start:ifile_end],
     )
@@ -68,8 +62,8 @@ exp_org_o[expid[i]]['psl_zh'] = xr.open_mfdataset(
 psl_zh = {}
 psl_zh[expid[i]] = {}
 
-psl_zh[expid[i]]['psl'] = mon_sea_ann(var_monthly=exp_org_o[expid[i]]['psl_zh'].psl)
-psl_zh[expid[i]]['zh'] = mon_sea_ann(var_monthly=exp_org_o[expid[i]]['psl_zh'].zh)
+psl_zh[expid[i]]['psl'] = mon_sea_ann(exp_org_o[expid[i]]['psl_zh'].psl)
+psl_zh[expid[i]]['zh'] = mon_sea_ann(exp_org_o[expid[i]]['psl_zh'].zh)
 
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.psl_zh.pkl', 'wb') as f:
     pickle.dump(psl_zh[expid[i]], f)

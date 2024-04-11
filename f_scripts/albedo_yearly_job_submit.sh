@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH -p fat
+#SBATCH -p mpp
 #SBATCH --qos=12h
 #SBATCH --time=12:00:00
 #SBATCH -o %A_%a.out
 #SBATCH -e %A_%a.err
-#SBATCH --array=0-6
-#SBATCH --mem=512GB
+#SBATCH --array=1979-2022
+# #SBATCH --mem=512GB
 
 echo "Current time : " $(date +"%T")
 cd $WORK
@@ -43,7 +43,9 @@ source ${HOME}/miniconda3/bin/activate deepice
 
 # /albedo/work/user/qigao001/a_basic_analysis/f_scripts/0_echam_pp/0.15_get_daily_wisoq_plev.sh ${SLURM_ARRAY_TASK_ID} /albedo/work/user/qigao001/output/echam-6.3.05p2-wiso/pi nudged_703_6.0_k52
 
-python /albedo/work/user/qigao001/a_basic_analysis/f_scripts/1_py_scripts/srun${SLURM_ARRAY_TASK_ID}.py
+/albedo/work/user/qigao001/a_basic_analysis/f_scripts/0_echam_pp/0.16_get_daily_psl_zh.sh ${SLURM_ARRAY_TASK_ID} /albedo/work/user/qigao001/output/echam-6.3.05p2-wiso/pi nudged_703_6.0_k52
+
+# python /albedo/work/user/qigao001/a_basic_analysis/f_scripts/1_py_scripts/srun${SLURM_ARRAY_TASK_ID}.py
 
 echo "Current time : " $(date +"%T")
 

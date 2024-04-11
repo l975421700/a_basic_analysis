@@ -115,14 +115,39 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-q_sfc_transport_distance = {}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_sfc_transport_distance.pkl', 'rb') as f:
-    q_sfc_transport_distance[expid[i]] = pickle.load(f)
+source_var = ['lat', 'lon', 'sst', 'RHsst', 'distance']
+q_sfc_weighted_var = {}
+
+for i in range(len(expid)):
+    # i = 0
+    print(str(i) + ': ' + expid[i])
+    
+    q_sfc_weighted_var[expid[i]] = {}
+    
+    prefix = exp_odir + expid[i] + '/analysis/echam/' + expid[i]
+    
+    source_var_files = [
+        prefix + '.q_sfc_weighted_lat.pkl',
+        prefix + '.q_sfc_weighted_lon.pkl',
+        prefix + '.q_sfc_weighted_sst.pkl',
+        prefix + '.q_sfc_weighted_RHsst.pkl',
+        prefix + '.q_sfc_transport_distance.pkl',
+    ]
+    
+    for ivar, ifile in zip(source_var, source_var_files):
+        print(ivar + ':    ' + ifile)
+        with open(ifile, 'rb') as f:
+            q_sfc_weighted_var[expid[i]][ivar] = pickle.load(f)
 
 
 
 
 '''
+q_sfc_transport_distance = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_sfc_transport_distance.pkl', 'rb') as f:
+    q_sfc_transport_distance[expid[i]] = pickle.load(f)
+
+
 '''
 # endregion
 # -----------------------------------------------------------------------------
@@ -261,13 +286,102 @@ fig.savefig(output_png)
 stats.describe(q_sfc_transport_distance[expid[i]]['daily'][:, daily_min_ilat, daily_min_ilon], nan_policy='omit')
 np.nanmean(q_sfc_transport_distance[expid[i]]['daily'][:, daily_min_ilat, daily_min_ilon])
 np.nanstd(q_sfc_transport_distance[expid[i]]['daily'][:, daily_min_ilat, daily_min_ilon], ddof=1)
+q_sfc_transport_distance[expid[i]]['am'][daily_min_ilat, daily_min_ilon]
 # 1074±556 km
+# 997±556 km
 
 stats.describe(q_sfc_transport_distance[expid[i]]['daily'][:, daily_max_ilat, daily_max_ilon], nan_policy='omit')
 np.nanmean(q_sfc_transport_distance[expid[i]]['daily'][:, daily_max_ilat, daily_max_ilon])
 np.nanstd(q_sfc_transport_distance[expid[i]]['daily'][:, daily_max_ilat, daily_max_ilon], ddof=1)
+q_sfc_transport_distance[expid[i]]['am'][daily_max_ilat, daily_max_ilon]
 # 415±111 km
+# 385±111 km
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot am relative source latitude of q_sfc
+
+q_sfc_weighted_var[expid[i]]['lat']['daily'].std(dim='time', ddof=1).to_netcdf('scratch/test/test0.nc')
+
+(q_sfc_weighted_var[expid[i]]['lat']['am'] - q_sfc_weighted_var[expid[i]]['lat']['am'].lat).to_netcdf('scratch/test/test0.nc')
+
+output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.2 ' + expid[i] + ' am q_sfc relative source latitude.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-10, cm_max=10, cm_interval1=1, cm_interval2=2, cmap='RdBu',)
+
+fig, ax = globe_plot(
+    add_grid_labels=False, figsize=np.array([8.8, 6]) / 2.54,
+    fm_left=0.01, fm_right=0.99, fm_bottom=0.1, fm_top=0.99,)
+
+plt1 = plot_t63_contourf(
+    q_sfc_weighted_var[expid[i]]['lat']['am'].lon,
+    q_sfc_weighted_var[expid[i]]['lat']['am'].lat,
+    q_sfc_weighted_var[expid[i]]['lat']['am'] - q_sfc_weighted_var[expid[i]]['lat']['am'].lat,
+    ax, pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+
+ax.add_feature(
+    cfeature.LAND, color='white', zorder=2, edgecolor=None,lw=0)
+
+cbar = fig.colorbar(
+    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.7, ticks=pltticks,
+    pad=0.05, fraction=0.12,)
+cbar.ax.tick_params(length=2, width=0.4)
+cbar.ax.set_xlabel('Relative source latitude [$°$]', linespacing=2)
+
+fig.savefig(output_png)
+
 
 
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot std of daily source latitude of q_sfc
+
+q_sfc_weighted_var[expid[i]]['lat']['daily'].std(dim='time', ddof=1).to_netcdf('scratch/test/test0.nc')
+
+output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.2 ' + expid[i] + ' daily q_sfc relative source latitude std.png'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=0, cm_max=6, cm_interval1=0.5, cm_interval2=1, cmap='Oranges',
+    reversed=False,)
+
+fig, ax = globe_plot(
+    add_grid_labels=False, figsize=np.array([8.8, 6]) / 2.54,
+    fm_left=0.01, fm_right=0.99, fm_bottom=0.1, fm_top=0.99,)
+
+plt1 = plot_t63_contourf(
+    q_sfc_weighted_var[expid[i]]['lat']['am'].lon,
+    q_sfc_weighted_var[expid[i]]['lat']['am'].lat,
+    q_sfc_weighted_var[expid[i]]['lat']['daily'].std(dim='time', ddof=1),
+    ax, pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+
+ax.add_feature(
+    cfeature.LAND, color='white', zorder=2, edgecolor=None,lw=0)
+
+cbar = fig.colorbar(
+    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.7, ticks=pltticks,
+    pad=0.05, fraction=0.12,)
+cbar.ax.tick_params(length=2, width=0.4)
+cbar.ax.set_xlabel('Standard deviation of daily source latitude [$°$]')
+
+fig.savefig(output_png)
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+
+
+
+
+

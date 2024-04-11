@@ -398,6 +398,35 @@ def xr_par_cor(x, y, covar, output = 'r'):
         return(par_corr["p-val"].values[0])
 
 
+def xr_par_cor_subset(x, y, covar, subset, output = 'r'):
+    '''
+    output: 'r' correlation coefficient; 'p' p-values.
+    '''
+    
+    import pandas as pd
+    import pingouin as pg
+    import numpy as np
+    
+    if ((np.isfinite(x).sum() < 4) | \
+        (np.isfinite(y).sum() < 4) | \
+            (np.isfinite(covar).sum() < 4) | \
+                (subset.sum() < 4)):
+        return(np.nan)
+    
+    dataframe = pd.DataFrame(data={
+        'x': x[subset],
+        'y': y[subset],
+        'covar': covar[subset],
+    })
+    
+    par_corr = pg.partial_corr(data=dataframe, x='x', y='y', covar='covar')
+    
+    if (output == 'r'):
+        return(par_corr.r.values[0])
+    elif (output == 'p'):
+        return(par_corr["p-val"].values[0])
+
+
 '''
 import pingouin as pg
 ilat = 48

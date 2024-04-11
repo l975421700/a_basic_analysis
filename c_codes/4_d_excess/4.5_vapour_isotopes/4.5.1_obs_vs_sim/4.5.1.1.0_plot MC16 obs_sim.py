@@ -126,7 +126,16 @@ ERA5_daily_q_2013_2022 = xr.open_dataset('scratch/ERA5/q/ERA5_daily_q_2013_2022.
 ERA5_daily_temp2_2013_2022 = xr.open_dataset('scratch/ERA5/temp2/ERA5_daily_temp2_2013_2022.nc', chunks={'time': 720})
 
 
+
 '''
+# height in T63
+echam6_t63_geosp = xr.open_dataset(exp_odir + expid[i] + '/input/echam/unit.24')
+echam6_t63_surface_height = geopotential_to_height(
+    echam6_t63_geosp.GEOSP * (units.m / units.s)**2)
+
+echam6_t63_surface_height.sel(lat=site_lat, lon=site_lon, method='nearest')
+# 3275.6 m
+
 # check
 for ivar in ['dD_sim', 'd18O_sim', 'd_ln_sim', 'd_xs_sim', 'q_sim']:
     print((MC16_Dome_C_1d_sim['nudged_717_6.0_I03_2yr'][ivar] == MC16_Dome_C_1d_sim['nudged_713_6.0_2yr'][ivar]).all())

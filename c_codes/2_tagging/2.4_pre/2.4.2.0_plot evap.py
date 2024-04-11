@@ -1,11 +1,14 @@
 
 
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_m_416_4.9',
-    'nudged_701_5.0',
+    # 'nudged_701_5.0',
+    
+    'nudged_705_6.0',
     ]
 i = 0
+
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -117,19 +120,31 @@ lon = wisoevap_alltime[expid[i]]['am'].lon
 lat = wisoevap_alltime[expid[i]]['am'].lat
 lon_2d, lat_2d = np.meshgrid(lon, lat,)
 
-major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
-major_ice_core_site = major_ice_core_site.loc[
-    major_ice_core_site['age (kyr)'] > 120, ]
+# major_ice_core_site = pd.read_csv('data_sources/others/major_ice_core_site.csv')
+# major_ice_core_site = major_ice_core_site.loc[
+#     major_ice_core_site['age (kyr)'] > 120, ]
 
-with open('scratch/products/era5/evap/era5_mon_evap_1979_2021_alltime.pkl', 'rb') as f:
-    era5_mon_evap_1979_2021_alltime = pickle.load(f)
+# with open('scratch/products/era5/evap/era5_mon_evap_1979_2021_alltime.pkl', 'rb') as f:
+#     era5_mon_evap_1979_2021_alltime = pickle.load(f)
 
-lon_era5 = era5_mon_evap_1979_2021_alltime['am'].longitude
-lat_era5 = era5_mon_evap_1979_2021_alltime['am'].latitude
-lon_2d_era5, lat_2d_era5 = np.meshgrid(lon_era5, lat_era5,)
+# lon_era5 = era5_mon_evap_1979_2021_alltime['am'].longitude
+# lat_era5 = era5_mon_evap_1979_2021_alltime['am'].latitude
+# lon_2d_era5, lat_2d_era5 = np.meshgrid(lon_era5, lat_era5,)
 
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot fraction of evap as pre
+
+(wisoevap_alltime[expid[i]]['am'].sel(wisotype=1) / wisoaprt_alltime[expid[i]]['am'].sel(wisotype=1) * 100).to_netcdf('scratch/test/test0.nc')
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
 
 
 # -----------------------------------------------------------------------------

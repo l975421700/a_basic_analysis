@@ -123,6 +123,13 @@ ERA5_daily_temp2_2013_2022 = xr.open_dataset('scratch/ERA5/temp2/ERA5_daily_temp
 
 
 '''
+echam6_t63_geosp = xr.open_dataset(exp_odir + expid[i] + '/input/echam/unit.24')
+echam6_t63_surface_height = geopotential_to_height(
+    echam6_t63_geosp.GEOSP * (units.m / units.s)**2)
+
+echam6_t63_surface_height.sel(lat=site_lat, lon=site_lon, method='nearest')
+# 2909.7
+
 q_geo7_sfc_frc_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_geo7_sfc_frc_alltime.pkl', 'rb') as f:
     q_geo7_sfc_frc_alltime[expid[i]] = pickle.load(f)

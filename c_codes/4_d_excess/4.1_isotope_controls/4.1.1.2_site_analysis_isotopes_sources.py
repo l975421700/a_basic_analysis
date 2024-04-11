@@ -1,19 +1,10 @@
 
 
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'pi_600_5.0',
-    # 'pi_601_5.1',
-    # 'pi_602_5.2',
-    # 'pi_603_5.3',
-    # 'pi_605_5.5',
-    # 'pi_606_5.6',
-    # 'pi_609_5.7',
-    # 'pi_610_5.8',
     # 'hist_700_5.0',
-    
-    # 'nudged_705_6.0',
-    'nudged_703_6.0_k52',
+    'nudged_705_6.0',
+    # 'nudged_703_6.0_k52',
     ]
 
 
@@ -186,19 +177,19 @@ for icores in ['EDC',]:
     # icores = 'EDC'
     print('#-------------------------------- ' + icores)
     
-    for iisotope in ['d_excess', 'd_ln']:
+    for iisotope in ['d_ln',]:
         # iisotope = 'd_ln'
-        # 'dO18', 'dD',
+        # ['d_ln', 'd_excess', 'dO18', 'dD',]
         print('#---------------- ' + iisotope)
         
-        for ivar in ['sst', 'RHsst']:
+        for ivar in ['sst',]:
             # ivar = 'sst'
-            # 'rh2m', 'wind10'
+            # 'sst', 'RHsst', 'rh2m', 'wind10'
             print('#-------- ' + ivar)
             
-            for ialltime in ['daily', 'mon', 'mm', 'mon no mm', 'ann', 'ann no am']:
-                # ['daily', 'mon', 'ann',]:
-                # ialltime = 'daily'
+            for ialltime in ['mon']:
+                # ['daily', 'mon', 'mm', 'mon no mm', 'ann', 'ann no am', 'sm']:
+                # ialltime = 'sea'
                 print('#---- ' + ialltime)
                 
                 #---------------- settings
@@ -209,10 +200,10 @@ for icores in ['EDC',]:
                 xdata = xdata[subset]
                 ydata = ydata[subset]
                 
-                xmax_value = np.max(xdata)
-                xmin_value = np.min(xdata)
-                ymax_value = np.max(ydata)
-                ymin_value = np.min(ydata)
+                xmax_value = np.max(xdata) + 1
+                xmin_value = np.min(xdata) - 1
+                ymax_value = np.max(ydata) + 1
+                ymin_value = np.min(ydata) - 1
                 
                 output_png = 'figures/8_d-excess/8.1_controls/8.1.3_site_analysis/8.1.3.0_isotopes_sources_alltimes/8.1.3.0.0 ' + expid[i] + ' ' + icores + ' ' + ialltime + ' ' + ivar + ' vs. ' + iisotope + '.png'
                 
@@ -220,31 +211,36 @@ for icores in ['EDC',]:
                 
                 #---------------- plot
                 
-                fig, ax = plt.subplots(1, 1, figsize=np.array([4.4, 4]) / 2.54)
+                fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
                 
-                ax.scatter(
-                    xdata, ydata,
-                    s=6, lw=0.1, facecolors='white', edgecolors='k',)
+                sns.scatterplot(
+                    x=xdata, y=ydata,
+                    hue=xdata.time.dt.season,
+                    s=12, lw=0.5, facecolors='white', edgecolors='k',
+                )
+                # ax.scatter(
+                #     xdata, ydata,
+                #     s=12, lw=0.5, facecolors='white', edgecolors='k',)
                 ax.axline(
                     (0, linearfit.intercept), slope = linearfit.slope,
                     lw=0.5, color='k')
-                plt.text(0.05, 0.9, icores, transform=ax.transAxes, color='k',)
+                # plt.text(0.05, 0.9, icores, transform=ax.transAxes, color='k',)
                 
                 if (ialltime in ['mon no mm', 'ann no am']):
                     eq_text = '$y = $' + str(np.round(linearfit.slope, 1)) + '$x$' + \
-                        '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3))
+                        '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 2))
                 elif (linearfit.intercept >= 0):
                     eq_text = '$y = $' + str(np.round(linearfit.slope, 1)) + '$x + $' + \
                         str(np.round(linearfit.intercept, 1)) + \
-                            '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3))
+                            '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 2))
                 else:
                     eq_text = '$y = $' + str(np.round(linearfit.slope, 1)) + '$x $' + \
                         str(np.round(linearfit.intercept, 1)) + \
-                            '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 3))
+                            '\n$R^2 = $' + str(np.round(linearfit.rvalue**2, 2))
                 
                 plt.text(
-                    0.5, 0.05, eq_text,
-                    transform=ax.transAxes, fontsize=6, linespacing=1.5)
+                    0.95, 0.05, eq_text, transform=ax.transAxes,
+                    linespacing=2, ha='right', va='bottom')
                 
                 ax.set_ylabel(plot_labels[iisotope], labelpad=2)
                 ax.set_ylim(ymin_value, ymax_value)
@@ -253,14 +249,13 @@ for icores in ['EDC',]:
                 ax.set_xlabel(plot_labels[ivar], labelpad=2)
                 ax.set_xlim(xmin_value, xmax_value)
                 ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-                ax.tick_params(axis='both', labelsize=8)
+                ax.tick_params(axis='both')
                 
                 ax.grid(True, which='both',
                         linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
                 fig.subplots_adjust(
-                    left=0.32, right=0.95, bottom=0.25, top=0.95)
+                    left=0.18, right=0.95, bottom=0.15, top=0.95)
                 fig.savefig(output_png)
-
 
 
 
@@ -290,6 +285,10 @@ xr_par_cor(iso_var, src_var, ctl_var) ** 2
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+
+
 
 
 # -----------------------------------------------------------------------------
@@ -430,8 +429,6 @@ fig.savefig(output_png)
 
 # endregion
 # -----------------------------------------------------------------------------
-
-
 
 
 # -----------------------------------------------------------------------------

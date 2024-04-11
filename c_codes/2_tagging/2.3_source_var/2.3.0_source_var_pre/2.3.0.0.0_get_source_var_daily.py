@@ -303,7 +303,9 @@ for file_suffix in [
     # 'q_weighted_sinlon_zm',
     # 'q_weighted_sst_zm',
     # 'q_weighted_wind10_zm',
-    'q_geo7_alltiime',
+    # 'q_geo7_alltiime',
+    'psl_zh',
+    'daily_uv_ml_k_alltime',
     ]:
     print('#-------------------------------- ' + file_suffix)
     
