@@ -236,7 +236,7 @@
 &set_stream_element
     stream = 'wiso'
     name = 'wisosnglac'
-    lpost = 0
+    lpost = 1
 /
 &set_stream_element
     stream = 'wiso'

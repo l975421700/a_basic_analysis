@@ -2,7 +2,7 @@ general:
     setup_name: "echam"
     version: "6.3.05p2-wiso"
     compute_time: "00:30:00"
-    initial_date: "1979-01-01"
+    initial_date: "2022-01-01"
     final_date: "2023-01-01"
     model_dir: "/albedo/work/user/qigao001/model_codes/echam-6.3.05p2-wiso/"
     base_dir: "/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/"
@@ -18,7 +18,7 @@ echam:
             echam_bin: "${bin_dir}/${executable}"
     bin_in_work:
             echam_bin: "${executable}"
-    namelist_dir: '/albedo/work/user/qigao001/a_basic_analysis/g_namelists/nudged/'
+    namelist_dir: '/albedo/work/user/qigao001/a_basic_analysis/g_namelists/nudged_check/'
     scenario: "HIST"
     res: T63
     lresume: True
@@ -26,7 +26,7 @@ echam:
     restart_unit: "months"
     ini_parent_date: "1983-12-31T23:52:30"
     ini_parent_exp_id: "nudged_702_6.0_spinup"
-    ini_parent_dir: "/albedo/work/user/qigao001/albedo_scratch/output/echam-6.3.05p2-wiso/pi/nudged_702_6.0_spinup/restart/echam/"
+    ini_parent_dir: "/albedo/work/user/qigao001/output/echam-6.3.05p2-wiso/pi/nudged_702_6.0_spinup/restart/echam/"
     nproca: 24
     nprocb: 24
     nprocar: 0
@@ -41,7 +41,7 @@ echam:
             runctl:
                 default_output: False
                 out_filetype: 2
-                # putdata: [ 1, 'days', 'last', 0 ]
+                putdata: [ 1, 'days', 'last', 0 ]
                 # dt_stop: [ 1979, 1, 2 ]
                 lcouple: False
                 lcouple_co2: False

@@ -124,6 +124,8 @@ from a_basic_analysis.b_module.component_plot import (
 
 d_ln_q_sfc_alltime = {}
 # d_excess_q_sfc_alltime = {}
+dD_q_sfc_alltime = {}
+dO18_q_sfc_alltime = {}
 
 for i in range(len(expid)):
     print(str(i) + ': ' + expid[i])
@@ -133,6 +135,12 @@ for i in range(len(expid)):
     
     # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_q_sfc_alltime.pkl', 'rb') as f:
     #     d_excess_q_sfc_alltime[expid[i]] = pickle.load(f)
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_q_sfc_alltime.pkl', 'rb') as f:
+        dD_q_sfc_alltime[expid[i]] = pickle.load(f)
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_q_sfc_alltime.pkl', 'rb') as f:
+        dO18_q_sfc_alltime[expid[i]] = pickle.load(f)
 
 source_var = ['lat', 'lon', 'sst', 'RHsst', 'distance']
 q_sfc_weighted_var = {}
@@ -279,6 +287,16 @@ annual_max_ilat = np.where(lat == annual_max_lat)[0][0]
 # print(par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'].values[annual_max_ilat, annual_max_ilon])
 
 
+daily_pos_lon = 30
+daily_pos_lat = -40
+daily_pos_ilon = np.argmin(abs(lon.values - daily_pos_lon))
+daily_pos_ilat = np.argmin(abs(lat.values - daily_pos_lat))
+
+daily_neg_lon = 30
+daily_neg_lat = -50
+daily_neg_ilon = np.argmin(abs(lon.values - daily_neg_lon))
+daily_neg_ilat = np.argmin(abs(lat.values - daily_neg_lat))
+
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -294,12 +312,14 @@ idatalength = 30
 
 data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)]
 data2 = q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)]
+output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' sst vs. d_ln from ' + str(data1.time[0].values)[:10] + '.png'
+
+# data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_pos_ilat, daily_pos_ilon][itimestart:(itimestart+idatalength)]
+# data2 = q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_pos_ilat, daily_pos_ilon][itimestart:(itimestart+idatalength)]
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' sst vs. d_ln from ' + str(data1.time[0].values)[:10] + ' daily_pos.png'
 
 subset = np.isfinite(data1) & np.isfinite(data2)
 r_value = pearsonr(data1[subset], data2[subset]).statistic
-
-
-output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' sst vs. d_ln from ' + str(data1.time[0].values)[:10] + '.png'
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
 
@@ -356,30 +376,41 @@ pearsonr(data1[subset], data2[subset],).statistic
 # region plot daily time series of d_ln and source RHsst
 
 ialltime = 'daily'
-itimestart = 11730
+# itimestart = 11730
+itimestart = 15730
 idatalength = 30
 
-data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)]
-data2 = q_sfc_weighted_var[expid[i]]['RHsst'][ialltime][:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)] * 100
+# data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)]
+# data2 = q_sfc_weighted_var[expid[i]]['RHsst'][ialltime][:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)] * 100
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' RHsst vs. d_ln from ' + str(data1.time[0].values)[:10] + '.png'
+
+# data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_pos_ilat, daily_pos_ilon][itimestart:(itimestart+idatalength)]
+# data2 = q_sfc_weighted_var[expid[i]]['RHsst'][ialltime][:, daily_pos_ilat, daily_pos_ilon][itimestart:(itimestart+idatalength)] * 100
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' RHsst vs. d_ln from ' + str(data1.time[0].values)[:10] + ' daily_pos.png'
+
+# data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_neg_ilat, daily_neg_ilon][itimestart:(itimestart+idatalength)]
+# data2 = q_sfc_weighted_var[expid[i]]['RHsst'][ialltime][:, daily_neg_ilat, daily_neg_ilon][itimestart:(itimestart+idatalength)] * 100
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' RHsst vs. d_ln from ' + str(data1.time[0].values)[:10] + ' daily_neg.png'
+
+data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
+data2 = q_sfc_weighted_var[expid[i]]['RHsst'][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)] * 100
+output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' RHsst vs. d_ln from ' + str(data1.time[0].values)[:10] + ' daily_max.png'
 
 subset = np.isfinite(data1) & np.isfinite(data2)
 r_value = pearsonr(data1[subset], data2[subset]).statistic
-
-
-output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' RHsst vs. d_ln from ' + str(data1.time[0].values)[:10] + '.png'
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
 
 ax.plot(
     data1.time, data1,
-    'o', ls='-', ms=2, lw=0.5, c='tab:blue',)
+    'o', ls='-', ms=2, lw=0.5, c='k',)
 
 ax.set_xticks(data1.time[::4])
 plt.xticks(rotation=30, ha='right')
 ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-ax.set_xlabel('Date [$R = ' + str(np.round(r_value, 2)) + '$]',)
+ax.set_xlabel('Date',)
 
-ax.set_ylabel(plot_labels['d_ln'], c='tab:blue')
+ax.set_ylabel(plot_labels['d_ln'], c='k')
 ax.yaxis.set_minor_locator(AutoMinorLocator(2))
 ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
 
@@ -388,7 +419,7 @@ ax2.invert_yaxis()
 ax2.plot(
     data2.time, data2,
     'o', ls='-', ms=2, lw=0.5, c='tab:orange',)
-ax2.set_ylabel(plot_labels['RHsst'], c='tab:orange')
+ax2.set_ylabel(plot_labels['RHsst'] + ', $R = ' + str(np.round(r_value, 2)) + '$', c='tab:orange')
 ax2.yaxis.set_minor_locator(AutoMinorLocator(2))
 ax2.yaxis.set_major_formatter(remove_trailing_zero_pos)
 
@@ -519,14 +550,24 @@ ialltime = 'daily'
 itimestart = 11730
 idatalength = 30
 
-data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)]
-data2 = q_sfc_weighted_var[expid[i]]['distance'][ialltime][:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)]
+# data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)]
+# data2 = q_sfc_weighted_var[expid[i]]['distance'][ialltime][:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)]
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' distance vs. d_ln from ' + str(data1.time[0].values)[:10] + '.png'
+
+# data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_pos_ilat, daily_pos_ilon][itimestart:(itimestart+idatalength)]
+# data2 = q_sfc_weighted_var[expid[i]]['distance'][ialltime][:, daily_pos_ilat, daily_pos_ilon][itimestart:(itimestart+idatalength)]
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' distance vs. d_ln from ' + str(data1.time[0].values)[:10] + ' daily_pos.png'
+
+# data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_neg_ilat, daily_neg_ilon][itimestart:(itimestart+idatalength)]
+# data2 = q_sfc_weighted_var[expid[i]]['distance'][ialltime][:, daily_neg_ilat, daily_neg_ilon][itimestart:(itimestart+idatalength)]
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' distance vs. d_ln from ' + str(data1.time[0].values)[:10] + ' daily neg.png'
+
+data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
+data2 = q_sfc_weighted_var[expid[i]]['distance'][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
+output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' distance vs. d_ln from ' + str(data1.time[0].values)[:10] + ' daily_max.png'
 
 subset = np.isfinite(data1) & np.isfinite(data2)
 r_value = pearsonr(data1[subset], data2[subset]).statistic
-
-
-output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' distance vs. d_ln from ' + str(data1.time[0].values)[:10] + '.png'
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
 
@@ -585,14 +626,26 @@ ialltime = 'daily'
 itimestart = 11730
 idatalength = 30
 
-data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)]
-data2 = tsw_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)]
+# data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)]
+# data2 = tsw_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)]
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' local sst vs. d_ln from ' + str(data1.time[0].values)[:10] + '.png'
+
+# data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_pos_ilat, daily_pos_ilon][itimestart:(itimestart+idatalength)]
+# data2 = tsw_alltime[expid[i]][ialltime][:, daily_pos_ilat, daily_pos_ilon][itimestart:(itimestart+idatalength)]
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' local sst vs. d_ln from ' + str(data1.time[0].values)[:10] + ' daily_pos.png'
+
+# data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_neg_ilat, daily_neg_ilon][itimestart:(itimestart+idatalength)]
+# data2 = tsw_alltime[expid[i]][ialltime][:, daily_neg_ilat, daily_neg_ilon][itimestart:(itimestart+idatalength)]
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' local sst vs. d_ln from ' + str(data1.time[0].values)[:10] + ' daily_neg.png'
+
+data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
+data2 = tsw_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
+output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' local sst vs. d_ln from ' + str(data1.time[0].values)[:10] + ' daily_max.png'
+
 
 subset = np.isfinite(data1.values) & np.isfinite(data2.values)
 r_value = pearsonr(data1[subset], data2[subset]).statistic
 
-
-output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' local sst vs. d_ln from ' + str(data1.time[0].values)[:10] + '.png'
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
 
@@ -639,13 +692,25 @@ ialltime = 'daily'
 itimestart = 11730
 idatalength = 30
 
-data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)]
-data2 = RHsst_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon][(itimestart):(itimestart+idatalength)]
+# data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)]
+# data2 = RHsst_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon][(itimestart):(itimestart+idatalength)]
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' local RHsst vs. d_ln from ' + str(data1.time[0].values)[:10] + '.png'
+
+# data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_pos_ilat, daily_pos_ilon][itimestart:(itimestart+idatalength)]
+# data2 = RHsst_alltime[expid[i]][ialltime][:, daily_pos_ilat, daily_pos_ilon][(itimestart):(itimestart+idatalength)]
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' local RHsst vs. d_ln from ' + str(data1.time[0].values)[:10] + ' daily_pos.png'
+
+# data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_neg_ilat, daily_neg_ilon][itimestart:(itimestart+idatalength)]
+# data2 = RHsst_alltime[expid[i]][ialltime][:, daily_neg_ilat, daily_neg_ilon][(itimestart):(itimestart+idatalength)]
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' local RHsst vs. d_ln from ' + str(data1.time[0].values)[:10] + ' daily_neg.png'
+
+data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
+data2 = RHsst_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon][(itimestart):(itimestart+idatalength)]
+output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' local RHsst vs. d_ln from ' + str(data1.time[0].values)[:10] + ' daily_max.png'
+
 
 subset = np.isfinite(data1.values) & np.isfinite(data2.values)
 r_value = pearsonr(data1[subset], data2[subset]).statistic
-
-output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' local RHsst vs. d_ln from ' + str(data1.time[0].values)[:10] + '.png'
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
 
@@ -701,14 +766,25 @@ ialltime = 'daily'
 itimestart = 11730
 idatalength = 30
 
-data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)]
-data2 = wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1)[:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)] * seconds_per_d
+# data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)]
+# data2 = wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1)[:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)] * seconds_per_d
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' local pre vs. d_ln from ' + str(data1.time[0].values)[:10] + '.png'
+
+# data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_pos_ilat, daily_pos_ilon][itimestart:(itimestart+idatalength)]
+# data2 = wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1)[:, daily_pos_ilat, daily_pos_ilon][itimestart:(itimestart+idatalength)] * seconds_per_d
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' local pre vs. d_ln from ' + str(data1.time[0].values)[:10] + ' daily_pos.png'
+
+# data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_neg_ilat, daily_neg_ilon][itimestart:(itimestart+idatalength)]
+# data2 = wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1)[:, daily_neg_ilat, daily_neg_ilon][itimestart:(itimestart+idatalength)] * seconds_per_d
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' local pre vs. d_ln from ' + str(data1.time[0].values)[:10] + ' daily_neg.png'
+
+data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
+data2 = wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1)[:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)] * seconds_per_d
+output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' local pre vs. d_ln from ' + str(data1.time[0].values)[:10] + ' daily_max.png'
 
 subset = np.isfinite(data1.values) & np.isfinite(data2.values)
 r_value = pearsonr(data1[subset], data2[subset]).statistic
 
-
-output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' local pre vs. d_ln from ' + str(data1.time[0].values)[:10] + '.png'
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
 
@@ -748,24 +824,23 @@ tsw_alltime[expid[i]][ialltime][itimestart:(itimestart+idatalength)].to_netcdf('
 # -----------------------------------------------------------------------------
 
 
-
-
-# daily max
 # -----------------------------------------------------------------------------
-# -----------------------------------------------------------------------------
-# region plot daily time series of d_ln and source SST
+# region plot daily time series of d_ln and dD/d18O
 
 ialltime = 'daily'
 itimestart = 11730
 idatalength = 30
 
-data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
-data2 = q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
+data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)]
+# data2 = dD_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)]
+data2 = dO18_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)]
+
 subset = np.isfinite(data1) & np.isfinite(data2)
 r_value = pearsonr(data1[subset], data2[subset]).statistic
 
 
-output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' sst vs. d_ln from ' + str(data1.time[0].values)[:10] + ' daily_max.png'
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' dD vs. d_ln from ' + str(data1.time[0].values)[:10] + '.png'
+output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' dO18 vs. d_ln from ' + str(data1.time[0].values)[:10] + '.png'
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
 
@@ -779,158 +854,90 @@ ax.xaxis.set_minor_locator(AutoMinorLocator(2))
 ax.set_xlabel('Date [$R = ' + str(np.round(r_value, 2)) + '$]',)
 
 ax.set_ylabel(plot_labels['d_ln'], c='tab:blue')
+ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
+
+ax2 = ax.twinx()
+ax2.invert_yaxis()
+ax2.plot(
+    data2.time, data2,
+    'o', ls='-', ms=2, lw=0.5, c='tab:orange',)
+# ax2.set_ylabel(plot_labels['dD'], c='tab:orange')
+ax2.set_ylabel(plot_labels['dO18'], c='tab:orange')
+ax2.yaxis.set_minor_locator(AutoMinorLocator(2))
+ax2.yaxis.set_major_formatter(remove_trailing_zero_pos)
+
+ax.grid(True, which='both',
+        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+fig.subplots_adjust(left=0.18, right=0.82, bottom=0.25, top=0.98)
+fig.savefig(output_png)
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot daily time series of source SST and source latitude
+
+ialltime = 'daily'
+itimestart = 11730
+# itimestart = 15730
+idatalength = 30
+
+# data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)]
+# data2 = q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)]
+# data3 = q_sfc_weighted_var[expid[i]]['lat'][ialltime][:, daily_min_ilat, daily_min_ilon][itimestart:(itimestart+idatalength)]
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' sst vs. lat from ' + str(data1.time[0].values)[:10] + '.png'
+
+# data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_pos_ilat, daily_pos_ilon][itimestart:(itimestart+idatalength)]
+# data2 = q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_pos_ilat, daily_pos_ilon][itimestart:(itimestart+idatalength)]
+# data3 = q_sfc_weighted_var[expid[i]]['lat'][ialltime][:, daily_pos_ilat, daily_pos_ilon][itimestart:(itimestart+idatalength)]
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' sst vs. lat from ' + str(data1.time[0].values)[:10] + ' daily_pos.png'
+
+data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_neg_ilat, daily_neg_ilon][itimestart:(itimestart+idatalength)]
+data2 = q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_neg_ilat, daily_neg_ilon][itimestart:(itimestart+idatalength)]
+data3 = q_sfc_weighted_var[expid[i]]['lat'][ialltime][:, daily_neg_ilat, daily_neg_ilon][itimestart:(itimestart+idatalength)]
+output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' sst vs. lat from ' + str(data1.time[0].values)[:10] + ' daily_neg.png'
+
+# data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
+# data2 = q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
+# data3 = q_sfc_weighted_var[expid[i]]['lat'][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' sst vs. lat from ' + str(data1.time[0].values)[:10] + ' daily_max.png'
+
+subset = np.isfinite(data1) & np.isfinite(data2)
+r_value2 = pearsonr(data1[subset], data2[subset]).statistic
+
+subset = np.isfinite(data1) & np.isfinite(data3)
+r_value3 = pearsonr(data1[subset], data3[subset]).statistic
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
+
+ax.plot(
+    data2.time, data2,
+    'o', ls='-', ms=2, lw=0.5, c='tab:blue',)
+
+ax.set_xticks(data2.time[::4])
+plt.xticks(rotation=30, ha='right')
+ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+ax.set_xlabel('Date',)
+
+ax.set_ylabel(plot_labels['sst'] + ', $R = ' + str(np.round(r_value2, 2)) + '$', c='tab:blue')
 ax.yaxis.set_minor_locator(AutoMinorLocator(2))
 ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
 
 ax2 = ax.twinx()
 # ax2.invert_yaxis()
 ax2.plot(
-    data2.time, data2,
-    'o', ls='-', ms=2, lw=0.5, c='tab:orange',)
-ax2.set_ylabel(plot_labels['sst'], c='tab:orange')
-ax2.yaxis.set_minor_locator(AutoMinorLocator(2))
-ax2.yaxis.set_major_formatter(remove_trailing_zero_pos)
+    data3.time, data3,
+    'o', ls='-', ms=2, lw=0.5, c='tab:red',)
 
-ax.grid(True, which='both',
-        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-fig.subplots_adjust(left=0.18, right=0.82, bottom=0.25, top=0.98)
-fig.savefig(output_png)
+# ax2.axhline(-40, ls='--', c='tab:red', lw=0.5,)
+ax2.axhline(-50, ls='--', c='tab:red', lw=0.5,)
 
-
-'''
-ialltime = 'daily'
-data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon]
-data2 = q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_max_ilat, daily_max_ilon]
-data3 = q_sfc_weighted_var[expid[i]]['RHsst'][ialltime][:, daily_max_ilat, daily_max_ilon]
-subset = np.isfinite(data1) & np.isfinite(data2) & np.isfinite(data3)
-
-pearsonr(data1[subset], data2[subset])
-pearsonr(data1[subset], data3[subset])
-
-xr_par_cor(data1[subset], data2[subset], data3[subset])
-
-
-
-
-ialltime = 'daily'
-itimestart = 11730
-idatalength = 30
-data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
-data2 = q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
-data3 = q_sfc_weighted_var[expid[i]]['RHsst'][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
-subset = np.isfinite(data1) & np.isfinite(data2) & np.isfinite(data3)
-
-pearsonr(data1[subset], data2[subset])
-pearsonr(data1[subset], data3[subset])
-
-xr_par_cor(data1[subset], data2[subset], data3[subset])
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot daily time series of d_ln and source RHsst
-
-ialltime = 'daily'
-itimestart = 11730
-idatalength = 30
-
-data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
-data2 = q_sfc_weighted_var[expid[i]]['RHsst'][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)] * 100
-
-subset = np.isfinite(data1) & np.isfinite(data2)
-r_value = pearsonr(data1[subset], data2[subset]).statistic
-
-
-output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' RHsst vs. d_ln from ' + str(data1.time[0].values)[:10] + ' daily_max.png'
-
-fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
-
-ax.plot(
-    data1.time, data1,
-    'o', ls='-', ms=2, lw=0.5, c='tab:blue',)
-
-ax.set_xticks(data1.time[::4])
-plt.xticks(rotation=30, ha='right')
-ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-ax.set_xlabel('Date [$R = ' + str(np.round(r_value, 2)) + '$]',)
-
-ax.set_ylabel(plot_labels['d_ln'], c='tab:blue')
-ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
-
-ax2 = ax.twinx()
-ax2.invert_yaxis()
-ax2.plot(
-    data2.time, data2,
-    'o', ls='-', ms=2, lw=0.5, c='tab:orange',)
-ax2.set_ylabel(plot_labels['RHsst'], c='tab:orange')
-ax2.yaxis.set_minor_locator(AutoMinorLocator(2))
-ax2.yaxis.set_major_formatter(remove_trailing_zero_pos)
-
-ax.grid(True, which='both',
-        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-fig.subplots_adjust(left=0.18, right=0.82, bottom=0.25, top=0.98)
-fig.savefig(output_png)
-
-
-'''
-
-# check partial correlation
-data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
-data2 = q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
-data3 = q_sfc_weighted_var[expid[i]]['RHsst'][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
-
-# pearsonr(data1, data2).statistic ** 2
-
-xr_par_cor(data1, data2, data3) ** 2
-
-xr_par_cor(data1, data3, data2) ** 2
-
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot daily time series of d_ln and source latitude
-
-ialltime = 'daily'
-itimestart = 11730
-idatalength = 30
-
-data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
-data2 = q_sfc_weighted_var[expid[i]]['lat'][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
-
-subset = np.isfinite(data1) & np.isfinite(data2)
-r_value = pearsonr(data1[subset], data2[subset]).statistic
-
-
-output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' lat vs. d_ln from ' + str(data1.time[0].values)[:10] + ' daily_max.png'
-
-fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
-
-ax.plot(
-    data1.time, data1,
-    'o', ls='-', ms=2, lw=0.5, c='tab:blue',)
-
-ax.set_xticks(data1.time[::4])
-plt.xticks(rotation=30, ha='right')
-ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-ax.set_xlabel('Date [$R = ' + str(np.round(r_value, 2)) + '$]',)
-
-ax.set_ylabel(plot_labels['d_ln'], c='tab:blue')
-ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
-
-ax2 = ax.twinx()
-ax2.invert_yaxis()
-ax2.plot(
-    data2.time, data2,
-    'o', ls='-', ms=2, lw=0.5, c='tab:orange',)
-ax2.axhline(daily_max_lat, c='tab:orange', ls='--', lw=0.5)
-ax2.set_ylabel(plot_labels['lat'], c='tab:orange')
+ax2.set_ylabel(plot_labels['lat'] + ', $R = ' + str(np.round(r_value3, 2)) + '$', c='tab:red')
 ax2.yaxis.set_minor_locator(AutoMinorLocator(2))
 ax2.yaxis.set_major_formatter(remove_trailing_zero_pos_abs)
 
@@ -941,265 +948,13 @@ fig.savefig(output_png)
 
 
 '''
-ialltime = 'daily'
-itimestart = 11730
-idatalength = 30
-
-data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
-data2 = q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
-data3 = q_sfc_weighted_var[expid[i]]['lat'][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
-
-subset = np.isfinite(data1) & np.isfinite(data2) & np.isfinite(data3)
-pearsonr(data1[subset], data2[subset])
-pearsonr(data1[subset], data3[subset])
-
-xr_par_cor(data1[subset], data2[subset], data3[subset])
-xr_par_cor(data1[subset], data3[subset], data2[subset])
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot daily time series of d_ln and transport distance
-
-ialltime = 'daily'
-itimestart = 11730
-idatalength = 30
-
-data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
-data2 = q_sfc_weighted_var[expid[i]]['distance'][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
-
-subset = np.isfinite(data1) & np.isfinite(data2)
-r_value = pearsonr(data1[subset], data2[subset]).statistic
-
-
-output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' distance vs. d_ln from ' + str(data1.time[0].values)[:10] + ' daily_max.png'
-
-fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
-
-ax.plot(
-    data1.time, data1,
-    'o', ls='-', ms=2, lw=0.5, c='tab:blue',)
-
-ax.set_xticks(data1.time[::4])
-plt.xticks(rotation=30, ha='right')
-ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-ax.set_xlabel('Date [$R = ' + str(np.round(r_value, 2)) + '$]',)
-
-ax.set_ylabel(plot_labels['d_ln'], c='tab:blue')
-ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
-
-ax2 = ax.twinx()
-ax2.invert_yaxis()
-ax2.plot(
-    data2.time, data2 / 100,
-    'o', ls='-', ms=2, lw=0.5, c='tab:orange',)
-ax2.set_ylabel(plot_labels['distance'], c='tab:orange')
-ax2.yaxis.set_minor_locator(AutoMinorLocator(2))
-ax2.yaxis.set_major_formatter(remove_trailing_zero_pos_abs)
-
-ax.grid(True, which='both',
-        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-fig.subplots_adjust(left=0.18, right=0.82, bottom=0.25, top=0.98)
-fig.savefig(output_png)
-
-
-'''
-ialltime = 'daily'
-itimestart = 11730
-idatalength = 30
-
-data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
-data2 = q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
-data3 = q_sfc_weighted_var[expid[i]]['lat'][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
-
-subset = np.isfinite(data1) & np.isfinite(data2) & np.isfinite(data3)
-pearsonr(data1[subset], data2[subset])
-pearsonr(data1[subset], data3[subset])
-
-xr_par_cor(data1[subset], data2[subset], data3[subset])
-xr_par_cor(data1[subset], data3[subset], data2[subset])
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot daily time series of d_ln and local SST
-
-ialltime = 'daily'
-itimestart = 11730
-idatalength = 30
-
-data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
-data2 = tsw_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
-
-subset = np.isfinite(data1.values) & np.isfinite(data2.values)
-r_value = pearsonr(data1[subset], data2[subset]).statistic
-
-
-output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' local sst vs. d_ln from ' + str(data1.time[0].values)[:10] + ' daily_max.png'
-
-fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
-
-ax.plot(
-    data1.time, data1,
-    'o', ls='-', ms=2, lw=0.5, c='tab:blue',)
-
-ax.set_xticks(data1.time[::4])
-plt.xticks(rotation=30, ha='right')
-ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-ax.set_xlabel('Date [$R = ' + str(np.round(r_value, 2)) + '$]',)
-
-ax.set_ylabel(plot_labels['d_ln'], c='tab:blue')
-ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
-
-ax2 = ax.twinx()
-ax2.invert_yaxis()
-ax2.plot(
-    data2.time.dt.floor('1d'), data2,
-    'o', ls='-', ms=2, lw=0.5, c='tab:orange',)
-ax2.set_ylabel('Local SST [$°C$]', c='tab:orange')
-ax2.yaxis.set_minor_locator(AutoMinorLocator(2))
-ax2.yaxis.set_major_formatter(remove_trailing_zero_pos)
-
-ax.grid(True, which='both',
-        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-fig.subplots_adjust(left=0.18, right=0.82, bottom=0.25, top=0.98)
-fig.savefig(output_png)
-
-
-'''
-tsw_alltime[expid[i]][ialltime][itimestart:(itimestart+idatalength)].to_netcdf('scratch/test/test0.nc')
-
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot daily time series of d_ln and local RHsst
-
-ialltime = 'daily'
-itimestart = 11730
-idatalength = 30
-
-data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
-data2 = RHsst_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon][(itimestart):(itimestart+idatalength)]
-
-subset = np.isfinite(data1.values) & np.isfinite(data2.values)
-r_value = pearsonr(data1[subset], data2[subset]).statistic
-
-output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' local RHsst vs. d_ln from ' + str(data1.time[0].values)[:10] + ' daily_max.png'
-
-fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
-
-ax.plot(
-    data1.time, data1,
-    'o', ls='-', ms=2, lw=0.5, c='tab:blue',)
-
-ax.set_xticks(data1.time[::4])
-plt.xticks(rotation=30, ha='right')
-ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-ax.set_xlabel('Date [$R = ' + str(np.round(r_value, 2)) + '$]',)
-
-ax.set_ylabel(plot_labels['d_ln'], c='tab:blue')
-ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
-
-ax2 = ax.twinx()
-ax2.invert_yaxis()
-ax2.plot(
-    data2.time.dt.floor('1d'), data2,
-    'o', ls='-', ms=2, lw=0.5, c='tab:orange',)
-ax2.set_ylabel('Local RHsst [$\%$]', c='tab:orange')
-ax2.yaxis.set_minor_locator(AutoMinorLocator(2))
-ax2.yaxis.set_major_formatter(remove_trailing_zero_pos)
-
-ax.grid(True, which='both',
-        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-fig.subplots_adjust(left=0.18, right=0.82, bottom=0.25, top=0.98)
-fig.savefig(output_png)
-
-
-'''
-ialltime = 'daily'
-itimestart = 11730
-idatalength = 30
-
-data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
-data2 = RHsst_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon][(itimestart-1):(itimestart+idatalength-1)]
-data3 = q_sfc_weighted_var[expid[i]]['RHsst'][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)] * 100
-
-subset = np.isfinite(data1) & np.isfinite(data2) & np.isfinite(data3)
-pearsonr(data1, data2)
-pearsonr(data1, data3)
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region plot daily time series of d_ln and local precipitation
-
-ialltime = 'daily'
-itimestart = 11730
-idatalength = 30
-
-data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)]
-data2 = wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1)[:, daily_max_ilat, daily_max_ilon][itimestart:(itimestart+idatalength)] * seconds_per_d
-
-subset = np.isfinite(data1.values) & np.isfinite(data2.values)
-r_value = pearsonr(data1[subset], data2[subset]).statistic
-
-
-output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.5 ' + expid[i] + ' ' + ialltime + ' local pre vs. d_ln from ' + str(data1.time[0].values)[:10] + ' daily_max.png'
-
-fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
-
-ax.plot(
-    data1.time, data1,
-    'o', ls='-', ms=2, lw=0.5, c='tab:blue',)
-
-ax.set_xticks(data1.time[::4])
-plt.xticks(rotation=30, ha='right')
-ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-ax.set_xlabel('Date [$R = ' + str(np.round(r_value, 2)) + '$]',)
-
-ax.set_ylabel(plot_labels['d_ln'], c='tab:blue')
-ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
-
-ax2 = ax.twinx()
-ax2.invert_yaxis()
-ax2.plot(
-    data2.time.dt.floor('1d'), data2,
-    'o', ls='-', ms=2, lw=0.5, c='tab:orange',)
-ax2.set_ylabel('Precipitation [$mm \; day^{-1}$]', c='tab:orange')
-ax2.yaxis.set_minor_locator(AutoMinorLocator(2))
-ax2.yaxis.set_major_formatter(remove_trailing_zero_pos)
-
-ax.grid(True, which='both',
-        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-fig.subplots_adjust(left=0.18, right=0.82, bottom=0.25, top=0.98)
-fig.savefig(output_png)
-
-
-'''
-tsw_alltime[expid[i]][ialltime][itimestart:(itimestart+idatalength)].to_netcdf('scratch/test/test0.nc')
-
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 
-
-
-
+# ann
 # -----------------------------------------------------------------------------
 # region plot annual time series of d_ln and source SST
 
@@ -1352,5 +1107,116 @@ pearsonr(daily_src_sst, daily_src_distance, ).statistic
 
 # endregion
 # -----------------------------------------------------------------------------
+
+
+
+
+# -----------------------------------------------------------------------------
+# region check source-sink distance
+
+stats.describe(q_sfc_weighted_var[expid[i]]['distance']['daily'][:, daily_min_ilat, daily_min_ilon], nan_policy='omit')
+# 1074±556
+stats.describe(q_sfc_weighted_var[expid[i]]['distance']['daily'][:, daily_max_ilat, daily_max_ilon], nan_policy='omit')
+# 415±111
+stats.describe(q_sfc_weighted_var[expid[i]]['distance']['daily'][:, daily_neg_ilat, daily_neg_ilon], nan_policy='omit')
+# 1276±734
+stats.describe(q_sfc_weighted_var[expid[i]]['distance']['daily'][:, daily_pos_ilat, daily_pos_ilon], nan_policy='omit')
+# 660±315
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region check partial correlation
+
+ialltime = 'daily'
+
+for ipoint in ['daily_min', 'daily_max', 'daily_neg', 'daily_pos', ]:
+    print('#-------------------------------- ' + ipoint)
+    
+    if (ipoint == 'daily_min'):
+        daily_ilat = daily_min_ilat
+        daily_ilon = daily_min_ilon
+    elif (ipoint == 'daily_max'):
+        daily_ilat = daily_max_ilat
+        daily_ilon = daily_max_ilon
+    elif (ipoint == 'daily_neg'):
+        daily_ilat = daily_neg_ilat
+        daily_ilon = daily_neg_ilon
+    elif (ipoint == 'daily_pos'):
+        daily_ilat = daily_pos_ilat
+        daily_ilon = daily_pos_ilon
+    
+    daily_d_ln = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_ilat, daily_ilon]
+    daily_RHsst = q_sfc_weighted_var[expid[i]]['RHsst'][ialltime][:, daily_ilat, daily_ilon] * 100
+    daily_sst = q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_ilat, daily_ilon]
+    daily_lat = q_sfc_weighted_var[expid[i]]['lat'][ialltime][:, daily_ilat, daily_ilon]
+    daily_distance = q_sfc_weighted_var[expid[i]]['distance'][ialltime][:, daily_ilat, daily_ilon]
+    
+    # print('#-------- Corr. between d_ln and srcSST, controlling srcRHsst')
+    # print(np.round(xr_par_cor(daily_d_ln, daily_sst, daily_RHsst), 2))
+    
+    # print('#-------- Corr. between d_ln and srcRHsst, controlling srcSST')
+    # print(np.round(xr_par_cor(daily_d_ln, daily_RHsst, daily_sst), 2))
+    
+    # print('#-------- Corr. between d_ln and srcSST, controlling srclat')
+    # print(np.round(xr_par_cor(daily_d_ln, daily_sst, daily_lat), 2))
+    
+    print('#-------- Corr. between d_ln and srclat, controlling srcSST')
+    print(np.round(xr_par_cor(daily_d_ln, daily_lat, daily_sst), 2))
+    
+    # print('#-------- Corr. between d_ln and srcSST, controlling distance')
+    # print(np.round(xr_par_cor(daily_d_ln, daily_sst, daily_distance), 2))
+    
+    itimestart = 11730
+    idatalength = 30
+    
+    # print('#-------- Corr. between d_ln and srcSST, controlling srcRHsst')
+    # print(np.round(xr_par_cor(daily_d_ln[itimestart:(itimestart+idatalength)], daily_sst[itimestart:(itimestart+idatalength)], daily_RHsst[itimestart:(itimestart+idatalength)]), 2))
+    
+    # print('#-------- Corr. between d_ln and srcRHsst, controlling srcSST')
+    # print(np.round(xr_par_cor(daily_d_ln[itimestart:(itimestart+idatalength)], daily_RHsst[itimestart:(itimestart+idatalength)], daily_sst[itimestart:(itimestart+idatalength)]), 2))
+    
+    # print('#-------- Corr. between d_ln and srcSST, controlling srclat')
+    # print(np.round(xr_par_cor(daily_d_ln[itimestart:(itimestart+idatalength)], daily_sst[itimestart:(itimestart+idatalength)], daily_lat[itimestart:(itimestart+idatalength)]), 2))
+    
+    print('#-------- Corr. between d_ln and srcSST, controlling srclat')
+    print(np.round(xr_par_cor(daily_d_ln[itimestart:(itimestart+idatalength)], daily_lat[itimestart:(itimestart+idatalength)], daily_sst[itimestart:(itimestart+idatalength)]), 2))
+    
+    # print('#-------- Corr. between d_ln and srcSST, controlling distance')
+    # print(np.round(xr_par_cor(daily_d_ln[itimestart:(itimestart+idatalength)], daily_sst[itimestart:(itimestart+idatalength)], daily_distance[itimestart:(itimestart+idatalength)]), 2))
+
+
+
+
+'''
+    for ivar in ['RHsst', 'sst', 'lat', 'distance']:
+        print('#---------------- correlation between d_ln and ' + ivar)
+        
+        itimestart = 11730
+        idatalength = 30
+        
+        data1 = daily_d_ln[itimestart:(itimestart+idatalength)]
+        data2 = q_sfc_weighted_var[expid[i]][ivar][ialltime][:, daily_ilat, daily_ilon][itimestart:(itimestart+idatalength)]
+        
+        print(np.round(pearsonr(data1, data2).statistic, 2))
+
+
+    itimestart = 11730
+    idatalength = 30
+    data1 = daily_sst[itimestart:(itimestart+idatalength)]
+    data2 = daily_lat[itimestart:(itimestart+idatalength)]
+    print(np.round(pearsonr(data1, data2).statistic, 2))
+    
+    subset = np.isfinite(daily_sst) & np.isfinite(daily_lat)
+    print(np.round(pearsonr(daily_sst[subset], daily_lat[subset]).statistic, 2))
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+
 
 

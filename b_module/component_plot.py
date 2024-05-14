@@ -87,7 +87,7 @@ def plot_t63_contourf(
 
 def cplot_ice_cores(
     lon, lat, ax,
-    s=6, c='none', lw=0.75, marker='o', edgecolors = 'black', zorder=4,
+    s=6, c='none', lw=0.75, marker='o', edgecolors = 'black', zorder=4, alpha=1,
     ):
     '''
     #-------- Input
@@ -99,11 +99,13 @@ def cplot_ice_cores(
     
     import cartopy.crs as ccrs
     
-    ax.scatter(
+    plt_scatter = ax.scatter(
         x = lon, y = lat,
         s=s, c=c, lw=lw, marker=marker, edgecolors = edgecolors, zorder=zorder,
-        transform=ccrs.PlateCarree(),
+        transform=ccrs.PlateCarree(), alpha=alpha,
         )
+    
+    return(plt_scatter)
 
 
 # endregion

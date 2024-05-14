@@ -285,6 +285,11 @@ annual_max_ilat = np.where(lat == annual_max_lat)[0][0]
 # -----------------------------------------------------------------------------
 # region plot par_corr_sources_isotopes_q_sfc
 
+daily_pos_lon = 30
+daily_pos_lat = -40
+daily_neg_lon = 30
+daily_neg_lat = -50
+
 for i in range(len(expid)):
     # i = 0
     print('#-------------------------------- ' + str(i) + ': ' + expid[i])
@@ -303,7 +308,7 @@ for i in range(len(expid)):
                 # ctr_var = 'RHsst'
                 print('#-------- ' + ctr_var)
                 
-                for ialltime in ['daily', 'ann',]:
+                for ialltime in ['daily',]:
                     # ialltime = 'mon'
                     # ['daily', 'mon', 'mon no mm', 'ann', 'ann no am']
                     print('#---- ' + ialltime)
@@ -320,11 +325,17 @@ for i in range(len(expid)):
                         ax, pltlevel, 'neither', pltnorm, pltcmp, ccrs.PlateCarree(),)
                     
                     if ((iisotopes == 'd_ln') & (ivar == 'sst') & (ialltime == 'daily')):
-                        cplot_ice_cores(daily_min_lon, daily_min_lat, ax, s=12)
-                        cplot_ice_cores(daily_max_lon, daily_max_lat, ax, s=12)
-                    elif ((iisotopes == 'd_ln') & (ivar == 'sst') & (ialltime == 'ann')):
-                        cplot_ice_cores(annual_min_lon, annual_min_lat, ax,s=12)
-                        cplot_ice_cores(annual_max_lon, annual_max_lat, ax,s=12)
+                        # cplot_ice_cores(daily_min_lon, daily_min_lat, ax, s=12,
+                        #                 lw=1, edgecolors = 'tab:red')
+                        # cplot_ice_cores(daily_max_lon, daily_max_lat, ax, s=12,
+                        #                 lw=1, edgecolors = 'tab:orange')
+                        cplot_ice_cores(daily_pos_lon, daily_pos_lat, ax, s=12,
+                                        lw=1, edgecolors = 'tab:blue')
+                        cplot_ice_cores(daily_neg_lon, daily_neg_lat, ax, s=12,
+                                        lw=1, edgecolors = 'k')
+                    # elif ((iisotopes == 'd_ln') & (ivar == 'sst') & (ialltime == 'ann')):
+                    #     cplot_ice_cores(annual_min_lon, annual_min_lat, ax,s=12)
+                    #     cplot_ice_cores(annual_max_lon, annual_max_lat, ax,s=12)
                     
                     cbar = fig.colorbar(
                         plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
@@ -363,7 +374,7 @@ for i in range(len(expid)):
             # ctr_var = 'RHsst'
             print('#-------- ' + ctr_var)
             
-            for ialltime in ['daily', 'mon', 'mon no mm', 'ann no am']:
+            for ialltime in ['daily', 'ann no am']:
                 # ialltime = 'daily'
                 # ['daily', 'mon', 'mon no mm', 'ann no am']
                 print('#---- ' + ialltime)
@@ -375,6 +386,9 @@ for i in range(len(expid)):
                 fig, ax = globe_plot(
                     add_grid_labels=False, figsize=np.array([8.8, 6]) / 2.54,
                     fm_left=0.01, fm_right=0.99, fm_bottom=0.1, fm_top=0.99,)
+                
+                ax.add_feature(
+                    cfeature.LAND, color='white', zorder=2, edgecolor=None,lw=0)
                 
                 plt1 = plot_t63_contourf(
                     lon, lat,

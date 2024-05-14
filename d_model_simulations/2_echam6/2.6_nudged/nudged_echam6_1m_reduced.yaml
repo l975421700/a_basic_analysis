@@ -2,8 +2,8 @@ general:
     setup_name: "echam"
     version: "6.3.05p2-wiso"
     compute_time: "00:30:00"
-    initial_date: "1979-01-01"
-    final_date: "2023-01-01"
+    initial_date: "1998-01-01"
+    final_date: "1999-01-01"
     model_dir: "/albedo/work/user/qigao001/model_codes/echam-6.3.05p2-wiso/"
     base_dir: "/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/"
     nmonth: 1
@@ -26,7 +26,7 @@ echam:
     restart_unit: "months"
     ini_parent_date: "1983-12-31T23:52:30"
     ini_parent_exp_id: "nudged_704_6.0_spinup_reduced"
-    ini_parent_dir: "/albedo/work/user/qigao001/albedo_scratch/output/echam-6.3.05p2-wiso/pi/nudged_704_6.0_spinup_reduced/restart/echam/"
+    ini_parent_dir: "/albedo/work/user/qigao001/output/echam-6.3.05p2-wiso/pi/nudged_704_6.0_spinup_reduced/restart/echam/"
     nproca: 24
     nprocb: 24
     nprocar: 0

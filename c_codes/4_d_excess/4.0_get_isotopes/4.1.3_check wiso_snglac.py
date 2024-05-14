@@ -111,6 +111,8 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 
 
+
+
 # -----------------------------------------------------------------------------
 # region import data
 
@@ -236,4 +238,38 @@ stats.describe(dD_daily.sel(lon=t63_sites_indices['EDC']['lon'], lat=t63_sites_i
 # endregion
 # -----------------------------------------------------------------------------
 
+
+
+
+# -----------------------------------------------------------------------------
+# region check am dD in surface snow and precipitation
+
+# exp_out_wiso = xr.open_mfdataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/test1/unknown/test1_1979??.01_wiso.nc')
+exp_out_wiso = xr.open_mfdataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/test2/unknown/test2_2022??.01_wiso.nc')
+# exp_out_wiso = xr.open_mfdataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/test3/unknown/test3_2008??.01_wiso.nc')
+# exp_out_wiso = xr.open_mfdataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/test4/unknown/test4_1998??.01_wiso.nc')
+
+# exp_out_wiso_test2 = xr.open_mfdataset('albedo_scratch/output/echam-6.3.05p2-wiso/pi/test2/unknown/test2_2022??.01_wiso.nc')
+
+with open('scratch/others/pi_m_502_5.0.t63_sites_indices.pkl', 'rb') as f:
+    t63_sites_indices = pickle.load(f)
+
+VSMOW_O18 = 0.22279967
+VSMOW_D   = 0.3288266
+
+
+wisosnglac_am = exp_out_wiso.wisosnglac.mean(dim='time')
+dD_am = (((wisosnglac_am.sel(wisotype=3) / wisosnglac_am.sel(wisotype=1)) / VSMOW_D - 1) * 1000).compute()
+
+wisoaprt_am = (exp_out_wiso.wisoaprl + exp_out_wiso.wisoaprc).mean(dim='time')
+pre_dD_am = (((wisoaprt_am.sel(wisotype=3) / wisoaprt_am.sel(wisotype=1)) / VSMOW_D - 1) * 1000).compute()
+
+(dD_am - pre_dD_am).sel(lon=t63_sites_indices['EDC']['lon'], lat=t63_sites_indices['EDC']['lat'], method='nearest')
+
+(dD_am - pre_dD_am).to_netcdf('scratch/test/test0.nc')
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
 

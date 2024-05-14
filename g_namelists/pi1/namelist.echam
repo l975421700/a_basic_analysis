@@ -288,5 +288,11 @@
     interval = 1, 'days', 'last', 0
     target = 'g3b_1d'
     source = 'g3b'
-    variables = 'temp2:mean'
+    variables = 'temp2:mean', 'aps:mean', 'seaice:mean', 'tsw:mean'
+/
+&mvstreamctl
+    interval = 6, 'hours', 'last', 0
+    target = 'g3b_6h'
+    source = 'g3b'
+    variables = 'temp2:mean', 'q2m:mean', 'rh2m:mean', 'tsurf:mean', 'wind10:mean'
 /

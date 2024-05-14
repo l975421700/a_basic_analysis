@@ -128,9 +128,20 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.contributions2
 # region Find the maximum point
 
 
+corr_sources_isotopes_q_sfc = {}
 par_corr_sources_isotopes_q_sfc={}
-with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sources_isotopes_q_sfc.pkl', 'rb') as f:
-    par_corr_sources_isotopes_q_sfc[expid[i]] = pickle.load(f)
+
+for i in range(len(expid)):
+    print(str(i) + ': ' + expid[i])
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.corr_sources_isotopes_q_sfc.pkl', 'rb') as f:
+        corr_sources_isotopes_q_sfc[expid[i]] = pickle.load(f)
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.par_corr_sources_isotopes_q_sfc.pkl', 'rb') as f:
+        par_corr_sources_isotopes_q_sfc[expid[i]] = pickle.load(f)
+
+lon = corr_sources_isotopes_q_sfc[expid[i]]['sst']['d_ln']['mon']['r'].lon
+lat = corr_sources_isotopes_q_sfc[expid[i]]['sst']['d_ln']['mon']['r'].lat
 
 
 #-------------------------------- Daily negative corr.
@@ -212,6 +223,15 @@ annual_max_ilon = np.where(lon == annual_max_lon)[0][0]
 annual_max_ilat = np.where(lat == annual_max_lat)[0][0]
 # print(par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'].values[annual_max_ilat, annual_max_ilon])
 
+daily_pos_lon = 30
+daily_pos_lat = -40
+daily_pos_ilon = np.argmin(abs(lon.values - daily_pos_lon))
+daily_pos_ilat = np.argmin(abs(lat.values - daily_pos_lat))
+
+daily_neg_lon = 30
+daily_neg_lat = -50
+daily_neg_ilon = np.argmin(abs(lon.values - daily_neg_lon))
+daily_neg_ilat = np.argmin(abs(lat.values - daily_neg_lat))
 
 # endregion
 # -----------------------------------------------------------------------------
@@ -221,15 +241,18 @@ annual_max_ilat = np.where(lat == annual_max_lat)[0][0]
 # region plot source contributions to q_sfc
 
 pltlevel1, pltticks1, pltnorm1, pltcmp1 = plt_mesh_pars(
-    cm_min=0, cm_max=10, cm_interval1=1, cm_interval2=2, cmap='Blues',
+    cm_min=0, cm_max=20, cm_interval1=2, cm_interval2=4, cmap='Blues',
     reversed=False)
 
 output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.4 ' + expid[i] + ' source contributions to q_sfc at daily_min_max.png'
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.4 ' + expid[i] + ' source contributions to q_sfc at daily_neg_pos.png'
 
 fig, ax = hemisphere_plot(northextent=-10, figsize=np.array([5.8, 7]) / 2.54,)
 
 cplot_ice_cores(daily_min_lon, daily_min_lat, ax, s=12)
 cplot_ice_cores(daily_max_lon, daily_max_lat, ax, s=12)
+# cplot_ice_cores(daily_neg_lon, daily_neg_lat, ax, s=12)
+# cplot_ice_cores(daily_pos_lon, daily_pos_lat, ax, s=12)
 
 #-------- daily_min
 plt_data1 = (contributions2site_q_sfc['daily_min'] * 1000).compute()
@@ -246,6 +269,22 @@ plt_data2.values[plt_data2.values == 0] = np.nan
 plt2 = ax.pcolormesh(
     plt_data2.lon, plt_data2.lat, plt_data2,
     norm=pltnorm1, cmap=pltcmp1, transform=ccrs.PlateCarree(),)
+
+# #-------- daily_neg
+# plt_data1 = (contributions2site_q_sfc['daily_neg'] * 1000).compute()
+# plt_data1.values[plt_data1.values == 0] = np.nan
+
+# plt1 = ax.pcolormesh(
+#     plt_data1.lon, plt_data1.lat, plt_data1,
+#     norm=pltnorm1, cmap=pltcmp1, transform=ccrs.PlateCarree(),)
+
+# #-------- daily_pos
+# plt_data2 = (contributions2site_q_sfc['daily_pos'] * 1000).compute()
+# plt_data2.values[plt_data2.values == 0] = np.nan
+
+# plt2 = ax.pcolormesh(
+#     plt_data2.lon, plt_data2.lat, plt_data2,
+#     norm=pltnorm1, cmap=pltcmp1, transform=ccrs.PlateCarree(),)
 
 cbar = fig.colorbar(
     plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
@@ -264,3 +303,7 @@ stats.describe(contributions2site_q_sfc['daily_max'] * 1000, axis=None)
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+
+

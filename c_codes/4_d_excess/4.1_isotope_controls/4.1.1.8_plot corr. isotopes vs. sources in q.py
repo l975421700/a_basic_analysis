@@ -227,7 +227,7 @@ for ivar in ['sst', 'RHsst']:
         # ['d_ln', 'd_xs',]
         print('#---------------- ' + iisotopes)
         
-        for ialltime in ['daily',]:
+        for ialltime in ['ann no am',]:
             # ialltime = 'mon'
             # ['mon', 'mon no mm', 'ann', 'ann no am']
             print('#-------- ' + ialltime)
@@ -259,7 +259,7 @@ for ivar in ['sst', 'RHsst']:
                 plt_mesh, ax=ax, aspect=25, format=remove_trailing_zero_pos,
                 orientation="horizontal", shrink=0.7, ticks=pltticks,
                 extend='neither', pad=0.1, fraction=0.04, anchor=(0.4, -1),)
-            cbar.ax.set_xlabel('Partial correlation: ' + time_labels[ialltime] + ' ' + plot_labels_no_unit[ivar] + ' and ' + plot_labels_no_unit[iisotopes] + ', controlling ' + plot_labels_no_unit[ctr_var],)
+            cbar.ax.set_xlabel('Partial correlation: ' + plot_labels_no_unit[iisotopes] + ' & ' + plot_labels_no_unit[ivar] + ' while controlling ' + plot_labels_no_unit[ctr_var],)
             
             fig.subplots_adjust(left=0.12, right=0.96, bottom=0.14, top=0.98)
             fig.savefig(output_png)

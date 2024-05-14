@@ -1029,16 +1029,18 @@ def plot_maxmin_points(lon, lat, data, ax, extrema, nsize, symbol, color='k',
     mxy, mxx = np.where(data_ext == data)
     ny, nx = data.shape
     
+    pretext = []
     for i in range(len(mxy)):
         # 1st criterion
         criteria1 = ((mxx[i] > 0.05 * nx) & (mxx[i] < 0.95 * nx) &
                      (mxy[i] > 0.05 * ny) & (mxy[i] < 0.95 * ny))
         if criteria1:
-            ax.text(
+            pretext_i = ax.text(
                 lon[mxx[i]], lat[mxy[i]], symbol,
                 color=color, clip_on=True, clip_box=ax.bbox, fontweight='bold',
                 horizontalalignment='center', verticalalignment='center',
                 transform=transform)
+            pretext.append(pretext_i)
         if (criteria1 & plotValue):
             ax.text(
                 lon[mxx[i]], lat[mxy[i]],
@@ -1047,6 +1049,8 @@ def plot_maxmin_points(lon, lat, data, ax, extrema, nsize, symbol, color='k',
                 fontweight='bold', horizontalalignment='center',
                 verticalalignment='top',
                 transform=transform)
+    
+    return(pretext)
 
 
 # endregion

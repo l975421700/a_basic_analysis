@@ -227,6 +227,16 @@ annual_max_ilat = np.where(lat == annual_max_lat)[0][0]
 # print(par_corr_sources_isotopes_q_sfc[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'].values[annual_max_ilat, annual_max_ilon])
 
 
+daily_pos_lon = 30
+daily_pos_lat = -40
+daily_pos_ilon = np.argmin(abs(lon.values - daily_pos_lon))
+daily_pos_ilat = np.argmin(abs(lat.values - daily_pos_lat))
+
+daily_neg_lon = 30
+daily_neg_lat = -50
+daily_neg_ilon = np.argmin(abs(lon.values - daily_neg_lon))
+daily_neg_ilat = np.argmin(abs(lat.values - daily_neg_lat))
+
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -236,7 +246,7 @@ annual_max_ilat = np.where(lat == annual_max_lat)[0][0]
 
 contributions2site_q_sfc = {}
 
-for isite in ['daily_min', 'daily_max']:
+for isite in ['daily_min', 'daily_max', 'daily_neg', 'daily_pos']:
     # isite = 'daily_min'
     print('#-------------------------------- ' + isite)
     
@@ -246,6 +256,12 @@ for isite in ['daily_min', 'daily_max']:
     elif (isite == 'daily_max'):
         isitelat = daily_max_lat
         isitelon = daily_max_lon
+    elif (isite == 'daily_neg'):
+        isitelat = daily_neg_lat
+        isitelon = daily_neg_lon
+    elif (isite == 'daily_pos'):
+        isitelat = daily_pos_lat
+        isitelon = daily_pos_lon
     
     contributions=np.zeros((len(one_degree_grid.lat), len(one_degree_grid.lon)))
     
@@ -304,3 +320,6 @@ for isite in ['daily_min', 'daily_max']:
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+
