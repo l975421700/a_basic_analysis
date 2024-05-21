@@ -187,6 +187,17 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.tsw_alltime.pk
 # region Find the maximum point
 
 
+daily_pos_lon = 30
+daily_pos_lat = -40
+daily_pos_ilon = np.argmin(abs(lon.values - daily_pos_lon))
+daily_pos_ilat = np.argmin(abs(lat.values - daily_pos_lat))
+
+daily_neg_lon = 30
+daily_neg_lat = -50
+daily_neg_ilon = np.argmin(abs(lon.values - daily_neg_lon))
+daily_neg_ilat = np.argmin(abs(lat.values - daily_neg_lat))
+
+
 #-------------------------------- Daily negative corr.
 iisotopes = 'd_ln'
 ivar = 'sst'
@@ -548,54 +559,6 @@ fig.savefig(output_png)
 
 
 # -----------------------------------------------------------------------------
-# region check variations of correlation with RHsst
-
-ialltime = 'daily'
-
-RHsst_threshold = np.arange(60, 140+1e-4, 1)
-Correlation_below_RHsst = np.zeros_like(RHsst_threshold)
-
-for iRHsst in range(len(RHsst_threshold)):
-    # iRHsst = 0
-    
-    subset = np.isfinite(d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon]).values & np.isfinite(q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_min_ilat, daily_min_ilon]).values & (RHsst_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon] < RHsst_threshold[iRHsst]).values
-    
-    print('#---------------- ' + str(iRHsst) + ' ' + str(RHsst_threshold[iRHsst]) + ' ' + str(subset.sum()))
-    
-    Correlation_below_RHsst[iRHsst] = pearsonr(d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon].values[subset], q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_min_ilat, daily_min_ilon].values[subset]).statistic
-
-
-# It is always around -0.6, no much variations
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
-# region check variations of correlation with source RHsst
-
-ialltime = 'daily'
-
-srcRHsst_threshold = np.arange(60, 90+1e-4, 1)
-Correlation_below_srcRHsst = np.zeros_like(srcRHsst_threshold)
-
-for iRHsst in range(len(srcRHsst_threshold)):
-    # iRHsst = 0
-    
-    subset = np.isfinite(d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon]).values & np.isfinite(q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_min_ilat, daily_min_ilon]).values & (q_sfc_weighted_var[expid[i]]['RHsst'][ialltime][:, daily_min_ilat, daily_min_ilon] * 100 < srcRHsst_threshold[iRHsst]).values
-    
-    print('#---------------- ' + str(iRHsst) + ' ' + str(srcRHsst_threshold[iRHsst]) + ' ' + str(subset.sum()))
-    
-    Correlation_below_srcRHsst[iRHsst] = pearsonr(d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon].values[subset], q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_min_ilat, daily_min_ilon].values[subset]).statistic
-
-
-# It is always around -0.6, no much variations
-
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
 # region check variations of partial correlation with RHsst
 
 ialltime = 'daily'
@@ -677,6 +640,148 @@ for iRHsst in range(len(srcRHsst_threshold)):
 
 
 # Partial correlation between d_ln and source SST while controlling source RHsst does not change with source RHsst.
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region check variations of partial correlation with source SST
+
+ialltime = 'daily'
+
+# stats.describe(q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_neg_ilat, daily_neg_ilon], nan_policy='omit')
+
+sst_threshold = np.arange(1, 24+1e-4, 0.1)
+Partial_corr_below_threshold = np.zeros_like(sst_threshold)
+
+for ithreshold in range(len(sst_threshold)):
+    
+    subset = np.isfinite(d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_neg_ilat, daily_neg_ilon]).values & np.isfinite(q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_neg_ilat, daily_neg_ilon]).values & np.isfinite(q_sfc_weighted_var[expid[i]]['RHsst'][ialltime][:, daily_neg_ilat, daily_neg_ilon]).values & (q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_neg_ilat, daily_neg_ilon] < sst_threshold[ithreshold]).values
+    
+    print('#---------------- ' + str(ithreshold) + ' ' + str(sst_threshold[ithreshold]) + ' ' + str(subset.sum()))
+    
+    Partial_corr_below_threshold[ithreshold] = xr_par_cor(
+        d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_neg_ilat, daily_neg_ilon].values[subset],
+        q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_neg_ilat, daily_neg_ilon].values[subset],
+        q_sfc_weighted_var[expid[i]]['RHsst'][ialltime][:, daily_neg_ilat, daily_neg_ilon].values[subset],
+    )
+
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+
+ax.scatter(
+    sst_threshold, Partial_corr_below_threshold,
+    s=6, lw=1, facecolors='white', edgecolors='k',)
+
+ax.set_xlabel('Upper threshold of Source SST [$°C$]',)
+ax.set_ylabel('Partial correlation between source SST and $d_{ln}$\nwhile controlling source RHsst',)
+
+ax.grid(True, which='both',
+        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+fig.subplots_adjust(left=0.24, right=0.95, bottom=0.16, top=0.98)
+fig.savefig('figures/test/test2.png')
+
+
+
+# When RHsst is smaller, partial correlation between d_ln and source SST while controlling source RHsst is less negative, but still significant.
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region check variations of partial correlation with source-local SST
+
+ialltime = 'daily'
+
+stats.describe(q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_neg_ilat, daily_neg_ilon] - tsw_alltime[expid[i]][ialltime][:, daily_neg_ilat, daily_neg_ilon].values, nan_policy='omit')
+
+sst_threshold = np.arange(-3, 19+1e-4, 0.1)
+Partial_corr_below_threshold = np.zeros_like(sst_threshold)
+
+for ithreshold in range(len(sst_threshold)):
+    
+    subset = np.isfinite(d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_neg_ilat, daily_neg_ilon]).values & np.isfinite(q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_neg_ilat, daily_neg_ilon]).values & np.isfinite(q_sfc_weighted_var[expid[i]]['RHsst'][ialltime][:, daily_neg_ilat, daily_neg_ilon]).values & (q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_neg_ilat, daily_neg_ilon] - tsw_alltime[expid[i]][ialltime][:, daily_neg_ilat, daily_neg_ilon].values < sst_threshold[ithreshold]).values
+    
+    print('#---------------- ' + str(ithreshold) + ' ' + str(sst_threshold[ithreshold]) + ' ' + str(subset.sum()))
+    
+    Partial_corr_below_threshold[ithreshold] = xr_par_cor(
+        d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_neg_ilat, daily_neg_ilon].values[subset],
+        q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_neg_ilat, daily_neg_ilon].values[subset],
+        q_sfc_weighted_var[expid[i]]['RHsst'][ialltime][:, daily_neg_ilat, daily_neg_ilon].values[subset],
+    )
+
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+
+ax.scatter(
+    sst_threshold, Partial_corr_below_threshold,
+    s=6, lw=1, facecolors='white', edgecolors='k',)
+
+ax.set_xlabel('Upper threshold of Source-local SST [$°C$]',)
+ax.set_ylabel('Partial correlation between source SST and $d_{ln}$\nwhile controlling source RHsst',)
+
+ax.grid(True, which='both',
+        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+fig.subplots_adjust(left=0.24, right=0.95, bottom=0.16, top=0.98)
+fig.savefig('figures/test/test3.png')
+
+
+
+# When RHsst is smaller, partial correlation between d_ln and source SST while controlling source RHsst is less negative, but still significant.
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+
+
+
+
+# -----------------------------------------------------------------------------
+# region check variations of correlation with RHsst
+
+ialltime = 'daily'
+
+RHsst_threshold = np.arange(60, 140+1e-4, 1)
+Correlation_below_RHsst = np.zeros_like(RHsst_threshold)
+
+for iRHsst in range(len(RHsst_threshold)):
+    # iRHsst = 0
+    
+    subset = np.isfinite(d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon]).values & np.isfinite(q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_min_ilat, daily_min_ilon]).values & (RHsst_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon] < RHsst_threshold[iRHsst]).values
+    
+    print('#---------------- ' + str(iRHsst) + ' ' + str(RHsst_threshold[iRHsst]) + ' ' + str(subset.sum()))
+    
+    Correlation_below_RHsst[iRHsst] = pearsonr(d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon].values[subset], q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_min_ilat, daily_min_ilon].values[subset]).statistic
+
+
+# It is always around -0.6, no much variations
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region check variations of correlation with source RHsst
+
+ialltime = 'daily'
+
+srcRHsst_threshold = np.arange(60, 90+1e-4, 1)
+Correlation_below_srcRHsst = np.zeros_like(srcRHsst_threshold)
+
+for iRHsst in range(len(srcRHsst_threshold)):
+    # iRHsst = 0
+    
+    subset = np.isfinite(d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon]).values & np.isfinite(q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_min_ilat, daily_min_ilon]).values & (q_sfc_weighted_var[expid[i]]['RHsst'][ialltime][:, daily_min_ilat, daily_min_ilon] * 100 < srcRHsst_threshold[iRHsst]).values
+    
+    print('#---------------- ' + str(iRHsst) + ' ' + str(srcRHsst_threshold[iRHsst]) + ' ' + str(subset.sum()))
+    
+    Correlation_below_srcRHsst[iRHsst] = pearsonr(d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_min_ilat, daily_min_ilon].values[subset], q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_min_ilat, daily_min_ilon].values[subset]).statistic
+
+
+# It is always around -0.6, no much variations
 
 # endregion
 # -----------------------------------------------------------------------------

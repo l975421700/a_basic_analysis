@@ -142,6 +142,10 @@ for i in range(len(expid)):
         with open(ifile, 'rb') as f:
             q_sfc_weighted_var[expid[i]][ivar] = pickle.load(f)
 
+tsw_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.tsw_alltime.pkl', 'rb') as f:
+    tsw_alltime[expid[i]] = pickle.load(f)
+
 '''
 '''
 # endregion
@@ -233,5 +237,89 @@ fig.savefig(output_png)
 # -----------------------------------------------------------------------------
 
 
+# -----------------------------------------------------------------------------
+# region plot am source SST - local SST
 
+stats.describe(q_sfc_weighted_var[expid[i]]['sst']['am'] - tsw_alltime[expid[i]]['am'], axis=None, nan_policy='omit')
+
+# plot
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-2, cm_max=10, cm_interval1=1, cm_interval2=2,
+    cmap='PuOr', asymmetric=True, reversed=True)
+
+output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.7 ' + expid[i] + ' am q_sfc source_local sst.png'
+
+cbar_label = 'Differences between source and local SST of\nannual mean surface vapour [$°C$]'
+
+fig, ax = globe_plot(
+    add_grid_labels=False, figsize=np.array([8.8, 6.5]) / 2.54,
+    fm_left=0.01, fm_right=0.99, fm_bottom=0.14, fm_top=0.99,)
+
+plt1 = plot_t63_contourf(
+    q_sfc_weighted_var[expid[i]]['lat']['daily'].lon,
+    q_sfc_weighted_var[expid[i]]['lat']['daily'].lat,
+    (q_sfc_weighted_var[expid[i]]['sst']['daily'] - tsw_alltime[expid[i]]['daily'].values).mean(dim='time'),
+    # q_sfc_weighted_var[expid[i]]['sst']['am'] - tsw_alltime[expid[i]]['am'],
+    ax, pltlevel, 'both', pltnorm, pltcmp, ccrs.PlateCarree(),)
+
+ax.add_feature(
+    cfeature.LAND, color='white', zorder=2, edgecolor=None,lw=0)
+
+cbar = fig.colorbar(
+    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.7, ticks=pltticks,
+    pad=0.05, fraction=0.14,)
+
+cbar.ax.tick_params(length=1.5, width=0.6)
+cbar.ax.set_xlabel(cbar_label, linespacing=1.3)
+fig.savefig(output_png)
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot std of daily source SST - local SST
+
+stats.describe((q_sfc_weighted_var[expid[i]]['sst']['daily'] - tsw_alltime[expid[i]]['daily'].values).std(dim='time', ddof=1), axis=None, nan_policy='omit')
+
+# plot
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=0, cm_max=8, cm_interval1=1, cm_interval2=1,
+    cmap='viridis',)
+
+output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.7 ' + expid[i] + ' daily std q_sfc source_local sst.png'
+
+cbar_label = 'Standard deviation of differences between source\nand local SST of daily surface vapour [$°C$]'
+
+fig, ax = globe_plot(
+    add_grid_labels=False, figsize=np.array([8.8, 6.5]) / 2.54,
+    fm_left=0.01, fm_right=0.99, fm_bottom=0.14, fm_top=0.99,)
+
+plt1 = plot_t63_contourf(
+    q_sfc_weighted_var[expid[i]]['lat']['daily'].lon,
+    q_sfc_weighted_var[expid[i]]['lat']['daily'].lat,
+    (q_sfc_weighted_var[expid[i]]['sst']['daily'] - tsw_alltime[expid[i]]['daily'].values).std(dim='time', ddof=1),
+    ax, pltlevel, 'max', pltnorm, pltcmp, ccrs.PlateCarree(),)
+
+ax.add_feature(
+    cfeature.LAND, color='white', zorder=2, edgecolor=None,lw=0)
+
+cbar = fig.colorbar(
+    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.7, ticks=pltticks,
+    pad=0.05, fraction=0.14,)
+
+cbar.ax.tick_params(length=1.5, width=0.6)
+cbar.ax.set_xlabel(cbar_label, linespacing=1.3)
+fig.savefig(output_png)
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
 
