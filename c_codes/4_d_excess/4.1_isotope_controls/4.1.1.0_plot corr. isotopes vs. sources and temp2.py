@@ -34,6 +34,8 @@ import pandas as pd
 from statsmodels.stats import multitest
 import pycircstat as circ
 import xskillscore as xs
+from metpy.calc import pressure_to_height_std, geopotential_to_height
+from metpy.units import units
 
 # plot
 import matplotlib as mpl
@@ -216,17 +218,17 @@ for i in range(len(expid)):
     # i = 0
     print('#-------------------------------- ' + str(i) + ': ' + expid[i])
     
-    for ivar in ['RHsst',]:
+    for ivar in ['wind10',]:
         # ivar = 'sst'
         # 'sst', 'lat', 'lon', 'distance', 'rh2m', 'wind10'
         print('#---------------- ' + ivar)
         
-        for iisotope in ['d_ln', 'd_excess']:
+        for iisotope in ['d_ln']:
             # iisotope = 'd_ln'
-            # 'wisoaprt', 'dO18', 'dD',
+            # 'wisoaprt', 'dO18', 'dD', 'd_excess',
             print('#-------- ' + iisotope)
             
-            for ialltime in ['daily', 'mon', 'mon no mm', 'ann', 'ann no am']:
+            for ialltime in ['daily', 'mon', 'mon no mm', 'ann no am']:
                 # ialltime = 'mon_no_mm'
                 print('#---- ' + ialltime)
                 
@@ -427,6 +429,30 @@ for i in range(len(expid)):
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region statistics
+
+echam6_t63_geosp = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/nudged_705_6.0/input/echam/unit.24')
+echam6_t63_surface_height = geopotential_to_height(
+    echam6_t63_geosp.GEOSP * (units.m / units.s)**2)
+with open('scratch/others/land_sea_masks/echam6_t63_ais_mask.pkl', 'rb') as f:
+    echam6_t63_ais_mask = pickle.load(f)
+
+imask = 'AIS'
+mask_high = echam6_t63_ais_mask['mask'][imask] & \
+    (echam6_t63_surface_height.values >= 2250)
+
+stats.describe(corr_sources_isotopes[expid[i]]['sst']['d_ln']['ann']['r'].values[mask_high])
+stats.describe(corr_sources_isotopes[expid[i]]['sst']['d_excess']['ann']['r'].values[mask_high])
+
+stats.describe(corr_sources_isotopes[expid[i]]['sst']['d_ln']['ann']['r'].values[mask_high] - corr_sources_isotopes[expid[i]]['sst']['d_excess']['ann']['r'].values[mask_high])
+
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
 
 
 

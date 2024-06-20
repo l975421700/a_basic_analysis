@@ -271,27 +271,34 @@ pltticks[-6] = 0
 nrow = 2
 ncol = 2
 
-for ialltime in ['daily', 'mon', 'mon no mm', 'ann no am']:
+for ialltime in ['daily', 'ann no am']:
     # ialltime = 'daily'
+    # ['daily', 'mon', 'mon no mm', 'ann no am']
     print('#-------------------------------- ' + ialltime)
     
     for iisotope in ['d_ln', 'd_excess']:
         # iisotope = 'd_ln'
         print('#---------------- ' + iisotope)
         
-        output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.0_sources_isotopes/8.1.5.0.2 ' + expid[i] + ' ' + ialltime + ' SH partial corr. sources vs. ' + iisotope + '.png'
+        # output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.0_sources_isotopes/8.1.5.0.2 ' + expid[i] + ' ' + ialltime + ' SH partial corr. sources vs. ' + iisotope + '.png'
+        # output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.0_sources_isotopes/8.1.5.0.2 ' + expid[i] + ' ' + ialltime + ' partial corr. sources vs. ' + iisotope + ' SH.png'
+        output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.0_sources_isotopes/8.1.5.0.2 ' + expid[i] + ' ' + ialltime + ' partial corr. sources vs. ' + iisotope + ' NH.png'
         print(output_png)
         
         fig, axs = plt.subplots(
             nrow, ncol, figsize=np.array([5.8*ncol+1, 5.8*nrow+2.5]) / 2.54,
-            subplot_kw={'projection': ccrs.SouthPolarStereo()},
+            # subplot_kw={'projection': ccrs.SouthPolarStereo()},
+            subplot_kw={'projection': ccrs.NorthPolarStereo()},
             )
         
         ipanel=0
         for irow in range(nrow):
             for jcol in range(ncol):
                 axs[irow, jcol] = hemisphere_plot(
-                    northextent=-20, ax_org = axs[irow, jcol])
+                    # northextent=-20,
+                    # northextent=0,
+                    southextent=0,
+                    ax_org = axs[irow, jcol])
                 
                 plt.text(
                     0.05, 1, panel_labels[ipanel],
@@ -300,8 +307,8 @@ for ialltime in ['daily', 'mon', 'mon no mm', 'ann no am']:
                 ipanel += 1
         
         # (a)
-        plt_data = par_corr_sources_RHsst_SST[expid[i]][iisotope]['sst']['RHsst'][ialltime]['r'].copy()
-        # plt_data.values[corr_sources_isotopes[expid[i]]['sst'][iisotope][ialltime]['p'].values >= 0.01] = np.nan
+        plt_data = par_corr_sources_isotopes_q_sfc[expid[i]][iisotope]['RHsst']['sst'][ialltime]['r'].copy()
+        # plt_data.values[corr_sources_isotopes_q_sfc[expid[i]]['RHsst'][iisotope][ialltime]['p'].values >= 0.01] = np.nan
         plt1 = plot_t63_contourf(
             lon, lat,
             plt_data,
@@ -321,28 +328,28 @@ for ialltime in ['daily', 'mon', 'mon no mm', 'ann no am']:
             plt_data,
             axs[1, 0], pltlevel, 'neither', pltnorm, pltcmp,ccrs.PlateCarree(),)
         # (d)
-        plt_data = par_corr_sources_isotopes_q_sfc[expid[i]][iisotope]['RHsst']['sst'][ialltime]['r'].copy()
-        # plt_data.values[corr_sources_isotopes_q_sfc[expid[i]]['RHsst'][iisotope][ialltime]['p'].values >= 0.01] = np.nan
+        plt_data = par_corr_sources_RHsst_SST[expid[i]][iisotope]['sst']['RHsst'][ialltime]['r'].copy()
+        # plt_data.values[corr_sources_isotopes[expid[i]]['sst'][iisotope][ialltime]['p'].values >= 0.01] = np.nan
         plt1 = plot_t63_contourf(
             lon, lat,
             plt_data,
             axs[1, 1], pltlevel, 'neither', pltnorm, pltcmp,ccrs.PlateCarree(),)
         
         plt.text(
-            0.5, 1.05, plot_labels_no_unit[iisotope] + ' and Source SST | Source RHsst',
+            0.5, 1.05, 'Surface vapour',
             transform=axs[0, 0].transAxes,
             ha='center', va='center', rotation='horizontal')
         plt.text(
-            0.5, 1.05, plot_labels_no_unit[iisotope] + ' and Source RHsst | Source SST',
+            0.5, 1.05, 'Precipitation',
             transform=axs[0, 1].transAxes,
             ha='center', va='center', rotation='horizontal')
         
         plt.text(
-            -0.05, 0.5, 'Precipitation',
+            -0.05, 0.5, plot_labels_no_unit[iisotope] + ' and Source RHsst | Source SST',
             transform=axs[0, 0].transAxes,
             ha='center', va='center', rotation='vertical')
         plt.text(
-            -0.05, 0.5, 'Surface vapour',
+            -0.05, 0.5, plot_labels_no_unit[iisotope] + ' and Source SST | Source RHsst',
             transform=axs[1, 0].transAxes,
             ha='center', va='center', rotation='vertical')
         

@@ -1,5 +1,10 @@
 
 
+# salloc --account=paleodyn.paleodyn --qos=12h --time=12:00:00 --nodes=1 --mem=120GB
+# source ${HOME}/miniconda3/bin/activate deepice
+# ipython
+
+
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
     'nudged_705_6.0',
@@ -121,7 +126,7 @@ from a_basic_analysis.b_module.component_plot import (
 # region import data
 
 
-source_var = ['lat', 'sst',]
+source_var = ['lat', 'sst', 'RHsst']
 q_sfc_weighted_var = {}
 
 for i in range(len(expid)):
@@ -135,6 +140,7 @@ for i in range(len(expid)):
     source_var_files = [
         prefix + '.q_sfc_weighted_lat.pkl',
         prefix + '.q_sfc_weighted_sst.pkl',
+        prefix + '.q_sfc_weighted_RHsst.pkl',
     ]
     
     for ivar, ifile in zip(source_var, source_var_files):
@@ -145,6 +151,31 @@ for i in range(len(expid)):
 tsw_alltime = {}
 with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.tsw_alltime.pkl', 'rb') as f:
     tsw_alltime[expid[i]] = pickle.load(f)
+
+RHsst_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.RHsst_alltime.pkl', 'rb') as f:
+    RHsst_alltime[expid[i]] = pickle.load(f)
+
+
+d_ln_q_sfc_alltime = {}
+# d_excess_q_sfc_alltime = {}
+# dD_q_sfc_alltime = {}
+# dO18_q_sfc_alltime = {}
+
+for i in range(len(expid)):
+    print(str(i) + ': ' + expid[i])
+    
+    with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_ln_q_sfc_alltime.pkl', 'rb') as f:
+        d_ln_q_sfc_alltime[expid[i]] = pickle.load(f)
+    
+    # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.d_excess_q_sfc_alltime.pkl', 'rb') as f:
+    #     d_excess_q_sfc_alltime[expid[i]] = pickle.load(f)
+    
+    # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_q_sfc_alltime.pkl', 'rb') as f:
+    #     dD_q_sfc_alltime[expid[i]] = pickle.load(f)
+    
+    # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_q_sfc_alltime.pkl', 'rb') as f:
+    #     dO18_q_sfc_alltime[expid[i]] = pickle.load(f)
 
 '''
 '''
@@ -219,6 +250,146 @@ plt1 = plot_t63_contourf(
     q_sfc_weighted_var[expid[i]]['lat']['daily'].lat,
     daily_corr_src_sst_lat,
     ax, pltlevel, 'neither', pltnorm, pltcmp, ccrs.PlateCarree(),)
+
+ax.add_feature(
+    cfeature.LAND, color='white', zorder=2, edgecolor=None,lw=0)
+
+cbar = fig.colorbar(
+    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.7, ticks=pltticks,
+    pad=0.05, fraction=0.12,)
+
+cbar.ax.tick_params(length=0.5, width=0.4)
+cbar.ax.set_xlabel(cbar_label, linespacing=2, size=9)
+fig.savefig(output_png)
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region check correlation between moisture source SST and RHsst
+
+daily_corr_src_sst_RHsst = xr.corr(
+    q_sfc_weighted_var[expid[i]]['sst']['daily'],
+    q_sfc_weighted_var[expid[i]]['RHsst']['daily'],
+    dim='time',
+    ).compute()
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-1, cm_max=1, cm_interval1=0.1, cm_interval2=0.4,
+    cmap='PuOr', asymmetric=False, reversed=True)
+
+output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.7 ' + expid[i] + ' corr. daily q_sfc src_sst and src_RHsst.png'
+
+cbar_label = 'Correlation: source SST and RHsst of daily surface vapour [-]'
+
+fig, ax = globe_plot(
+    add_grid_labels=False, figsize=np.array([8.8, 6]) / 2.54,
+    fm_left=0.01, fm_right=0.99, fm_bottom=0.1, fm_top=0.99,)
+
+plt1 = plot_t63_contourf(
+    q_sfc_weighted_var[expid[i]]['lat']['daily'].lon,
+    q_sfc_weighted_var[expid[i]]['lat']['daily'].lat,
+    daily_corr_src_sst_RHsst,
+    ax, pltlevel, 'neither', pltnorm, pltcmp, ccrs.PlateCarree(),)
+
+ax.add_feature(
+    cfeature.LAND, color='white', zorder=2, edgecolor=None,lw=0)
+
+cbar = fig.colorbar(
+    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.7, ticks=pltticks,
+    pad=0.05, fraction=0.12,)
+
+cbar.ax.tick_params(length=0.5, width=0.4)
+cbar.ax.set_xlabel(cbar_label, linespacing=2, size=9)
+fig.savefig(output_png)
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region check correlation between tsw and RHsst
+
+daily_corr_sst_RHsst = xr.corr(
+    tsw_alltime[expid[i]]['daily'],
+    RHsst_alltime[expid[i]]['daily'],
+    dim='time',
+    ).compute()
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-1, cm_max=1, cm_interval1=0.1, cm_interval2=0.4,
+    cmap='PuOr', asymmetric=False, reversed=True)
+
+output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.7 ' + expid[i] + ' corr. daily local sst and RHsst.png'
+
+cbar_label = 'Correlation: local SST and RHsst [-]'
+
+fig, ax = globe_plot(
+    add_grid_labels=False, figsize=np.array([8.8, 6]) / 2.54,
+    fm_left=0.01, fm_right=0.99, fm_bottom=0.1, fm_top=0.99,)
+
+plt1 = ax.pcolormesh(
+        daily_corr_sst_RHsst.lon,
+        daily_corr_sst_RHsst.lat,
+        daily_corr_sst_RHsst,
+        norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree()
+    )
+# plt1 = plot_t63_contourf(
+#     daily_corr_sst_RHsst.lon,
+#     daily_corr_sst_RHsst.lat,
+#     daily_corr_sst_RHsst,
+#     ax, pltlevel, 'neither', pltnorm, pltcmp, ccrs.PlateCarree(),)
+
+ax.add_feature(
+    cfeature.LAND, color='white', zorder=2, edgecolor=None,lw=0)
+
+cbar = fig.colorbar(
+    plt1, ax=ax, aspect=30, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.7, ticks=pltticks,
+    pad=0.05, fraction=0.12,)
+
+cbar.ax.tick_params(length=0.5, width=0.4)
+cbar.ax.set_xlabel(cbar_label, linespacing=2, size=9)
+fig.savefig(output_png)
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region check correlation between moisture source SST and RHsst
+
+RHsst_alltime[expid[i]]['daily']['time'] = d_ln_q_sfc_alltime[expid[i]]['daily']['time']
+daily_corr_d_ln_RHsst = xr.corr(
+    d_ln_q_sfc_alltime[expid[i]]['daily'],
+    RHsst_alltime[expid[i]]['daily'],
+    dim='time',
+    ).compute()
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-1, cm_max=1, cm_interval1=0.1, cm_interval2=0.4,
+    cmap='PuOr', asymmetric=False, reversed=True)
+
+output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.7 ' + expid[i] + ' corr. daily q_sfc d_ln and RHsst.png'
+
+cbar_label = 'Correlation: d_ln of daily surface vapour and RHsst [-]'
+
+fig, ax = globe_plot(
+    add_grid_labels=False, figsize=np.array([8.8, 6]) / 2.54,
+    fm_left=0.01, fm_right=0.99, fm_bottom=0.1, fm_top=0.99,)
+
+plt1 = ax.pcolormesh(
+        daily_corr_d_ln_RHsst.lon,
+        daily_corr_d_ln_RHsst.lat,
+        daily_corr_d_ln_RHsst,
+        norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree()
+    )
 
 ax.add_feature(
     cfeature.LAND, color='white', zorder=2, edgecolor=None,lw=0)

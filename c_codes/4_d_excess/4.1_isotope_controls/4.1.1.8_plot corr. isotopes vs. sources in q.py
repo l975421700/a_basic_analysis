@@ -227,24 +227,28 @@ for ivar in ['sst', 'RHsst']:
         # ['d_ln', 'd_xs',]
         print('#---------------- ' + iisotopes)
         
-        for ialltime in ['ann no am',]:
+        for ialltime in ['daily', 'mon', 'mon no mm', 'ann no am',]:
             # ialltime = 'mon'
             # ['mon', 'mon no mm', 'ann', 'ann no am']
             print('#-------- ' + ialltime)
             
-            output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.1 ' + expid[i] + ' zm ' + ialltime + ' partial corr. ' + iisotopes + ' vs. ' + ivar + ' controlling ' + ctr_var + ' SH.png'
+            # output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.1 ' + expid[i] + ' zm ' + ialltime + ' partial corr. ' + iisotopes + ' vs. ' + ivar + ' controlling ' + ctr_var + ' SH.png'
+            output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.1 ' + expid[i] + ' zm ' + ialltime + ' partial corr. ' + iisotopes + ' vs. ' + ivar + ' controlling ' + ctr_var + ' NH.png'
             
             fig, ax = plt.subplots(1, 1, figsize=np.array([13.2, 8.8]) / 2.54)
             
             plt_mesh = ax.contourf(
-                lat.sel(lat=slice(3, -90)),
+                # lat.sel(lat=slice(3, -90)),
+                lat.sel(lat=slice(90, -3)),
                 plev.sel(plev=slice(1e+5, 2e+4)) / 100,
-                par_corr_sources_isotopes_q_zm[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'].sel(lat=slice(3, -90), plev=slice(1e+5, 2e+4)),
+                # par_corr_sources_isotopes_q_zm[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'].sel(lat=slice(3, -90), plev=slice(1e+5, 2e+4)),
+                par_corr_sources_isotopes_q_zm[expid[i]][iisotopes][ivar][ctr_var][ialltime]['r'].sel(lat=slice(90, -3), plev=slice(1e+5, 2e+4)),
                 norm=pltnorm, cmap=pltcmp, levels=pltlevel, extend='neither',)
             
             # x-axis
-            ax.set_xticks(np.arange(0, -90 - 1e-4, -10))
-            ax.set_xlim(0, -88.57)
+            ax.set_xticks(np.arange(90, -90 - 1e-4, -10))
+            # ax.set_xlim(0, -88.57)
+            ax.set_xlim(90, 0)
             ax.xaxis.set_major_formatter(LatitudeFormatter(degree_symbol='° '))
             
             # y-axis

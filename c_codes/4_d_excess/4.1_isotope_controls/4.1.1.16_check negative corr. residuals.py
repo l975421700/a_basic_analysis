@@ -146,7 +146,7 @@ for i in range(len(expid)):
     # with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_q_sfc_alltime.pkl', 'rb') as f:
     #     dO18_q_sfc_alltime[expid[i]] = pickle.load(f)
 
-source_var = ['lat', 'sst', 'RHsst', 'distance'] # 'lon',
+source_var = ['lat', 'sst', 'RHsst', 'distance', 'wind10', 'rh2m'] # 'lon',
 q_sfc_weighted_var = {}
 
 for i in range(len(expid)):
@@ -163,6 +163,8 @@ for i in range(len(expid)):
         prefix + '.q_sfc_weighted_sst.pkl',
         prefix + '.q_sfc_weighted_RHsst.pkl',
         prefix + '.q_sfc_transport_distance.pkl',
+        prefix + '.q_sfc_weighted_wind10.pkl',
+        prefix + '.q_sfc_weighted_rh2m.pkl',
     ]
     
     for ivar, ifile in zip(source_var, source_var_files):
@@ -195,6 +197,35 @@ white_viridis = LinearSegmentedColormap.from_list('white_viridis', [
     (0.8, '#78d151'),
     (1, '#fde624'),
 ], N=256)
+
+
+wisoaprt_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wisoaprt_alltime.pkl', 'rb') as f:
+    wisoaprt_alltime[expid[i]] = pickle.load(f)
+
+tsw_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.tsw_alltime.pkl', 'rb') as f:
+    tsw_alltime[expid[i]] = pickle.load(f)
+
+source_var = ['sst',]
+pre_weighted_var = {}
+
+for i in range(len(expid)):
+    # i = 0
+    print(str(i) + ': ' + expid[i])
+    
+    pre_weighted_var[expid[i]] = {}
+    
+    prefix = exp_odir + expid[i] + '/analysis/echam/' + expid[i]
+    
+    source_var_files = [
+        prefix + '.pre_weighted_sst.pkl',
+    ]
+    
+    for ivar, ifile in zip(source_var, source_var_files):
+        print(ivar + ':    ' + ifile)
+        with open(ifile, 'rb') as f:
+            pre_weighted_var[expid[i]][ivar] = pickle.load(f)
 
 '''
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
@@ -366,14 +397,20 @@ predict_deviations = predicted_y - data1
 
 #-------------------------------- plot deviations against src SST/lat/distance
 
-for ivar in ['lat', 'sst', 'distance']:
+for ivar in ['sst']:
     # ivar = 'sst'
+    # ['pre', 'lat', 'sst', 'distance', 'wind10']
     print('#-------------------------------- ' + ivar)
     
     output_png = output_png1 + ivar + '.png'
     
-    data3 = q_sfc_weighted_var[expid[i]][ivar][ialltime][:, daily_neg_ilat, daily_neg_ilon].values
-    # data3 = q_sfc_weighted_var[expid[i]][ivar][ialltime][:, daily_pos_ilat, daily_pos_ilon].values
+    if (ivar == 'pre'):
+        data3 = wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1)[:, daily_neg_ilat, daily_neg_ilon].values * seconds_per_d
+        # data3 = wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1)[:, daily_pos_ilat, daily_pos_ilon].values * seconds_per_d
+        data3[data3 < 0.002] = np.nan
+    else:
+        data3 = q_sfc_weighted_var[expid[i]][ivar][ialltime][:, daily_neg_ilat, daily_neg_ilon].values
+        # data3 = q_sfc_weighted_var[expid[i]][ivar][ialltime][:, daily_pos_ilat, daily_pos_ilon].values
     
     fig = plt.figure(figsize=np.array([8.8, 9.5]) / 2.54,)
     ax = fig.add_subplot(1, 1, 1, projection='scatter_density')
@@ -384,13 +421,20 @@ for ivar in ['lat', 'sst', 'distance']:
         predict_deviations[subset1],
         cmap=white_viridis, vmin=0, vmax=25,)
     
-    linearfit = linregress(x=data3[subset1], y=predict_deviations[subset1],)
-    ax.axline((0, linearfit.intercept), slope = linearfit.slope, lw=0.5)
+    # linearfit = linregress(x=data3[subset1], y=predict_deviations[subset1],)
+    # ax.axline((0, linearfit.intercept), slope = linearfit.slope, lw=0.5)
+    
+    ax.axvline(
+        x=tsw_alltime[expid[i]]['am'][daily_neg_ilat, daily_neg_ilon].values,
+        # x=tsw_alltime[expid[i]]['am'][daily_pos_ilat, daily_pos_ilon].values,
+        ls='--', lw=0.8, c='k',
+        )
     
     ax.set_xlabel(plot_labels[ivar],)
     ax.xaxis.set_minor_locator(AutoMinorLocator(2))
     
-    ax.set_ylabel('Deviations in predicted ' + plot_labels['d_ln'],)
+    ax.set_ylabel('Residuals in regression $d_{ln} = f(RHsst)$ [$‰$]')
+    # ax.set_ylabel('Deviations in predicted ' + plot_labels['d_ln'],)
     ax.yaxis.set_minor_locator(AutoMinorLocator(2))
     
     fig.colorbar(
@@ -416,6 +460,197 @@ print(np.sqrt(np.average(np.square(predicted_y[subset] - data1[subset]))))
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot the original data
+
+ialltime = 'daily'
+
+# data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_neg_ilat, daily_neg_ilon].values
+# data2 = q_sfc_weighted_var[expid[i]]['RHsst'][ialltime][:, daily_neg_ilat, daily_neg_ilon].values * 100
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.4 ' + expid[i] + ' ' + ialltime + ' d_ln and source RHsst daily_neg.png'
+
+# data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_pos_ilat, daily_pos_ilon].values
+# data2 = q_sfc_weighted_var[expid[i]]['RHsst'][ialltime][:, daily_pos_ilat, daily_pos_ilon].values * 100
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.4 ' + expid[i] + ' ' + ialltime + ' d_ln and source RHsst daily_pos.png'
+
+# data1 = q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_neg_ilat, daily_neg_ilon].values
+# data2 = wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1)[:, daily_neg_ilat, daily_neg_ilon].values * seconds_per_d
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.4 ' + expid[i] + ' ' + ialltime + ' srcSST and pre.png'
+
+# data1 = q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_pos_ilat, daily_pos_ilon].values
+# data2 = wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1)[:, daily_pos_ilat, daily_pos_ilon].values * seconds_per_d
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.4 ' + expid[i] + ' ' + ialltime + ' srcSST and pre daily_pos.png'
+
+# data1 = pre_weighted_var[expid[i]]['sst'][ialltime][:, daily_neg_ilat, daily_neg_ilon].values
+# data2 = wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1)[:, daily_neg_ilat, daily_neg_ilon].values * seconds_per_d
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.4 ' + expid[i] + ' ' + ialltime + ' presrcSST and pre.png'
+
+# data1 = pre_weighted_var[expid[i]]['sst'][ialltime][:, daily_pos_ilat, daily_pos_ilon].values
+# data2 = wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1)[:, daily_pos_ilat, daily_pos_ilon].values * seconds_per_d
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.4 ' + expid[i] + ' ' + ialltime + ' presrcSST and pre daily_pos.png'
+
+
+# data1 = q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_neg_ilat, daily_neg_ilon].values
+# data2 = pre_weighted_var[expid[i]]['sst'][ialltime][:, daily_neg_ilat, daily_neg_ilon].values
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.4 ' + expid[i] + ' ' + ialltime + ' q_sfc_srcSST and pre_srcSST.png'
+
+data1 = q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_pos_ilat, daily_pos_ilon].values
+data2 = pre_weighted_var[expid[i]]['sst'][ialltime][:, daily_pos_ilat, daily_pos_ilon].values
+output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.4 ' + expid[i] + ' ' + ialltime + ' q_sfc_srcSST and pre_srcSST daily_pos.png'
+
+subset = np.isfinite(data1) & np.isfinite(data2)
+
+ols_fit = sm.OLS(
+    data2[subset],
+    sm.add_constant(np.column_stack((
+        data1[subset],
+        )))).fit()
+
+# ols_fit.summary()
+# ols_fit.params
+# ols_fit.rsquared
+
+# predicted_y = ols_fit.params[0] + ols_fit.params[1] * data2[subset]
+# rsquared = pearsonr(data1[subset], predicted_y).statistic ** 2
+# RMSE = np.sqrt(np.average(np.square(predicted_y - data1[subset])))
+
+# eq_text = plot_labels_no_unit['d_ln'] + '$=' + \
+#     str(np.round(ols_fit.params[1], 2)) + 'srcRHsst+' + \
+#         str(np.round(ols_fit.params[0], 1)) + '$' + \
+#         '\n$R^2=' + str(np.round(rsquared, 2)) + '$' + \
+#             '\n$RMSE=' + str(np.round(RMSE, 1)) + '‰$'
+
+# xymax = np.max(np.concatenate((data1[subset], predicted_y)))
+# xymin = np.min(np.concatenate((data1[subset], predicted_y)))
+
+white_viridis = LinearSegmentedColormap.from_list('white_viridis', [
+    (0, '#ffffff'),
+    (1e-20, '#440053'),
+    (0.2, '#404388'),
+    (0.4, '#2a788e'),
+    (0.6, '#21a784'),
+    (0.8, '#78d151'),
+    (1, '#fde624'),
+], N=256)
+
+fig = plt.figure(figsize=np.array([8.8, 9.5]) / 2.54,)
+ax = fig.add_subplot(1, 1, 1, projection='scatter_density')
+
+plt_scatter = ax.scatter_density(
+    data1[subset],
+    data2[subset],
+    cmap=white_viridis, vmin=0, vmax=25,)
+
+# ax.axline((0, 0), slope = 1, lw=0.5, color='k')
+ax.axline(
+    (0, ols_fit.params[0]), slope = ols_fit.params[1], lw=0.5,)
+
+# ax.axvline(
+#     # x=tsw_alltime[expid[i]]['am'][daily_neg_ilat, daily_neg_ilon].values,
+#     x=tsw_alltime[expid[i]]['am'][daily_pos_ilat, daily_pos_ilon].values,
+#     ls='--', lw=0.8, c='k',
+#     )
+
+# plt.text(
+#     0.05, 0.05, eq_text, transform=ax.transAxes, linespacing=2,
+#     va='bottom', ha='left',)
+
+# ax.set_xticks(np.arange(-20, 40 + 1e-4, 4))
+# ax.set_yticks(np.arange(-20, 40 + 1e-4, 4))
+
+ax.set_xlabel('Vapour ' + plot_labels['sst'],)
+# ax.set_xlim(xymin-2, xymax+2)
+ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+
+ax.set_ylabel('Precipitation ' + plot_labels['sst'],)
+# ax.set_ylim(xymin-2, xymax+2)
+ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+
+fig.colorbar(
+    plt_scatter, label='Number of points per pixel',
+    ticks=np.arange(0, 25+1e-4, 5),
+    orientation='horizontal', fraction=0.08, aspect=30, extend='max',)
+
+ax.grid(True, which='both',
+        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+fig.subplots_adjust(left=0.16, right=0.98, bottom=0.08, top=0.98)
+fig.savefig(output_png)
+
+
+'''
+data1_normalised = ((data1 - data1.mean()) / data1.std(ddof=1))
+data2_normalised = ((data2 - data2.mean()) / data2.std(ddof=1))
+
+linearfit = linregress(
+    x = data1_normalised[subset],
+    y = data1_normalised[subset],)
+
+d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_neg_ilat, daily_neg_ilon].to_netcdf('scratch/test/test0.nc')
+
+subset = np.isfinite(data1) & np.isfinite(data2)
+print(pearsonr(data1[subset], data2[subset], ).statistic ** 2)
+print(pearsonr(((data1 - data1.mean()) / data1.std(ddof=1))[subset], ((data2 - data2.mean()) / data2.std(ddof=1))[subset], ).statistic)
+print(corr_sources_isotopes_q_sfc[expid[i]]['RHsst']['d_ln']['daily']['r'][daily_neg_ilat, daily_neg_ilon])
+print(pearsonr(data1_normalised[subset], data2_normalised[subset]).statistic)
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot distribution of source SST during non-precipitation days
+
+ialltime = 'daily'
+
+# data1 = q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_neg_ilat, daily_neg_ilon].values
+# data2 = (wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1)[:, daily_neg_ilat, daily_neg_ilon] * seconds_per_d).values
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.9 ' + expid[i] + ' histogram of srcSST in non_pre days.png'
+
+data1 = q_sfc_weighted_var[expid[i]]['sst'][ialltime][:, daily_pos_ilat, daily_pos_ilon].values
+data2 = (wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1)[:, daily_pos_ilat, daily_pos_ilon] * seconds_per_d).values
+output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.0_negative correlation/8.1.5.7.0.9 ' + expid[i] + ' histogram of srcSST in non_pre days daily_pos.png'
+
+no_pre_subset   = data2 <= 0.2
+pre_subset      = data2 > 0.2
+# pre_subset.sum()
+# no_pre_subset.sum()
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+
+sns.histplot(
+    data1[pre_subset],
+    binwidth=0.5, color='tab:blue', alpha=0.5,
+    label = 'prec > 0.2 $mm \; day^{-1}$'
+    )
+
+sns.histplot(
+    data1[no_pre_subset],
+    binwidth=0.5, color='tab:orange', alpha=0.5,
+    label = 'prec ≤ 0.2 $mm \; day^{-1}$'
+    )
+
+ax.set_xlabel(plot_labels['sst'],)
+ax.xaxis.set_major_formatter(remove_trailing_zero_pos)
+
+ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+# ax.legend()
+
+ax.grid(True, which='both',
+        linewidth=0.4, color='lightgray', alpha=0.5, linestyle=':')
+fig.subplots_adjust(left=0.18, right=0.98, bottom=0.14, top=0.98)
+fig.savefig(output_png)
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+
+
 
 
 # -----------------------------------------------------------------------------
@@ -491,115 +726,6 @@ for ivar in ['lat', 'sst', 'distance']:
 '''
 print(pearsonr(data1[subset], predicted_y[subset]).statistic ** 2)
 print(np.sqrt(np.average(np.square(predicted_y[subset] - data1[subset]))))
-
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-
-
-# -----------------------------------------------------------------------------
-# region plot the original data
-
-ialltime = 'daily'
-
-# data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_neg_ilat, daily_neg_ilon].values
-# data2 = q_sfc_weighted_var[expid[i]]['RHsst'][ialltime][:, daily_neg_ilat, daily_neg_ilon].values * 100
-# output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.4 ' + expid[i] + ' ' + ialltime + ' d_ln and source RHsst daily_neg.png'
-
-data1 = d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_pos_ilat, daily_pos_ilon].values
-data2 = q_sfc_weighted_var[expid[i]]['RHsst'][ialltime][:, daily_pos_ilat, daily_pos_ilon].values * 100
-output_png = 'figures/8_d-excess/8.1_controls/8.1.5_correlation_analysis/8.1.5.7_sources_isotopes_q/8.1.5.7.4 ' + expid[i] + ' ' + ialltime + ' d_ln and source RHsst daily_pos.png'
-
-subset = np.isfinite(data1) & np.isfinite(data2)
-
-ols_fit = sm.OLS(
-    data1[subset],
-    sm.add_constant(np.column_stack((
-        data2[subset],
-        )))).fit()
-
-# ols_fit.summary()
-# ols_fit.params
-# ols_fit.rsquared
-
-predicted_y = ols_fit.params[0] + ols_fit.params[1] * data2[subset]
-rsquared = pearsonr(data1[subset], predicted_y).statistic ** 2
-RMSE = np.sqrt(np.average(np.square(predicted_y - data1[subset])))
-
-eq_text = plot_labels_no_unit['d_ln'] + '$=' + \
-    str(np.round(ols_fit.params[1], 2)) + 'srcRHsst+' + \
-        str(np.round(ols_fit.params[0], 1)) + '$' + \
-        '\n$R^2=' + str(np.round(rsquared, 2)) + '$' + \
-            '\n$RMSE=' + str(np.round(RMSE, 1)) + '‰$'
-
-# xymax = np.max(np.concatenate((data1[subset], predicted_y)))
-# xymin = np.min(np.concatenate((data1[subset], predicted_y)))
-
-white_viridis = LinearSegmentedColormap.from_list('white_viridis', [
-    (0, '#ffffff'),
-    (1e-20, '#440053'),
-    (0.2, '#404388'),
-    (0.4, '#2a788e'),
-    (0.6, '#21a784'),
-    (0.8, '#78d151'),
-    (1, '#fde624'),
-], N=256)
-
-fig = plt.figure(figsize=np.array([8.8, 9.5]) / 2.54,)
-ax = fig.add_subplot(1, 1, 1, projection='scatter_density')
-
-plt_scatter = ax.scatter_density(
-    data2[subset],
-    data1[subset],
-    cmap=white_viridis, vmin=0, vmax=25,)
-
-# ax.axline((0, 0), slope = 1, lw=0.5, color='k')
-ax.axline(
-    (0, ols_fit.params[0]), slope = ols_fit.params[1], lw=0.5,)
-
-plt.text(
-    0.05, 0.05, eq_text, transform=ax.transAxes, linespacing=2,
-    va='bottom', ha='left',)
-
-# ax.set_xticks(np.arange(-20, 40 + 1e-4, 4))
-# ax.set_yticks(np.arange(-20, 40 + 1e-4, 4))
-
-ax.set_xlabel(plot_labels['RHsst'],)
-# ax.set_xlim(xymin-2, xymax+2)
-ax.xaxis.set_minor_locator(AutoMinorLocator(2))
-
-ax.set_ylabel(plot_labels['d_ln'],)
-# ax.set_ylim(xymin-2, xymax+2)
-ax.yaxis.set_minor_locator(AutoMinorLocator(2))
-
-fig.colorbar(
-    plt_scatter, label='Number of points per pixel',
-    ticks=np.arange(0, 25+1e-4, 5),
-    orientation='horizontal', fraction=0.08, aspect=30, extend='max',)
-
-ax.grid(True, which='both',
-        linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
-fig.subplots_adjust(left=0.16, right=0.98, bottom=0.08, top=0.98)
-fig.savefig(output_png)
-
-
-'''
-data1_normalised = ((data1 - data1.mean()) / data1.std(ddof=1))
-data2_normalised = ((data2 - data2.mean()) / data2.std(ddof=1))
-
-linearfit = linregress(
-    x = data1_normalised[subset],
-    y = data1_normalised[subset],)
-
-d_ln_q_sfc_alltime[expid[i]][ialltime][:, daily_neg_ilat, daily_neg_ilon].to_netcdf('scratch/test/test0.nc')
-
-subset = np.isfinite(data1) & np.isfinite(data2)
-print(pearsonr(data1[subset], data2[subset], ).statistic ** 2)
-print(pearsonr(((data1 - data1.mean()) / data1.std(ddof=1))[subset], ((data2 - data2.mean()) / data2.std(ddof=1))[subset], ).statistic)
-print(corr_sources_isotopes_q_sfc[expid[i]]['RHsst']['d_ln']['daily']['r'][daily_neg_ilat, daily_neg_ilon])
-print(pearsonr(data1_normalised[subset], data2_normalised[subset]).statistic)
 
 '''
 # endregion

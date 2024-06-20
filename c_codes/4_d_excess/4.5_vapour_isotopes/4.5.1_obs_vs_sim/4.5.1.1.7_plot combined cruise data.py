@@ -260,7 +260,7 @@ for idataset in ['Kurita et al. (2016)', 'Bonne et al. (2019)', 'Thurnherr et al
 # -----------------------------------------------------------------------------
 # region plot maps of subset data
 
-subset = ((SO_vapor_isotopes_SLMSIC[expid[i]]['SLM'] == 0) & (SO_vapor_isotopes_SLMSIC[expid[i]]['SIC'] == 0) & (SO_vapor_isotopes_SLMSIC[expid[i]]['lat'] <= -20) & (SO_vapor_isotopes_SLMSIC[expid[i]]['lat'] >= -60) & np.isfinite(SO_vapor_isotopes_SLMSIC[expid[i]]['d18O']) & np.isfinite(SO_vapor_isotopes_SLMSIC[expid[i]]['dD']))
+subset = ((SO_vapor_isotopes_SLMSIC[expid[i]]['SLM'] == 0) & (SO_vapor_isotopes_SLMSIC[expid[i]]['SIC'] == 0) & (SO_vapor_isotopes_SLMSIC[expid[i]]['lat'] <= -20) & (SO_vapor_isotopes_SLMSIC[expid[i]]['lat'] >= -60) & np.isfinite(SO_vapor_isotopes_SLMSIC[expid[i]]['d18O']) & np.isfinite(SO_vapor_isotopes_SLMSIC[expid[i]]['dD'])) # & (SO_vapor_isotopes_SLMSIC[expid[i]][subset]['Reference'] == 'Thurnherr et al. (2020)')
 
 np.unique(SO_vapor_isotopes_SLMSIC[expid[i]][subset]['Reference'], return_counts=True)
 

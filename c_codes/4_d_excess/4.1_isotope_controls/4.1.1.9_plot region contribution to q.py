@@ -173,21 +173,26 @@ fig.savefig(output_png)
 # region plot open ocean contribution to zonal mean q
 
 pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
-    cm_min=50, cm_max=100, cm_interval1=5, cm_interval2=10, cmap='viridis',)
+    cm_min=0, cm_max=100, cm_interval1=10, cm_interval2=20,
+    cmap='Greens', reversed=False,)
 
 output_png = 'figures/8_d-excess/8.1_controls/8.1.8_region_contribution/8.1.8.0 ' + expid[i] + ' annual mean open ocean contribution to zonal mean q.png'
+# output_png = 'figures/8_d-excess/8.1_controls/8.1.8_region_contribution/8.1.8.0 ' + expid[i] + ' annual mean open ocean contribution to zonal mean q NH.png'
 
 fig, ax = plt.subplots(1, 1, figsize=np.array([13.2, 8.8]) / 2.54)
 
 plt_mesh = ax.contourf(
     lat.sel(lat=slice(3, -90)),
+    # lat.sel(lat=slice(90, -3)),
     plev.sel(plev=slice(1e+5, 2e+4)) / 100,
     (q_geo7_alltiime[expid[i]]['am'].mean(dim='lon').sel(geo_regions='Open Ocean') / q_geo7_alltiime[expid[i]]['am'].mean(dim='lon').sel(geo_regions='Sum') * 100).sel(lat=slice(3, -90), plev=slice(1e+5, 2e+4)),
-    norm=pltnorm, cmap=pltcmp, levels=pltlevel, extend='min',)
+    # (q_geo7_alltiime[expid[i]]['am'].mean(dim='lon').sel(geo_regions='Open Ocean') / q_geo7_alltiime[expid[i]]['am'].mean(dim='lon').sel(geo_regions='Sum') * 100).sel(lat=slice(90, -3), plev=slice(1e+5, 2e+4)),
+    norm=pltnorm, cmap=pltcmp, levels=pltlevel, extend='neither',)
 
 # x-axis
-ax.set_xticks(np.arange(0, -90 - 1e-4, -10))
+ax.set_xticks(np.arange(90, -90 - 1e-4, -10))
 ax.set_xlim(0, -88.57)
+# ax.set_xlim(90, 0)
 ax.xaxis.set_major_formatter(LatitudeFormatter(degree_symbol='° '))
 
 # y-axis
