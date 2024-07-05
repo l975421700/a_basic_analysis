@@ -117,6 +117,12 @@ AMOC_xppfa_3000yrs = xr.open_dataset('/gws/nopw/j04/bas_palaeoclim/rahul/data/BA
 with open('scratch/share/from_rahul/data_qingang/hadcm3_output.pkl', 'rb') as f:
     hadcm3_output = pickle.load(f)
 
+
+with open('scratch/share/from_rahul/data_qingang/hadcm3_extended_output.pkl', 'rb') as f:
+    hadcm3_extended_output = pickle.load(f)
+
+AMOC_xpvga = xr.open_dataset('scratch/share/from_rahul/data_qingang/xpvga/AMOC_xpvga.nc')
+
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -476,3 +482,74 @@ hadcm3_output['LIG0.25']['SST'].sel(lat=slice(-60, -40)).mean(dim=('lat', 'lon')
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot AMOC and SO SST time series, extended
+
+xppfa_SST_cellarea = xr.open_dataset('scratch/share/from_rahul/data_qingang/xppfa/29nov23/xppfa_SST_cellarea.nc')
+
+SO_40_60_SST = hadcm3_output['LIG0.25']['SST'].sel(lat=slice(-60, -40)).weighted(xppfa_SST_cellarea.cell_area.sel(lat=slice(-60, -40))).mean(dim=('lat', 'lon')).resample(time='1Y').mean(dim='time')
+
+SO_40_60_SST_extended = hadcm3_extended_output['LIG0.25_extended']['SST'].sel(lat=slice(-60, -40)).weighted(xppfa_SST_cellarea.cell_area.sel(lat=slice(-60, -40))).mean(dim=('lat', 'lon')).resample(time='1Y').mean(dim='time')
+
+
+output_png = 'figures/7_lig/7.1_hadcm3/7.1.2.1 extended time series of AMOC and SO SST.png'
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([10, 8]) / 2.54)
+
+ax.plot(
+    np.arange(0, 3000, 1),
+    AMOC_xppfa_3000yrs.merid_Atlantic_ym_dpth.sel(time=slice('2754-06-01', '5754-06-02')),
+    lw=0.2, c='tab:blue'
+    )
+
+ax.plot(
+    np.arange(3000, 3300, 1),
+    AMOC_xpvga.merid_Atlantic_ym_dpth[:-2],
+    lw=0.2, c='tab:blue'
+    )
+
+ax.set_xlim(-100, 3400)
+ax.set_ylim(0, 24)
+ax.set_xticks(np.arange(0, 3000+1e-4, 500))
+ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+ax.set_xlabel('Modelling year')
+ax.set_ylabel('AMOC [$Sv$]', c='tab:blue')
+ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
+ax.axvline(3000, c='k', lw=0.5)
+
+ax.grid(True, which='both',
+        linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+
+ax2 = ax.twinx()
+ax2.plot(
+    np.arange(0, 3000, 1),
+    SO_40_60_SST,
+    lw=0.2, c = 'tab:orange'
+)
+ax2.plot(
+    np.arange(3000, 3300, 1),
+    SO_40_60_SST_extended,
+    lw=0.2, c = 'tab:orange'
+)
+ax2.set_ylim(8, 9.8)
+ax2.yaxis.set_major_formatter(remove_trailing_zero_pos)
+ax2.set_ylabel('Annual averaged SST between 40-60$°\;S$ [$°C$]', c = 'tab:orange')
+
+fig.subplots_adjust(left=0.14, right=0.86, bottom=0.15, top=0.97)
+fig.savefig(output_png)
+
+
+SO_40_60_SST[-100:].mean().values
+SO_40_60_SST_extended[:100].mean().values
+
+
+'''
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+

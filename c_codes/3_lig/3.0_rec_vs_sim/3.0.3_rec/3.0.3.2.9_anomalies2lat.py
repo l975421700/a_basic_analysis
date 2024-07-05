@@ -142,7 +142,72 @@ with open('scratch/cmip6/lig/sic/SO_sep_sic_site_values.pkl', 'rb') as f:
 
 
 # -----------------------------------------------------------------------------
-# region plot annual sst against latitude
+# region plot summer sst against latitude
+
+
+symbol_size = 60
+linewidth = 1
+alpha = 0.75
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
+
+ax.scatter(
+    lig_recs['DC']['JFM_128']['Latitude'],
+    lig_recs['DC']['JFM_128']['sst_anom_hadisst_jfm'],
+    marker=marker_recs['DC'],
+    s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,
+    )
+
+ax.scatter(
+    lig_recs['EC']['SO_jfm']['Latitude'],
+    lig_recs['EC']['SO_jfm']['127 ka Median PIAn [°C]'],
+    marker=marker_recs['EC'],
+    s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,
+    )
+
+ax.scatter(
+    lig_recs['JH']['SO_jfm']['Latitude'],
+    lig_recs['JH']['SO_jfm']['127 ka SST anomaly (°C)'],
+    marker=marker_recs['JH'],
+    s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,
+    )
+
+ax.scatter(
+    lig_recs['MC']['interpolated']['Latitude'],
+    lig_recs['MC']['interpolated']['sst_anom_hadisst_jfm'],
+    marker=marker_recs['MC'],
+    s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,
+    )
+
+ax.set_xlabel('Latitude [$° \; S$]')
+ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+
+ax.set_ylabel('Summer SST anomalies [$°C$]')
+ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+
+ax.grid(True, which='both',
+        linewidth=0.5, color='gray', alpha=0.5, linestyle='--')
+fig.subplots_adjust(left=0.14, right=0.95, bottom=0.15, top=0.97)
+fig.savefig('figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.3_rec_site_values/7.0.3.3.0 Summer SST anomalies vs. latitude.png')
+
+
+
+
+
+'''
+
+lig_recs['EC']['SO_ann']['Latitude']
+lig_recs['EC']['SO_ann']['127 ka Median PIAn [°C]']
+
+lig_recs['JH']['SO_ann']['Latitude']
+lig_recs['JH']['SO_ann']['127 ka SST anomaly (°C)']
+
+
+lig_recs['DC']['annual_128']['Latitude']
+lig_recs['DC']['annual_128']['sst_anom_hadisst_ann']
+
+
+
 
 recs = ['EC', 'JH', 'DC', 'MC',]
 
@@ -173,22 +238,6 @@ lig_datasets['annual_sst'][irec]['Latitude']
 lig_datasets['annual_sst'][irec][lig_anom_name['annual_sst'][irec]]
 
 marker_recs[irec]
-
-
-
-
-
-'''
-
-lig_recs['EC']['SO_ann']['Latitude']
-lig_recs['EC']['SO_ann']['127 ka Median PIAn [°C]']
-
-lig_recs['JH']['SO_ann']['Latitude']
-lig_recs['JH']['SO_ann']['127 ka SST anomaly (°C)']
-
-
-lig_recs['DC']['annual_128']['Latitude']
-lig_recs['DC']['annual_128']['sst_anom_hadisst_ann']
 
 '''
 # endregion

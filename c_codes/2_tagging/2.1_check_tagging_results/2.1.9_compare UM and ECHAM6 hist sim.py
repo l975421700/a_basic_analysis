@@ -2,7 +2,7 @@
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'hist_700_5.0',
+    'hist_700_6.0',
     ]
 i = 0
 

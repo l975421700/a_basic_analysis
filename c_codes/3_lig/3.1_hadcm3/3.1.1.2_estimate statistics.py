@@ -106,11 +106,17 @@ from a_basic_analysis.b_module.component_plot import (
 with open('scratch/share/from_rahul/data_qingang/hadcm3_output_regridded_alltime.pkl', 'rb') as f:
     hadcm3_output_regridded_alltime = pickle.load(f)
 
+with open('scratch/share/from_rahul/data_qingang/hadcm3_128k_regridded_alltime.pkl', 'rb') as f:
+    hadcm3_128k_regridded_alltime = pickle.load(f)
+
 lon = hadcm3_output_regridded_alltime['PI']['SST']['am'].lon.values
 lat = hadcm3_output_regridded_alltime['PI']['SST']['am'].lat.values
 
 with open('scratch/share/from_rahul/data_qingang/hadcm3_output_site_values.pkl', 'rb') as f:
     hadcm3_output_site_values = pickle.load(f)
+
+with open('scratch/share/from_rahul/data_qingang/hadcm3_128k_site_values.pkl', 'rb') as f:
+    hadcm3_128k_site_values = pickle.load(f)
 
 HadISST = {}
 with open('data_sources/LIG/HadISST1.1/HadISST_sst.pkl', 'rb') as f:
@@ -163,6 +169,8 @@ print(np.round(diff, 1))
 # -----------------------------------------------------------------------------
 
 
+# HadCM3 lig127k
+# -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
 # region lig127k vs. piControl
 
@@ -237,3 +245,75 @@ for iproxy in hadcm3_output_site_values.keys():
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# HadCM3 lig128k
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# region lig128k vs. piControl
+
+
+iperiod = '128k_PI'
+
+
+# annual sst
+data_diff = hadcm3_128k_regridded_alltime[iperiod]['SST']['am'].squeeze().values
+data_diff_SO = data_diff[mask_SO]
+mean_diff = np.ma.average(
+    np.ma.MaskedArray(data_diff_SO, mask=np.isnan(data_diff_SO)),
+    weights=cellarea_SO,)
+std_diff = np.nanstd(data_diff_SO)
+print(str(np.round(mean_diff, 1)) + '±' + str(np.round(std_diff, 1)))
+
+
+# summer sst
+data_diff = hadcm3_128k_regridded_alltime[iperiod]['SST']['sm'].sel(time=3).values
+data_diff_SO = data_diff[mask_SO]
+mean_diff = np.ma.average(
+    np.ma.MaskedArray(data_diff_SO, mask=np.isnan(data_diff_SO)),
+    weights=cellarea_SO,)
+std_diff = np.nanstd(data_diff_SO)
+print(str(np.round(mean_diff, 1)) + '±' + str(np.round(std_diff, 1)))
+
+
+# annual sat
+data_diff = hadcm3_128k_regridded_alltime[iperiod]['SAT']['am'].squeeze().values
+data_diff_AIS = data_diff[mask_AIS]
+mean_diff = np.ma.average(
+    np.ma.MaskedArray(data_diff_AIS, mask=np.isnan(data_diff_AIS)),
+    weights=cellarea_AIS,)
+std_diff = np.nanstd(data_diff_AIS)
+print(str(np.round(mean_diff, 1)) + '±' + str(np.round(std_diff, 1)))
+
+
+# sep sic
+data1 = hadcm3_128k_regridded_alltime['SIC']['mm'].sel(time=9).values
+data2 = hadcm3_output_regridded_alltime['PI']['SIC']['mm'].sel(time=9).values
+data1_SO = data1[mask_SO]
+data2_SO = data2[mask_SO]
+
+diff = (np.nansum(data1_SO * cellarea_SO) - np.nansum(data2_SO * cellarea_SO)) / np.nansum(data2_SO * cellarea_SO) * 100
+print(np.round(diff, 0))
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region sim vs. rec
+
+for iproxy in hadcm3_128k_site_values.keys():
+    print('#-------------------------------- ' + iproxy)
+    
+    for irec in hadcm3_128k_site_values[iproxy].keys():
+        print('#---------------- ' + irec)
+        
+        # diff = hadcm3_128k_site_values[iproxy][irec]['sim_rec_lig_pi'].values
+        diff = hadcm3_128k_site_values[iproxy][irec]['sim_rec_128k_pi'].values
+        
+        RMSE = np.sqrt(np.nanmean(np.square(diff)))
+        
+        print(np.round(RMSE, 1))
+
+
+# endregion
+# -----------------------------------------------------------------------------

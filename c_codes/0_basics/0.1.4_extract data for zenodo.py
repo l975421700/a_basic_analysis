@@ -145,11 +145,19 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.aprt_geo7_allt
 # -----------------------------------------------------------------------------
 # region output data
 
+ialltime = 'ann'
+
 for ivar in source_var:
     # ivar = 'lat'
     print('#-------------------------------- ' + ivar)
     
-    pre_weighted_var[expid[i]][ivar]
+    pre_weighted_var[expid[i]][ivar][ialltime].to_netcdf('output/echam-6.3.05p2-wiso/pi/pi_m_502_5.0/analysis/echam/zenodo/pi_m_502_5.0.pre_weighted_' + ivar + '_' + ialltime + '.nc')
+
+wisoaprt_alltime[expid[i]][ialltime].sel(wisotype=1).to_netcdf('output/echam-6.3.05p2-wiso/pi/pi_m_502_5.0/analysis/echam/zenodo/pi_m_502_5.0.wisoaprt_' + ialltime + '.nc')
+
+
+aprt_geo7_alltime[expid[i]][ialltime].to_netcdf('output/echam-6.3.05p2-wiso/pi/pi_m_502_5.0/analysis/echam/zenodo/pi_m_502_5.0.aprt_geo7_' + ialltime + '.nc')
+
 
 
 

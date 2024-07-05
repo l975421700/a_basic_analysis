@@ -473,11 +473,11 @@ plt.text(-0.08, 0.5,
          transform=axs[1, 0].transAxes, ha='center', va='center',
          rotation='vertical')
 plt.text(-0.08, 0.5,
-         'HadCM3',
+         'HadCM3_127k',
          transform=axs[2, 0].transAxes, ha='center', va='center',
          rotation='vertical')
 plt.text(-0.08, 0.5,
-         'HadCM3 with 0.25 $Sv$ freshwater forcing',
+         'HadCM3_128k_H11',
          transform=axs[3, 0].transAxes, ha='center', va='center',
          rotation='vertical')
 

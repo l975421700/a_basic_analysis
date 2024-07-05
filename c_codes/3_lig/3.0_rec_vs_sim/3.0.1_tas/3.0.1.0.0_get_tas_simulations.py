@@ -213,6 +213,10 @@ with open('scratch/cmip6/lig/tas/lig_tas.pkl', 'rb') as f:
 with open('scratch/cmip6/lig/tas/pi_tas.pkl', 'rb') as f:
     pi_tas = pickle.load(f)
 
+pi_tas.keys()
+pi_tas['AWI-ESM-1-1-LR'].tas
+pi_tas['NorESM2-LM'].tas
+
 #---------------- check time length
 
 for imodel in lig_tas.keys():

@@ -299,8 +299,8 @@ axs[0, 3].remove()
 
 axs[0, 0].set_ylabel('PMIP3 model ensemble')
 axs[1, 0].set_ylabel('PMIP4 model ensemble')
-axs[2, 0].set_ylabel('HadCM3')
-axs[3, 0].set_ylabel('HadCM3 with 0.25 $Sv$ freshwater forcing')
+axs[2, 0].set_ylabel('HadCM3_127k')
+axs[3, 0].set_ylabel('HadCM3_128k_H11')
 
 fig.subplots_adjust(left=0.05, right=0.99, bottom=0.05, top=0.97)
 fig.savefig(output_png)

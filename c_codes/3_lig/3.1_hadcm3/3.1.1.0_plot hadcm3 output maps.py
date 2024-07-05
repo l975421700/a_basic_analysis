@@ -104,6 +104,9 @@ from a_basic_analysis.b_module.component_plot import (
 with open('scratch/share/from_rahul/data_qingang/hadcm3_output_regridded_alltime.pkl', 'rb') as f:
     hadcm3_output_regridded_alltime = pickle.load(f)
 
+with open('scratch/share/from_rahul/data_qingang/hadcm3_extended_regridded_alltime.pkl', 'rb') as f:
+    hadcm3_extended_regridded_alltime = pickle.load(f)
+
 lig_recs = {}
 
 with open('scratch/cmip6/lig/rec/lig_recs_dc.pkl', 'rb') as f:
@@ -481,6 +484,151 @@ fig.savefig(output_png)
 
 
 
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot maps of LIG0.25_extended-PI and LIG0.25_extended-LIG0.25
+
+
+output_png = 'figures/7_lig/7.1_hadcm3/7.1.0.0 LIG0.25_extended, LIG0.25_PI SST, SAT and SIC 1deg.png'
+
+pltlevel1, pltticks1, pltnorm1, pltcmp1 = plt_mesh_pars(
+    cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='RdBu',)
+pltlevel2, pltticks2, pltnorm2, pltcmp2 = plt_mesh_pars(
+    cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='RdBu',)
+pltlevel3, pltticks3, pltnorm3, pltcmp3 = plt_mesh_pars(
+    cm_min=-5, cm_max=5, cm_interval1=0.5, cm_interval2=1, cmap='RdBu',)
+pltlevel4, pltticks4, pltnorm4, pltcmp4 = plt_mesh_pars(
+    cm_min=-70, cm_max=70, cm_interval1=10, cm_interval2=20, cmap='PuOr',
+    reversed=False, asymmetric=False,)
+
+
+nrow = 2
+ncol = 4
+fm_bottom = 2 / (5.8*nrow + 2)
+
+fig, axs = plt.subplots(
+    nrow, ncol, figsize=np.array([5.8*ncol, 5.8*nrow + 2]) / 2.54,
+    subplot_kw={'projection': ccrs.SouthPolarStereo()},
+    gridspec_kw={'hspace': 0.06, 'wspace': 0.02},)
+
+northextents = [-38, -38, -60, -50]
+ipanel=0
+for irow in range(nrow):
+    for jcol in range(ncol):
+        axs[irow, jcol] = hemisphere_plot(
+            northextent=northextents[jcol], ax_org = axs[irow, jcol])
+        plt.text(
+            0, 0.95, panel_labels[ipanel],
+            transform=axs[irow, jcol].transAxes,
+            ha='left', va='top', rotation='horizontal')
+        ipanel += 1
+
+plt.text(0.5, -0.08, 'Annual SST [$°C$]', transform=axs[1, 0].transAxes,
+         ha='center', va='center', rotation='horizontal')
+plt.text(0.5, -0.08, 'Summer SST [$°C$]', transform=axs[1, 1].transAxes,
+         ha='center', va='center', rotation='horizontal')
+plt.text(0.5, -0.08, 'Annual SAT [$°C$]', transform=axs[1, 2].transAxes,
+         ha='center', va='center', rotation='horizontal')
+plt.text(0.5, -0.08, 'Sep SIC [$\%$]', transform=axs[1, 3].transAxes,
+         ha='center', va='center', rotation='horizontal')
+
+for irow, iperiod in zip(range(1), ['LIG0.25_extended']):
+    print('#-------------------------------- ' + str(irow) + ' ' + iperiod)
+    
+    #-------------------------------- 1st column annual SST
+    ann_lig = hadcm3_extended_regridded_alltime[iperiod]['SST']['ann'].values
+    ann_pi  = hadcm3_output_regridded_alltime['PI']['SST']['ann'].values
+    ttest_fdr_res = ttest_fdr_control(ann_lig, ann_pi,)
+    
+    am_diff = hadcm3_extended_regridded_alltime[iperiod + '_PI']['SST']['am'].squeeze().values.copy()
+    am_diff[ttest_fdr_res == False] = np.nan
+    
+    plt_mesh1 = axs[irow, 0].contourf(
+        lon, lat, am_diff, levels=pltlevel1, extend='both',
+        norm=pltnorm1, cmap=pltcmp1, transform=ccrs.PlateCarree(),)
+    
+    #-------------------------------- 2nd column summer SST
+    sea_lig = hadcm3_extended_regridded_alltime[iperiod]['SST']['sea'][0::4].values
+    sea_pi  = hadcm3_output_regridded_alltime['PI']['SST']['sea'][0::4].values
+    ttest_fdr_res = ttest_fdr_control(sea_lig, sea_pi,)
+    
+    am_diff = hadcm3_extended_regridded_alltime[iperiod + '_PI']['SST']['sm'].sel(time=3).values.copy()
+    am_diff[ttest_fdr_res == False] = np.nan
+    
+    plt_mesh2 = axs[irow, 1].contourf(
+        lon, lat, am_diff, levels=pltlevel2, extend='both',
+        norm=pltnorm2, cmap=pltcmp2, transform=ccrs.PlateCarree(),)
+    
+    #-------------------------------- 3rd column annual SAT
+    ann_lig = hadcm3_extended_regridded_alltime[iperiod]['SAT']['ann'].values
+    ann_pi  = hadcm3_output_regridded_alltime['PI']['SAT']['ann'].values
+    ttest_fdr_res = ttest_fdr_control(ann_lig, ann_pi,)
+    
+    am_diff = hadcm3_extended_regridded_alltime[iperiod + '_PI']['SAT']['am'].squeeze().values.copy()
+    am_diff[ttest_fdr_res == False] = np.nan
+    
+    plt_mesh3 = axs[irow, 2].contourf(
+        lon, lat, am_diff, levels=pltlevel3, extend='both',
+        norm=pltnorm3, cmap=pltcmp3, transform=ccrs.PlateCarree(),)
+    axs[irow, 2].add_feature(
+        cfeature.OCEAN, color='white', zorder=2, edgecolor=None,lw=0)
+    
+    #-------------------------------- 4th column Sep SIC
+    ann_lig = hadcm3_extended_regridded_alltime[iperiod]['SIC']['mon'][8::12].values
+    ann_pi  = hadcm3_output_regridded_alltime['PI']['SIC']['mon'][8::12].values
+    ttest_fdr_res = ttest_fdr_control(ann_lig, ann_pi,)
+    
+    am_diff = hadcm3_extended_regridded_alltime[iperiod + '_PI']['SIC']['mm'].sel(time=9).values.copy()
+    am_diff[ttest_fdr_res == False] = np.nan
+    
+    plt_mesh4 = axs[irow, 3].contourf(
+        lon, lat, am_diff * 100, levels=pltlevel4, extend='both',
+        norm=pltnorm4, cmap=pltcmp4, transform=ccrs.PlateCarree(),)
+    
+    sep_sic = hadcm3_extended_regridded_alltime[iperiod]['SIC']['mm'].sel(time=9).values.copy()
+    sep_sic[np.isnan(hadcm3_output_regridded_alltime['PI']['SST']['am'].squeeze()).values] = np.nan
+    axs[irow, 3].contour(
+        lon, lat, sep_sic,
+        levels=[0.15], linestyles='dashed', linewidths=0.6, colors='k',
+        transform=ccrs.PlateCarree(),)
+    sep_sic = hadcm3_output_regridded_alltime['PI']['SIC']['mm'].sel(time=9).values.copy()
+    sep_sic[np.isnan(hadcm3_output_regridded_alltime['PI']['SST']['am'].squeeze()).values] = np.nan
+    axs[irow, 3].contour(
+        lon, lat, sep_sic,
+        levels=[0.15], linestyles='solid', linewidths=0.6, colors='k',
+        transform=ccrs.PlateCarree(),)
+    
+    axs[irow, 3].add_feature(
+        cfeature.LAND, color='white', zorder=2, edgecolor=None,lw=0)
+
+cbar1 = fig.colorbar(
+    plt_mesh1, ax=axs, aspect=20, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.25, ticks=pltticks1, extend='both',
+    anchor=(0.3, -0.45),
+    )
+cbar4 = fig.colorbar(
+    plt_mesh4, ax=axs, aspect=20, format=remove_trailing_zero_pos,
+    orientation="horizontal", shrink=0.25, ticks=pltticks4, extend='both',
+    anchor=(1.12, -4.2),
+    )
+
+plt.text(-0.08, 0.5,
+         r'$\mathit{lig127k\_0.25Sv\_extended}$' + ' vs. ' + r'$\mathit{piControl}$',
+         transform=axs[0, 0].transAxes, ha='center', va='center',
+         rotation='vertical')
+
+plt.text(-0.08, 0.5,
+         r'$\mathit{lig127k\_0.25Sv\_extended}$' + ' vs. ' + r'$\mathit{lig127k\_0.25Sv}$',
+         transform=axs[1, 0].transAxes, ha='center', va='center',
+         rotation='vertical')
+
+fig.subplots_adjust(left=0.04, right = 0.99, bottom = fm_bottom, top = 0.97)
+fig.savefig(output_png)
 
 
 # endregion
