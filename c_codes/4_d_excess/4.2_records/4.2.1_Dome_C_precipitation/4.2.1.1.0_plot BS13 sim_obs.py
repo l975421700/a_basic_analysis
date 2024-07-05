@@ -223,6 +223,15 @@ for ivar in ['dD', 'd18O', 'd_xs', 'd_ln', 'pre', 'temp2', ]:
     fig.savefig(output_png)
 
 
+ivar = 'd_ln'
+
+data1 = BS13_Dome_C['mon'][ivar].values[3:]
+data2 = isotopes_alltime_icores[expid[i]][ivar]['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))[:-3]
+subset = np.isfinite(data1) & np.isfinite(data2)
+
+pearsonr(data1[subset], data2[subset],).statistic ** 2
+
+
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -343,6 +352,94 @@ for ivar in ['dD', 'd18O', 'd_xs', 'd_ln', 'pre', 'temp2', ]:
 
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region daily scatter plot - one model
+
+for ivar in ['d_xs', 'd_ln',]:
+    # ivar = 'd_ln'
+    # ['dD', 'd18O', 'd_xs', 'd_ln',]
+    print('#-------------------------------- ' + ivar)
+    
+    output_png = 'figures/8_d-excess/8.0_records/8.0.4_dome_c/8.0.4.0_sim_obs/8.0.4.0.2 ' + expid[i] + ' BS13 daily observed vs. simulated ' + ivar + '.png'
+    
+    xdata = BS13_Dome_C['1d']['date'].values
+    obs_var = BS13_Dome_C['1d'][ivar].values
+    
+    fig, ax = plt.subplots(1, 1, figsize=np.array([16, 11]) / 2.54)
+    
+    ax.scatter(xdata, obs_var,
+               s=4, c='k', marker='x', lw=0.5, label='Observation',
+               )
+    
+    for i in range(1):
+        # len(expid)
+        print('#---------------- ' + expid[i])
+        
+        if (ivar == 'd_xs'):
+            sim_var = isotopes_alltime_icores[expid[i]]['d_excess']['EDC']['daily'].sel(time=slice('2008-01-1', '2010-12-31'))
+            unit = '$‰$'
+        elif (ivar == 'd_ln'):
+            sim_var = isotopes_alltime_icores[expid[i]][ivar]['EDC']['daily'].sel(time=slice('2008-01-1', '2010-12-31'))
+            unit = '$‰$'
+        
+        # subset = np.isfinite(obs_var) & np.isfinite(sim_var)
+        # RMSE = np.sqrt(np.average(np.square(obs_var[subset] - sim_var[subset])))
+        # rsquared = pearsonr(obs_var[subset], sim_var[subset]).statistic ** 2
+        
+        # if (ivar == 'pre'):
+        #     round_digit = 3
+        # else:
+        #     round_digit = 1
+        
+        if ((ivar != 'd_ln') & (ivar != 'dD') & (ivar != 'd_xs') & (ivar != 'd18O')):
+            ax.scatter(xdata, sim_var,
+                       s=4, c=expid_colours[expid[i]], marker='x', lw=0.5,
+                       label=expid_labels[expid[i]],
+                       )
+        else:
+            ax.scatter(xdata[:-31], sim_var[:-31],
+                       s=4, c=expid_colours[expid[i]], marker='x', lw=0.5,
+                       label=expid_labels[expid[i]],
+                       )
+    
+    # ax.set_xticks(xdata[::31])
+    # ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%b'))
+    plt.xticks(rotation=45, ha='right')
+    # ax.xaxis.set_minor_locator(AutoMinorLocator(2))
+    # ax.set_xlabel('Date', labelpad=3)
+    ax.yaxis.set_minor_locator(AutoMinorLocator(2))
+    ax.set_ylabel(plot_labels[ivar], labelpad=6)
+    ax.yaxis.set_major_formatter(remove_trailing_zero_pos)
+    
+    if ((ivar == 'd_ln') | (ivar == 'd_xs')):
+        ax.legend(handlelength=1.5, loc='lower left')
+    else:
+        ax.legend().set_visible(False)
+    
+    # ax.get_xticklabels()
+    ax.set_xticks(['2008-01-01', '2008-04-01', '2008-07-01', '2008-10-01',
+                   '2009-01-01', '2009-04-01', '2009-07-01', '2009-10-01',
+                   '2010-01-01', '2010-04-01', '2010-07-01', '2010-10-01',
+                   ])
+    ax.set_xticklabels(['2008-Jan', 'Apr', 'Jul', 'Oct',
+                       '2009-Jan', 'Apr', 'Jul', 'Oct',
+                       '2010-Jan', 'Apr', 'Jul', 'Oct',])
+    ax.tick_params(axis='x', which='major', pad=0.5)
+    
+    ax.grid(True, which='both',
+            linewidth=0.4, color='gray', alpha=0.75, linestyle=':')
+    fig.subplots_adjust(left=0.12, right=0.98, bottom=0.12, top=0.98)
+    fig.savefig(output_png)
+
+
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
 
 
 # -----------------------------------------------------------------------------

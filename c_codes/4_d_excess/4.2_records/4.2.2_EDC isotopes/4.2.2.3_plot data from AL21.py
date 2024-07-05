@@ -111,12 +111,111 @@ AL21_T_source = pd.read_excel(
         'age AICC2012 EDC ka', 'dD (EDC) permil', 'd-excess (EDC) permil',
         'Dtsite (EDC)', 'Dtsource (EDC)'])
 
+AL21_T_source = AL21_T_source.rename(columns={
+    'age AICC2012 EDC ka': 'Age',
+    'dD (EDC) permil': 'dD',
+    'd-excess (EDC) permil': 'd_xs',
+    'Dtsite (EDC)': 'Tsite',
+    'Dtsource (EDC)': 'Tsource',
+})
+
+AL21_T_source_resampled = AL21_T_source.groupby(pd.cut(
+    AL21_T_source['Age'], np.arange(0, 800 + 1e-4, 2)
+    )).mean()
+
+AL21_T_source_resampled['Age'] = np.arange(1, 800 + 1e-4, 2)
 
 '''
+
 AL21_T_source.columns
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region plot four variables
+
+output_png = 'figures/8_d-excess/8.0_records/8.0.2_reconstructions/8.0.2.0 AL21 EDC four variables on AICC 800 kyr.png'
+
+fig, axs = plt.subplots(2, 1, figsize=np.array([18, 13]) / 2.54, sharex=True,
+                        gridspec_kw={'hspace':0.1,})
+
+# dD
+axs[0].plot(
+    AL21_T_source['Age'].values,
+    AL21_T_source['dD'].values,
+    c='k', lw=0.3, ls='-', alpha=0.4)
+axs[0].set_ylabel(plot_labels['dD'], c='k')
+axs[0].yaxis.set_minor_locator(AutoMinorLocator(2))
+axs[0].yaxis.set_major_formatter(remove_trailing_zero_pos)
+
+# Tsite
+ax0 = axs[0].twinx()
+ax0.plot(
+    AL21_T_source['Age'].values,
+    AL21_T_source['Tsite'].values,
+    c='tab:blue', lw=0.3, ls='-', alpha=0.4,)
+ax0.set_ylabel('Site temperature [$°C$]', c = 'tab:blue')
+ax0.yaxis.set_minor_locator(AutoMinorLocator(2))
+ax0.yaxis.set_major_formatter(remove_trailing_zero_pos)
+
+# d_xs
+axs[1].plot(
+    AL21_T_source['Age'].values,
+    AL21_T_source['d_xs'].values,
+    c='k', lw=0.3, ls='-', alpha=0.4,)
+axs[1].set_ylabel(plot_labels['d_xs'], c='k')
+axs[1].yaxis.set_minor_locator(AutoMinorLocator(2))
+axs[1].yaxis.set_major_formatter(remove_trailing_zero_pos)
+
+# Tsource
+ax1 = axs[1].twinx()
+ax1.plot(
+    AL21_T_source['Age'].values,
+    AL21_T_source['Tsource'].values,
+    c='tab:blue', lw=0.3, ls='-', alpha=0.4,)
+ax1.set_ylabel('Source temperature [$°C$]', c = 'tab:blue')
+ax1.yaxis.set_minor_locator(AutoMinorLocator(2))
+ax1.yaxis.set_major_formatter(remove_trailing_zero_pos)
+
+axs[0].plot(
+    AL21_T_source_resampled['Age'].values,
+    AL21_T_source_resampled['dD'].values,
+    c='k', lw=1, ls='-',)
+ax0.plot(
+    AL21_T_source_resampled['Age'].values,
+    AL21_T_source_resampled['Tsite'].values,
+    c='tab:blue', lw=1, ls='-',)
+axs[1].plot(
+    AL21_T_source_resampled['Age'].values,
+    AL21_T_source_resampled['d_xs'].values,
+    c='k', lw=1, ls='-',)
+ax1.plot(
+    AL21_T_source_resampled['Age'].values,
+    AL21_T_source_resampled['Tsource'].values,
+    c='tab:blue', lw=1, ls='-',)
+
+ax0.axhline(0, lw=0.5, ls='--')
+ax1.axhline(0, lw=0.5, ls='--')
+
+ax0.axvline(127, lw=0.5, ls='--', c='k')
+ax1.axvline(127, lw=0.5, ls='--', c='k')
+
+axs[1].set_xlabel('Age [ka]')
+axs[1].set_xlim(0, 800)
+axs[1].set_xticks(np.arange(0, 800 + 1e-4, 100))
+axs[1].xaxis.set_minor_locator(AutoMinorLocator(2))
+
+fig.subplots_adjust(left=0.08, right=0.92, bottom=0.10, top=0.98)
+fig.savefig(output_png, dpi=600)
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+
 
 
 # -----------------------------------------------------------------------------
@@ -156,3 +255,6 @@ np.max(abs(tem_rec[expid[i]][icores]['delta_T_source']['low'].values - tem_rec[e
 '''
 # endregion
 # -----------------------------------------------------------------------------
+
+
+

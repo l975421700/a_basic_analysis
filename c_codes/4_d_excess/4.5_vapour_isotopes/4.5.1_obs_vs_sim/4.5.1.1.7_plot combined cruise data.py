@@ -136,7 +136,7 @@ subset = ((SO_vapor_isotopes_SLMSIC[expid[i]]['SLM'] == 0) & (SO_vapor_isotopes_
 
 # (pd.DatetimeIndex(pd.to_datetime(SO_vapor_isotopes_SLMSIC[expid[i]][subset]['time'], utc=True)).year >= 2019).sum()
 
-# SO_vapor_isotopes_SLMSIC[expid[i]][subset]['time']
+# np.unique(pd.DatetimeIndex(pd.to_datetime(SO_vapor_isotopes_SLMSIC[expid[i]][subset]['time'], utc=True)).month)
 
 
 for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', ]:
