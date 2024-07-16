@@ -294,6 +294,28 @@ with open('scratch/cmip6/lig/rec/lig_recs_dc.pkl', 'wb') as f:
 
 
 
+#-------------------------------- check
+
+lig_recs = {}
+with open('scratch/cmip6/lig/rec/lig_recs_dc.pkl', 'rb') as f:
+    lig_recs['DC'] = pickle.load(f)
+
+np.mean(lig_recs['DC']['annual_128']['sst_anom_hadisst_ann'])
+np.mean(lig_recs['DC']['annual_126']['sst_anom_hadisst_ann'])
+
+np.mean(pd.merge(lig_recs['DC']['annual_128'], lig_recs['DC']['annual_126'], on='Station')[['sst_anom_hadisst_ann_x', 'sst_anom_hadisst_ann_y']].values.flatten())
+
+
+np.intersect1d(lig_recs['DC']['annual_128']['Station'], lig_recs['DC']['annual_126']['Station'])
+
+np.mean(lig_recs['DC']['JFM_128']['sst_anom_hadisst_jfm'])
+np.mean(lig_recs['DC']['JFM_126']['sst_anom_hadisst_jfm'])
+
+np.mean(pd.merge(lig_recs['DC']['JFM_128'], lig_recs['DC']['JFM_126'], on='Station')[['sst_anom_hadisst_jfm_x', 'sst_anom_hadisst_jfm_y']].values.flatten())
+
+np.intersect1d(lig_recs['DC']['JFM_128']['Station'], lig_recs['DC']['JFM_126']['Station'])
+
+
 '''
 #-------------------------------- check
 

@@ -275,17 +275,25 @@ data_to_plot = {}
 data_to_plot['EC'] = SO_jfm_sst_site_values['EC'].groupby(['Station']).mean()[
     ['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']]
 
+data_to_plot['EC']['std'] = SO_jfm_sst_site_values['EC'].groupby(['Station']).std(ddof=1)[['sim_jfm_sst_lig_pi']]
+
 data_to_plot['JH'] = SO_jfm_sst_site_values['JH'].groupby(['Station']).mean()[
     ['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']]
+
+data_to_plot['JH']['std'] = SO_jfm_sst_site_values['JH'].groupby(['Station']).std(ddof=1)[['sim_jfm_sst_lig_pi']]
 
 data_to_plot['DC'] = SO_jfm_sst_site_values['DC'].groupby(['Station']).mean()[
     ['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']]
 
+data_to_plot['DC']['std'] = SO_jfm_sst_site_values['DC'].groupby(['Station']).std(ddof=1)[['sim_jfm_sst_lig_pi']]
+
 data_to_plot['MC'] = SO_jfm_sst_site_values['MC'].groupby(['Station']).mean()[
     ['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']]
 
-mean_err = {}
-rms_err  = {}
+data_to_plot['MC']['std'] = SO_jfm_sst_site_values['MC'].groupby(['Station']).std(ddof=1)[['sim_jfm_sst_lig_pi']]
+
+# mean_err = {}
+# rms_err  = {}
 
 output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.0_sim_rec_sst/7.0.3.0.0 sim_rec jfm_sst ens.png'
 
@@ -305,13 +313,20 @@ for irec in ['EC', 'JH', 'DC', 'MC']:
         s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,
         )
     
-    mean_err[irec] = np.round(
-        (SO_jfm_sst_site_values[irec].groupby(['Station']).mean()[
-            ['sim_rec_jfm_sst_lig_pi']]).mean().values[0], 1)
-    rms_err[irec] = np.round(mean_squared_error(
-        data_to_plot[irec]['rec_jfm_sst_lig_pi'],
-        data_to_plot[irec]['sim_jfm_sst_lig_pi'],
-        squared=False), 1)
+    ax.errorbar(
+        x=data_to_plot[irec]['rec_jfm_sst_lig_pi'],
+        y=data_to_plot[irec]['sim_jfm_sst_lig_pi'],
+        yerr=data_to_plot[irec]['std'],
+        linestyle='None', c='tab:blue'
+    )
+    
+    # mean_err[irec] = np.round(
+    #     (SO_jfm_sst_site_values[irec].groupby(['Station']).mean()[
+    #         ['sim_rec_jfm_sst_lig_pi']]).mean().values[0], 1)
+    # rms_err[irec] = np.round(mean_squared_error(
+    #     data_to_plot[irec]['rec_jfm_sst_lig_pi'],
+    #     data_to_plot[irec]['sim_jfm_sst_lig_pi'],
+    #     squared=False), 1)
 
 ax.plot([0, 1], [0, 1], transform=ax.transAxes,
         c='k', lw=0.5, ls='--')

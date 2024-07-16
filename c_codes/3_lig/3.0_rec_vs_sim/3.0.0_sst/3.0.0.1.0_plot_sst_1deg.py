@@ -44,6 +44,7 @@ import matplotlib.animation as animation
 import seaborn as sns
 from matplotlib.ticker import AutoMinorLocator
 import cartopy.feature as cfeature
+from scipy.stats import pearsonr
 
 # self defined
 from a_basic_analysis.b_module.mapplot import (
@@ -389,6 +390,89 @@ fig.savefig(output_png)
 #-------------------------------- check
 
 mask
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region calculate and plot Taylor Diagram
+
+import skill_metrics as sm
+from skill_metrics import taylor_diagram
+
+ccoef = np.array([])
+crmsd = np.array([])
+sdev = np.array([])
+
+for imodel in pi_sst_regrid_alltime.keys():
+    # imodel = 'AWI-ESM-1-1-LR'
+    print('#-------------------------------- ' + imodel)
+    
+    pred_data = pi_sst_regrid_alltime[imodel]['am'].squeeze().values[mask['SO']]
+    ref_data  = HadISST['sst']['1deg_alltime']['am'].values[mask['SO']]
+    subset = np.isfinite(pred_data) & np.isfinite(ref_data)
+    
+    taylor_stats1 = sm.taylor_statistics(pred_data[subset], ref_data[subset],)
+    
+    if (imodel == 'ACCESS-ESM1-5'):
+        ccoef = np.append(ccoef, taylor_stats1['ccoef'][0])
+        crmsd = np.append(crmsd, taylor_stats1['crmsd'][0])
+        sdev  = np.append(sdev, taylor_stats1['sdev'][0])
+    
+    ccoef = np.append(ccoef, taylor_stats1['ccoef'][1])
+    crmsd = np.append(crmsd, taylor_stats1['crmsd'][1])
+    sdev  = np.append(sdev, taylor_stats1['sdev'][1])
+
+
+labels = ['HadISST1'] + list(pi_sst_regrid_alltime.keys())
+
+plt.close()
+sm.taylor_diagram(
+    sdev, crmsd, ccoef, markerLabel = labels, markerLegend = 'on',
+    styleOBS = '-', colOBS = 'r', markerobs = 'o',
+    markerSize = 4, titleOBS = 'HadISST1',
+    # markersymbol='x',
+    # markerLabelColor = 'r', markerColor = 'r',
+    # tickRMS = [0.0, 1.0, 2.0, 3.0], titleRMS = 'on',
+    # tickRMSangle = 115, showlabelsRMS = 'on',
+    )
+
+plt.savefig('figures/test/test.png')
+
+
+
+
+'''
+
+    # print(taylor_stats1['ccoef'][1])
+    # print(taylor_stats1['crmsd'][1])
+    print(taylor_stats1['sdev'][1])
+
+
+
+imodel = 'ACCESS-ESM1-5'
+pred_data = pi_sst_regrid_alltime[imodel]['am'].squeeze().values[mask['SO']]
+ref_data  = HadISST['sst']['1deg_alltime']['am'].values[mask['SO']]
+subset = np.isfinite(pred_data) & np.isfinite(ref_data)
+taylor_stats1 = sm.taylor_statistics(pred_data[subset], ref_data[subset],)
+
+
+
+    
+    
+    # print(pearsonr(pred_data[subset], ref_data[subset])[0])
+    
+    
+    
+    am_data = pi_sst_regrid_alltime[imodel]['am'].values[0] - \
+            HadISST['sst']['1deg_alltime']['am'].values
+    rmse = np.sqrt(np.ma.average(np.ma.MaskedArray(np.square(
+        am_data[mask['SO']]), mask=np.isnan(am_data[mask['SO']]))))
+    # rmse = np.sqrt(np.nanmean(np.square(am_data[mask['SO']])))
+    print(rmse)
+    rmse = np.sqrt(np.nanmean(np.square(pred_data[subset] - ref_data[subset])))
+    print(rmse)
 '''
 # endregion
 # -----------------------------------------------------------------------------

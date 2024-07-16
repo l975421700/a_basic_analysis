@@ -63,6 +63,17 @@ mamba install -c conda-forge lazy_loader -y
 mamba install -c conda-forge siphon
 mamba install -c conda-forge mpl-scatter-density
 mamba install -c conda-forge typhon
+pip3 install SkillMetrics
+mamba install -c conda-forge intake
+pip install intake-esm
+mamba install -c conda-forge intake-xarray
+mamba install -c conda-forge dask-gateway
+mamba install -c conda-forge xarrayutils
+mamba install -c conda-forge xgcm
+mamba install -c conda-forge gcsfs
+mamba install -c conda-forge python-cdo
+mamba install -c conda-forge numexpr
+
 
 '''
 #-------------------------------- TEST REGION
