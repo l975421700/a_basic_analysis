@@ -116,6 +116,16 @@ lon = hist_tos_regrid['ACCESS-ESM1-5'].lon.values
 lat = hist_tos_regrid['ACCESS-ESM1-5'].lat.values
 models = list(hist_tos_regrid_alltime.keys())
 
+
+with open('scratch/others/land_sea_masks/cdo_1deg_ais_mask.pkl', 'rb') as f:
+    cdo_1deg_ais_mask = pickle.load(f)
+
+cdo_area1deg = xr.open_dataset('scratch/others/one_degree_grids_cdo_area.nc')
+
+lat = cdo_area1deg.lat.values
+mask_so = (lat < -40)
+
+
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -186,5 +196,42 @@ fig.savefig(output_png)
 
 # endregion
 # -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region calculate statistics
+
+for model in models:
+    # model = 'ACCESS-ESM1-5'
+    print(model)
+    if True:
+        # calculate RMSE
+        am_data = hist_tos_regrid_alltime[model]['am'].values[0] - esacci_sst_alltime['am'].values[0]
+        
+        diff = am_data[mask_so]
+        area = cdo_area1deg.cell_area.values[mask_so]
+        rmse = np.sqrt(np.ma.average(np.ma.MaskedArray(
+            np.square(diff), mask=np.isnan(diff)),
+                                     weights=area))
+        
+        print(np.round(rmse, 1))
+
+
+# endregion
+# -----------------------------------------------------------------------------
+
+
+
+
+array1 = np.array([1.7, 1.4, 1.3, 0.9, 2.7, 1.1, 1.3, 1.0, 0.8, 3.3, 1.1, 1.7])
+array2 = np.array([0.4, 0.2, 0.1, 0.2, -0.2, 0.6, -0.1, 0.1, 0, 0, 0.3, 0.1])
+
+pearsonr(array1, array2)
+
+fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8]) / 2.54)
+
+ax.scatter(array1, array2)
+
+fig.savefig('figures/test/test.png')
 
 

@@ -95,6 +95,15 @@ from a_basic_analysis.b_module.component_plot import (
     plt_mesh_pars,
 )
 
+from a_basic_analysis.b_module.basic_calculations import (
+    find_gridvalue_at_site,
+    find_multi_gridvalue_at_site,
+    mon_sea_ann,
+    find_ilat_ilon,
+    regrid,
+    time_weighted_mean,
+)
+
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -110,15 +119,90 @@ lig_recs['CT']['original'] = pd.read_csv(
     sep='\t', header=0, skiprows=310,
 )
 
-np.mean(lig_recs['CT']['original'].loc[lig_recs['CT']['original']['Latitude'] < -40]['T anomaly [°C] (Annual LIG temperature anomal...).1'])
+lig_recs['CT']['org_SO'] = lig_recs['CT']['original'].loc[lig_recs['CT']['original']['Latitude'] <= -40]
 
-
-
+# np.mean(lig_recs['CT']['original'].loc[lig_recs['CT']['original']['Latitude'] <= -40]['T anomaly [°C] (Annual LIG temperature anomal...).1'])
 
 '''
-lig_recs['CT']['original'].columns
+lig_recs['CT']['org_SO'].columns
 '''
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region plot data
+
+output_png = 'figures/7_lig/7.0_sim_rec/7.0.3_rec/7.0.3.0 rec am sst lig-pi CT20.png'
+
+cbar_label = 'Annual SST anomalies [$°C$]'
+
+pltlevel, pltticks, pltnorm, pltcmp = plt_mesh_pars(
+    cm_min=-5, cm_max=5, cm_interval1=1, cm_interval2=1, cmap='RdBu',)
+
+max_size = 80
+scale_size = 16
+
+fig, ax = hemisphere_plot(northextent=-38,)
+
+plt_scatter = ax.scatter(
+    x = lig_recs['CT']['org_SO'].Longitude,
+    y = lig_recs['CT']['org_SO'].Latitude,
+    c = lig_recs['CT']['org_SO']['T anomaly [°C] (Annual LIG temperature anomal...).1'],
+    s = max_size - scale_size * 1,
+    lw=0.5, marker='v', edgecolors = 'black', zorder=2,
+    norm=pltnorm, cmap=pltcmp, transform=ccrs.PlateCarree(),)
+
+cbar = fig.colorbar(
+    plt_scatter, ax=ax, aspect=30,
+    orientation="horizontal", shrink=1, ticks=pltticks, extend='both',
+    pad=0.02, fraction=0.2, format=remove_trailing_zero_pos,
+    )
+cbar.ax.set_xlabel(cbar_label, linespacing=1.5)
+fig.savefig(output_png)
+
+'''
+28 rows
+'''
+# endregion
+# -----------------------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------------
+# region compare with simulations
+
+hadcm3_output_regridded_alltime = pd.read_pickle('scratch/share/from_rahul/data_qingang/hadcm3_output_regridded_alltime.pkl')
+
+data = lig_recs['CT']['org_SO']['T anomaly [°C] (Annual LIG temperature anomal...).1']
+
+data1 = np.zeros_like(data)
+
+data2 = find_multi_gridvalue_at_site(
+    lig_recs['CT']['org_SO'].Latitude.values,
+    lig_recs['CT']['org_SO'].Longitude.values,
+    hadcm3_output_regridded_alltime['LIG_PI']['SST']['am'].lat.values,
+    hadcm3_output_regridded_alltime['LIG_PI']['SST']['am'].lon.values,
+    hadcm3_output_regridded_alltime['LIG_PI']['SST']['am'].squeeze().values
+)
+
+data3 = find_multi_gridvalue_at_site(
+    lig_recs['CT']['org_SO'].Latitude.values,
+    lig_recs['CT']['org_SO'].Longitude.values,
+    hadcm3_output_regridded_alltime['LIG0.25_PI']['SST']['am'].lat.values,
+    hadcm3_output_regridded_alltime['LIG0.25_PI']['SST']['am'].lon.values,
+    hadcm3_output_regridded_alltime['LIG0.25_PI']['SST']['am'].squeeze().values
+)
+
+subset = np.isfinite(data) & np.isfinite(data1)
+np.sqrt(np.average(np.square(data[subset] - data1[subset])))
+
+subset = np.isfinite(data) & np.isfinite(data2)
+np.sqrt(np.average(np.square(data[subset] - data2[subset])))
+
+subset = np.isfinite(data) & np.isfinite(data3)
+np.sqrt(np.average(np.square(data[subset] - data3[subset])))
+
+
+# endregion
+# -----------------------------------------------------------------------------
 

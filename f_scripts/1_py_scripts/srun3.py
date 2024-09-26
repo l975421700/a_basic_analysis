@@ -1,14 +1,20 @@
-#SBATCH --time=00:30:00
+# #SBATCH --time=00:30:00
 
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    'nudged_703_6.0_k52',
+    # 'pi_600_5.0',
+    'hist_700_6.0',
+    # 'nudged_701_5.0',
+    # 'pi_1d_803_6.0',
+    # 'nudged_703_6.0_k52',
     ]
-i = 0
+i=0
+
+output_dir = exp_odir + expid[i] + '/analysis/echam/'
 
 ifile_start = 0 #0 #120
-ifile_end   = 528 #1740 #840
+ifile_end   = 432 # 528 #1740 #840
 
 ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0,  3, 0]
 
@@ -27,15 +33,15 @@ ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0,  3, 0]
 # min_sf    = 0
 # max_sf    = 1.6
 
-var_name  = 'wind10'
-itag      = 9
-min_sf    = 0
-max_sf    = 28
+# var_name  = 'wind10'
+# itag      = 9
+# min_sf    = 0
+# max_sf    = 28
 
-# var_name  = 'sinlon'
-# itag      = 11
-# min_sf    = -1
-# max_sf    = 1
+var_name  = 'sinlon'
+itag      = 11
+min_sf    = -1
+max_sf    = 1
 
 # var_name  = 'coslon'
 # itag      = 12
@@ -56,15 +62,15 @@ import warnings
 warnings.filterwarnings('ignore')
 import sys  # print(sys.path)
 sys.path.append('/albedo/work/user/qigao001')
+sys.path.append('/home/users/qino')
 import os
 
 # data analysis
-import numpy as np
+# import numpy as np
 import xarray as xr
 import dask
 dask.config.set({"array.slicing.split_large_chunks": True})
 import pickle
-from scipy import stats
 
 from a_basic_analysis.b_module.source_properties import (
     source_properties,
@@ -83,212 +89,153 @@ pbar.register()
 
 
 # -----------------------------------------------------------------------------
-# region set indices
-
-kwiso2 = 0
-
-kstart = kwiso2 + sum(ntags[:itag])
-
-str_ind1 = str(kstart + 2)
-str_ind2 = str(kstart + 3)
-
-if (len(str_ind1) == 1):
-    str_ind1 = '0' + str_ind1
-if (len(str_ind2) == 1):
-    str_ind2 = '0' + str_ind2
-
-print(kstart); print(str_ind1); print(str_ind2)
-
-
-'''
-exp_out_wiso_q_1m['q_' + str_ind1]
-'''
-# endregion
-# -----------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------
 # region import data
 
-
-fl_wiso_q_plev = sorted(glob.glob(
-    exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.daily_wiso_q_plev.nc'
+fl_wiso_daily = sorted(glob.glob(
+    exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_wiso.nc'
         ))
 
-exp_out_wiso_q_plev = xr.open_mfdataset(
-    fl_wiso_q_plev[ifile_start:ifile_end],
+exp_out_wiso_daily = xr.open_mfdataset(
+    fl_wiso_daily[ifile_start:ifile_end], use_cftime=True,
     )
 
-
-'''
-fl_wiso_q_plev = sorted(glob.glob(
-    exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_wiso_q_plev.nc'
-        ))
-
-
-#-------- check with echam output with p level q
-
-fl_wiso_q_plev = sorted(glob.glob(
-    exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_wiso_q_plev.nc'
-        ))
-fl_uvq_plev = sorted(glob.glob(
-    exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_uvq_plev.nc'
-        ))
-
-ifile = -1
-print(fl_uvq_plev[ifile_start:ifile_end][ifile])
-print(fl_wiso_q_plev[ifile_start:ifile_end][ifile])
-ncfile = xr.open_dataset(fl_uvq_plev[ifile_start:ifile_end][ifile])
-ncfile2 = xr.open_dataset(fl_wiso_q_plev[ifile_start:ifile_end][ifile])
-
-(ncfile.q.values[np.isfinite(ncfile.q.values)] == ncfile2.q16o.values[np.isfinite(ncfile2.q16o.values)]).all()
-np.max(abs(ncfile.q.values[np.isfinite(ncfile.q.values)] - ncfile2.q16o.values[np.isfinite(ncfile2.q16o.values)]))
-test = ncfile.q.values[np.isfinite(ncfile.q.values)] - ncfile2.q16o.values[np.isfinite(ncfile2.q16o.values)]
-wheremax = np.where(test == np.max(abs(test)))
-
-print(test[wheremax])
-print(np.max(abs(test)))
-ncfile.q.values[np.isfinite(ncfile.q.values)][wheremax]
-ncfile2.q16o.values[np.isfinite(ncfile2.q16o.values)][wheremax]
-
-
-
-
-#-------- check with echam output with model level q
-
-fl_gl_1m = sorted(glob.glob(
-    exp_odir + expid[i] + '/unknown/' + expid[i] + '_??????.01_gl_1m.nc'
-        ))
-
-ifile = -1
-fl_wiso_q_1m[ifile_start:ifile_end][ifile]
-fl_gl_1m[ifile_start:ifile_end][ifile]
-ncfile = xr.open_dataset(fl_gl_1m[ifile_start:ifile_end][ifile])
-
-(ncfile.xi.squeeze().values == exp_out_wiso_q_1m.xi16o[ifile, ].values).all()
-# np.max(abs(ncfile.xi.squeeze().values - exp_out_wiso_q_1m.xi16o[ifile, ].values))
-
-ncfile2 = xr.open_dataset(fl_wiso_q_1m[ifile_start:ifile_end][ifile])
-(ncfile2.xi_24.squeeze().values == exp_out_wiso_q_1m.xi_24[ifile, ].values).all()
-
-'''
 # endregion
 # -----------------------------------------------------------------------------
 
 
 # -----------------------------------------------------------------------------
-# region calculate atmospheric source var zm
+# region set indices
+
+kwiso2 = 3
+
+kstart = kwiso2 + sum(ntags[:itag])
+kend   = kwiso2 + sum(ntags[:(itag+1)])
+
+print(kstart); print(kend)
+
+# endregion
+# -----------------------------------------------------------------------------
 
 
-#-------- aggregate atmospheric water
+# -----------------------------------------------------------------------------
+# region calculate source var
 
-ocean_q_zm = (exp_out_wiso_q_plev['q_' + str_ind1] + \
-    exp_out_wiso_q_plev['q_' + str_ind2] + \
-        exp_out_wiso_q_plev['xl_' + str_ind1] + \
-            exp_out_wiso_q_plev['xl_' + str_ind2] + \
-                exp_out_wiso_q_plev['xi_' + str_ind1] + \
-                    exp_out_wiso_q_plev['xi_' + str_ind2]
-        ).mean(dim='lon').compute()
+#-------------------------------- precipitation
 
-var_scaled_q_zm = (exp_out_wiso_q_plev['q_' + str_ind1] + \
-    exp_out_wiso_q_plev['xl_' + str_ind1] + \
-        exp_out_wiso_q_plev['xi_' + str_ind1]
-        ).mean(dim='lon').compute()
+ocean_pre = (
+    exp_out_wiso_daily.wisoaprl.sel(wisotype=slice(kstart+2, kstart+3)) + \
+        exp_out_wiso_daily.wisoaprc.sel(wisotype=slice(kstart+2, kstart+3))
+        ).sum(dim='wisotype').compute()
+var_scaled_pre = (
+    exp_out_wiso_daily.wisoaprl.sel(wisotype=kstart+2) + \
+        exp_out_wiso_daily.wisoaprc.sel(wisotype=kstart+2)).compute()
+
+var_scaled_pre.values[ocean_pre.values < 2e-8] = 0
+ocean_pre.values[ocean_pre.values < 2e-8] = 0
 
 
-#-------- mon_sea_ann
+#-------- monthly/seasonal/annual (mean) values
 
-ocean_q_zm_alltime = mon_sea_ann(var_daily=ocean_q_zm)
-var_scaled_q_zm_alltime = mon_sea_ann(var_daily=var_scaled_q_zm)
+ocean_pre_alltime      = mon_sea_ann(ocean_pre)
+var_scaled_pre_alltime = mon_sea_ann(var_scaled_pre)
 
-#-------- q-weighted var
+#-------------------------------- pre-weighted var
 
-q_weighted_var_zm = {}
+pre_weighted_var = {}
 
 for ialltime in ['daily', 'mon', 'mm', 'sea', 'sm', 'ann', 'am']:
     print(ialltime)
     
-    q_weighted_var_zm[ialltime] = source_properties(
-        var_scaled_q_zm_alltime[ialltime],
-        ocean_q_zm_alltime[ialltime],
+    pre_weighted_var[ialltime] = source_properties(
+        var_scaled_pre_alltime[ialltime],
+        ocean_pre_alltime[ialltime],
         min_sf, max_sf,
         var_name,
-        prefix = 'q_weighted_', threshold = 0,
     )
 
 #-------- monthly without monthly mean
-q_weighted_var_zm['mon no mm'] = (q_weighted_var_zm['mon'].groupby('time.month') - q_weighted_var_zm['mon'].groupby('time.month').mean(skipna=True)).compute()
+pre_weighted_var['mon no mm'] = (pre_weighted_var['mon'].groupby('time.month') - pre_weighted_var['mon'].groupby('time.month').mean(skipna=True)).compute()
 
 #-------- annual without annual mean
-q_weighted_var_zm['ann no am'] = (q_weighted_var_zm['ann'] - q_weighted_var_zm['ann'].mean(dim='time', skipna=True)).compute()
+pre_weighted_var['ann no am'] = (pre_weighted_var['ann'] - pre_weighted_var['ann'].mean(dim='time', skipna=True)).compute()
 
-output_file = exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_weighted_' + var_name + '_zm.pkl'
+output_file = output_dir + expid[i] + '.pre_weighted_' + var_name + '.pkl'
 
 if (os.path.isfile(output_file)):
     os.remove(output_file)
 
 with open(output_file, 'wb') as f:
-    pickle.dump(q_weighted_var_zm, f)
+    pickle.dump(pre_weighted_var, f)
 
 
 '''
-#-------------------------------- check calculation of q_weighted_var
+#-------- import data
+pre_weighted_lat = {}
 
-with open(
-    exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_weighted_' + var_name + '_zm.pkl',
-          'rb') as f:
-    q_weighted_var_zm = pickle.load(f)
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.pre_weighted_lat.pkl', 'rb') as f:
+    pre_weighted_lat[expid[i]] = pickle.load(f)
+
+#-------- check precipitation sources are bit identical
+
+exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+expid = [
+    'pi_600_5.0',
+    'pi_601_5.1',
+    'pi_602_5.2',
+    'pi_603_5.3',
+    ]
+
+source_var = ['latitude', 'longitude', 'SST', 'rh2m', 'wind10', 'distance']
+pre_weighted_var = {}
+
+for i in range(len(expid)):
+    # i = 0
+    print(str(i) + ': ' + expid[i])
+    
+    pre_weighted_var[expid[i]] = {}
+    
+    prefix = exp_odir + expid[i] + '/analysis/echam/' + expid[i]
+    
+    source_var_files = [
+        prefix + '.pre_weighted_lat.pkl',
+        prefix + '.pre_weighted_lon.pkl',
+        prefix + '.pre_weighted_sst.pkl',
+        prefix + '.pre_weighted_rh2m.pkl',
+        prefix + '.pre_weighted_wind10.pkl',
+        prefix + '.transport_distance.pkl',
+    ]
+    
+    for ivar, ifile in zip(source_var, source_var_files):
+        print(ivar + ':    ' + ifile)
+        with open(ifile, 'rb') as f:
+            pre_weighted_var[expid[i]][ivar] = pickle.load(f)
+
+column_names = ['Control', 'Smooth wind regime', 'Rough wind regime',
+                'No supersaturation']
+
+for ivar in source_var:
+    # ivar = 'SST'
+    print('#---------------- ' + ivar)
+    
+    for ialltime in ['mon', 'sea', 'ann', 'mm', 'sm', 'am']:
+        # ialltime = 'am'
+        print('#-------- ' + ialltime)
+        
+        for i in [1, 2, 3]:
+            # i = 1
+            print('#---- expid 0 vs. ' + str(i))
+            
+            data1 = pre_weighted_var[expid[0]][ivar][ialltime].values
+            data2 = pre_weighted_var[expid[i]][ivar][ialltime].values
+            
+            data1 = data1[np.isfinite(data1)]
+            data2 = data2[np.isfinite(data2)]
+            
+            print((data1 == data2).all())
 
 
-fl_wiso_q_plev = sorted(glob.glob(
-    exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_wiso_q_plev.nc'
-        ))
-
-ifile = -30
-print(fl_wiso_q_plev[ifile_start:ifile_end][ifile])
-ncfile2 = xr.open_dataset(fl_wiso_q_plev[ifile_start:ifile_end][ifile])
-
-ocean_q_zm = (ncfile2['q_' + str_ind1] + \
-    ncfile2['q_' + str_ind2] + \
-        ncfile2['xl_' + str_ind1] + \
-            ncfile2['xl_' + str_ind2] + \
-                ncfile2['xi_' + str_ind1] + \
-                    ncfile2['xi_' + str_ind2]
-        ).mean(dim='lon').compute()
-var_scaled_q_zm = (ncfile2['q_' + str_ind1] + \
-    ncfile2['xl_' + str_ind1] + \
-        ncfile2['xi_' + str_ind1]
-        ).mean(dim='lon').compute()
-
-plev = 0
-ilat = 45
-ilon = 90
-
-sq = var_scaled_q_zm[0, plev, ilat].values
-oq = ocean_q_zm[0, plev, ilat].values
-q_var_new = (sq / oq) * (max_sf - min_sf) + min_sf
-
-if (var_name == 'sst'):
-    q_var_new = q_var_new - 273.15
-
-if (var_name == 'rh2m'):
-    q_var_new = q_var_new * 100
-
-q_var = q_weighted_var['mon'][ifile, plev, ilat].values
-
-print(q_var)
-print(q_var_new)
-
-
-
-
-stats.describe(ocean_q, axis=None, nan_policy='omit')
-stats.describe(
-    ocean_q.sel(plev=slice(1e+5, 2e+4)), axis=None, nan_policy='omit')
 '''
 # endregion
 # -----------------------------------------------------------------------------
-
-
 
 

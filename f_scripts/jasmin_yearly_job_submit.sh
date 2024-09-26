@@ -3,7 +3,7 @@
 #SBATCH --time=00:30:00
 #SBATCH -o %A_%a.out
 #SBATCH -e %A_%a.err
-#SBATCH --array=0-6
+#SBATCH --array=0-5
 #SBATCH --mem=120GB
 # #SBATCH -n 16
 

@@ -272,25 +272,24 @@ mean_squared_error(
 # region compare sim_rec jfm_sst
 
 data_to_plot = {}
-data_to_plot['EC'] = SO_jfm_sst_site_values['EC'].groupby(['Station']).mean()[
+data_to_plot['EC'] = SO_jfm_sst_site_values['EC'][['Station', 'rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']].groupby(['Station']).mean()[['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']]
+
+data_to_plot['EC']['std'] = SO_jfm_sst_site_values['EC'][['Station', 'sim_jfm_sst_lig_pi']].groupby(['Station']).std(ddof=1)[['sim_jfm_sst_lig_pi']]
+
+data_to_plot['JH'] = SO_jfm_sst_site_values['JH'][['Station', 'rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']].groupby(['Station']).mean()[
     ['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']]
 
-data_to_plot['EC']['std'] = SO_jfm_sst_site_values['EC'].groupby(['Station']).std(ddof=1)[['sim_jfm_sst_lig_pi']]
+data_to_plot['JH']['std'] = SO_jfm_sst_site_values['JH'][['Station', 'sim_jfm_sst_lig_pi']].groupby(['Station']).std(ddof=1)[['sim_jfm_sst_lig_pi']]
 
-data_to_plot['JH'] = SO_jfm_sst_site_values['JH'].groupby(['Station']).mean()[
+data_to_plot['DC'] = SO_jfm_sst_site_values['DC'][['Station', 'rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']].groupby(['Station']).mean()[
     ['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']]
 
-data_to_plot['JH']['std'] = SO_jfm_sst_site_values['JH'].groupby(['Station']).std(ddof=1)[['sim_jfm_sst_lig_pi']]
+data_to_plot['DC']['std'] = SO_jfm_sst_site_values['DC'][['Station', 'sim_jfm_sst_lig_pi']].groupby(['Station']).std(ddof=1)[['sim_jfm_sst_lig_pi']]
 
-data_to_plot['DC'] = SO_jfm_sst_site_values['DC'].groupby(['Station']).mean()[
+data_to_plot['MC'] = SO_jfm_sst_site_values['MC'][['Station', 'rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']].groupby(['Station']).mean()[
     ['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']]
 
-data_to_plot['DC']['std'] = SO_jfm_sst_site_values['DC'].groupby(['Station']).std(ddof=1)[['sim_jfm_sst_lig_pi']]
-
-data_to_plot['MC'] = SO_jfm_sst_site_values['MC'].groupby(['Station']).mean()[
-    ['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']]
-
-data_to_plot['MC']['std'] = SO_jfm_sst_site_values['MC'].groupby(['Station']).std(ddof=1)[['sim_jfm_sst_lig_pi']]
+data_to_plot['MC']['std'] = SO_jfm_sst_site_values['MC'][['Station', 'sim_jfm_sst_lig_pi']].groupby(['Station']).std(ddof=1)[['sim_jfm_sst_lig_pi']]
 
 # mean_err = {}
 # rms_err  = {}
@@ -306,19 +305,19 @@ for irec in ['EC', 'JH', 'DC', 'MC']:
     # irec = 'EC'
     print(irec)
     
+    ax.errorbar(
+        x=data_to_plot[irec]['rec_jfm_sst_lig_pi'].values,
+        y=data_to_plot[irec]['sim_jfm_sst_lig_pi'].values,
+        yerr=data_to_plot[irec]['std'],
+        linestyle='None', c='tab:blue', lw=0.75, alpha=0.75,
+    )
+    
     ax.scatter(
-        data_to_plot[irec]['rec_jfm_sst_lig_pi'],
-        data_to_plot[irec]['sim_jfm_sst_lig_pi'],
+        data_to_plot[irec]['rec_jfm_sst_lig_pi'].values,
+        data_to_plot[irec]['sim_jfm_sst_lig_pi'].values,
         marker=marker_recs[irec],
         s=symbol_size, c='white', edgecolors='k', lw=linewidth, alpha=alpha,
         )
-    
-    ax.errorbar(
-        x=data_to_plot[irec]['rec_jfm_sst_lig_pi'],
-        y=data_to_plot[irec]['sim_jfm_sst_lig_pi'],
-        yerr=data_to_plot[irec]['std'],
-        linestyle='None', c='tab:blue'
-    )
     
     # mean_err[irec] = np.round(
     #     (SO_jfm_sst_site_values[irec].groupby(['Station']).mean()[

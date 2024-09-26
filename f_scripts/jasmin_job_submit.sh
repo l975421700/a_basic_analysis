@@ -10,7 +10,7 @@ echo "Current time : " $(date +"%T")
 cd ${HOME}
 source ${HOME}/miniconda3/bin/activate deepice
 
-python /home/users/qino/a_basic_analysis/f_scripts/1_py_scripts/srun0.py
+python /home/users/qino/a_basic_analysis/f_scripts/1_py_scripts/srun6.py
 
 echo "Current time : " $(date +"%T")
 

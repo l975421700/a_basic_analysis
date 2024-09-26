@@ -297,8 +297,9 @@ with open('scratch/cmip6/lig/rec/lig_recs_dc.pkl', 'wb') as f:
 #-------------------------------- check
 
 lig_recs = {}
-with open('scratch/cmip6/lig/rec/lig_recs_dc.pkl', 'rb') as f:
-    lig_recs['DC'] = pickle.load(f)
+lig_recs['DC'] = pd.read_pickle('scratch/cmip6/lig/rec/lig_recs_dc.pkl')
+
+lig_recs['DC']['annual_128'].columns
 
 np.mean(lig_recs['DC']['annual_128']['sst_anom_hadisst_ann'])
 np.mean(lig_recs['DC']['annual_126']['sst_anom_hadisst_ann'])

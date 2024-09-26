@@ -103,8 +103,7 @@ from a_basic_analysis.b_module.component_plot import (
 # -----------------------------------------------------------------------------
 # region import data
 
-with open('scratch/share/from_rahul/data_qingang/hadcm3_output_site_values.pkl', 'rb') as f:
-    hadcm3_output_site_values = pickle.load(f)
+hadcm3_output_site_values = pd.read_pickle('scratch/share/from_rahul/data_qingang/hadcm3_output_site_values.pkl')
 
 with open('scratch/cmip6/lig/sst/pmip3_anomalies_site_values.pkl', 'rb') as f:
     pmip3_anomalies_site_values = pickle.load(f)
@@ -201,14 +200,23 @@ axs[0, 2].scatter(
 
 # PMIP4 Annual SST
 data_to_plot = {}
-data_to_plot['EC'] = SO_ann_sst_site_values['EC'].groupby(['Station']).mean()[
-    ['rec_ann_sst_lig_pi', 'sim_ann_sst_lig_pi']]
-data_to_plot['JH'] = SO_ann_sst_site_values['JH'].groupby(['Station']).mean()[
-    ['rec_ann_sst_lig_pi', 'sim_ann_sst_lig_pi']]
-data_to_plot['DC'] = SO_ann_sst_site_values['DC'].groupby(['Station']).mean()[
-    ['rec_ann_sst_lig_pi', 'sim_ann_sst_lig_pi']]
+data_to_plot['EC'] = SO_ann_sst_site_values['EC'][['rec_ann_sst_lig_pi', 'sim_ann_sst_lig_pi', 'Station']].groupby(['Station']).mean()[['rec_ann_sst_lig_pi', 'sim_ann_sst_lig_pi']]
+data_to_plot['EC']['std'] = SO_ann_sst_site_values['EC'][['sim_ann_sst_lig_pi', 'Station']].groupby(['Station']).std(ddof=1)[['sim_ann_sst_lig_pi']]
+
+data_to_plot['JH'] = SO_ann_sst_site_values['JH'][['rec_ann_sst_lig_pi', 'sim_ann_sst_lig_pi', 'Station']].groupby(['Station']).mean()[['rec_ann_sst_lig_pi', 'sim_ann_sst_lig_pi']]
+data_to_plot['JH']['std'] = SO_ann_sst_site_values['JH'][['sim_ann_sst_lig_pi', 'Station']].groupby(['Station']).std(ddof=1)[['sim_ann_sst_lig_pi']]
+
+data_to_plot['DC'] = SO_ann_sst_site_values['DC'][['rec_ann_sst_lig_pi', 'sim_ann_sst_lig_pi', 'Station']].groupby(['Station']).mean()[['rec_ann_sst_lig_pi', 'sim_ann_sst_lig_pi']]
+data_to_plot['DC']['std'] = SO_ann_sst_site_values['DC'][['sim_ann_sst_lig_pi', 'Station']].groupby(['Station']).std(ddof=1)[['sim_ann_sst_lig_pi']]
 
 for irec in ['EC', 'JH', 'DC']:
+    axs[1, 0].errorbar(
+        x=data_to_plot[irec]['rec_ann_sst_lig_pi'].values,
+        y=data_to_plot[irec]['sim_ann_sst_lig_pi'].values,
+        yerr=data_to_plot[irec]['std'],
+        linestyle='None', c='tab:blue', lw=0.75, alpha=0.75,
+    )
+    
     axs[1, 0].scatter(
         data_to_plot[irec]['rec_ann_sst_lig_pi'],
         data_to_plot[irec]['sim_ann_sst_lig_pi'],
@@ -218,16 +226,27 @@ for irec in ['EC', 'JH', 'DC']:
 
 # PMIP4 Summer SST
 data_to_plot = {}
-data_to_plot['EC'] = SO_jfm_sst_site_values['EC'].groupby(['Station']).mean()[
-    ['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']]
-data_to_plot['JH'] = SO_jfm_sst_site_values['JH'].groupby(['Station']).mean()[
-    ['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']]
-data_to_plot['DC'] = SO_jfm_sst_site_values['DC'].groupby(['Station']).mean()[
-    ['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']]
-data_to_plot['MC'] = SO_jfm_sst_site_values['MC'].groupby(['Station']).mean()[
-    ['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']]
+data_to_plot['EC'] = SO_jfm_sst_site_values['EC'][['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi', 'Station']].groupby(['Station']).mean()[['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']]
+data_to_plot['EC']['std'] = SO_jfm_sst_site_values['EC'][['Station', 'sim_jfm_sst_lig_pi']].groupby(['Station']).std(ddof=1)[['sim_jfm_sst_lig_pi']]
+
+data_to_plot['JH'] = SO_jfm_sst_site_values['JH'][['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi', 'Station']].groupby(['Station']).mean()[['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']]
+data_to_plot['JH']['std'] = SO_jfm_sst_site_values['JH'][['Station', 'sim_jfm_sst_lig_pi']].groupby(['Station']).std(ddof=1)[['sim_jfm_sst_lig_pi']]
+
+data_to_plot['DC'] = SO_jfm_sst_site_values['DC'][['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi', 'Station']].groupby(['Station']).mean()[['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']]
+data_to_plot['DC']['std'] = SO_jfm_sst_site_values['DC'][['Station', 'sim_jfm_sst_lig_pi']].groupby(['Station']).std(ddof=1)[['sim_jfm_sst_lig_pi']]
+
+data_to_plot['MC'] = SO_jfm_sst_site_values['MC'][['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi', 'Station']].groupby(['Station']).mean()[['rec_jfm_sst_lig_pi', 'sim_jfm_sst_lig_pi']]
+data_to_plot['MC']['std'] = SO_jfm_sst_site_values['MC'][['Station', 'sim_jfm_sst_lig_pi']].groupby(['Station']).std(ddof=1)[['sim_jfm_sst_lig_pi']]
+
 
 for irec in ['EC', 'JH', 'DC', 'MC']:
+    axs[1, 1].errorbar(
+        x=data_to_plot[irec]['rec_jfm_sst_lig_pi'].values,
+        y=data_to_plot[irec]['sim_jfm_sst_lig_pi'].values,
+        yerr=data_to_plot[irec]['std'],
+        linestyle='None', c='tab:blue', lw=0.75, alpha=0.75,
+    )
+    
     axs[1, 1].scatter(
         data_to_plot[irec]['rec_jfm_sst_lig_pi'],
         data_to_plot[irec]['sim_jfm_sst_lig_pi'],
@@ -237,9 +256,15 @@ for irec in ['EC', 'JH', 'DC', 'MC']:
 
 # PMIP4 Annual SAT
 data_to_plot = {}
-data_to_plot['EC_tas'] = AIS_ann_tas_site_values['EC'].groupby(['Station']).mean()[
-    ['rec_ann_tas_lig_pi', 'sim_ann_tas_lig_pi']]
+data_to_plot['EC_tas'] = AIS_ann_tas_site_values['EC'][['rec_ann_tas_lig_pi', 'sim_ann_tas_lig_pi', 'Station']].groupby(['Station']).mean()[['rec_ann_tas_lig_pi', 'sim_ann_tas_lig_pi']]
+data_to_plot['EC_tas']['std'] = AIS_ann_tas_site_values['EC'][['sim_ann_tas_lig_pi', 'Station']].groupby(['Station']).std(ddof=1)[['sim_ann_tas_lig_pi']]
 
+axs[1, 2].errorbar(
+    x=data_to_plot['EC_tas']['rec_ann_tas_lig_pi'].values,
+    y=data_to_plot['EC_tas']['sim_ann_tas_lig_pi'].values,
+    yerr=data_to_plot['EC_tas']['std'],
+    linestyle='None', c='tab:blue', lw=0.75, alpha=0.75,
+    )
 axs[1, 2].scatter(
     data_to_plot['EC_tas']['rec_ann_tas_lig_pi'],
     data_to_plot['EC_tas']['sim_ann_tas_lig_pi'],
@@ -249,9 +274,15 @@ axs[1, 2].scatter(
 
 # PMIP4 Sep SIC
 data_to_plot = {}
-data_to_plot['MC'] = SO_sep_sic_site_values['MC'].groupby(['Station']).mean()[
-    ['rec_sep_sic_lig_pi', 'sim_sep_sic_lig_pi']]
+data_to_plot['MC'] = SO_sep_sic_site_values['MC'][['rec_sep_sic_lig_pi', 'sim_sep_sic_lig_pi', 'Station']].groupby(['Station']).mean()[['rec_sep_sic_lig_pi', 'sim_sep_sic_lig_pi']]
+data_to_plot['MC']['std'] = SO_sep_sic_site_values['MC'][['sim_sep_sic_lig_pi', 'Station']].groupby(['Station']).std(ddof=1)[['sim_sep_sic_lig_pi']]
 
+axs[1, 3].errorbar(
+    x=data_to_plot['MC']['rec_sep_sic_lig_pi'].values,
+    y=data_to_plot['MC']['sim_sep_sic_lig_pi'].values,
+    yerr=data_to_plot['MC']['std'],
+    linestyle='None', c='tab:blue', lw=0.75, alpha=0.75,
+    )
 axs[1, 3].scatter(
     data_to_plot['MC']['rec_sep_sic_lig_pi'],
     data_to_plot['MC']['sim_sep_sic_lig_pi'],

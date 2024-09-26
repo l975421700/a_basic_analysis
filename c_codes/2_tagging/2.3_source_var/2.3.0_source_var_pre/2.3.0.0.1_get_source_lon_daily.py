@@ -4,7 +4,7 @@ exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_600_5.0',
     # 'pi_601_5.1',
-    'hist_700_5.0',
+    'hist_700_6.0',
     # 'nudged_701_5.0',
     
     # 'nudged_703_6.0_k52',
