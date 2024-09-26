@@ -240,22 +240,28 @@ pearsonr(data1[subset], data2[subset],).statistic ** 2
 # region time series plot - only one model
 
 
-for ivar in ['dD', 'd18O', 'd_xs', 'd_ln', 'pre', 'temp2', ]:
+for ivar in ['dD', 'd_ln',]:
     # ivar = 'd_ln'
     # ['dD', 'd18O', 'd_xs', 'd_ln', 'pre', 'temp2', ]
     print('#-------------------------------- ' + ivar)
     
     output_png = 'figures/8_d-excess/8.0_records/8.0.4_dome_c/8.0.4.0_sim_obs/8.0.4.0.1 ' + expid[i] + ' BS13 time series of observed vs. simulated mon ' + ivar + '.png'
     
-    xdata = BS13_Dome_C['mon']['date'].values
+    daily_pre = wisoaprt_alltime_icores[expid[i]]['EDC']['daily'].sel(time=slice('2008-01-01', '2010-11-30')) * seconds_per_d
+    pre_days = (daily_pre >= 0.02).values
+    
+    xdata = BS13_Dome_C['mon']['date'].values - np.timedelta64(15,'D')
     obs_var = BS13_Dome_C['mon'][ivar].values
     # obs_var_am = BS13_Dome_C['am'][ivar]
+    
+    xdata_daily = BS13_Dome_C['1d']['date'].values
+    obs_var_daily = BS13_Dome_C['1d'][ivar].values
     
     fig, ax = plt.subplots(1, 1, figsize=np.array([11, 11]) / 2.54)
     
     ax.plot(xdata,
-            obs_var, 'o', ls='-', ms=2, lw=0.5, c='k', label='Observation',
-            )
+            obs_var, 'o', ls='-', ms=3, lw=0.75, c='k', label='Observation',)
+    ax.scatter(xdata_daily, obs_var_daily, s=4, c='k', marker='x', lw=0.5, alpha=0.75)
     
     for i in range(1):
         # len(expid)
@@ -263,6 +269,7 @@ for ivar in ['dD', 'd18O', 'd_xs', 'd_ln', 'pre', 'temp2', ]:
         
         if (ivar == 'dD'):
             sim_var = isotopes_alltime_icores[expid[i]][ivar]['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+            sim_var_daily = isotopes_alltime_icores[expid[i]][ivar]['EDC']['daily'].sel(time=slice('2008-01-1', '2010-12-31'))
             unit = '$‰$'
         elif (ivar == 'd18O'):
             sim_var = isotopes_alltime_icores[expid[i]]['dO18']['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
@@ -272,6 +279,7 @@ for ivar in ['dD', 'd18O', 'd_xs', 'd_ln', 'pre', 'temp2', ]:
             unit = '$‰$'
         elif (ivar == 'd_ln'):
             sim_var = isotopes_alltime_icores[expid[i]][ivar]['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+            sim_var_daily = isotopes_alltime_icores[expid[i]][ivar]['EDC']['daily'].sel(time=slice('2008-01-1', '2010-12-31'))
             unit = '$‰$'
         elif (ivar == 'pre'):
             sim_var = wisoaprt_alltime_icores[expid[i]]['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31')) * seconds_per_d
@@ -293,16 +301,18 @@ for ivar in ['dD', 'd18O', 'd_xs', 'd_ln', 'pre', 'temp2', ]:
         
         if ((ivar != 'd_ln') & (ivar != 'dD')):
             ax.plot(xdata,
-                    sim_var, 'o', ls='-', ms=2, lw=0.5,
+                    sim_var, 'o', ls='-', ms=3, lw=0.75,
                     c=expid_colours[expid[i]],
                     label=expid_labels[expid[i]],
                     )
         else:
             ax.plot(xdata[:-1],
-                    sim_var[:-1], 'o', ls='-', ms=2, lw=0.5,
+                    sim_var[:-1], 'o', ls='-', ms=3, lw=0.75,
                     c=expid_colours[expid[i]],
                     label=expid_labels[expid[i]],
                     )
+            ax.scatter(xdata_daily[:-31][pre_days], sim_var_daily[:-31][pre_days],
+                       s=4, c=expid_colours[expid[i]], marker='x', lw=0.5, alpha=0.75)
         # ax.plot(xdata,
         #         sim_var, 'o', ls='-', ms=2, lw=0.5,
         #         c=expid_colours[expid[i]],
@@ -311,7 +321,6 @@ for ivar in ['dD', 'd18O', 'd_xs', 'd_ln', 'pre', 'temp2', ]:
         #                 ', $RMSE = $' + str(np.round(RMSE, round_digit))
         #         )
     
-    ax.set_xticks(xdata[::3])
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%b'))
     plt.xticks(rotation=45, ha='right')
     # ax.xaxis.set_minor_locator(AutoMinorLocator(2))
@@ -330,6 +339,10 @@ for ivar in ['dD', 'd18O', 'd_xs', 'd_ln', 'pre', 'temp2', ]:
     #     framealpha=0.25, ncol=2, columnspacing=1, fontsize=9)
     
     # ax.get_xticklabels()
+    ax.set_xticks(['2008-01-01', '2008-04-01', '2008-07-01', '2008-10-01',
+                   '2009-01-01', '2009-04-01', '2009-07-01', '2009-10-01',
+                   '2010-01-01', '2010-04-01', '2010-07-01', '2010-10-01',
+                   ])
     ax.set_xticklabels(['2008-Jan', 'Apr', 'Jul', 'Oct',
                        '2009-Jan', 'Apr', 'Jul', 'Oct',
                        '2010-Jan', 'Apr', 'Jul', 'Oct',])
@@ -349,7 +362,50 @@ for ivar in ['dD', 'd18O', 'd_xs', 'd_ln', 'pre', 'temp2', ]:
 
 
 
+'''
+subset = np.isfinite(BS13_Dome_C['1d']['dD'].values) & np.isfinite(BS13_Dome_C['1d']['pre'].values) & (BS13_Dome_C['1d']['pre'].values > 0.02)
+pearsonr(BS13_Dome_C['1d']['dD'].values[subset], BS13_Dome_C['1d']['pre'].values[subset])
+fig, ax = plt.subplots(1, 1, figsize=np.array([8.8, 8.8]) / 2.54)
+ax.scatter(
+    BS13_Dome_C['1d']['pre'].values[subset],
+    BS13_Dome_C['1d']['dD'].values[subset],
+    s=4, marker='x', lw=0.5, alpha=0.75
+)
+fig.savefig('figures/test/test.png')
 
+
+
+
+#-------------------------------- check
+
+ivar = 'dD'
+xdata = BS13_Dome_C['mon']['date'].values - np.timedelta64(15,'D')
+obs_var = BS13_Dome_C['mon'][ivar].values
+
+xdata_daily = BS13_Dome_C['1d']['date'].values
+obs_var_daily = BS13_Dome_C['1d'][ivar].values
+
+sim_var = isotopes_alltime_icores[expid[i]][ivar]['EDC']['mon'].sel(time=slice('2008-01-31', '2010-12-31'))
+sim_var_daily = isotopes_alltime_icores[expid[i]][ivar]['EDC']['daily'].sel(time=slice('2008-01-1', '2010-12-31'))
+
+
+xdata[3]
+obs_var[3]
+xdata_daily[91:121]
+
+subset = np.isfinite(obs_var_daily[91:121])
+np.average(
+    obs_var_daily[91:121][subset],
+    weights=BS13_Dome_C['1d']['pre'].values[91:121][subset],
+)
+
+sim_var[3]
+subset = np.isfinite(sim_var_daily[91:121])
+np.average(
+    sim_var_daily[91:121][subset],
+    weights=wisoaprt_alltime_icores['nudged_705_6.0']['EDC']['daily'].sel(time=slice('2008-04-01', '2008-04-30'))[subset],
+)
+'''
 # endregion
 # -----------------------------------------------------------------------------
 
@@ -661,7 +717,7 @@ for ivar in ['pre',]:
         ax.plot(xdata,
                 sim_var, 'o', ls='-', ms=2, lw=0.5,
                 c=expid_colours[expid[i]],
-                label=expid_labels[expid[i]],
+                label='ECHAM6-wiso',
                 )
         # ax.plot(xdata,
         #         sim_var, 'o', ls='-', ms=2, lw=0.5,

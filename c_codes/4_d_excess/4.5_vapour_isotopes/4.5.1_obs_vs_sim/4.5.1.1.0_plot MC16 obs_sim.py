@@ -706,7 +706,7 @@ for var_name in ['q',]:
             c='k', label='Observation',)
     ax.plot(xdata, ydata_sim, 'o', ls='-', ms=2, lw=0.5,
             c=expid_colours[expid[i]],
-            label=expid_labels[expid[i]],)
+            label='ECHAM6-wiso',)
     
     #  + \
     #                 ': $R^2 = $' + str(np.round(rsquared, 2)) +\

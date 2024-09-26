@@ -98,6 +98,9 @@ MC16_Dome_C['1h']['dD'][iind]
 MC16_Dome_C['1h']['d18O'][iind]
 MC16_Dome_C['1h']['humidity'][iind]
 
+from scipy.stats import pearsonr
+pearsonr(MC16_Dome_C['1d']['dD'], MC16_Dome_C['1d']['t_3m']).statistic
+
 
 '''
 #------------------------- check statistics
