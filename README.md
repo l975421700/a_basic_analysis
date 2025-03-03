@@ -1,4 +1,6 @@
-All code used for Qinggang Gao's PhD thesis: https://doi.org/10.17863/CAM.116283
+All code used for Qinggang Gao's PhD thesis:
+
+Gao, Q. (2024). Innovative water tracers and water isotopes enhance Antarctic research with climate models [Apollo - University of Cambridge Repository]. https://doi.org/10.17863/CAM.116283
 
 c_codes/2_tagging is mainly used for the paper:
 
