@@ -7,8 +7,8 @@
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'nudged_703_6.0_k52',
-    'nudged_705_6.0',
+    'nudged_703_6.0_k52',
+    # 'nudged_705_6.0',
     ]
 i = 0
 
@@ -65,7 +65,7 @@ VSMOW_D   = 0.3288266
 dO18_q_alltime = {}
 dO18_q_alltime[expid[i]] = {}
 
-for ialltime in ['mon', 'mm', 'sea', 'sm', 'ann', 'am']:
+for ialltime in ['daily', 'mon', 'mm', 'sea', 'sm', 'ann', 'am']:
     # ialltime = 'am'
     print(ialltime)
     
@@ -108,7 +108,7 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_q_alltime
 dD_q_alltime = {}
 dD_q_alltime[expid[i]] = {}
 
-for ialltime in ['mon', 'mm', 'sea', 'sm', 'ann', 'am']:
+for ialltime in ['daily', 'mon', 'mm', 'sea', 'sm', 'ann', 'am']:
     # ialltime = 'am'
     print(ialltime)
     

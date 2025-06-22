@@ -1,13 +1,13 @@
 
 
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = '/albedo/work/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_m_502_5.0',
     # 'pi_600_5.0',
     # 'pi_601_5.1',
     # 'pi_602_5.2',
     # 'pi_603_5.3',
-    'hist_700_5.0',
+    'nudged_705_6.0',
     ]
 i = 0
 
@@ -34,6 +34,7 @@ pbar = ProgressBar()
 pbar.register()
 
 from a_basic_analysis.b_module.basic_calculations import (
+    find_nearest_1d,
     get_mon_sam,
 )
 
@@ -87,4 +88,45 @@ sam_mon.sam.values
 # endregion
 # -----------------------------------------------------------------------------
 
+
+# -----------------------------------------------------------------------------
+# region get daily SAM
+
+lat = psl_zh[expid[i]]['psl']['daily'].lat
+mslp = psl_zh[expid[i]]['psl']['daily']
+
+north_lat = find_nearest_1d(lat.values, -40)
+south_lat = find_nearest_1d(lat.values, -65)
+
+darray = mslp.sel(lat=[south_lat, north_lat]).mean(dim='lon').compute()
+
+clim = darray.groupby('time.month').mean(dim='time').compute()
+stdev = darray.groupby('time.month').std(dim='time').compute()
+anom = (darray.groupby('time.month') - clim).compute()
+norm = (anom.groupby('time.month') / stdev).compute()
+
+sam_timeseries = norm.sel(lat=north_lat).values - norm.sel(lat=south_lat).values
+
+sam_daily = xr.Dataset(
+    {'sam': (('time'), sam_timeseries),},
+    coords={'time': temp2_alltime[expid[i]]['daily'].time,},
+    )
+
+sam_daily.to_netcdf(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.sam_daily.nc')
+
+
+
+
+'''
+sam_daily = xr.open_dataset(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.sam_daily.nc')
+# sam_daily.sam.values
+
+sam_posneg_ind = {}
+sam_posneg_ind['pos'] = sam_daily.sam > sam_daily.sam.std(ddof = 1)
+sam_posneg_ind['neg'] = sam_daily.sam < (-1 * sam_daily.sam.std(ddof = 1))
+
+
+'''
+# endregion
+# -----------------------------------------------------------------------------
 

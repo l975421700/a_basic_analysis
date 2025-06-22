@@ -8,12 +8,12 @@
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
     'nudged_705_6.0',
-    # 'nudged_703_6.0_k52',
-    # 'nudged_707_6.0_k43',
-    # 'nudged_708_6.0_I01',
-    # 'nudged_709_6.0_I03',
-    # 'nudged_710_6.0_S3',
-    # 'nudged_711_6.0_S6',
+    'nudged_703_6.0_k52',
+    'nudged_707_6.0_k43',
+    'nudged_708_6.0_I01',
+    'nudged_709_6.0_I03',
+    'nudged_710_6.0_S3',
+    'nudged_711_6.0_S6',
     ]
 i = 0
 
@@ -129,6 +129,10 @@ ERA5_daily_temp2_2013_2022 = xr.open_dataset('scratch/ERA5/temp2/ERA5_daily_temp
 
 '''
 # height in T63
+ten_sites_loc = pd.read_pickle('data_sources/others/ten_sites_loc.pkl')
+isite = 'EDC'
+site_lat = ten_sites_loc[ten_sites_loc['Site'] == isite]['lat'][0]
+site_lon = ten_sites_loc[ten_sites_loc['Site'] == isite]['lon'][0]
 echam6_t63_geosp = xr.open_dataset(exp_odir + expid[i] + '/input/echam/unit.24')
 echam6_t63_surface_height = geopotential_to_height(
     echam6_t63_geosp.GEOSP * (units.m / units.s)**2)
@@ -524,7 +528,7 @@ for var_name in ['dD', 'd18O', 'd_xs', 'd_ln', 'q', 't_3m']:
 # -----------------------------------------------------------------------------
 # region time series multiple models
 
-for var_name in ['dD', 'd18O', 'd_xs', 'd_ln',]:
+for var_name in ['dD']:
     # var_name = 'q'
     # ['dD', 'd18O', 'd_xs', 'd_ln', 'q']
     print('#-------- ' + var_name)

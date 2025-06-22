@@ -1,6 +1,6 @@
 
 
-# salloc --account=paleodyn.paleodyn --qos=12h --time=12:00:00 --nodes=1 --mem=120GB
+# salloc --account=paleodyn.paleodyn --qos=12h --time=2:00:00 --nodes=1 --mem=120GB
 # source ${HOME}/miniconda3/bin/activate deepice
 # ipython
 
@@ -433,7 +433,8 @@ for ivar in ['sst']:
     ax.set_xlabel(plot_labels[ivar],)
     ax.xaxis.set_minor_locator(AutoMinorLocator(2))
     
-    ax.set_ylabel('Residuals in regression $d_{ln} = f(RHsst)$ [$‰$]')
+    ax.set_ylabel('$d_{ln}$(regression) - $d_{ln}$(simulation) [$‰$]')
+    # ax.set_ylabel('Residuals in regression $d_{ln} = f(RHsst)$ [$‰$]')
     # ax.set_ylabel('Deviations in predicted ' + plot_labels['d_ln'],)
     ax.yaxis.set_minor_locator(AutoMinorLocator(2))
     

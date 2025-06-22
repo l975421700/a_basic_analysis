@@ -2,8 +2,8 @@
 
 exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
-    # 'nudged_703_6.0_k52',
-    'nudged_705_6.0',
+    'nudged_703_6.0_k52',
+    # 'nudged_705_6.0',
     ]
 i = 0
 
@@ -108,7 +108,7 @@ cc
 d_ln_q_alltime = {}
 d_ln_q_alltime[expid[i]] = {}
 
-for ialltime in ['mon', 'mm', 'sea', 'sm', 'ann', 'am']:
+for ialltime in ['daily', 'mon', 'mm', 'sea', 'sm', 'ann', 'am']:
     print(ialltime)
     # ialltime = 'sm'
     

@@ -7,15 +7,15 @@ expid = [
     ]
 i = 0
 
-ifile_start = 0 #0 #120
+ifile_start = 504 #0 #120
 ifile_end   = 528 #1740 #840
 
 ntags = [0, 0, 0, 0, 0,   3, 0, 3, 3, 3,   7, 3, 3, 0,  3, 0]
 
-var_name  = 'sst'
-itag      = 7
-min_sf    = 268.15
-max_sf    = 318.15
+# var_name  = 'sst'
+# itag      = 7
+# min_sf    = 268.15
+# max_sf    = 318.15
 
 # var_name  = 'lat'
 # itag      = 5
@@ -37,10 +37,10 @@ max_sf    = 318.15
 # min_sf    = -1
 # max_sf    = 1
 
-# var_name  = 'coslon'
-# itag      = 12
-# min_sf    = -1
-# max_sf    = 1
+var_name  = 'coslon'
+itag      = 12
+min_sf    = -1
+max_sf    = 1
 
 
 # var_name  = 'RHsst'
@@ -113,7 +113,7 @@ exp_out_wiso_q_1m['q_' + str_ind1]
 
 
 fl_wiso_q_plev = sorted(glob.glob(
-    exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_wiso_q_plev.nc'
+    exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.daily_wiso_q_plev.nc'
         ))
 
 exp_out_wiso_q_plev = xr.open_mfdataset(
@@ -194,14 +194,14 @@ var_scaled_q = (exp_out_wiso_q_plev['q_' + str_ind1] + \
 
 #-------- mon_sea_ann
 
-ocean_q_alltime = mon_sea_ann(var_monthly=ocean_q)
-var_scaled_q_alltime = mon_sea_ann(var_monthly=var_scaled_q)
+ocean_q_alltime = mon_sea_ann(var_daily=ocean_q)
+var_scaled_q_alltime = mon_sea_ann(var_daily=var_scaled_q)
 
 #-------- q-weighted var
 
 q_weighted_var = {}
 
-for ialltime in ['mon', 'mm', 'sea', 'sm', 'ann', 'am']:
+for ialltime in ['daily', 'mon', 'mm', 'sea', 'sm', 'ann', 'am']:
     print(ialltime)
     
     q_weighted_var[ialltime] = source_properties(

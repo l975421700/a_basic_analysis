@@ -1,12 +1,14 @@
 
 
-exp_odir = '/albedo/scratch/user/qigao001/output/echam-6.3.05p2-wiso/pi/'
+exp_odir = 'output/echam-6.3.05p2-wiso/pi/'
 expid = [
     # 'pi_m_416_4.9',
     # 'pi_m_502_5.0',
-    'nudged_701_5.0',
+    # 'nudged_701_5.0',
+    'nudged_703_6.0_k52',
     ]
 i=0
+
 
 # -----------------------------------------------------------------------------
 # region import packages
@@ -50,7 +52,7 @@ with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.q_weighted_cos
 
 q_weighted_lon = {}
 
-for ialltime in ['mon', 'mm', 'sea', 'sm', 'ann', 'am']:
+for ialltime in ['daily', 'mon', 'mm', 'sea', 'sm', 'ann', 'am']:
     print(ialltime)
     
     q_weighted_lon[ialltime] = sincoslon_2_lon(

@@ -174,14 +174,14 @@ expid_labels = {
     'nudged_718_6.0_S3_2yr': '$Nudge_{S3}$',
     'nudged_719_6.0_S6_2yr': '$Nudge_{S6}$',
     
-    'nudged_705_6.0': '$Nudge_{control}$',
-    'nudged_703_6.0_k52': '$Nudge_{k52}$',
-    'nudged_706_6.0_k52_88': '$Nudge_{k52\_88}$',
-    'nudged_707_6.0_k43': '$Nudge_{k43}$',
-    'nudged_708_6.0_I01': '$Nudge_{I01}$',
-    'nudged_709_6.0_I03': '$Nudge_{I03}$',
-    'nudged_710_6.0_S3': '$Nudge_{S3}$',
-    'nudged_711_6.0_S6': '$Nudge_{S6}$',
+    'nudged_705_6.0': '$control$',
+    'nudged_703_6.0_k52': '$k52$',
+    'nudged_706_6.0_k52_88': '$k52_88$',
+    'nudged_707_6.0_k43': '$k43$',
+    'nudged_708_6.0_I01': '$I01$',
+    'nudged_709_6.0_I03': '$I03$',
+    'nudged_710_6.0_S3': '$S3$',
+    'nudged_711_6.0_S6': '$S6$',
 
 }
 

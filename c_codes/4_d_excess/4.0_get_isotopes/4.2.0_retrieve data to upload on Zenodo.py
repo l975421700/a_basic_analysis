@@ -1,6 +1,6 @@
 
 
-# salloc --account=paleodyn.paleodyn --qos=12h --time=12:00:00 --nodes=1 --mem=120GB
+# salloc --account=paleodyn.paleodyn --qos=12h --time=5:00:00 --nodes=1 --mem=120GB
 # source ${HOME}/miniconda3/bin/activate deepice
 # ipython
 
@@ -69,5 +69,50 @@ pre_weighted_var[expid[i]]['lon']['mon'].to_netcdf('output/echam-6.3.05p2-wiso/p
 pre_weighted_var[expid[i]]['sst']['mon'].to_netcdf('output/echam-6.3.05p2-wiso/pi/nudged_705_6.0/analysis/echam/upload_to_Zenodo/pre_weighted_sst.nc')
 pre_weighted_var[expid[i]]['RHsst']['mon'].to_netcdf('output/echam-6.3.05p2-wiso/pi/nudged_705_6.0/analysis/echam/upload_to_Zenodo/pre_weighted_RHsst.nc')
 temp2_alltime[expid[i]]['mon'].to_netcdf('output/echam-6.3.05p2-wiso/pi/nudged_705_6.0/analysis/echam/upload_to_Zenodo/temp2.nc')
+
+
+
+
+wiso_q_6h_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.wiso_q_6h_sfc_alltime.pkl', 'rb') as f:
+    wiso_q_6h_sfc_alltime[expid[i]] = pickle.load(f)
+
+wiso_q_6h_sfc_alltime[expid[i]]['q16o']['mon'].to_netcdf('output/echam-6.3.05p2-wiso/pi/nudged_705_6.0/analysis/echam/upload_to_Zenodo/q_sfc.nc')
+
+dO18_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dO18_q_sfc_alltime.pkl', 'rb') as f:
+    dO18_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+dO18_q_sfc_alltime[expid[i]]['mon'].to_netcdf('output/echam-6.3.05p2-wiso/pi/nudged_705_6.0/analysis/echam/upload_to_Zenodo/dO18_q_sfc.nc')
+
+
+dD_q_sfc_alltime = {}
+with open(exp_odir + expid[i] + '/analysis/echam/' + expid[i] + '.dD_q_sfc_alltime.pkl', 'rb') as f:
+    dD_q_sfc_alltime[expid[i]] = pickle.load(f)
+
+dD_q_sfc_alltime[expid[i]]['mon'].to_netcdf('output/echam-6.3.05p2-wiso/pi/nudged_705_6.0/analysis/echam/upload_to_Zenodo/dD_q_sfc.nc')
+
+
+source_var = ['lat', 'lon', 'sst', 'RHsst']
+q_sfc_weighted_var = {}
+q_sfc_weighted_var[expid[i]] = {}
+prefix = exp_odir + expid[i] + '/analysis/echam/' + expid[i]
+source_var_files = [
+    prefix + '.q_sfc_weighted_lat.pkl',
+    prefix + '.q_sfc_weighted_lon.pkl',
+    prefix + '.q_sfc_weighted_sst.pkl',
+    prefix + '.q_sfc_weighted_RHsst.pkl',
+    ]
+for ivar, ifile in zip(source_var, source_var_files):
+    # ivar=source_var[0]; ifile = source_var_files[0]
+    print(ivar + ':    ' + ifile)
+    with open(ifile, 'rb') as f:
+        q_sfc_weighted_var[expid[i]][ivar] = pickle.load(f)
+    
+    q_sfc_weighted_var[expid[i]][ivar]['mon'].to_netcdf(f'output/echam-6.3.05p2-wiso/pi/nudged_705_6.0/analysis/echam/upload_to_Zenodo/q_sfc_weighted_{ivar}.nc')
+
+
+
+
 
 

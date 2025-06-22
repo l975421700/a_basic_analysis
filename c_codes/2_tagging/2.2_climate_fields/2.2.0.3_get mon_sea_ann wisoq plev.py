@@ -12,7 +12,7 @@ expid = [
     ]
 i = 0
 
-ifile_start = 0 #0 #120
+ifile_start = 504 #0 #120
 ifile_end   = 528 #1740 #840
 
 # -----------------------------------------------------------------------------
@@ -54,7 +54,7 @@ from a_basic_analysis.b_module.basic_calculations import (
 exp_org_o = {}
 exp_org_o[expid[i]] = {}
 
-filenames_wiso_q_plev = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.monthly_wiso_q_plev.nc'))
+filenames_wiso_q_plev = sorted(glob.glob(exp_odir + expid[i] + '/outdata/echam/' + expid[i] + '_??????.daily_wiso_q_plev.nc'))
 exp_org_o[expid[i]]['wiso_q_plev'] = xr.open_mfdataset(
     filenames_wiso_q_plev[ifile_start:ifile_end],
     )

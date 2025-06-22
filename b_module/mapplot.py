@@ -208,10 +208,10 @@ def globe_plot(
             'physical', 'coastline', '10m', edgecolor=atlas_color,
             facecolor='none', lw=lw)
         ax.add_feature(coastline, zorder=2)
-        borders = cfeature.NaturalEarthFeature(
-            'cultural', 'admin_0_boundary_lines_land', '10m',
-            edgecolor=atlas_color, facecolor='none', lw=lw)
-        ax.add_feature(borders, zorder=2)
+        # borders = cfeature.NaturalEarthFeature(
+        #     'cultural', 'admin_0_boundary_lines_land', '10m',
+        #     edgecolor=atlas_color, facecolor='none', lw=lw)
+        # ax.add_feature(borders, zorder=2)
     
     if add_grid:
         gl = ax.gridlines(

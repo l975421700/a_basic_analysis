@@ -60,16 +60,16 @@ from a_basic_analysis.b_module.namelist import (
 
 #-------------------------------- get land sea mask
 
-# T63 slm and slf
-T63GR15_jan_surf = xr.open_dataset(
-    'output/echam-6.3.05p2-wiso/pi/pi_m_502_5.0/input/echam/unit.24')
-# 1 means land
-t63_slf = T63GR15_jan_surf.SLF.values
-# 1 means land
-t63_slm = T63GR15_jan_surf.SLM.values
+# # T63 slm and slf
+# T63GR15_jan_surf = xr.open_dataset(
+#     'output/echam-6.3.05p2-wiso/pi/pi_m_502_5.0/input/echam/unit.24')
+# # 1 means land
+# t63_slf = T63GR15_jan_surf.SLF.values
+# # 1 means land
+# t63_slm = T63GR15_jan_surf.SLM.values
 
-#-------------------------------- get model output from the 1st time step
-t63_1st_output = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/pi_d_500_wiso/unknown/pi_d_500_wiso_200001.01_echam.nc')
+# #-------------------------------- get model output from the 1st time step
+# t63_1st_output = xr.open_dataset('output/echam-6.3.05p2-wiso/pi/pi_d_500_wiso/unknown/pi_d_500_wiso_200001.01_echam.nc')
 
 pi_geo_tagmap = xr.open_dataset('startdump/tagging/tagmap/pi_geo_tagmap.nc')
 
@@ -93,18 +93,11 @@ analysed_sst = esacci_echam6_t63_trim.analysed_sst.values
 # -----------------------------------------------------------------------------
 # region plot pi_geo_tagmap
 
-colors = [
-    'salmon', 'darkviolet',
-    'royalblue', 'deepskyblue', 'lightblue',
-    'darkorange', 'bisque']
-
 pltlevel_o = np.arange(1 - 0.5, 7 +1.5, 1)
 pltnorm_o = BoundaryNorm(pltlevel_o, ncolors=len(pltlevel_o), clip=False)
 pltcmp_o = cm.get_cmap('PRGn', len(pltlevel_o))
 
-fig, ax = globe_plot(
-    figsize=np.array([12.8, 6.4]) / 2.54, add_grid_labels=False,
-    fm_left=0.01, fm_right=0.99, fm_bottom=0.01, fm_top=0.99,)
+fig, ax = globe_plot(figsize=np.array([16, 9.2]) / 2.54, labelsize=10,)
 
 for i in [0, 1, 2, 3, 4, 6, 5]:
     print(i)
@@ -112,16 +105,35 @@ for i in [0, 1, 2, 3, 4, 6, 5]:
     mask_data[mask_data == 0] = np.nan
     mask_data = mask_data * (i + 1)
     
-    ax.pcolormesh(
+    plt1 = ax.pcolormesh(
         pi_geo_tagmap.lon, pi_geo_tagmap.lat, mask_data,
         norm=pltnorm_o, cmap=pltcmp_o,
-        transform=ccrs.PlateCarree(),)
+        transform=ccrs.PlateCarree())
 
-fig.savefig('figures/test/test.png')
+cbar = fig.colorbar(
+    plt1, ax=ax, orientation="horizontal",
+    pad=0.08, fraction=0.06,
+    # pad=0.1, anchor=(0.5, -0.6),
+    shrink=1.1, aspect=40,
+    ticks=np.arange(1, 8, 1), extend="neither",)
+
+cbar.ax.set_xticklabels(['AIS', 'Land excl. AIS', 'Atlantic Ocean', 'Indian Ocean', 'Pacific Ocean', 'SH sea ice', r'Ocean south of 50$°\;S$',])
+
+fig.subplots_adjust(left=0.07, right=0.93, bottom=0.07, top=0.98)
+fig.savefig('figures/test/test1.png')
 
 
 
+'''
+colors = [
+    'salmon', 'darkviolet',
+    'royalblue', 'deepskyblue', 'lightblue',
+    'darkorange', 'bisque']
+colors = [
+    'bisque', 'darkorange', 'lightblue', 'deepskyblue', 'royalblue',
+    'darkviolet', 'salmon',]
 
+'''
 # endregion
 # -----------------------------------------------------------------------------
 

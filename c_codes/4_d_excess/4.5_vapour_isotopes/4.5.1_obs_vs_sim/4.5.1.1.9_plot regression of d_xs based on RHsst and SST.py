@@ -289,7 +289,7 @@ SO_vapour_SST = SO_vapour_SST[subset]
 
 #-------------------------------- regression and plot
 
-for iisotope in ['d_xs', 'd_ln']:
+for iisotope in ['d_ln']:
     # iisotope = 'd_xs'
     print('#-------------------------------- ' + iisotope)
     
